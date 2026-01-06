@@ -1,13 +1,13 @@
 ---
-title: "Snapshots"
-description: "Learn how to use snapshot testing in Bun to save and compare output between test runs"
+title: "快照测试"
+description: "学习如何在 Bun 中使用快照测试，在测试运行之间保存并比较输出"
 ---
 
-Snapshot testing saves the output of a value and compares it against future test runs. This is particularly useful for UI components, complex objects, or any output that needs to remain consistent.
+快照测试保存一个值的输出，并与未来的测试运行进行比较。这对于 UI 组件、复杂对象或任何需要保持一致的输出特别有用。
 
-## Basic Snapshots
+## 基本快照
 
-Snapshot tests are written using the `.toMatchSnapshot()` matcher:
+快照测试使用 `.toMatchSnapshot()` 匹配器编写：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
@@ -17,20 +17,20 @@ test("snap", () => {
 });
 ```
 
-The first time this test is run, the argument to `expect` will be serialized and written to a special snapshot file in a `__snapshots__` directory alongside the test file.
+首次运行此测试时，传递给 `expect` 的参数会被序列化并写入与测试文件同级的 `__snapshots__` 目录下的特殊快照文件中。
 
-### Snapshot Files
+### 快照文件
 
-After running the test above, Bun will create:
+运行上述测试后，Bun 会创建：
 
-```text title="directory structure" icon="file-directory"
+```text title="目录结构" icon="file-directory"
 your-project/
 ├── snap.test.ts
 └── __snapshots__/
     └── snap.test.ts.snap
 ```
 
-The snapshot file contains:
+快照文件内容如下：
 
 ```ts title="__snapshots__/snap.test.ts.snap" icon="file-code"
 // Bun Snapshot v1, https://bun.com/docs/test/snapshots
@@ -38,36 +38,36 @@ The snapshot file contains:
 exports[`snap 1`] = `"foo"`;
 ```
 
-On future runs, the argument is compared against the snapshot on disk.
+后续运行时，传入的值会与磁盘上的快照进行对比。
 
-## Updating Snapshots
+## 更新快照
 
-Snapshots can be re-generated with the following command:
+可以使用以下命令重新生成快照：
 
 ```bash terminal icon="terminal"
 bun test --update-snapshots
 ```
 
-This is useful when:
+这在以下情况有用：
 
-- You've intentionally changed the output
-- You're adding new snapshot tests
-- The expected output has legitimately changed
+- 你有意更改了输出
+- 你添加了新的快照测试
+- 预期输出确实发生了变化
 
-## Inline Snapshots
+## 内联快照
 
-For smaller values, you can use inline snapshots with `.toMatchInlineSnapshot()`. These snapshots are stored directly in your test file:
+对于较小的值，可以使用 `.toMatchInlineSnapshot()` 进行内联快照。这些快照直接存储在测试文件中：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
 
 test("inline snapshot", () => {
-  // First run: snapshot will be inserted automatically
+  // 首次运行：快照将自动插入
   expect({ hello: "world" }).toMatchInlineSnapshot();
 });
 ```
 
-After the first run, Bun automatically updates your test file:
+首次运行后，Bun 会自动更新你的测试文件：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
@@ -81,18 +81,18 @@ test("inline snapshot", () => {
 });
 ```
 
-### Using Inline Snapshots
+### 使用内联快照步骤
 
-1. Write your test with `.toMatchInlineSnapshot()`
-2. Run the test once
-3. Bun automatically updates your test file with the snapshot
-4. On subsequent runs, the value will be compared against the inline snapshot
+1. 编写包含 `.toMatchInlineSnapshot()` 的测试
+2. 运行测试一次
+3. Bun 会自动更新测试文件，插入快照
+4. 后续运行时，值会与内联快照比较
 
-Inline snapshots are particularly useful for small, simple values where it's helpful to see the expected output right in the test file.
+内联快照特别适合用于小而简单的值，方便在测试文件中直接查看预期输出。
 
-## Error Snapshots
+## 错误快照
 
-You can also snapshot error messages using `.toThrowErrorMatchingSnapshot()` and `.toThrowErrorMatchingInlineSnapshot()`:
+你也可以使用 `.toThrowErrorMatchingSnapshot()` 和 `.toThrowErrorMatchingInlineSnapshot()` 来快照错误消息：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
@@ -108,7 +108,7 @@ test("error snapshot", () => {
 });
 ```
 
-After running, the inline version becomes:
+运行后，内联版本变为：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 test("error snapshot", () => {
@@ -122,11 +122,11 @@ test("error snapshot", () => {
 });
 ```
 
-## Advanced Snapshot Usage
+## 高级快照用法
 
-### Complex Objects
+### 复杂对象
 
-Snapshots work well with complex nested objects:
+快照适用于复杂的嵌套对象：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
@@ -150,9 +150,9 @@ test("complex object snapshot", () => {
 });
 ```
 
-### Array Snapshots
+### 数组快照
 
-Arrays are also well-suited for snapshot testing:
+数组同样适合快照测试：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
@@ -163,9 +163,9 @@ test("array snapshot", () => {
 });
 ```
 
-### Function Output Snapshots
+### 函数输出快照
 
-Snapshot the output of functions:
+快照函数的返回值：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
@@ -174,7 +174,7 @@ function generateReport(data: any[]) {
   return {
     total: data.length,
     summary: data.map(item => ({ id: item.id, name: item.name })),
-    timestamp: "2024-01-01", // Fixed for testing
+    timestamp: "2024-01-01", // 测试时固定值
   };
 }
 
@@ -188,9 +188,9 @@ test("report generation", () => {
 });
 ```
 
-## React Component Snapshots
+## React 组件快照
 
-Snapshots are particularly useful for React components:
+快照对 React 组件特别有用：
 
 ```tsx title="test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
@@ -209,18 +209,18 @@ test("Button component snapshots", () => {
 });
 ```
 
-## Property Matchers
+## 属性匹配器
 
-For values that change between test runs (like timestamps or IDs), use property matchers:
+对于在测试运行间会变化的值（比如时间戳或 ID），使用属性匹配器：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
 
 test("snapshot with dynamic values", () => {
   const user = {
-    id: Math.random(), // This changes every run
+    id: Math.random(), // 每次运行都会变
     name: "John",
-    createdAt: new Date().toISOString(), // This also changes
+    createdAt: new Date().toISOString(), // 也会变化
   };
 
   expect(user).toMatchSnapshot({
@@ -230,9 +230,9 @@ test("snapshot with dynamic values", () => {
 });
 ```
 
-The snapshot will store:
+快照将保存为：
 
-```txt title="snapshot file" icon="file-code"
+```txt title="快照文件" icon="file-code"
 exports[`snapshot with dynamic values 1`] = `
 {
   "createdAt": Any<String>,
@@ -242,14 +242,14 @@ exports[`snapshot with dynamic values 1`] = `
 `;
 ```
 
-## Custom Serializers
+## 自定义序列化器
 
-You can customize how objects are serialized in snapshots:
+你可以自定义对象在快照中的序列化方式：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
 
-// Custom serializer for Date objects
+// Date 对象的自定义序列化器
 expect.addSnapshotSerializer({
   test: val => val instanceof Date,
   serialize: val => `"${val.toISOString()}"`,
@@ -265,39 +265,39 @@ test("custom serializer", () => {
 });
 ```
 
-## Best Practices
+## 最佳实践
 
-### Keep Snapshots Small
+### 保持快照文件简洁
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
-// Good: Focused snapshots
+// 推荐：聚焦的快照
 test("user name formatting", () => {
   const formatted = formatUserName("john", "doe");
   expect(formatted).toMatchInlineSnapshot(`"John Doe"`);
 });
 
-// Avoid: Huge snapshots that are hard to review
+// 避免：冗长难以审查的快照
 test("entire page render", () => {
   const page = renderEntirePage();
-  expect(page).toMatchSnapshot(); // This could be thousands of lines
+  expect(page).toMatchSnapshot(); // 可能有数千行
 });
 ```
 
-### Use Descriptive Test Names
+### 使用描述性测试名称
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
-// Good: Clear what the snapshot represents
+// 推荐：清晰说明快照代表的内容
 test("formats currency with USD symbol", () => {
   expect(formatCurrency(99.99)).toMatchInlineSnapshot(`"$99.99"`);
 });
 
-// Avoid: Unclear what's being tested
+// 避免：测试意图不明确
 test("format test", () => {
   expect(format(99.99)).toMatchInlineSnapshot(`"$99.99"`);
 });
 ```
 
-### Group Related Snapshots
+### 分组相关快照
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { describe, test, expect } from "bun:test";
@@ -320,10 +320,10 @@ describe("Button component", () => {
 });
 ```
 
-### Handle Dynamic Data
+### 处理动态数据
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
-// Good: Normalize dynamic data
+// 推荐：标准化动态数据
 test("API response format", () => {
   const response = {
     data: { id: 1, name: "Test" },
@@ -338,7 +338,7 @@ test("API response format", () => {
   }).toMatchSnapshot();
 });
 
-// Or use property matchers
+// 或使用属性匹配器
 test("API response with matchers", () => {
   const response = getApiResponse();
 
@@ -349,40 +349,40 @@ test("API response with matchers", () => {
 });
 ```
 
-## Managing Snapshots
+## 管理快照
 
-### Reviewing Snapshot Changes
+### 复查快照变更
 
-When snapshots change, carefully review them:
+当快照发生变化时，需仔细检查：
 
 ```bash terminal icon="terminal"
-# See what changed
+# 查看变更内容
 git diff __snapshots__/
 
-# Update if changes are intentional
+# 若变更是预期，则更新快照
 bun test --update-snapshots
 
-# Commit the updated snapshots
+# 提交更新后的快照
 git add __snapshots__/
 git commit -m "Update snapshots after UI changes"
 ```
 
-### Cleaning Up Unused Snapshots
+### 清理未使用的快照
 
-Bun will warn about unused snapshots:
+Bun 会提示未使用的快照：
 
-```txt title="warning" icon="warning"
+```txt title="警告" icon="warning"
 Warning: 1 unused snapshot found:
   my-test.test.ts.snap: "old test that no longer exists 1"
 ```
 
-Remove unused snapshots by deleting them from the snapshot files or by running tests with cleanup flags if available.
+通过删除快照文件中的对应快照或使用可用的清理标志运行测试来移除未使用的快照。
 
-### Organizing Large Snapshot Files
+### 组织大型快照文件
 
-For large projects, consider organizing tests to keep snapshot files manageable:
+对于大型项目，建议合理组织测试以保持快照文件可管理：
 
-```text title="directory structure" icon="file-directory"
+```text title="目录结构" icon="file-directory"
 tests/
 ├── components/
 │   ├── Button.test.tsx
@@ -394,11 +394,11 @@ tests/
 │       └── formatters.test.ts.snap
 ```
 
-## Troubleshooting
+## 故障排除
 
-### Snapshot Failures
+### 快照失败
 
-When snapshots fail, you'll see a diff:
+当快照不匹配时，会看到差异视图：
 
 ```diff title="diff" icon="file-code"
 - Expected
@@ -410,25 +410,25 @@ When snapshots fail, you'll see a diff:
   }
 ```
 
-Common causes:
+常见原因：
 
-- Intentional changes (update with `--update-snapshots`)
-- Unintentional changes (fix the code)
-- Dynamic data (use property matchers)
-- Environment differences (normalize the data)
+- 有意更改（使用 `--update-snapshots` 更新）
+- 无意更改（修正代码）
+- 动态数据（使用属性匹配器）
+- 环境差异（标准化数据）
 
-### Platform Differences
+### 平台差异
 
-Be aware of platform-specific differences:
+注意平台间的差异：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
-// Paths might differ between Windows/Unix
+// Windows 与 Unix 路径可能不同
 test("file operations", () => {
   const result = processFile("./test.txt");
 
   expect({
     ...result,
-    path: result.path.replace(/\\/g, "/"), // Normalize paths
+    path: result.path.replace(/\\/g, "/"), // 统一路径格式
   }).toMatchSnapshot();
 });
 ```

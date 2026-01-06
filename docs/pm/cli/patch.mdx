@@ -1,66 +1,66 @@
 ---
-title: "bun patch"
-description: "Persistently patch node_modules packages in a git-friendly way"
+title: "bun 补丁"
+description: "以对 git 友好的方式持久化修补 node_modules 包"
 ---
 
 import Patch from "/snippets/cli/patch.mdx";
 
-`bun patch` lets you persistently patch node_modules in a maintainable, git-friendly way.
+`bun patch` 让你可以以一种可维护且对 git 友好的方式持久化修补 node_modules。
 
-Sometimes, you need to make a small change to a package in `node_modules/` to fix a bug or add a feature. `bun patch` makes it easy to do this without vendoring the entire package and reuse the patch across multiple installs, multiple projects, and multiple machines.
+有时，你需要对 `node_modules/` 中的某个包进行小幅修改，以修复bug或添加功能。`bun patch` 让这个过程变得简单，无需整体供应包，并且能跨多次安装、多个项目和多台机器复用补丁。
 
-Features:
+功能特点：
 
-- Generates `.patch` files applied to dependencies in `node_modules` on install
-- `.patch` files can be committed to your repository, reused across multiple installs, projects, and machines
-- `"patchedDependencies"` in `package.json` keeps track of patched packages
-- `bun patch` lets you patch packages in `node_modules/` while preserving the integrity of Bun's [Global Cache](/pm/global-cache)
-- Test your changes locally before committing them with `bun patch --commit <pkg>`
-- To preserve disk space and keep `bun install` fast, patched packages are committed to the Global Cache and shared across projects where possible
+- 生成应用于 `node_modules` 依赖的 `.patch` 文件（在安装时生效）
+- `.patch` 文件可以提交到你的仓库，跨多次安装、项目和机器复用
+- `package.json` 中的 `"patchedDependencies"` 用以追踪已修补的包
+- `bun patch` 允许你对 `node_modules/` 中的包进行补丁修改，同时保持 Bun [全局缓存](/pm/global-cache) 的完整性
+- 使用 `bun patch --commit <pkg>` 可在提交补丁前，本地测试修改
+- 为节省磁盘空间并保持 `bun install` 的速度，修补的包会提交到全局缓存，并在可能的情况下跨项目共享
 
-#### Step 1. Prepare the package for patching
+#### 第 1 步. 准备包进行补丁
 
-To get started, use `bun patch <pkg>` to prepare the package for patching:
+开始时，使用 `bun patch <pkg>` 来准备补丁包：
 
 ```bash terminal icon="terminal"
-# you can supply the package name
+# 你可以直接提供包名
 bun patch react
 
-# ...and a precise version in case multiple versions are installed
+# 如果安装了多个版本，可以指定精确版本
 bun patch react@17.0.2
 
-# or the path to the package
+# 也可以提供包的路径
 bun patch node_modules/react
 ```
 
 <Note>
-Don't forget to call `bun patch <pkg>`! This ensures the package folder in `node_modules/` contains a fresh copy of the package with no symlinks/hardlinks to Bun's cache.
+别忘了执行 `bun patch <pkg>`！这一步可确保 `node_modules/` 中的包文件夹包含一份不带软链接/硬链接至 Bun 缓存的全新副本。
 
-If you forget to do this, you might end up editing the package globally in the cache!
+如果忘记执行这步，你可能会误修改全局缓存中的包！
 
 </Note>
 
-#### Step 2. Test your changes locally
+#### 第 2 步. 本地测试你的修改
 
-`bun patch <pkg>` makes it safe to edit the `<pkg>` in `node_modules/` directly, while preserving the integrity of Bun's [Global Cache](/pm/global-cache). This works by re-creating an unlinked clone of the package in `node_modules/` and diffing it against the original package in the Global Cache.
+`bun patch <pkg>` 允许你直接安全地编辑 `node_modules/` 中的 `<pkg>`，同时保全 Bun [全局缓存](/pm/global-cache) 的完整性。其原理是在 `node_modules/` 中重新创建一个未链接的克隆版本，并与全局缓存中的原始包做差异比对。
 
-#### Step 3. Commit your changes
+#### 第 3 步. 提交修改
 
-Once you're happy with your changes, run `bun patch --commit <path or pkg>`.
+当你满意修改后，执行 `bun patch --commit <路径或包名>`。
 
-Bun will generate a patch file in `patches/`, update your `package.json` and lockfile, and Bun will start using the patched package:
+Bun 会在 `patches/` 生成补丁文件，更新你的 `package.json` 和锁文件，随后 Bun 会开始使用补丁包：
 
 ```bash terminal icon="terminal"
-# you can supply the path to the patched package
+# 你可以提供已修补包的路径
 bun patch --commit node_modules/react
 
-# ... or the package name and optionally the version
+# 或只是包名，外加可选版本号
 bun patch --commit react@17.0.2
 
-# choose the directory to store the patch files
+# 指定存放补丁文件的目录
 bun patch --commit react --patches-dir=mypatches
 
-# `patch-commit` is available for compatibility with pnpm
+# 为兼容 pnpm，可使用 patch-commit
 bun patch-commit react
 ```
 

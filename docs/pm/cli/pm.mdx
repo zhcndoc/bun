@@ -1,30 +1,30 @@
 ---
 title: "bun pm"
-description: "Package manager utilities"
+description: "包管理器工具"
 ---
 
-The `bun pm` command group provides a set of utilities for working with Bun's package manager.
+`bun pm` 命令组提供了一套用于操作 Bun 包管理器的实用工具。
 
 ## pack
 
-To create a tarball of the current workspace:
+创建当前工作区的 tar 包：
 
 ```bash terminal icon="terminal"
 bun pm pack
 ```
 
-This command creates a `.tgz` file containing all files that would be published to npm, following the same rules as `npm pack`.
+此命令创建一个 `.tgz` 文件，包含所有将发布到 npm 的文件，规则与 `npm pack` 相同。
 
-## Examples
+## 示例
 
-Basic usage:
+基本用法：
 
 ```bash terminal icon="terminal"
 bun pm pack
-# Creates my-package-1.0.0.tgz in current directory
+# 在当前目录创建 my-package-1.0.0.tgz
 ```
 
-Quiet mode for scripting:
+脚本静默模式：
 
 ```bash terminal icon="terminal"
 TARBALL=$(bun pm pack --quiet)
@@ -35,27 +35,27 @@ echo "Created: $TARBALL"
 Created: my-package-1.0.0.tgz
 ```
 
-Custom destination:
+自定义目标目录：
 
 ```bash terminal icon="terminal"
 bun pm pack --destination ./dist
-# Saves tarball in ./dist/ directory
+# 在 ./dist/ 目录保存 tar 包
 ```
 
-## Options
+## 选项
 
-- `--dry-run`: Perform all tasks except writing the tarball to disk. Shows what would be included.
-- `--destination <dir>`: Specify the directory where the tarball will be saved.
-- `--filename <name>`: Specify an exact file name for the tarball to be saved at.
-- `--ignore-scripts`: Skip running pre/postpack and prepare scripts.
-- `--gzip-level <0-9>`: Set a custom compression level for gzip, ranging from 0 to 9 (default is 9).
-- `--quiet`: Only output the tarball filename, suppressing verbose output. Ideal for scripts and automation.
+- `--dry-run`：执行所有操作但不写入 tar 包到磁盘，显示将包含的内容。
+- `--destination <dir>`：指定 tar 包保存的目录。
+- `--filename <name>`：指定 tar 包保存的精确文件名。
+- `--ignore-scripts`：跳过运行 prepack、postpack 和 prepare 脚本。
+- `--gzip-level <0-9>`：设置 gzip 压缩级别，范围 0 到 9（默认 9）。
+- `--quiet`：仅输出 tar 包文件名，抑制详细输出，适合脚本和自动化。
 
-> **Note:** `--filename` and `--destination` cannot be used at the same time.
+> **注意：** `--filename` 和 `--destination` 不能同时使用。
 
-## Output Modes
+## 输出模式
 
-**Default output:**
+**默认输出：**
 
 ```bash terminal icon="terminal"
 bun pm pack
@@ -75,7 +75,7 @@ Unpacked size: 171B
 Packed size: 249B
 ```
 
-**Quiet output:**
+**静默输出：**
 
 ```bash terminal icon="terminal"
 bun pm pack --quiet
@@ -85,11 +85,11 @@ bun pm pack --quiet
 my-package-1.0.0.tgz
 ```
 
-The `--quiet` flag is particularly useful for automation workflows where you need to capture the generated tarball filename for further processing.
+`--quiet` 参数在自动化流程中非常有用，可直接获取生成的 tar 包文件名以便后续处理。
 
 ## bin
 
-To print the path to the `bin` directory for the local project:
+打印当前项目的 `bin` 目录路径：
 
 ```bash terminal icon="terminal"
 bun pm bin
@@ -99,7 +99,7 @@ bun pm bin
 /path/to/current/project/node_modules/.bin
 ```
 
-To print the path to the global `bin` directory:
+打印全局 `bin` 目录路径：
 
 ```bash terminal icon="terminal"
 bun pm bin -g
@@ -111,11 +111,11 @@ bun pm bin -g
 
 ## ls
 
-To print a list of installed dependencies in the current project and their resolved versions, excluding their dependencies.
+打印当前项目已安装依赖及解析版本，不包含它们的依赖。
 
 ```bash terminal icon="terminal"
 bun pm ls
-# or
+# 或者
 bun list
 ```
 
@@ -128,11 +128,11 @@ bun list
 └── zod@3.21.4
 ```
 
-To print all installed dependencies, including nth-order dependencies.
+打印所有已安装依赖，包括多级依赖：
 
 ```bash terminal icon="terminal"
 bun pm ls --all
-# or
+# 或者
 bun list --all
 ```
 
@@ -154,7 +154,7 @@ bun list --all
 
 ## whoami
 
-Print your npm username. Requires you to be logged in (`bunx npm login`) with credentials in either `bunfig.toml` or `.npmrc`:
+打印你的 npm 用户名。需要已登录（`bunx npm login`）并在 `bunfig.toml` 或 `.npmrc` 中保存凭据：
 
 ```bash terminal icon="terminal"
 bun pm whoami
@@ -162,19 +162,19 @@ bun pm whoami
 
 ## hash
 
-To generate and print the hash of the current lockfile:
+生成并打印当前锁文件的哈希：
 
 ```bash terminal icon="terminal"
 bun pm hash
 ```
 
-To print the string used to hash the lockfile:
+打印用于哈希锁文件的字符串：
 
 ```bash terminal icon="terminal"
 bun pm hash-string
 ```
 
-To print the hash stored in the current lockfile:
+打印当前锁文件中存储的哈希：
 
 ```bash terminal icon="terminal"
 bun pm hash-print
@@ -182,13 +182,13 @@ bun pm hash-print
 
 ## cache
 
-To print the path to Bun's global module cache:
+打印 Bun 的全局模块缓存路径：
 
 ```bash terminal icon="terminal"
 bun pm cache
 ```
 
-To clear Bun's global module cache:
+清除 Bun 的全局模块缓存：
 
 ```bash terminal icon="terminal"
 bun pm cache rm
@@ -196,7 +196,7 @@ bun pm cache rm
 
 ## migrate
 
-To migrate another package manager's lockfile without installing anything:
+迁移其他包管理器的锁文件，不安装任何东西：
 
 ```bash terminal icon="terminal"
 bun pm migrate
@@ -204,7 +204,7 @@ bun pm migrate
 
 ## untrusted
 
-To print current untrusted dependencies with scripts:
+打印当前带有脚本的未受信任依赖：
 
 ```bash terminal icon="terminal"
 bun pm untrusted
@@ -214,34 +214,34 @@ bun pm untrusted
 ./node_modules/@biomejs/biome @1.8.3
  » [postinstall]: node scripts/postinstall.js
 
-These dependencies had their lifecycle scripts blocked during install.
+这些依赖在安装时其生命周期脚本被阻止运行。
 ```
 
 ## trust
 
-To run scripts for untrusted dependencies and add to `trustedDependencies`:
+运行未受信任依赖的脚本并添加到 `trustedDependencies`：
 
 ```bash terminal icon="terminal"
 bun pm trust <names>
 ```
 
-Options for the `trust` command:
+`trust` 命令选项：
 
-- `--all`: Trust all untrusted dependencies.
+- `--all`：信任所有未受信任的依赖。
 
 ## default-trusted
 
-To print the default trusted dependencies list:
+打印默认可信赖依赖列表：
 
 ```bash terminal icon="terminal"
 bun pm default-trusted
 ```
 
-see the current list on GitHub [here](https://github.com/oven-sh/bun/blob/main/src/install/default-trusted-dependencies.txt)
+查看当前列表可访问 GitHub [这里](https://github.com/oven-sh/bun/blob/main/src/install/default-trusted-dependencies.txt)
 
 ## version
 
-To display current package version and help:
+显示当前包版本及帮助信息：
 
 ```bash terminal icon="terminal"
 bun pm version
@@ -249,9 +249,9 @@ bun pm version
 
 ```txt
 bun pm version v1.3.3 (ca7428e9)
-Current package version: v1.0.0
+当前包版本：v1.0.0
 
-Increment:
+版本增量：
   patch      1.0.0 → 1.0.1
   minor      1.0.0 → 1.1.0
   major      1.0.0 → 2.0.0
@@ -259,23 +259,23 @@ Increment:
   prepatch   1.0.0 → 1.0.1-0
   preminor   1.0.0 → 1.1.0-0
   premajor   1.0.0 → 2.0.0-0
-  from-git   Use version from latest git tag
-  1.2.3      Set specific version
+  from-git   使用最新 git 标签的版本
+  1.2.3      设置指定版本
 
-Options:
-  --no-git-tag-version Skip git operations
-  --allow-same-version Prevents throwing error if version is the same
-  --message=<val>, -m  Custom commit message, use %s for version substitution
-  --preid=<val>        Prerelease identifier (i.e beta → 1.0.1-beta.0)
-  --force, -f          Bypass dirty git history check
+选项：
+  --no-git-tag-version 跳过 git 操作
+  --allow-same-version 避免版本相同时报错
+  --message=<val>, -m  自定义提交信息，使用 %s 代替版本号
+  --preid=<val>        预发行标识（例如 beta → 1.0.1-beta.0）
+  --force, -f          跳过检查 git 是否脏状态
 
-Examples:
+示例：
   bun pm version patch
   bun pm version 1.2.3 --no-git-tag-version
   bun pm version prerelease --preid beta --message "Release beta: %s"
 ```
 
-To bump the version in `package.json`:
+在 `package.json` 中升级版本：
 
 ```bash terminal icon="terminal"
 bun pm version patch
@@ -285,39 +285,39 @@ bun pm version patch
 v1.0.1
 ```
 
-Supports `patch`, `minor`, `major`, `premajor`, `preminor`, `prepatch`, `prerelease`, `from-git`, or specific versions like `1.2.3`. By default creates git commit and tag unless `--no-git-tag-version` was used to skip.
+支持 `patch`、`minor`、`major`、`premajor`、`preminor`、`prepatch`、`prerelease`、`from-git` 或具体版本如 `1.2.3`。默认会创建 git 提交和标签，除非使用 `--no-git-tag-version` 跳过。
 
 ## pkg
 
-Manage `package.json` data with get, set, delete, and fix operations.
+管理 `package.json` 数据，可进行获取、设置、删除及修复操作。
 
-All commands support dot and bracket notation:
+所有命令支持点号和中括号路径表示法：
 
 ```bash terminal icon="terminal"
-scripts.build              # dot notation
-contributors[0]            # array access
-workspaces.0               # dot with numeric index
-scripts[test:watch]        # bracket for special chars
+scripts.build              # 点号表示法
+contributors[0]            # 访问数组项
+workspaces.0               # 数字索引的点号表示法
+scripts[test:watch]        # 中括号表示特殊字符
 ```
 
-Examples:
+示例：
 
 ```bash terminal icon="terminal"
-# get
-bun pm pkg get name                               # single property
-bun pm pkg get name version                       # multiple properties
-bun pm pkg get                                    # entire package.json
-bun pm pkg get scripts.build                      # nested property
+# 获取
+bun pm pkg get name                               # 单个属性
+bun pm pkg get name version                       # 多个属性
+bun pm pkg get                                    # 整个 package.json
+bun pm pkg get scripts.build                      # 嵌套属性
 
-# set
-bun pm pkg set name="my-package"                  # simple property
-bun pm pkg set scripts.test="jest" version=2.0.0  # multiple properties
-bun pm pkg set {"private":"true"} --json          # JSON values with --json flag
+# 设置
+bun pm pkg set name="my-package"                  # 简单属性
+bun pm pkg set scripts.test="jest" version=2.0.0  # 多个属性
+bun pm pkg set {"private":"true"} --json          # 使用 --json 标志的 JSON 值
 
-# delete
-bun pm pkg delete description                     # single property
-bun pm pkg delete scripts.test contributors[0]    # multiple/nested
+# 删除
+bun pm pkg delete description                     # 单个属性
+bun pm pkg delete scripts.test contributors[0]    # 多个或嵌套属性
 
-# fix
-bun pm pkg fix                                    # auto-fix common issues
+# 修复
+bun pm pkg fix                                    # 自动修复常见问题
 ```

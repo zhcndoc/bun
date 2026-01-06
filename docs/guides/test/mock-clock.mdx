@@ -1,17 +1,17 @@
 ---
-title: Set the system time in Bun's test runner
-sidebarTitle: Mock system time
+title: 在 Bun 的测试运行器中设置系统时间
+sidebarTitle: 模拟系统时间
 mode: center
 ---
 
-Bun's test runner supports setting the system time programmatically with the `setSystemTime` function.
+Bun 的测试运行器支持通过 `setSystemTime` 函数以编程方式设置系统时间。
 
 ```ts
 import { test, expect, setSystemTime } from "bun:test";
 
 test("party like it's 1999", () => {
   const date = new Date("1999-01-01T00:00:00.000Z");
-  setSystemTime(date); // it's now January 1, 1999
+  setSystemTime(date); // 现在时间是 1999 年 1 月 1 日
 
   const now = new Date();
   expect(now.getFullYear()).toBe(1999);
@@ -22,29 +22,29 @@ test("party like it's 1999", () => {
 
 ---
 
-The `setSystemTime` function is commonly used on conjunction with [Lifecycle Hooks](/test/lifecycle) to configure a testing environment with a deterministic "fake clock".
+`setSystemTime` 函数通常与 [生命周期钩子](/test/lifecycle) 一起使用，以配置具有确定性的“假时钟”的测试环境。
 
 ```ts
 import { test, expect, beforeAll, setSystemTime } from "bun:test";
 
 beforeAll(() => {
   const date = new Date("1999-01-01T00:00:00.000Z");
-  setSystemTime(date); // it's now January 1, 1999
+  setSystemTime(date); // 现在时间是 1999 年 1 月 1 日
 });
 
-// tests...
+// 测试代码...
 ```
 
 ---
 
-To reset the system clock to the actual time, call `setSystemTime` with no arguments.
+要将系统时钟重置为实际时间，只需调用无参数的 `setSystemTime`。
 
 ```ts
 import { test, expect, beforeAll, setSystemTime } from "bun:test";
 
-setSystemTime(); // reset to actual time
+setSystemTime(); // 重置为实际时间
 ```
 
 ---
 
-See [Docs > Test Runner > Date and time](/test/dates-times) for complete documentation on mocking with the Bun test runner.
+完整的 Bun 测试运行器模拟文档请参见 [文档 > 测试运行器 > 日期和时间](/test/dates-times)。

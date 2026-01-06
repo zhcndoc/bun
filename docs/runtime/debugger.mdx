@@ -1,11 +1,11 @@
 ---
-title: "Debugging"
-description: "Debug your Bun code with an interactive debugger using WebKit Inspector Protocol"
+title: "调试"
+description: "使用 WebKit Inspector 协议，通过交互式调试器调试你的 Bun 代码"
 ---
 
-Bun speaks the [WebKit Inspector Protocol](https://github.com/oven-sh/bun/blob/main/packages/bun-inspector-protocol/src/protocol/jsc/index.d.ts), so you can debug your code with an interactive debugger. For demonstration purposes, consider the following simple web server.
+Bun 支持 [WebKit Inspector Protocol](https://github.com/oven-sh/bun/blob/main/packages/bun-inspector-protocol/src/protocol/jsc/index.d.ts)，因此你可以通过交互式调试器调试你的代码。为了演示，考虑下面这个简单的 Web 服务器。
 
-## Debugging JavaScript and TypeScript
+## 调试 JavaScript 和 TypeScript
 
 ```typescript icon="/icons/typescript.svg" title="server.ts"
 Bun.serve({
@@ -18,7 +18,7 @@ Bun.serve({
 
 ### `--inspect`
 
-To enable debugging when running code with Bun, use the `--inspect` flag. This automatically starts a WebSocket server on an available port that can be used to introspect the running Bun process.
+运行 Bun 代码时使用 `--inspect` 标志，可以启用调试功能。该标志会自动启动一个 WebSocket 服务器，监听一个可用端口，用于检查运行中的 Bun 进程。
 
 ```sh icon="terminal" title="terminal"
 bun --inspect server.ts
@@ -36,15 +36,15 @@ Inspect in browser:
 
 ### `--inspect-brk`
 
-The `--inspect-brk` flag behaves identically to `--inspect`, except it automatically injects a breakpoint at the first line of the executed script. This is useful for debugging scripts that run quickly and exit immediately.
+`--inspect-brk` 标志行为与 `--inspect` 相同，不同的是它会在执行脚本的第一行自动插入一个断点。这对于调试运行很快并立即退出的脚本非常有用。
 
 ### `--inspect-wait`
 
-The `--inspect-wait` flag behaves identically to `--inspect`, except the code will not execute until a debugger has attached to the running process.
+`--inspect-wait` 标志的行为与 `--inspect` 相同，但代码会等待直到调试器附加到运行进程才开始执行。
 
-### Setting a port or URL for the debugger
+### 为调试器设置端口或 URL
 
-Regardless of which flag you use, you can optionally specify a port number, URL prefix, or both.
+无论使用哪个标志，都可以选择性地指定端口号、URL 前缀或两者。
 
 ```sh icon="terminal" title="terminal"
 bun --inspect=4000 server.ts
@@ -54,84 +54,82 @@ bun --inspect=localhost:4000/prefix server.ts
 
 ---
 
-## Debuggers
+## 调试器
 
-Various debugging tools can connect to this server to provide an interactive debugging experience.
+各种调试工具可以连接到此服务器，提供交互式调试体验。
 
 ### `debug.bun.sh`
 
-Bun hosts a web-based debugger at [debug.bun.sh](https://debug.bun.sh). It is a modified version of WebKit's [Web Inspector Interface](https://webkit.org/web-inspector/web-inspector-interface/), which will look familiar to Safari users.
+Bun 在 [debug.bun.sh](https://debug.bun.sh) 提供了一个基于 Web 的调试器。它是 WebKit 的 [Web Inspector Interface](https://webkit.org/web-inspector/web-inspector-interface/) 的修改版本，Safari 用户会觉得很熟悉。
 
-Open the provided `debug.bun.sh` URL in your browser to start a debugging session. From this interface, you'll be able to view the source code of the running file, view and set breakpoints, and execute code with the built-in console.
-
-<Frame>
-  ![Screenshot of Bun debugger, Console
-  tab](https://github.com/oven-sh/bun/assets/3084745/e6a976a8-80cc-4394-8925-539025cc025d)
-</Frame>
-
-Let's set a breakpoint. Navigate to the Sources tab; you should see the code from earlier. Click on the line number `3` to set a breakpoint on our `console.log(req.url)` statement.
+打开提供的 `debug.bun.sh` URL 在浏览器中启动调试会话。在该界面，你可以查看正在运行文件的源代码，查看和设置断点，并使用内置控制台执行代码。
 
 <Frame>
-  ![screenshot of Bun debugger](https://github.com/oven-sh/bun/assets/3084745/3b69c7e9-25ff-4f9d-acc4-caa736862935)
+  ![Bun 调试器控制台标签截图](https://github.com/oven-sh/bun/assets/3084745/e6a976a8-80cc-4394-8925-539025cc025d)
 </Frame>
 
-Then visit [`http://localhost:3000`](http://localhost:3000) in your web browser. This will send an HTTP request to our `localhost` web server. It will seem like the page isn't loading. Why? Because the program has paused execution at the breakpoint we set earlier.
-
-Note how the UI has changed.
+现在我们设置一个断点。切换到 Sources 标签；你应该能看到之前的代码。点击第 `3` 行的行号，在 `console.log(req.url)` 语句上设置断点。
 
 <Frame>
-  ![screenshot of Bun debugger](https://github.com/oven-sh/bun/assets/3084745/8b565e58-5445-4061-9bc4-f41090dfe769)
+  ![Bun 调试器截图](https://github.com/oven-sh/bun/assets/3084745/3b69c7e9-25ff-4f9d-acc4-caa736862935)
 </Frame>
 
-At this point there's a lot we can do to introspect the current execution environment. We can use the console at the bottom to run arbitrary code in the context of the program, with full access to the variables in scope at our breakpoint.
+然后在浏览器访问 [`http://localhost:3000`](http://localhost:3000) 。这会向我们的本地服务器发送 HTTP 请求。页面似乎无法加载，这是因为程序已在先前设置的断点处暂停执行。
+
+注意界面发生的变化。
 
 <Frame>
-  ![Bun debugger console](https://github.com/oven-sh/bun/assets/3084745/f4312b76-48ba-4a7d-b3b6-6205968ac681)
+  ![Bun 调试器截图](https://github.com/oven-sh/bun/assets/3084745/8b565e58-5445-4061-9bc4-f41090dfe769)
 </Frame>
 
-On the right side of the Sources pane, we can see all local variables currently in scope, and drill down to see their properties and methods. Here, we're inspecting the `req` variable.
+此时我们可以做很多事情来检查当前执行环境。我们可以使用底部的控制台，在程序上下文中运行任意代码，完全访问断点处范围内的变量。
 
 <Frame>
-  ![Bun debugger variables](https://github.com/oven-sh/bun/assets/3084745/63d7f843-5180-489c-aa94-87c486e68646)
+  ![Bun 调试器控制台](https://github.com/oven-sh/bun/assets/3084745/f4312b76-48ba-4a7d-b3b6-6205968ac681)
 </Frame>
 
-In the upper left of the Sources pane, we can control the execution of the program.
+在 Sources 窗格的右侧，可以看到当前作用域中所有的局部变量，并可展开查看它们的属性和方法。这里我们检查了 `req` 变量。
 
 <Frame>
-  ![Bun debugger controls](https://github.com/oven-sh/bun/assets/3084745/41b76deb-7371-4461-9d5d-81b5a6d2f7a4)
+  ![Bun 调试器变量面板](https://github.com/oven-sh/bun/assets/3084745/63d7f843-5180-489c-aa94-87c486e68646)
 </Frame>
 
-Here's a cheat sheet explaining the functions of the control flow buttons.
-
-- _Continue script execution_ — continue running the program until the next breakpoint or exception.
-- _Step over_ — The program will continue to the next line.
-- _Step into_ — If the current statement contains a function call, the debugger will "step into" the called function.
-- _Step out_ — If the current statement is a function call, the debugger will finish executing the call, then "step out" of the function to the location where it was called.
+在 Sources 窗格左上角，我们可以控制程序的执行流程。
 
 <Frame>
-  ![Bun debugger execution
-  controls](https://github-production-user-asset-6210df.s3.amazonaws.com/3084745/261510346-6a94441c-75d3-413a-99a7-efa62365f83d.png)
+  ![Bun 调试器控制按钮](https://github.com/oven-sh/bun/assets/3084745/41b76deb-7371-4461-9d5d-81b5a6d2f7a4)
 </Frame>
 
-### Visual Studio Code Debugger
+下面是对这些执行控制按钮功能的说明：
 
-Experimental support for debugging Bun scripts is available in Visual Studio Code. To use it, you'll need to install the [Bun VSCode extension](/guides/runtime/vscode-debugger).
+- _继续执行脚本_ — 程序继续运行直到遇到下一个断点或异常。
+- _单步跳过_ — 程序继续执行到下一行。
+- _单步进入_ — 如果当前语句包含函数调用，则调试器会“进入”被调用函数内部。
+- _单步跳出_ — 如果当前语句是函数调用，调试器会完成该函数执行，然后“跳出”函数回到调用处。
+
+<Frame>
+  ![Bun 调试器执行控制](https://github-production-user-asset-6210df.s3.amazonaws.com/3084745/261510346-6a94441c-75d3-413a-99a7-efa62365f83d.png)
+</Frame>
+
+### Visual Studio Code 调试器
+
+Visual Studio Code 提供了对 Bun 脚本调试的实验性支持。使用前需要安装 [Bun VSCode 扩展](/guides/runtime/vscode-debugger)。
 
 ---
 
-## Debugging Network Requests
+## 调试网络请求
 
-The `BUN_CONFIG_VERBOSE_FETCH` environment variable lets you log network requests made with `fetch()` or `node:http` automatically.
+`BUN_CONFIG_VERBOSE_FETCH` 环境变量允许你自动打印通过 `fetch()` 或 `node:http` 发起的网络请求。
 
-| Value   | Description                        |
-| ------- | ---------------------------------- |
-| `curl`  | Print requests as `curl` commands. |
-| `true`  | Print request & response info      |
-| `false` | Don't print anything. Default      |
+| 值       | 描述                               |
+| -------- | ----------------------------------- |
+| `curl`   | 以 `curl` 命令格式打印请求            |
+| `true`   | 打印请求和响应信息                    |
+| `false`  | 不打印任何内容，默认值                |
 
-### Print fetch & node:http requests as curl commands
+### 以 curl 命令打印 fetch 和 node:http 请求
 
-Bun also supports printing `fetch()` and `node:http` network requests as `curl` commands by setting the environment variable `BUN_CONFIG_VERBOSE_FETCH` to `curl`. This prints the `fetch` request as a single-line `curl` command to let you copy-paste into your terminal to replicate the request.
+Bun 也支持将 `fetch()` 和 `node:http` 网络请求打印为 `curl` 命令，只需把 `BUN_CONFIG_VERBOSE_FETCH` 环境变量设置为 `curl`。这会将 fetch 请求打印为一行 `curl` 命令，方便你复制粘贴到终端中复现请求。
 
 ```ts index.ts icon="/icons/typescript.svg"
 process.env.BUN_CONFIG_VERBOSE_FETCH = "curl";
@@ -168,11 +166,11 @@ await fetch("https://example.com", {
 [fetch] < Content-Length: 1256
 ```
 
-The lines with `[fetch] >` are the request from your local code, and the lines with `[fetch] <` are the response from the remote server.
+以 `[fetch] >` 标记的行是本地代码发出的请求，以 `[fetch] <` 标记的行是远程服务器的响应。
 
-The `BUN_CONFIG_VERBOSE_FETCH` environment variable is supported in both `fetch()` and `node:http` requests, so it should just work.
+`BUN_CONFIG_VERBOSE_FETCH` 环境变量在 `fetch()` 和 `node:http` 请求中均支持，因此应该都能正常工作。
 
-To print without the `curl` command, set `BUN_CONFIG_VERBOSE_FETCH` to `true`.
+如果只想打印请求和响应信息，但不打印 `curl` 命令，可以将该环境变量设置为 `true`。
 
 ```ts index.ts icon="/icons/typescript.svg"
 process.env.BUN_CONFIG_VERBOSE_FETCH = "true";
@@ -210,45 +208,45 @@ await fetch("https://example.com", {
 
 ---
 
-## Stacktraces & sourcemaps
+## 堆栈跟踪和 sourcemaps
 
-Bun transpiles every file, which sounds like it would mean that the stack traces you see in the console would unhelpfully point to the transpiled output. To address this, Bun automatically generates and serves sourcemapped files for every file it transpiles. When you see a stack trace in the console, you can click on the file path and be taken to the original source code, even though it was written in TypeScript or JSX, or has some other transformation applied.
+Bun 会对每个文件进行转译，这看起来似乎会导致控制台中显示的堆栈跟踪不准确，只指向转译后的文件。为了解决这个问题，Bun 会自动为转译的每个文件生成并提供 sourcemap。当你在控制台看到堆栈跟踪时，点击文件路径即可跳转到原始源代码，即使它是 TypeScript 或 JSX 编写的，或经过了其他转换。
 
-Bun automatically loads sourcemaps both at runtime when transpiling files on-demand, and when using `bun build` to precompile files ahead of time.
+Bun 会在运行时按需转译文件时自动加载 sourcemaps，也会在使用 `bun build` 预编译文件时加载。
 
-### Syntax-highlighted source code preview
+### 带语法高亮的源代码预览
 
-To help with debugging, Bun automatically prints a small source-code preview when an unhandled exception or rejection occurs. You can simulate this behavior by calling `Bun.inspect(error)`:
+为了帮助调试，当发生未捕获的异常或拒绝时，Bun 会自动打印一段小的源代码预览。你可以通过调用 `Bun.inspect(error)` 来模拟此行为：
 
 ```ts
-// Create an error
+// 创建一个错误
 const err = new Error("Something went wrong");
 console.log(Bun.inspect(err, { colors: true }));
 ```
 
-This prints a syntax-highlighted preview of the source code where the error occurred, along with the error message and stack trace.
+这会打印出错误发生处的带语法高亮的源代码预览，以及错误信息和堆栈跟踪。
 
 ```ts icon="file-code"
-1 | // Create an error
+1 | // 创建一个错误
 2 | const err = new Error("Something went wrong");
                 ^
 error: Something went wrong
       at file.js:2:13
 ```
 
-### V8 Stack Traces
+### V8 堆栈跟踪
 
-Bun uses JavaScriptCore as it's engine, but much of the Node.js ecosystem & npm expects V8. JavaScript engines differ in `error.stack` formatting. Bun intends to be a drop-in replacement for Node.js, and that means it's our job to make sure that even though the engine is different, the stack traces are as similar as possible.
+Bun 使用 JavaScriptCore 作为其引擎，但许多 Node.js 生态和 npm 期望使用 V8。不同的 JavaScript 引擎对 `error.stack` 的格式不同。Bun 旨在作为 Node.js 的无缝替代品，因此我们负责确保即使引擎不同，堆栈跟踪的格式尽可能相似。
 
-That's why when you log `error.stack` in Bun, the formatting of `error.stack` is the same as in Node.js's V8 engine. This is especially useful when you're using libraries that expect V8 stack traces.
+这就是为什么在 Bun 中打印 `error.stack`，格式与 Node.js 的 V8 引擎一致。这在使用期望 V8 堆栈跟踪的库时尤其有用。
 
-#### V8 Stack Trace API
+#### V8 堆栈跟踪 API
 
-Bun implements the [V8 Stack Trace API](https://v8.dev/docs/stack-trace-api), which is a set of functions that allow you to manipulate stack traces.
+Bun 实现了 [V8 堆栈跟踪 API](https://v8.dev/docs/stack-trace-api)，它是一组允许你操作堆栈跟踪的函数。
 
 ##### `Error.prepareStackTrace`
 
-The `Error.prepareStackTrace` function is a global function that lets you customize the stack trace output. This function is called with the error object and an array of `CallSite` objects and lets you return a custom stack trace.
+`Error.prepareStackTrace` 是一个全局函数，可以定制堆栈跟踪的输出。该函数接收错误对象和一个 `CallSite` 对象数组，并返回自定义的堆栈跟踪内容。
 
 ```ts
 Error.prepareStackTrace = (err, stack) => {
@@ -262,38 +260,38 @@ console.log(err.stack);
 // [ "error.js" ]
 ```
 
-The `CallSite` object has the following methods:
+`CallSite` 对象的可用方法如下：
 
-| Method                     | Returns                                               |
-| -------------------------- | ----------------------------------------------------- |
-| `getThis`                  | `this` value of the function call                     |
-| `getTypeName`              | typeof `this`                                         |
-| `getFunction`              | function object                                       |
-| `getFunctionName`          | function name as a string                             |
-| `getMethodName`            | method name as a string                               |
-| `getFileName`              | file name or URL                                      |
-| `getLineNumber`            | line number                                           |
-| `getColumnNumber`          | column number                                         |
-| `getEvalOrigin`            | `undefined`                                           |
-| `getScriptNameOrSourceURL` | source URL                                            |
-| `isToplevel`               | returns `true` if the function is in the global scope |
-| `isEval`                   | returns `true` if the function is an `eval` call      |
-| `isNative`                 | returns `true` if the function is native              |
-| `isConstructor`            | returns `true` if the function is a constructor       |
-| `isAsync`                  | returns `true` if the function is `async`             |
-| `isPromiseAll`             | Not implemented yet.                                  |
-| `getPromiseIndex`          | Not implemented yet.                                  |
-| `toString`                 | returns a string representation of the call site      |
+| 方法                        | 返回值                                               |
+| --------------------------- | ---------------------------------------------------- |
+| `getThis`                   | 函数调用中的 `this` 值                               |
+| `getTypeName`               | `this` 的类型名                                     |
+| `getFunction`               | 函数对象                                             |
+| `getFunctionName`           | 函数名称，字符串                                     |
+| `getMethodName`             | 方法名称，字符串                                     |
+| `getFileName`               | 文件名或 URL                                         |
+| `getLineNumber`             | 行号                                                 |
+| `getColumnNumber`           | 列号                                                 |
+| `getEvalOrigin`             | `undefined`                                          |
+| `getScriptNameOrSourceURL` | 源码 URL                                             |
+| `isToplevel`                | 如果函数在全局作用域中，返回 `true`                 |
+| `isEval`                    | 如果函数是 `eval` 调用，返回 `true`                  |
+| `isNative`                  | 如果函数是原生的，返回 `true`                         |
+| `isConstructor`             | 如果函数是构造函数，返回 `true`                       |
+| `isAsync`                   | 如果函数是 `async`，返回 `true`                       |
+| `isPromiseAll`              | 尚未实现                                             |
+| `getPromiseIndex`           | 尚未实现                                             |
+| `toString`                  | 返回调用位置的字符串描述                              |
 
-In some cases, the `Function` object may have already been garbage collected, so some of these methods may return `undefined`.
+有时 `Function` 对象可能已被垃圾回收，因此部分方法可能返回 `undefined`。
 
 ##### `Error.captureStackTrace(error, startFn)`
 
-The `Error.captureStackTrace` function lets you capture a stack trace at a specific point in your code, rather than at the point where the error was thrown.
+`Error.captureStackTrace` 函数允许你在代码的特定位置捕获堆栈跟踪，而非错误抛出的地方。
 
-This can be helpful when you have callbacks or asynchronous code that makes it difficult to determine where an error originated. The 2nd argument to `Error.captureStackTrace` is the function where you want the stack trace to start.
+这在有回调或异步代码时非常有用，因为它们使得确定错误源头变得困难。`Error.captureStackTrace` 的第二个参数是你希望堆栈跟踪起始的函数。
 
-For example, the below code will make `err.stack` point to the code calling `fn()`, even though the error was thrown at `myInner`.
+例如，下面代码会使 `err.stack` 指向调用 `fn()` 的代码，而不是错误实际上被抛出的 `myInner`。
 
 ```ts index.ts icon="/icons/typescript.svg"
 const fn = () => {

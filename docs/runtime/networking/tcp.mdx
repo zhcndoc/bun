@@ -1,31 +1,31 @@
 ---
 title: TCP
-description: Use Bun's native TCP API to implement performance sensitive systems like database clients, game servers, or anything that needs to communicate over TCP (instead of HTTP)
+description: 使用 Bun 的原生 TCP API 实现性能敏感的系统，如数据库客户端、游戏服务器，或任何需要通过 TCP（而非 HTTP）通信的应用
 ---
 
-This is a low-level API intended for library authors and for advanced use cases.
+这是一个面向库作者和高级用例的低级 API。
 
-## Start a server (`Bun.listen()`)
+## 启动服务器（`Bun.listen()`）
 
-To start a TCP server with `Bun.listen`:
+使用 `Bun.listen` 启动一个 TCP 服务器：
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.listen({
   hostname: "localhost",
   port: 8080,
   socket: {
-    data(socket, data) {}, // message received from client
-    open(socket) {}, // socket opened
-    close(socket, error) {}, // socket closed
-    drain(socket) {}, // socket ready for more data
-    error(socket, error) {}, // error handler
+    data(socket, data) {}, // 收到来自客户端的消息
+    open(socket) {}, // 连接打开
+    close(socket, error) {}, // 连接关闭
+    drain(socket) {}, // 连接可写入更多数据
+    error(socket, error) {}, // 错误处理
   },
 });
 ```
 
-<Accordion title="An API designed for speed">
+<Accordion title="为速度设计的 API">
 
-In Bun, a set of handlers are declared once per server instead of assigning callbacks to each socket, as with Node.js `EventEmitters` or the web-standard `WebSocket` API.
+在 Bun 中，一组处理函数是在服务器级别声明一次，而不是像 Node.js 的 `EventEmitter` 或 web 标准的 `WebSocket` API 那样，为每个连接分配回调函数。
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.listen({
@@ -41,11 +41,11 @@ Bun.listen({
 });
 ```
 
-For performance-sensitive servers, assigning listeners to each socket can cause significant garbage collector pressure and increase memory usage. By contrast, Bun only allocates one handler function for each event and shares it among all sockets. This is a small optimization, but it adds up.
+对于性能敏感的服务器，为每个连接分配监听器会造成显著的垃圾回收压力并增加内存使用。相比之下，Bun 仅为每种事件分配一个处理函数，并在所有连接间共享。这是一个小优化，但积少成多。
 
 </Accordion>
 
-Contextual data can be attached to a socket in the `open` handler.
+可以在 `open` 事件处理器中为每个连接附加上下文数据。
 
 ```ts server.ts icon="/icons/typescript.svg"
 type SocketData = { sessionId: string };
@@ -64,7 +64,7 @@ Bun.listen<SocketData>({
 });
 ```
 
-To enable TLS, pass a `tls` object containing `key` and `cert` fields.
+要启用 TLS，传入包含 `key` 和 `cert` 字段的 `tls` 对象。
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.listen({
@@ -74,14 +74,14 @@ Bun.listen({
     data(socket, data) {},
   },
   tls: {
-    // can be string, BunFile, TypedArray, Buffer, or array thereof
+    // 可为字符串、BunFile、TypedArray、Buffer 或它们的数组
     key: Bun.file("./key.pem"), // [!code ++]
     cert: Bun.file("./cert.pem"), // [!code ++]
   },
 });
 ```
 
-The `key` and `cert` fields expect the _contents_ of your TLS key and certificate. This can be a string, `BunFile`, `TypedArray`, or `Buffer`.
+`key` 和 `cert` 字段期望的是 TLS 私钥和证书的**内容**。类型可以是字符串、`BunFile`、`TypedArray` 或 `Buffer`。
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.listen({
@@ -89,35 +89,35 @@ Bun.listen({
   tls: {
     key: Bun.file("./key.pem"), // BunFile
     key: fs.readFileSync("./key.pem"), // Buffer
-    key: fs.readFileSync("./key.pem", "utf8"), // string
-    key: [Bun.file("./key1.pem"), Bun.file("./key2.pem")], // array of above
+    key: fs.readFileSync("./key.pem", "utf8"), // 字符串
+    key: [Bun.file("./key1.pem"), Bun.file("./key2.pem")], // 上述类型的数组
   },
 });
 ```
 
-The result of `Bun.listen` is a server that conforms to the `TCPSocket` interface.
+`Bun.listen` 的返回值是符合 `TCPSocket` 接口的服务器实例。
 
 ```ts server.ts icon="/icons/typescript.svg"
 const server = Bun.listen({
-  /* config*/
+  /* 配置 */
 });
 
-// stop listening
-// parameter determines whether active connections are closed
+// 停止监听
+// 参数表示是否关闭所有活动连接
 server.stop(true);
 
-// let Bun process exit even if server is still listening
+// 让 Bun 进程即便服务器仍在监听也能退出
 server.unref();
 ```
 
 ---
 
-## Create a connection (`Bun.connect()`)
+## 创建连接（`Bun.connect()`）
 
-Use `Bun.connect` to connect to a TCP server. Specify the server to connect to with `hostname` and `port`. TCP clients can define the same set of handlers as `Bun.listen`, plus a couple client-specific handlers.
+使用 `Bun.connect` 连接到 TCP 服务器。通过 `hostname` 和 `port` 指定目标服务器。TCP 客户端的处理器集与 `Bun.listen` 相同，另加几个客户端专用的处理器。
 
 ```ts server.ts icon="/icons/typescript.svg"
-// The client
+// 客户端
 const socket = await Bun.connect({
   hostname: "localhost",
   port: 8080,
@@ -129,42 +129,42 @@ const socket = await Bun.connect({
     drain(socket) {},
     error(socket, error) {},
 
-    // client-specific handlers
-    connectError(socket, error) {}, // connection failed
-    end(socket) {}, // connection closed by server
-    timeout(socket) {}, // connection timed out
+    // 客户端专用处理器
+    connectError(socket, error) {}, // 连接失败
+    end(socket) {}, // 服务器关闭连接
+    timeout(socket) {}, // 连接超时
   },
 });
 ```
 
-To require TLS, specify `tls: true`.
+要启用 TLS，设置 `tls: true`。
 
 ```ts
-// The client
+// 客户端
 const socket = await Bun.connect({
-  // ... config
+  // ... 配置
   tls: true, // [!code ++]
 });
 ```
 
 ---
 
-## Hot reloading
+## 热重载
 
-Both TCP servers and sockets can be hot reloaded with new handlers.
+TCP 服务器和连接都能热重载新的处理器。
 
 <CodeGroup>
 
 ```ts server.ts icon="/icons/typescript.svg"
 const server = Bun.listen({
-  /* config */
+  /* 配置 */
 });
 
-// reloads handlers for all active server-side sockets
+// 为所有活动的服务器端连接重新加载处理器
 server.reload({
   socket: {
     data() {
-      // new 'data' handler
+      // 新的 'data' 处理器
     },
   },
 });
@@ -172,12 +172,12 @@ server.reload({
 
 ```ts client.ts icon="/icons/typescript.svg"
 const socket = await Bun.connect({
-  /* config */
+  /* 配置 */
 });
 
 socket.reload({
   data() {
-    // new 'data' handler
+    // 新的 'data' 处理器
   },
 });
 ```
@@ -186,9 +186,9 @@ socket.reload({
 
 ---
 
-## Buffering
+## 缓冲
 
-Currently, TCP sockets in Bun do not buffer data. For performance-sensitive code, it's important to consider buffering carefully. For example, this:
+当前，Bun 的 TCP 连接不会自动缓冲数据。对性能敏感的代码需要谨慎处理缓冲。例如，下面这样写：
 
 ```ts
 socket.write("h");
@@ -198,13 +198,13 @@ socket.write("l");
 socket.write("o");
 ```
 
-...performs significantly worse than this:
+性能会明显差于：
 
 ```ts
 socket.write("hello");
 ```
 
-To simplify this for now, consider using Bun's `ArrayBufferSink` with the `{stream: true}` option:
+为简化此问题，可以使用 Bun 提供的 `ArrayBufferSink`，配合 `{stream: true}` 选项：
 
 ```ts server.ts icon="/icons/typescript.svg"
 import { ArrayBufferSink } from "bun";
@@ -225,15 +225,14 @@ queueMicrotask(() => {
   const data = sink.flush();
   const wrote = socket.write(data);
   if (wrote < data.byteLength) {
-    // put it back in the sink if the socket is full
+    // 如果连接满了，剩余数据放回缓冲区
     sink.write(data.subarray(wrote));
   }
 });
 ```
 
 <Note>
-**Corking**
+**缓冲合并（Corking）**
 
-Support for corking is planned, but in the meantime backpressure must be managed manually with the `drain` handler.
-
+计划支持缓冲合并功能，但目前必须通过 `drain` 事件手动管理背压。
 </Note>

@@ -1,10 +1,10 @@
 ---
-title: Create a Discord bot
-sidebarTitle: "Discord.js with Bun"
+title: 创建一个 Discord 机器人
+sidebarTitle: "使用 Bun 的 Discord.js"
 mode: center
 ---
 
-Discord.js works out of the box with Bun. Let's write a simple bot. First create a directory and initialize it with `bun init`.
+Discord.js 与 Bun 兼容开箱即用。让我们编写一个简单的机器人。首先创建一个目录，并用 `bun init` 初始化。
 
 ```sh terminal icon="terminal"
 mkdir my-bot
@@ -14,7 +14,7 @@ bun init
 
 ---
 
-Now install Discord.js.
+现在安装 Discord.js。
 
 ```sh terminal icon="terminal"
 bun add discord.js
@@ -22,13 +22,13 @@ bun add discord.js
 
 ---
 
-Before we go further, we need to go to the [Discord developer portal](https://discord.com/developers/applications), login/signup, create a new _Application_, then create a new _Bot_ within that application. Follow the [official guide](https://discordjs.guide/legacy/preparations/app-setup#creating-your-bot) for step-by-step instructions.
+在继续之前，我们需要访问 [Discord 开发者门户](https://discord.com/developers/applications)，登录/注册，创建一个新的 _应用程序_，然后在该应用程序内创建一个新的 _机器人_。请参考[官方指南](https://discordjs.guide/legacy/preparations/app-setup#creating-your-bot)获取逐步说明。
 
 ---
 
-Once complete, you'll be presented with your bot's _private key_. Let's add this to a file called `.env.local`. Bun automatically reads this file and loads it into `process.env`.
+完成后，你将获得你的机器人的 _私钥_。让我们将其添加到一个名为 `.env.local` 的文件中。Bun 会自动读取该文件并加载到 `process.env` 中。
 
-<Note>This is an example token that has already been invalidated.</Note>
+<Note>这是一个已经被无效化的示例令牌。</Note>
 
 ```ini .env.local icon="settings"
 DISCORD_TOKEN=NzkyNzE1NDU0MTk2MDg4ODQy.X-hvzA.Ovy4MCQywSkoMRRclStW4xAYK7I
@@ -36,7 +36,7 @@ DISCORD_TOKEN=NzkyNzE1NDU0MTk2MDg4ODQy.X-hvzA.Ovy4MCQywSkoMRRclStW4xAYK7I
 
 ---
 
-Be sure to add `.env.local` to your `.gitignore`! It is dangerous to check your bot's private key into version control.
+务必将 `.env.local` 添加到你的 `.gitignore`！将机器人的私钥提交到版本控制是非常危险的。
 
 ```txt .gitignore icon="file-code"
 node_modules
@@ -45,36 +45,36 @@ node_modules
 
 ---
 
-Now let's actually write our bot in a new file called `bot.ts`.
+现在让我们在一个名为 `bot.ts` 的新文件中编写我们的机器人代码。
 
 ```ts bot.ts icon="/icons/typescript.svg"
-// import discord.js
+// 导入 discord.js
 import { Client, Events, GatewayIntentBits } from "discord.js";
 
-// create a new Client instance
+// 创建一个新的客户端实例
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-// listen for the client to be ready
+// 监听客户端准备就绪事件
 client.once(Events.ClientReady, c => {
-  console.log(`Ready! Logged in as ${c.user.tag}`);
+  console.log(`准备就绪！已登录为 ${c.user.tag}`);
 });
 
-// login with the token from .env.local
+// 使用 .env.local 中的令牌登录
 client.login(process.env.DISCORD_TOKEN);
 ```
 
 ---
 
-Now we can run our bot with `bun run`. It may take a several seconds for the client to initialize the first time you run the file.
+现在我们可以使用 `bun run` 来运行我们的机器人。首次运行该文件时，客户端初始化可能需要几秒钟。
 
 ```sh terminal icon="terminal"
 bun run bot.ts
 ```
 
 ```txt
-Ready! Logged in as my-bot#1234
+准备就绪！已登录为 my-bot#1234
 ```
 
 ---
 
-You're up and running with a bare-bones Discord.js bot! This is a basic guide to setting up your bot with Bun; we recommend the [official discord.js docs](https://discordjs.guide/) for complete information on the `discord.js` API.
+你的基础 Discord.js 机器人已经启动运行了！这是使用 Bun 设置机器人的基础指南；我们推荐阅读[官方 discord.js 文档](https://discordjs.guide/)以获得 `discord.js` API 的完整信息。

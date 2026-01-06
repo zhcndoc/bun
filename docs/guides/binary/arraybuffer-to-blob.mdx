@@ -1,10 +1,10 @@
 ---
-title: Convert an ArrayBuffer to a Blob
-sidebarTitle: "ArrayBuffer to Blob"
+title: 将 ArrayBuffer 转换为 Blob
+sidebarTitle: "ArrayBuffer 转 Blob"
 mode: center
 ---
 
-A [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) can be constructed from an array of "chunks", where each chunk is a string, binary data structure, or another `Blob`.
+一个 [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) 可以由一个“块”数组构造，其中每个块可以是字符串、二进制数据结构或另一个 `Blob`。
 
 ```ts
 const buf = new ArrayBuffer(64);
@@ -13,7 +13,7 @@ const blob = new Blob([buf]);
 
 ---
 
-By default the `type` of the resulting `Blob` will be unset. This can be set manually.
+默认情况下，生成的 `Blob` 的 `type` 属性是未设置的。可以手动设置它。
 
 ```ts
 const buf = new ArrayBuffer(64);
@@ -23,4 +23,4 @@ blob.type; // => "application/octet-stream"
 
 ---
 
-See [Docs > API > Binary Data](/runtime/binary-data#conversion) for complete documentation on manipulating binary data with Bun.
+完整的使用 Bun 操作二进制数据的文档，请参见 [文档 > API > 二进制数据](/runtime/binary-data#conversion)。

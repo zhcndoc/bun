@@ -1,17 +1,16 @@
 ---
-title: Use Prisma Postgres with Bun
-sidebarTitle: Prisma Postgres with Bun
+title: 在 Bun 中使用 Prisma Postgres
+sidebarTitle: 在 Bun 中使用 Prisma Postgres
 mode: center
 ---
 
 <Note>
-  **Note** — At the moment Prisma needs Node.js to be installed to run certain generation code. Make sure Node.js is
-  installed in the environment where you're running `bunx prisma` commands.
+  **注意** — 目前 Prisma 需要安装 Node.js 来运行某些生成代码。请确保在运行 `bunx prisma` 命令的环境中已安装 Node.js。
 </Note>
 
 <Steps>
-	<Step title="Create a new project">
-		First, create a directory and initialize it with `bun init`.
+	<Step title="创建新项目">
+		首先，创建一个目录并用 `bun init` 初始化它。
 
     	```bash terminal icon="terminal"
     	mkdir prisma-postgres-app
@@ -20,8 +19,8 @@ mode: center
     	```
     </Step>
 
-    <Step title="Install Prisma dependencies">
-    	Then install the Prisma CLI (`prisma`), Prisma Client (`@prisma/client`), and the accelerate extension as dependencies.
+    <Step title="安装 Prisma 依赖">
+    	然后安装 Prisma CLI (`prisma`)、Prisma 客户端 (`@prisma/client`) 以及 accelerate 扩展作为依赖。
 
     	```bash terminal icon="terminal"
     	bun add -d prisma
@@ -29,14 +28,14 @@ mode: center
     	```
     </Step>
 
-    <Step title="Initialize Prisma with PostgreSQL">
-    	We'll use the Prisma CLI with `bunx` to initialize our schema and migration directory. We'll be using PostgreSQL as our database.
+    <Step title="用 PostgreSQL 初始化 Prisma">
+    	我们将使用带 `bunx` 的 Prisma CLI 初始化 schema 和迁移目录。数据库使用 PostgreSQL。
 
     	```bash terminal icon="terminal"
     	bunx --bun prisma init --db
     	```
 
-    	This creates a basic schema. We need to update it to use the new Rust-free client with Bun optimization. Open `prisma/schema.prisma` and modify the generator block, then add a simple `User` model.
+    	这会创建一个基础 schema。我们需要更新它以使用新的无需 Rust 的、为 Bun 优化的客户端。打开 `prisma/schema.prisma`，修改 generator 块，然后添加一个简单的 `User` 模型。
 
     	```prisma prisma/schema.prisma icon="/icons/ecosystem/prisma.svg"
     	generator client {
@@ -59,52 +58,52 @@ mode: center
     	```
     </Step>
 
-    <Step title="Configure database connection">
-    	Set up your Postgres database URL in the `.env` file.
+    <Step title="配置数据库连接">
+    	在 `.env` 文件中设置你的 Postgres 数据库 URL。
 
     	```ini .env icon="settings"
     	DATABASE_URL="postgresql://username:password@localhost:5432/mydb?schema=public"
     	```
     </Step>
 
-    <Step title="Create and run database migration">
-    	Then generate and run initial migration.
+    <Step title="创建并运行数据库迁移">
+    	然后生成并运行初始迁移。
 
-    	This will generate a `.sql` migration file in `prisma/migrations`, and execute the migration against your Postgres database.
+    	这会在 `prisma/migrations` 中生成 `.sql` 迁移文件，并对你的 Postgres 数据库执行迁移。
 
     	```bash terminal icon="terminal"
     	bunx --bun prisma migrate dev --name init
     	```
 
     	```txt
-    	Environment variables loaded from .env
-    	Prisma schema loaded from prisma/schema.prisma
-    	Datasource "db": PostgreSQL database "mydb", schema "public" at "localhost:5432"
+    	从 .env 加载环境变量
+    	从 prisma/schema.prisma 加载 Prisma schema
+    	数据源 "db"：PostgreSQL 数据库 "mydb"，schema "public" 于 "localhost:5432"
 
-    	Applying migration `20250114141233_init`
+    	应用迁移 `20250114141233_init`
 
-    	The following migration(s) have been created and applied from new schema changes:
+    	以下迁移已根据新 schema 变更创建并应用：
 
     	prisma/migrations/
     	  └─ 20250114141233_init/
     	    └─ migration.sql
 
-    	Your database is now in sync with your schema.
+    	数据库现已与 schema 同步。
 
-    	✔ Generated Prisma Client (6.17.1) to ./generated in 18ms
+    	✔ 在 18ms 内生成 Prisma Client (6.17.1) 到 ./generated
     	```
     </Step>
 
-    <Step title="Generate Prisma Client">
-    	As indicated in the output, Prisma re-generates our _Prisma client_ whenever we execute a new migration. The client provides a fully typed API for reading and writing from our database. You can manually re-generate the client with the Prisma CLI.
+    <Step title="生成 Prisma 客户端">
+    	如输出所示，每次执行新迁移时 Prisma 都会重新生成 _Prisma 客户端_。客户端提供了完整类型化的数据库读写 API。你也可以使用 Prisma CLI 手动重新生成客户端。
 
     	```sh terminal icon="terminal"
     	bunx --bun prisma generate
     	```
     </Step>
 
-    <Step title="Initialize Prisma Client with Accelerate">
-    	Now we need to create a Prisma client instance. Create a new file `prisma/db.ts` to initialize the PrismaClient with the Postgres adapter.
+    <Step title="用 Accelerate 初始化 Prisma 客户端">
+    	现在我们需要创建一个 Prisma 客户端实例。新建文件 `prisma/db.ts`，用 Postgres 适配器初始化 PrismaClient。
 
     	```ts prisma/db.ts icon="/icons/typescript.svg"
     	import { PrismaClient } from "./generated/client";
@@ -114,13 +113,13 @@ mode: center
     	```
     </Step>
 
-    <Step title="Create a test script">
-    	Let's write a simple script to create a new user, then count the number of users in the database.
+    <Step title="创建测试脚本">
+    	我们写一个简单脚本来创建新用户，然后统计数据库中用户数量。
 
     	```ts index.ts icon="/icons/typescript.svg"
     	import { prisma } from "./prisma/db";
 
-    	// create a new user
+    	// 创建新用户
     	await prisma.user.create({
     	  data: {
     	    name: "John Dough",
@@ -128,29 +127,21 @@ mode: center
     	  },
     	});
 
-    	// count the number of users
+    	// 统计用户数量
     	const count = await prisma.user.count();
-    	console.log(`There are ${count} users in the database.`);
+    	console.log(`数据库中共有 ${count} 个用户。`);
     	```
     </Step>
 
-    <Step title="Run and test the application">
-    	Let's run this script with `bun run`. Each time we run it, a new user is created.
+    <Step title="运行并测试应用">
+    	用 `bun run` 运行此脚本。每次运行都会创建一个新用户。
 
     	```bash terminal icon="terminal"
     	bun run index.ts
     	```
 
     	```txt
-    	There are 1 users in the database.
-    	```
-
-    	```bash terminal icon="terminal"
-    	bun run index.ts
-    	```
-
-    	```txt
-    	There are 2 users in the database.
+    	数据库中共有 1 个用户。
     	```
 
     	```bash terminal icon="terminal"
@@ -158,7 +149,15 @@ mode: center
     	```
 
     	```txt
-    	There are 3 users in the database.
+    	数据库中共有 2 个用户。
+    	```
+
+    	```bash terminal icon="terminal"
+    	bun run index.ts
+    	```
+
+    	```txt
+    	数据库中共有 3 个用户。
     	```
     </Step>
 
@@ -166,4 +165,4 @@ mode: center
 
 ---
 
-That's it! Now that you've set up Prisma Postgres using Bun, we recommend referring to the [official Prisma Postgres docs](https://www.prisma.io/docs/postgres) as you continue to develop your application.
+就这样！现在你已经用 Bun 设置了 Prisma Postgres，建议继续开发时参考[官方 Prisma Postgres 文档](https://www.prisma.io/docs/postgres)。

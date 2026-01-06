@@ -1,65 +1,65 @@
 ---
-title: Deploy a Bun application on AWS Lambda
-sidebarTitle: Deploy on AWS Lambda
+title: 在 AWS Lambda 上部署 Bun 应用
+sidebarTitle: 在 AWS Lambda 上部署
 mode: center
 ---
 
-[AWS Lambda](https://aws.amazon.com/lambda/) is a serverless compute service that lets you run code without provisioning or managing servers.
+[AWS Lambda](https://aws.amazon.com/lambda/) 是一项无服务器计算服务，允许您无需配置或管理服务器即可运行代码。
 
-In this guide, we will deploy a Bun HTTP server to AWS Lambda using a `Dockerfile`.
+在本指南中，我们将使用 `Dockerfile` 将 Bun HTTP 服务器部署到 AWS Lambda。
 
 <Note>
-	Before continuing, make sure you have:
+	继续之前，请确保您已经具备：
 
-    	- A Bun application ready for deployment
-    	- An [AWS account](https://aws.amazon.com/)
-    	- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html) installed and configured
-    	- [Docker](https://docs.docker.com/get-started/get-docker/) installed and added to your `PATH`
+    	- 一个准备好部署的 Bun 应用
+    	- 一个 [AWS 账户](https://aws.amazon.com/)
+    	- 已安装并配置好的 [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
+    	- 已安装并添加到 `PATH` 的 [Docker](https://docs.docker.com/get-started/get-docker/)
 
 </Note>
 
 ---
 
 <Steps>
-	<Step title="Create a new Dockerfile">
-		Make sure you're in the directory containing your project, then create a new `Dockerfile` in the root of your project. This file contains the instructions to initialize the container, copy your local project files into it, install dependencies, and start the application.
+	<Step title="创建一个新的 Dockerfile">
+		确保您处于项目目录下，然后在项目根目录创建一个新的 `Dockerfile`。此文件包含初始化容器、将本地项目文件复制到容器、安装依赖以及启动应用的指令。
 
     	```docker Dockerfile icon="docker"
-    	# Use the official AWS Lambda adapter image to handle the Lambda runtime
+    	# 使用官方 AWS Lambda 适配器镜像来处理 Lambda 运行时
     	FROM public.ecr.aws/awsguru/aws-lambda-adapter:0.9.0 AS aws-lambda-adapter
 
-    	# Use the official Bun image to run the application
+    	# 使用官方 Bun 镜像来运行应用
     	FROM oven/bun:debian AS bun_latest
 
-    	# Copy the Lambda adapter into the container
+    	# 将 Lambda 适配器复制到容器中
     	COPY --from=aws-lambda-adapter /lambda-adapter /opt/extensions/lambda-adapter
 
-    	# Set the port to 8080. This is required for the AWS Lambda adapter.
+    	# 设置端口为 8080，AWS Lambda 适配器需要此端口
     	ENV PORT=8080
 
-    	# Set the work directory to `/var/task`. This is the default work directory for Lambda.
+    	# 设置工作目录为 `/var/task`，这是 Lambda 的默认工作目录
     	WORKDIR "/var/task"
 
-    	# Copy the package.json and bun.lock into the container
+    	# 复制 package.json 和 bun.lock 到容器中
     	COPY package.json bun.lock ./
 
-    	# Install the dependencies
+    	# 安装依赖
     	RUN bun install --production --frozen-lockfile
 
-    	# Copy the rest of the application into the container
+    	# 复制其余应用文件到容器中
     	COPY . /var/task
 
-    	# Run the application.
+    	# 运行应用
     	CMD ["bun", "index.ts"]
     	```
 
     	<Note>
-    		Make sure that the start command corresponds to your application's entry point. This can also be `CMD ["bun", "run", "start"]` if you have a start script in your `package.json`.
+    		确保启动命令对应您的应用入口点。如果您在 `package.json` 中有启动脚本，也可以使用 `CMD ["bun", "run", "start"]`。
 
-    		This image installs dependencies and runs your app with Bun inside a container. If your app doesn't have dependencies, you can omit the `RUN bun install --production --frozen-lockfile` line.
+    		该镜像会在容器内使用 Bun 安装依赖并运行您的应用。如果您的应用没有依赖，可以省略 `RUN bun install --production --frozen-lockfile` 这行。
     	</Note>
 
-    	Create a new `.dockerignore` file in the root of your project. This file contains the files and directories that should be _excluded_ from the container image, such as `node_modules`. This makes your builds faster and smaller:
+    	在项目根目录创建一个新的 `.dockerignore` 文件，里面列出应从容器镜像中 _排除_ 的文件或目录，例如 `node_modules`。这样可以让构建更快且更小：
 
     	```docker .dockerignore icon="Docker"
     	node_modules
@@ -71,23 +71,23 @@ In this guide, we will deploy a Bun HTTP server to AWS Lambda using a `Dockerfil
     	LICENSE
     	.vscode
     	.env
-    	# Any other files or directories you want to exclude
+    	# 任何其他想排除的文件或目录
     	```
     </Step>
-    <Step title="Build the Docker image">
-    	Make sure you're in the directory containing your `Dockerfile`, then build the Docker image. In this case, we'll call the image `bun-lambda-demo` and tag it as `latest`.
+    <Step title="构建 Docker 镜像">
+    	确保您处于包含 `Dockerfile` 的目录，然后构建 Docker 镜像。本例中，我们将镜像命名为 `bun-lambda-demo`，并标记为 `latest`。
 
     	```bash terminal icon="terminal"
     	# cd /path/to/your/app
     	docker build --provenance=false --platform linux/amd64 -t bun-lambda-demo:latest .
     	```
     </Step>
-    <Step title="Create an ECR repository">
-    	To push the image to AWS Lambda, we first need to create an [ECR repository](https://aws.amazon.com/ecr/) to push the image to.
+    <Step title="创建 ECR 仓库">
+    	要将镜像推送到 AWS Lambda，首先需要创建一个 [ECR 仓库](https://aws.amazon.com/ecr/)。
 
-    	By running the following command, we:
-    	- Create an ECR repository named `bun-lambda-demo` in the `us-east-1` region
-    	- Get the repository URI, and export the repository URI as an environment variable. This is optional, but make the next steps easier.
+    	运行以下命令将会：
+    	- 在 `us-east-1` 区域创建一个名为 `bun-lambda-demo` 的 ECR 仓库
+    	- 获取仓库 URI，并将其导出为环境变量（可选，但便于接下来的步骤）
 
     	```bash terminal icon="terminal"
     	export ECR_URI=$(aws ecr create-repository --repository-name bun-lambda-demo --region us-east-1 --query 'repository.repositoryUri' --output text)
@@ -98,9 +98,9 @@ In this guide, we will deploy a Bun HTTP server to AWS Lambda using a `Dockerfil
     	```
 
     	<Note>
-    		If you're using IAM Identity Center (SSO) or have configured AWS CLI with profiles, you'll need to add the `--profile` flag to your AWS CLI commands.
+    		如果您使用 IAM Identity Center (SSO) 或为 AWS CLI 配置了多个 profile，需要为 AWS CLI 命令添加 `--profile` 参数。
 
-    		For example, if your profile is named `my-sso-app`, use `--profile my-sso-app`. Check your AWS CLI configuration with `aws configure list-profiles` to see available profiles.
+    		例如，若您的 profile 名为 `my-sso-app`，则使用 `--profile my-sso-app`。您可通过 `aws configure list-profiles` 查看可用的 profile。
 
     		```bash terminal icon="terminal"
     		export ECR_URI=$(aws ecr create-repository --repository-name bun-lambda-demo --region us-east-1 --profile my-sso-app --query 'repository.repositoryUri' --output text)
@@ -109,8 +109,8 @@ In this guide, we will deploy a Bun HTTP server to AWS Lambda using a `Dockerfil
     	</Note>
 
     </Step>
-    <Step title="Authenticate with the ECR repository">
-    	Log in to the ECR repository:
+    <Step title="认证登录 ECR 仓库">
+    	登录到 ECR 仓库：
 
     	```bash terminal icon="terminal"
     	aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_URI
@@ -120,7 +120,7 @@ In this guide, we will deploy a Bun HTTP server to AWS Lambda using a `Dockerfil
     	```
 
     	<Note>
-    		If using a profile, use the `--profile` flag:
+    		若使用 profile，需添加 `--profile` 参数：
 
     		```bash terminal icon="terminal"
     		aws ecr get-login-password --region us-east-1 --profile my-sso-app | docker login --username AWS --password-stdin $ECR_URI
@@ -129,69 +129,69 @@ In this guide, we will deploy a Bun HTTP server to AWS Lambda using a `Dockerfil
     	</Note>
 
     </Step>
-    <Step title="Tag and push the docker image to the ECR repository">
-    	Make sure you're in the directory containing your `Dockerfile`, then tag the docker image with the ECR repository URI.
+    <Step title="为 Docker 镜像打标签并推送到 ECR 仓库">
+    	确保您处于包含 `Dockerfile` 的目录下，然后对 Docker 镜像使用 ECR 仓库的 URI 打标签。
 
     	```bash terminal icon="terminal"
     	docker tag bun-lambda-demo:latest ${ECR_URI}:latest
     	```
 
-    	Then, push the image to the ECR repository.
+    	接着，将镜像推送到 ECR 仓库。
 
     	```bash terminal icon="terminal"
     	docker push ${ECR_URI}:latest
     	```
     </Step>
-    <Step title="Create an AWS Lambda function">
-    	Go to **AWS Console** > **Lambda** > [**Create Function**](https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/create/function?intent=authorFromImage) > Select **Container image**
+    <Step title="创建 AWS Lambda 函数">
+    	打开 **AWS 控制台** > **Lambda** > [**创建函数**](https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/create/function?intent=authorFromImage) > 选择 **容器映像**
 
-    	<Warning>Make sure you've selected the right region, this URL defaults to `us-east-1`.</Warning>
+    	<Warning>请确认您选择了正确的区域，该链接默认为 `us-east-1`。</Warning>
 
     	<Frame>
-    	![Create Function](/images/guides/lambda1.png)
+    	![创建函数](/images/guides/lambda1.png)
     	</Frame>
 
-    	Give the function a name, like `my-bun-function`.
+    	为函数命名，例如 `my-bun-function`。
     </Step>
-    <Step title="Select the container image">
-    	Then, go to the **Container image URI** section, click on **Browse images**. Select the image we just pushed to the ECR repository.
+    <Step title="选择容器映像">
+    	然后，前往 **容器映像 URI** 部分，点击 **浏览映像**。选择刚才推送到 ECR 仓库的映像。
 
     	<Frame>
-    	![Select Container Repository](/images/guides/lambda2.png)
+    	![选择容器仓库](/images/guides/lambda2.png)
     	</Frame>
 
-    	Then, select the `latest` image, and click on **Select image**.
+    	接着选择 `latest` 标签的映像，点击 **选择映像**。
 
     	<Frame>
-    	![Select Container Image](/images/guides/lambda3.png)
-    	</Frame>
-    </Step>
-    <Step title="Configure the function">
-    	To get a public URL for the function, we need to go to **Additional configurations** > **Networking** > **Function URL**.
-
-    	Set this to **Enable**, with Auth Type **NONE**.
-
-    	<Frame>
-    		![Set the Function URL](/images/guides/lambda4.png)
+    	![选择容器映像](/images/guides/lambda3.png)
     	</Frame>
     </Step>
-    <Step title="Create the function">
-    	Click on **Create function** at the bottom of the page, this will create the function.
+    <Step title="配置函数">
+    	要获取函数的公共 URL，需要前往 **附加配置** > **网络** > **函数 URL**。
+
+    	将其设置为 **启用**，认证类型选择 **NONE**。
 
     	<Frame>
-    		![Create Function](/images/guides/lambda6.png)
+    		![设置函数 URL](/images/guides/lambda4.png)
+    	</Frame>
+    </Step>
+    <Step title="创建函数">
+    	点击页面底部的 **创建函数**，函数即被创建。
+
+    	<Frame>
+    		![创建函数](/images/guides/lambda6.png)
     	</Frame>
 
     </Step>
-    <Step title="Get the function URL">
-    	Once the function has been created you'll be redirected to the function's page, where you can see the function URL in the **"Function URL"** section.
+    <Step title="获取函数 URL">
+    	函数创建完成后，您会被重定向到函数页面，在 **“函数 URL”** 部分可以看到函数的 URL。
 
     	<Frame>
-    		![Function URL](/images/guides/lambda5.png)
+    		![函数 URL](/images/guides/lambda5.png)
     	</Frame>
     </Step>
-    <Step title="Test the function">
-    	🥳 Your app is now live! To test the function, you can either go to the **Test** tab, or call the function URL directly.
+    <Step title="测试函数">
+    	🥳 您的应用已上线！要测试函数，您可以前往 **测试** 标签页，或直接调用函数 URL。
 
     	```bash terminal icon="terminal"
     	curl -X GET https://[your-function-id].lambda-url.us-east-1.on.aws/

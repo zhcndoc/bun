@@ -1,49 +1,48 @@
 ---
-title: Using bun install with an Azure Artifacts npm registry
-sidebarTitle: Azure Artifacts with Bun
+title: 使用 bun install 配合 Azure Artifacts npm 注册表
+sidebarTitle: 在 Bun 中使用 Azure Artifacts
 mode: center
 ---
 
 <Note>
-  In [Azure
-  Artifact's](https://learn.microsoft.com/en-us/azure/devops/artifacts/npm/npmrc?view=azure-devops&tabs=windows%2Cclassic)
-  instructions for `.npmrc`, they say to base64 encode the password. Do not do this for `bun install`. Bun will
-  automatically base64 encode the password for you if needed.
+  在 [Azure
+  Artifacts](https://learn.microsoft.com/en-us/azure/devops/artifacts/npm/npmrc?view=azure-devops&tabs=windows%2Cclassic)
+  关于 `.npmrc` 的说明中，建议对密码进行 base64 编码。但在使用 `bun install` 时不要这样做。Bun 会在需要时自动为你进行 base64 编码。
 </Note>
 
-[Azure Artifacts](https://azure.microsoft.com/en-us/products/devops/artifacts) is a package management system for Azure DevOps. It allows you to host your own private npm registry, npm packages, and other types of packages as well.
+[Azure Artifacts](https://azure.microsoft.com/en-us/products/devops/artifacts) 是 Azure DevOps 提供的包管理系统。它允许你托管私有的 npm 注册表、npm 包以及其他类型的包。
 
 ---
 
-### Configure with bunfig.toml
+### 使用 bunfig.toml 配置
 
 ---
 
-To use it with `bun install`, add a `bunfig.toml` file to your project with the following contents. Make sure to replace `my-azure-artifacts-user` with your Azure Artifacts username, such as `jarred1234`.
+要配合 `bun install` 使用，在项目中添加一个名为 `bunfig.toml` 的文件，内容如下。确保将 `my-azure-artifacts-user` 替换为你的 Azure Artifacts 用户名，例如 `jarred1234`。
 
 ```toml bunfig.toml icon="settings"
 [install.registry]
 url = "https://pkgs.dev.azure.com/my-azure-artifacts-user/_packaging/my-azure-artifacts-user/npm/registry"
 username = "my-azure-artifacts-user"
-# You can use an environment variable here
+# 这里可以使用环境变量
 password = "$NPM_PASSWORD"
 ```
 
 ---
 
-Then assign your Azure Personal Access Token to the `NPM_PASSWORD` environment variable. Bun [automatically reads](/runtime/environment-variables) `.env` files, so create a file called `.env` in your project root. There is no need to base-64 encode this token! Bun will do this for you.
+然后，将你的 Azure 个人访问令牌赋值给环境变量 `NPM_PASSWORD`。Bun 会[自动读取](/runtime/environment-variables) `.env` 文件，因此在项目根目录创建一个名为 `.env` 的文件即可。不需要对令牌进行 base64 编码，Bun 会帮你处理。
 
 ```ini .env icon="settings"
-NPM_PASSWORD=<paste token here>
+NPM_PASSWORD=<在此粘贴令牌>
 ```
 
 ---
 
-### Configure with environment variables
+### 使用环境变量配置
 
 ---
 
-To configure Azure Artifacts without `bunfig.toml`, you can set the `NPM_CONFIG_REGISTRY` environment variable. The URL should include `:username` and `:_password` as query parameters. Replace `<USERNAME>` and `<PASSWORD>` with the appropriate values.
+如果不使用 `bunfig.toml`，你可以设置环境变量 `NPM_CONFIG_REGISTRY` 来配置 Azure Artifacts。URL 中应包含 `:username` 和 `:_password` 作为查询参数，替换 `<USERNAME>` 和 `<PASSWORD>` 为相应的值。
 
 ```bash terminal icon="terminal"
 NPM_CONFIG_REGISTRY=https://pkgs.dev.azure.com/my-azure-artifacts-user/_packaging/my-azure-artifacts-user/npm/registry/:username=<USERNAME>:_password=<PASSWORD>
@@ -51,26 +50,26 @@ NPM_CONFIG_REGISTRY=https://pkgs.dev.azure.com/my-azure-artifacts-user/_packagin
 
 ---
 
-### Don't base64 encode the password
+### 不要对密码进行 base64 编码
 
 ---
 
-In [Azure Artifact's](https://learn.microsoft.com/en-us/azure/devops/artifacts/npm/npmrc?view=azure-devops&tabs=windows%2Cclassic) instructions for `.npmrc`, they say to base64 encode the password. Do not do this for `bun install`. Bun will automatically base64 encode the password for you if needed.
+在 [Azure Artifacts](https://learn.microsoft.com/en-us/azure/devops/artifacts/npm/npmrc?view=azure-devops&tabs=windows%2Cclassic) 的 `.npmrc` 说明中会建议对密码进行 base64 编码，但使用 `bun install` 时切勿这样做。Bun 会自动为你进行 base64 编码（如果需要的话）。
 
-<Note>**Tip** — If it ends with `==`, it probably is base64 encoded.</Note>
+<Note>**提示** — 如果密码以 `==` 结尾，很可能就是 base64 编码的。</Note>
 
 ---
 
-To decode a base64-encoded password, open your browser console and run:
+要解码 base64 编码的密码，可以打开浏览器控制台执行：
 
 ```js browser icon="computer"
-atob("<base64-encoded password>");
+atob("<base64编码的密码>");
 ```
 
 ---
 
-Alternatively, use the `base64` command line tool, but doing so means it may be saved in your terminal history which is not recommended:
+或者使用命令行工具 `base64`，但这样可能会被保存到终端历史记录中，出于安全考虑不建议这么做：
 
 ```bash terminal icon="terminal"
-echo "base64-encoded-password" | base64 --decode
+echo "base64编码的密码" | base64 --decode
 ```

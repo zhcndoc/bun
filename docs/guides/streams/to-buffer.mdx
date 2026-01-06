@@ -1,10 +1,10 @@
 ---
-title: Convert a ReadableStream to a Buffer
-sidebarTitle: Stream to Buffer
+title: 将 ReadableStream 转换为 Buffer
+sidebarTitle: 流转 Buffer
 mode: center
 ---
 
-Bun provides a number of convenience functions for reading the contents of a [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) into different formats. This snippet reads the contents of a `ReadableStream` to an [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer), then creates a [`Buffer`](https://nodejs.org/api/buffer.html) that points to it.
+Bun 提供了许多便捷函数，用于将 [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) 的内容读取为不同格式。此示例代码将 `ReadableStream` 的内容读取为 [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)，然后创建一个指向该 `ArrayBuffer` 的 [`Buffer`](https://nodejs.org/api/buffer.html)。
 
 ```ts
 const stream = new ReadableStream();
@@ -14,4 +14,4 @@ const nodeBuf = Buffer.from(arrBuf);
 
 ---
 
-See [Docs > API > Utils](/runtime/utils#bun-readablestreamto) for documentation on Bun's other `ReadableStream` conversion functions.
+有关 Bun 其他 `ReadableStream` 转换函数的文档，请参见 [Docs > API > Utils](/runtime/utils#bun-readablestreamto)。

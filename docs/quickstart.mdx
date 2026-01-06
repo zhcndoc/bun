@@ -1,47 +1,47 @@
 ---
-title: Quickstart
-description: Build your first app with Bun
+title: 快速开始
+description: 使用 Bun 构建您的第一个应用
 ---
 
-## Overview
+## 概览
 
-Build a minimal HTTP server with `Bun.serve`, run it locally, then evolve it by installing a package.
+使用 `Bun.serve` 构建一个简约的 HTTP 服务器，在本地运行它，然后通过安装一个包来扩展它。
 
-<Info>Prerequisites: Bun installed and available on your `PATH`. See [installation](/installation) for setup.</Info>
+<Info>先决条件：已安装 Bun 并且可在您的 `PATH` 中访问。有关安装，请参见 [安装](/installation)。</Info>
 
 ---
 
 <Steps>
-  <Step title="Step 1">
+  <Step title="步骤 1">
 
-    Initialize a new project with `bun init`.
+    使用 `bun init` 初始化一个新项目。
 
     ```bash terminal icon="terminal"
     bun init my-app
     ```
 
-    It'll prompt you to pick a template, either `Blank`, `React`, or `Library`. For this guide, we'll pick `Blank`.
+    它会提示您选择一个模板，可以是 `Blank`、`React` 或 `Library`。本指南中，我们选择 `Blank`。
 
     ```bash terminal icon="terminal"
     bun init my-app
     ```
     ```txt
-    ✓ Select a project template: Blank
+    ✓ 选择一个项目模板：Blank
 
     - .gitignore
     - CLAUDE.md
     - .cursor/rules/use-bun-instead-of-node-vite-npm-pnpm.mdc -> CLAUDE.md
     - index.ts
-    - tsconfig.json (for editor autocomplete)
+    - tsconfig.json (用于编辑器自动补全)
     - README.md
     ```
 
-    This automatically creates a `my-app` directory with a basic Bun app.
+    这将自动创建一个包含基础 Bun 应用的 `my-app` 目录。
 
   </Step>
-  <Step title="Step 2">
+  <Step title="步骤 2">
 
-    Run the `index.ts` file using `bun run index.ts`.
+    使用 `bun run index.ts` 运行 `index.ts` 文件。
 
     ```bash terminal icon="terminal"
     cd my-app
@@ -51,12 +51,12 @@ Build a minimal HTTP server with `Bun.serve`, run it locally, then evolve it by 
     Hello via Bun!
     ```
 
-    You should see a console output saying `"Hello via Bun!"`.
+    您应该会在控制台看到输出 `"Hello via Bun!"`。
 
   </Step>
-  <Step title="Step 3">
+  <Step title="步骤 3">
 
-    Replace the contents of `index.ts` with the following code:
+    将 `index.ts` 的内容替换为以下代码：
 
     ```ts index.ts icon="/icons/typescript.svg"
     const server = Bun.serve({
@@ -69,7 +69,7 @@ Build a minimal HTTP server with `Bun.serve`, run it locally, then evolve it by 
     console.log(`Listening on ${server.url}`);
     ```
 
-    Run the `index.ts` file again using `bun run index.ts`.
+    再次使用 `bun run index.ts` 运行该文件。
 
     ```bash terminal icon="terminal"
     bun run index.ts
@@ -78,19 +78,19 @@ Build a minimal HTTP server with `Bun.serve`, run it locally, then evolve it by 
     Listening on http://localhost:3000
     ```
 
-    Visit [`http://localhost:3000`](http://localhost:3000) to test the server. You should see a simple page that says `"Bun!"`.
+    访问 [`http://localhost:3000`](http://localhost:3000) 测试服务器。您应该能看到一个显示 `"Bun!"` 的简单页面。
 
-    <Accordion title="Seeing TypeScript errors on Bun?">
+    <Accordion title="在 Bun 中看到 TypeScript 错误？">
 
-      If you used `bun init`, Bun will have automatically installed Bun's TypeScript declarations and configured your `tsconfig.json`. If you're trying out Bun in an existing project, you may see a type error on the `Bun` global.
+      如果您使用了 `bun init`，Bun 会自动安装 Bun 的 TypeScript 声明并配置您的 `tsconfig.json`。如果您在现有项目中尝试 Bun，可能会看到 `Bun` 全局的类型错误。
 
-      To fix this, first install `@types/bun` as a dev dependency.
+      要解决此问题，首先安装 `@types/bun` 作为开发依赖。
 
       ```bash terminal icon="terminal"
       bun add -d @types/bun
       ```
 
-      Then add the following to your `compilerOptions` in `tsconfig.json`:
+      然后在 `tsconfig.json` 的 `compilerOptions` 中添加以下配置：
 
       ```json tsconfig.json icon="file-json"
       {
@@ -110,16 +110,16 @@ Build a minimal HTTP server with `Bun.serve`, run it locally, then evolve it by 
     </Accordion>
 
   </Step>
-  <Step title="Step 4">
+  <Step title="步骤 4">
 
-    Install the `figlet` package and its type declarations. Figlet is a utility for converting strings into ASCII art.
+    安装 `figlet` 包及其类型声明。Figlet 是一个将字符串转换为 ASCII 艺术的工具。
 
     ```bash terminal icon="terminal"
     bun add figlet
-    bun add -d @types/figlet # TypeScript users only
+    bun add -d @types/figlet # 仅限 TypeScript 用户
     ```
 
-    Update `index.ts` to use `figlet` in `routes`.
+    更新 `index.ts`，在 `routes` 中使用 `figlet`。
 
     ```ts index.ts icon="/icons/typescript.svg"
     import figlet from 'figlet'; // [!code ++]
@@ -138,7 +138,7 @@ Build a minimal HTTP server with `Bun.serve`, run it locally, then evolve it by 
     console.log(`Listening on ${server.url}`);
     ```
 
-    Run the `index.ts` file again using `bun run index.ts`.
+    再次使用 `bun run index.ts` 运行该文件。
 
     ```bash terminal icon="terminal"
     bun run index.ts
@@ -147,7 +147,7 @@ Build a minimal HTTP server with `Bun.serve`, run it locally, then evolve it by 
     Listening on http://localhost:3000
     ```
 
-    Visit [`http://localhost:3000/figlet`](http://localhost:3000/figlet) to test the server. You should see a simple page that says `"Bun!"` in ASCII art.
+    访问 [`http://localhost:3000/figlet`](http://localhost:3000/figlet) 测试服务器。您应该看到一段以 ASCII 艺术形式显示的 `"Bun!"`。
 
     ```txt
     ____              _
@@ -158,9 +158,9 @@ Build a minimal HTTP server with `Bun.serve`, run it locally, then evolve it by 
     ```
 
   </Step>
-  <Step title="Step 5">
+  <Step title="步骤 5">
 
-    Let's add some HTML. Create a new file called `index.html` and add the following code:
+    让我们添加一些 HTML。创建一个新文件 `index.html`，并添加以下代码：
 
     ```html index.html icon="file-code"
     <!DOCTYPE html>
@@ -176,7 +176,7 @@ Build a minimal HTTP server with `Bun.serve`, run it locally, then evolve it by 
     </html>
     ```
 
-    Then, import this file in `index.ts` and serve it from the root `/` route.
+    然后，在 `index.ts` 中导入此文件，并从根路由 `/` 提供它。
 
     ```ts index.ts icon="/icons/typescript.svg"
     import figlet from 'figlet';
@@ -196,7 +196,7 @@ Build a minimal HTTP server with `Bun.serve`, run it locally, then evolve it by 
     console.log(`Listening on ${server.url}`);
     ```
 
-    Run the `index.ts` file again using `bun run index.ts`.
+    再次使用 `bun run index.ts` 运行该文件。
 
     ```bash terminal icon="terminal"
     bun run index.ts
@@ -205,19 +205,19 @@ Build a minimal HTTP server with `Bun.serve`, run it locally, then evolve it by 
     Listening on http://localhost:3000
     ```
 
-    Visit [`http://localhost:3000`](http://localhost:3000) to test the server. You should see the static HTML page.
+    访问 [`http://localhost:3000`](http://localhost:3000) 测试服务器。您应该看到该静态 HTML 页面。
 
   </Step>
 
 </Steps>
 
-🎉 Congratulations! You've built a simple HTTP server with Bun and installed a package.
+🎉 恭喜！您已成功使用 Bun 构建了一个简单的 HTTP 服务器并安装了一个包。
 
 ---
 
-## Run a script
+## 运行脚本
 
-Bun can also execute `"scripts"` from your `package.json`. Add the following script:
+Bun 也可以执行 `package.json` 中的 `"scripts"`。添加以下脚本：
 
 {/* prettier-ignore */}
 ```json package.json icon="file-json"
@@ -238,7 +238,7 @@ Bun can also execute `"scripts"` from your `package.json`. Add the following scr
 }
 ```
 
-Then run it with `bun run start`.
+然后通过 `bun run start` 运行它。
 
 ```bash terminal icon="terminal"
 bun run start
@@ -248,4 +248,4 @@ bun run start
 Listening on http://localhost:3000
 ```
 
-<Note>⚡️ **Performance** — `bun run` is roughly 28x faster than `npm run` (6ms vs 170ms of overhead).</Note>
+<Note>⚡️ **性能** — `bun run` 的速度大约是 `npm run` 的 28 倍（6ms 对比 170ms 的开销）。</Note>

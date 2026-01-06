@@ -1,16 +1,16 @@
 ---
-title: Configuring a monorepo using workspaces
-sidebarTitle: Workspaces with Bun
+title: 使用 workspaces 配置 monorepo
+sidebarTitle: Bun 的 Workspaces
 mode: center
 ---
 
-Bun's package manager supports npm `"workspaces"`. This allows you to split a codebase into multiple distinct "packages" that live in the same repository, can depend on each other, and (when possible) share a `node_modules` directory.
+Bun 的包管理器支持 npm 的 `"workspaces"`。这允许你将代码库拆分成多个独立的“包”，它们位于同一个仓库中，可以相互依赖，并且（在可能的情况下）共享一个 `node_modules` 目录。
 
-Clone [this sample project](https://github.com/colinhacks/bun-workspaces) to experiment with workspaces.
+克隆[这个示例项目](https://github.com/colinhacks/bun-workspaces)来尝试使用 workspaces。
 
 ---
 
-The root `package.json` should not contain any `"dependencies"`, `"devDependencies"`, etc. Each individual package should be self-contained and declare its own dependencies. Similarly, it's conventional to declare `"private": true` to avoid accidentally publishing the root package to `npm`.
+根目录的 `package.json` 不应包含任何 `"dependencies"`、`"devDependencies"` 等。每个独立的包都应该是自包含的，并声明自己的依赖。同样，通常会声明 `"private": true`，以避免意外将根包发布到 `npm` 上。
 
 ```json package.json icon="file-json"
 {
@@ -22,7 +22,7 @@ The root `package.json` should not contain any `"dependencies"`, `"devDependenci
 
 ---
 
-It's common to place all packages in a `packages` directory. The `"workspaces"` field in package.json supports glob patterns, so you can use `packages/*` to indicate that each subdirectory of `packages` should be considered separate _package_ (also known as a workspace).
+通常会将所有包放在 `packages` 目录下。`package.json` 中的 `"workspaces"` 字段支持通配符模式，因此你可以使用 `packages/*` 来表示 `packages` 下的每个子目录都应被视为独立的 _package_（也称为 workspace）。
 
 ```txt File Tree icon="folder-tree"
 .
@@ -37,7 +37,7 @@ It's common to place all packages in a `packages` directory. The `"workspaces"` 
 
 ---
 
-To add dependencies between workspaces, use the `"workspace:*"` syntax. Here we're adding `stuff-a` as a dependency of `stuff-b`.
+要在 workspaces 之间添加依赖，使用 `"workspace:*"` 语法。这里我们把 `stuff-a` 添加为 `stuff-b` 的依赖。
 
 ```json packages/stuff-b/package.json icon="file-json"
 {
@@ -50,7 +50,7 @@ To add dependencies between workspaces, use the `"workspace:*"` syntax. Here we'
 
 ---
 
-Once added, run `bun install` from the project root to install dependencies for all workspaces.
+添加后，从项目根目录运行 `bun install` 来安装所有 workspaces 的依赖。
 
 ```sh terminal icon="terminal"
 bun install
@@ -58,7 +58,7 @@ bun install
 
 ---
 
-To add npm dependencies to a particular workspace, just `cd` to the appropriate directory and run `bun add` commands as you would normally. Bun will detect that you are in a workspace and hoist the dependency as needed.
+要给某个特定的 workspace 添加 npm 依赖，只需切换到相应目录，然后像平常一样运行 `bun add` 命令。Bun 会检测你处于 workspace 中，必要时提升依赖。
 
 ```sh terminal icon="terminal"
 cd packages/stuff-a
@@ -67,4 +67,4 @@ bun add zod
 
 ---
 
-See [Docs > Package manager](/pm/cli/install) for complete documentation of Bun's package manager.
+完整的 Bun 包管理器文档，请参见 [文档 > 包管理器](/pm/cli/install)。

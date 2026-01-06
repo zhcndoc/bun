@@ -1,112 +1,112 @@
 ---
-title: Bytecode Caching
-description: Speed up JavaScript execution with bytecode caching in Bun's bundler
+title: 字节码缓存
+description: 使用 Bun 打包器中的字节码缓存加速 JavaScript 执行
 ---
 
-Bytecode caching is a build-time optimization that dramatically improves application startup time by pre-compiling your JavaScript to bytecode. For example, when compiling TypeScript's `tsc` with bytecode enabled, startup time improves by **2x**.
+字节码缓存是一种构建时优化，通过将你的 JavaScript 预编译为字节码，从而显著提升应用启动速度。例如，在启用字节码的情况下编译 TypeScript 的 `tsc`，启动时间提升可达 **2 倍**。
 
-## Usage
+## 使用方法
 
-### Basic usage
+### 基础用法
 
-Enable bytecode caching with the `--bytecode` flag:
+使用 `--bytecode` 标志启用字节码缓存：
 
 ```bash terminal icon="terminal"
 bun build ./index.ts --target=bun --bytecode --outdir=./dist
 ```
 
-This generates two files:
+这会生成两个文件：
 
-- `dist/index.js` - Your bundled JavaScript
-- `dist/index.jsc` - The bytecode cache file
+- `dist/index.js` - 你的打包好的 JavaScript
+- `dist/index.jsc` - 字节码缓存文件
 
-At runtime, Bun automatically detects and uses the `.jsc` file:
+运行时，Bun 会自动检测并使用 `.jsc` 文件：
 
 ```bash terminal icon="terminal"
-bun ./dist/index.js  # Automatically uses index.jsc
+bun ./dist/index.js  # 自动使用 index.jsc
 ```
 
-### With standalone executables
+### 生成独立可执行文件时
 
-When creating executables with `--compile`, bytecode is embedded into the binary:
+使用 `--compile` 创建可执行文件时，字节码会嵌入到二进制文件：
 
 ```bash terminal icon="terminal"
 bun build ./cli.ts --compile --bytecode --outfile=mycli
 ```
 
-The resulting executable contains both the code and bytecode, giving you maximum performance in a single file.
+生成的可执行文件同时包含代码和字节码，在单文件中提供极致性能。
 
-### Combining with other optimizations
+### 与其他优化结合
 
-Bytecode works great with minification and source maps:
+字节码支持与代码压缩和源码映射同时使用：
 
 ```bash terminal icon="terminal"
 bun build --compile --bytecode --minify --sourcemap ./cli.ts --outfile=mycli
 ```
 
-- `--minify` reduces code size before generating bytecode (less code -> less bytecode)
-- `--sourcemap` preserves error reporting (errors still point to original source)
-- `--bytecode` eliminates parsing overhead
+- `--minify` 在生成字节码前压缩代码体积（代码更少，字节码更小）
+- `--sourcemap` 保持错误定位（错误仍指向原始源码）
+- `--bytecode` 消除解析开销
 
-## Performance impact
+## 性能影响
 
-The performance improvement scales with your codebase size:
+性能提升与代码体量成正比：
 
-| Application size          | Typical startup improvement |
-| ------------------------- | --------------------------- |
-| Small CLI (< 100 KB)      | 1.5-2x faster               |
-| Medium-large app (> 5 MB) | 2.5x-4x faster              |
+| 应用大小                  | 典型启动速度提升          |
+| ------------------------- | ------------------------- |
+| 小型 CLI (< 100 KB)       | 快 1.5-2 倍               |
+| 中大型应用 (> 5 MB)       | 快 2.5-4 倍               |
 
-Larger applications benefit more because they have more code to parse.
+体量越大，受益越明显，因为解析的代码更多。
 
-## When to use bytecode
+## 何时使用字节码
 
-### Great for:
+### 非常适合：
 
-#### CLI tools
+#### CLI 工具
 
-- Invoked frequently (linters, formatters, git hooks)
-- Startup time is the entire user experience
-- Users notice the difference between 90ms and 45ms startup
-- Example: TypeScript compiler, Prettier, ESLint
+- 经常调用（如 linter、格式化工具、git 钩子）
+- 启动时间即全部用户体验
+- 用户能明显感受到 90ms 与 45ms 启动时间的差异
+- 例子：TypeScript 编译器、Prettier、ESLint
 
-#### Build tools and task runners
+#### 构建工具和任务运行器
 
-- Run hundreds or thousands of times during development
-- Milliseconds saved per run compound quickly
-- Developer experience improvement
-- Example: Build scripts, test runners, code generators
+- 在开发过程中执行数百次甚至数千次
+- 每次节省数毫秒，累计提升明显
+- 改善开发者体验
+- 例子：构建脚本、测试运行器、代码生成器
 
-#### Standalone executables
+#### 独立可执行文件
 
-- Distributed to users who care about snappy performance
-- Single-file distribution is convenient
-- File size less important than startup time
-- Example: CLIs distributed via npm or as binaries
+- 发布给重视性能的用户
+- 单文件分发方便
+- 文件体积不如启动速度重要
+- 例子：通过 npm 或二进制发布的 CLI
 
-### Skip it for:
+### 不适合：
 
-- ❌ **Small scripts**
-- ❌ **Code that runs once**
-- ❌ **Development builds**
-- ❌ **Size-constrained environments**
-- ❌ **Code with top-level await** (not supported)
+- ❌ **小型脚本**
+- ❌ **只执行一次的代码**
+- ❌ **开发环境构建**
+- ❌ **对体积有限制的环境**
+- ❌ **包含顶层 await 的代码**（不支持）
 
-## Limitations
+## 限制
 
-### CommonJS only
+### 仅支持 CommonJS
 
-Bytecode caching currently works with CommonJS output format. Bun's bundler automatically converts most ESM code to CommonJS, but **top-level await** is the exception:
+字节码缓存目前仅支持 CommonJS 输出格式。Bun 打包器会自动将大部分 ESM 代码转换为 CommonJS，但 **顶层 await** 是例外：
 
 ```js
-// This prevents bytecode caching
+// 会阻止字节码缓存
 const data = await fetch("https://api.example.com");
 export default data;
 ```
 
-**Why**: Top-level await requires async module evaluation, which can't be represented in CommonJS. The module graph becomes asynchronous, and the CommonJS wrapper function model breaks down.
+**原因**：顶层 await 需要异步模块评估，这无法用 CommonJS 表示。模块图异步化，CommonJS 包装函数模型失效。
 
-**Workaround**: Move async initialization into a function:
+**解决方案**：将异步初始化放入函数：
 
 ```js
 async function init() {
@@ -117,45 +117,45 @@ async function init() {
 export default init;
 ```
 
-Now the module exports a function that the consumer can await when needed.
+现在模块导出的是函数，由调用方根据需要使用 `await`。
 
-### Version compatibility
+### 版本兼容性
 
-Bytecode is **not portable across Bun versions**. The bytecode format is tied to JavaScriptCore's internal representation, which changes between versions.
+字节码**不跨 Bun 版本通用**。字节码格式绑定于 JavaScriptCore 内部表示，不同版本会改变。
 
-When you update Bun, you must regenerate bytecode:
+更新 Bun 后必须重新生成字节码：
 
 ```bash terminal icon="terminal"
-# After updating Bun
+# 更新 Bun 后
 bun build --bytecode ./index.ts --outdir=./dist
 ```
 
-If bytecode doesn't match the current Bun version, it's automatically ignored and your code falls back to parsing the JavaScript source. Your app still runs - you just lose the performance optimization.
+如果字节码版本与当前 Bun 不匹配，会被自动忽略，回退为解析 JavaScript 源码。应用依然能运行，只是失去性能优化。
 
-**Best practice**: Generate bytecode as part of your CI/CD build process. Don't commit `.jsc` files to git. Regenerate them whenever you update Bun.
+**最佳实践**：将字节码生成纳入 CI/CD 构建流程，不要将 `.jsc` 文件提交到 Git。更新 Bun 时重新生成字节码。
 
-### Source code still required
+### 仍需源码文件
 
-- The `.js` file (your bundled source code)
-- The `.jsc` file (the bytecode cache)
+- `.js` 文件（打包后的源码）
+- `.jsc` 文件（字节码缓存）
 
-At runtime:
+运行时流程：
 
-1. Bun loads the `.js` file, sees a `@bytecode` pragma, and checks the `.jsc` file
-2. Bun loads the `.jsc` file
-3. Bun validates the bytecode hash matches the source
-4. If valid, Bun uses the bytecode
-5. If invalid, Bun falls back to parsing the source
+1. Bun 加载 `.js` 文件，发现 `@bytecode` 指令，检查 `.jsc` 文件
+2. Bun 加载 `.jsc`
+3. Bun 验证字节码哈希与源码匹配
+4. 验证通过则使用字节码
+5. 否则回退为解析源码
 
-### Bytecode is not obfuscation
+### 字节码不是混淆手段
 
-Bytecode **does not obscure your source code**. It's an optimization, not a security measure.
+字节码**不会隐藏你的源代码**。它是性能优化，而非安全措施。
 
-## Production deployment
+## 生产部署
 
 ### Docker
 
-Include bytecode generation in your Dockerfile:
+在 Dockerfile 中集成字节码生成：
 
 ```dockerfile Dockerfile icon="docker"
 FROM oven/bun:1 AS builder
@@ -176,11 +176,11 @@ COPY --from=builder /dist/server /app/server
 CMD ["./server"]
 ```
 
-The bytecode is architecture-independent.
+字节码文件与架构无关。
 
 ### CI/CD
 
-Generate bytecode during your build pipeline:
+在构建流水线中生成字节码：
 
 ```yaml workflow.yml icon="file-code"
 # GitHub Actions
@@ -193,11 +193,11 @@ Generate bytecode during your build pipeline:
       ./src/index.ts
 ```
 
-## Debugging
+## 调试
 
-### Verify bytecode is being used
+### 验证字节码是否生效
 
-Check that the `.jsc` file exists:
+检查 `.jsc` 文件是否存在：
 
 ```bash terminal icon="terminal"
 ls -lh dist/
@@ -208,258 +208,259 @@ ls -lh dist/
 -rw-r--r--  1 user  staff   1.1M  index.jsc
 ```
 
-The `.jsc` file should be 2-8x larger than the `.js` file.
+`.jsc` 文件通常比 `.js` 大 2-8 倍。
 
-To log if bytecode is being used, set `BUN_JSC_verboseDiskCache=1` in your environment.
+要记录字节码使用情况，设置环境变量 `BUN_JSC_verboseDiskCache=1`。
 
-On success, it will log something like:
+成功时日志示例：
 
 ```txt
 [Disk cache] cache hit for sourceCode
 ```
 
-If you see a cache miss, it will log something like:
+若缓存未命中，日志示例：
 
 ```txt
 [Disk cache] cache miss for sourceCode
 ```
 
-It's normal for it it to log a cache miss multiple times since Bun doesn't currently bytecode cache JavaScript code used in builtin modules.
+多次缓存未命中正常，因为 Bun 目前不缓存内置模块的 JavaScript 字节码。
 
-### Common issues
+### 常见问题
 
-**Bytecode silently ignored**: Usually caused by a Bun version update. The cache version doesn't match, so bytecode is rejected. Regenerate to fix.
+**字节码被静默忽略**：通常是 Bun 版本更新导致的缓存版本不匹配，重新生成可解决。
 
-**File size too large**: This is expected. Consider:
+**文件太大**：这是预期的。建议：
 
-- Using `--minify` to reduce code size before bytecode generation
-- Compressing `.jsc` files for network transfer (gzip/brotli)
-- Evaluating if the startup performance gain is worth the size increase
+- 先用 `--minify` 减小代码体积再生成字节码
+- 网络传输时压缩 `.jsc` 文件（gzip/brotli）
+- 评估启动性能提升是否值得文件增大代价
 
-**Top-level await**: Not supported. Refactor to use async initialization functions.
+**顶层 await**：不支持，请用异步初始化函数替代。
 
-## What is bytecode?
+## 什么是字节码？
 
-When you run JavaScript, the JavaScript engine doesn't execute your source code directly. Instead, it goes through several steps:
+运行 JavaScript 时，JavaScript 引擎并不直接执行源代码，而是经过以下步骤：
 
-1. **Parsing**: The engine reads your JavaScript source code and converts it into an Abstract Syntax Tree (AST)
-2. **Bytecode compilation**: The AST is compiled into bytecode - a lower-level representation that's faster to execute
-3. **Execution**: The bytecode is executed by the engine's interpreter or JIT compiler
+1. **解析**：读取代码，生成抽象语法树（AST）
+2. **字节码编译**：将 AST 编译为字节码，一种更低级但执行更快的中间表示
+3. **执行**：引擎通过解释器或 JIT 编译器执行字节码
 
-Bytecode is an intermediate representation - it's lower-level than JavaScript source code, but higher-level than machine code. Think of it as assembly language for a virtual machine. Each bytecode instruction represents a single operation like "load this variable," "add two numbers," or "call this function."
+字节码介于源代码和机器码之间，可理解为虚拟机的汇编语言。每个字节码指令对应一条操作，如“加载变量”、“两个数字相加”或“调用函数”。
 
-This happens **every single time** you run your code. If you have a CLI tool that runs 100 times a day, your code gets parsed 100 times. If you have a serverless function with frequent cold starts, parsing happens on every cold start.
+每次运行你的代码都会执行以上步骤。如果你的 CLI 每天运行 100 次，则代码被解析 100 次。如果是 serverless 函数发生频繁冷启动，解析在每次冷启动时都会进行。
 
-With bytecode caching, Bun moves steps 1 and 2 to the build step. At runtime, the engine loads the pre-compiled bytecode and jumps straight to execution.
+字节码缓存将步骤 1 和 2 移到构建时。运行时直接加载预编译的字节码，加快启动。
 
-### Why lazy parsing makes this even better
+### 为什么懒解析让字节码更有效
 
-Modern JavaScript engines use a clever optimization called **lazy parsing**. They don't parse all your code upfront - instead, functions are only parsed when they're first called:
+现代 JavaScript 引擎有种巧妙的优化叫**懒解析**，不会一开始解析所有代码，只有函数首次调用时才解析：
 
 ```js
-// Without bytecode caching:
+// 没有字节码缓存时：
 function rarely_used() {
-  // This 500-line function is only parsed
-  // when it's actually called
+  // 这段 500 行的函数仅在调用时被解析
 }
 
 function main() {
   console.log("Starting app");
-  // rarely_used() is never called, so it's never parsed
+  // rarely_used() 从未调用，故无解析
 }
 ```
 
-This means parsing overhead isn't just a startup cost - it happens throughout your application's lifetime as different code paths execute. With bytecode caching, **all functions are pre-compiled**, even the ones that are lazily parsed. The parsing work happens once at build time instead of being distributed throughout your application's execution.
+解析开销不仅是启动时的成本，而是在应用运行期间根据不同路径陆续产生。字节码缓存则提前编译所有函数，包括本应懒解析的，那些解析工作一次性在构建时完成。
 
-## The bytecode format
+## 字节码格式
 
-### Inside a .jsc file
+### .jsc 文件内部结构
 
-A `.jsc` file contains a serialized bytecode structure. Understanding what's inside helps explain both the performance benefits and the file size tradeoff.
+`.jsc` 文件包含序列化的字节码结构。理解其内容能解释性能优势与文件增大间的权衡。
 
-**Header section** (validated on every load):
+**头部部分**（每次加载验证）：
 
-- **Cache version**: A hash tied to the JavaScriptCore framework version. This ensures bytecode generated with one version of Bun only runs with that exact version.
-- **Code block type tag**: Identifies whether this is a Program, Module, Eval, or Function code block.
+- **缓存版本**：与 JavaScriptCore 框架版本关联的哈希，确保字节码只在对应版本的 Bun 中运行。
+- **代码块类型标签**：指示这是程序、模块、eval 还是函数代码块。
 
-**SourceCodeKey** (validates bytecode matches source):
+**SourceCodeKey**（验证字节码对应源码）：
 
-- **Source code hash**: A hash of the original JavaScript source code. Bun verifies this matches before using the bytecode.
-- **Source code length**: The exact length of the source, for additional validation.
-- **Compilation flags**: Critical compilation context like strict mode, whether it's a script vs module, eval context type, etc. The same source code compiled with different flags produces different bytecode.
+- **源码哈希**：原始 JavaScript 代码的哈希，Bun 会校验匹配后才使用字节码。
+- **源码长度**：源码精确长度，用于进一步验证。
+- **编译标记**：如严格模式、脚本或模块类型、eval 类型等。不同标记下同一源码生成不同字节码。
 
-**Bytecode instructions**:
+**字节码指令**：
 
-- **Instruction stream**: The actual bytecode opcodes - the compiled representation of your JavaScript. This is a variable-length sequence of bytecode instructions.
-- **Metadata table**: Each opcode has associated metadata - things like profiling counters, type hints, and execution counts (even if not yet populated).
-- **Jump targets**: Pre-computed addresses for control flow (if/else, loops, switch statements).
-- **Switch tables**: Optimized lookup tables for switch statements.
+- **指令流**：实际的字节码操作码，表示 JavaScript 编译后代码，是可变长度序列。
+- **元数据表**：每条操作码相关的元信息，如性能计数器、类型提示、执行次数（即使未填充）。
+- **跳转目标**：针对控制流（if/else、循环、switch）预计算的地址。
+- **Switch 表**：针对 switch 语句的优化查找表。
 
-**Constants and identifiers**:
+**常量与标识符**：
 
-- **Constant pool**: All literal values in your code - numbers, strings, booleans, null, undefined. These are stored as actual JavaScript values (JSValues) so they don't need to be parsed from source at runtime.
-- **Identifier table**: All variable and function names used in the code. Stored as deduplicated strings.
-- **Source code representation markers**: Flags indicating how constants should be represented (as integers, doubles, big ints, etc.).
+- **常量池**：代码中所有字面量，包括数字、字符串、布尔值、null、undefined。以 JavaScript 值（JSValue）存储，运行时无需解析源码来加载。
+- **标识符表**：代码使用过的所有变量与函数名，采用去重字符串存储。
+- **源码表示标记**：指示常量如何存储（整数、双精度、BigInt 等）。
 
-**Function metadata** (for each function in your code):
+**函数元数据**（每个函数对应）：
 
-- **Register allocation**: How many registers (local variables) the function needs - `thisRegister`, `scopeRegister`, `numVars`, `numCalleeLocals`, `numParameters`.
-- **Code features**: A bitmask of function characteristics: is it a constructor? an arrow function? does it use `super`? does it have tail calls? These affect how the function is executed.
-- **Lexically scoped features**: Strict mode and other lexical context.
-- **Parse mode**: The mode in which the function was parsed (normal, async, generator, async generator).
+- **寄存器分配**：函数所需寄存器数，如 `thisRegister`、`scopeRegister`、`numVars`、`numCalleeLocals`、`numParameters`。
+- **代码特性**：函数特性位掩码，如是否构造函数、箭头函数、使用 `super`、尾调用等，影响执行行为。
+- **词法作用域特性**：严格模式及其他词法上下文。
+- **解析模式**：函数被解析时的模式（普通、异步、生成器、异步生成器）。
 
-**Nested structures**:
+**嵌套结构**：
 
-- **Function declarations and expressions**: Each nested function gets its own bytecode block, recursively. A file with 100 functions has 100 separate bytecode blocks, all nested in the structure.
-- **Exception handlers**: Try/catch/finally blocks with their boundaries and handler addresses pre-computed.
-- **Expression info**: Maps bytecode positions back to source code locations for error reporting and debugging.
+- **函数声明和表达式**：每个内嵌函数含独立字节码块。文件包含 100 个函数即有 100 个嵌套字节码块。
+- **异常处理**：try/catch/finally 边界及处理地址经过预计算。
+- **表达式信息**：字节码位置映射回源码位置，方便报错及调试。
 
-### What bytecode does NOT contain
+### 字节码不包含什么
 
-Importantly, **bytecode does not embed your source code**. Instead:
+重要的是，**字节码不包含你的源码文本**，而是：
 
-- The JavaScript source is stored separately (in the `.js` file)
-- The bytecode only stores a hash and length of the source
-- At load time, Bun validates the bytecode matches the current source code
+- JavaScript 源码保存在 `.js` 文件中
+- 字节码只存储源码的哈希和长度
+- 加载时 Bun 验证字节码与当前源码匹配
 
-This is why you need to deploy both the `.js` and `.jsc` files. The `.jsc` file is useless without its corresponding `.js` file.
+因此需要同时发布 `.js` 和 `.jsc` 文件，缺一不可。
 
-## The tradeoff: file size
+## 权衡：文件大小
 
-Bytecode files are significantly larger than source code - typically 2-8x larger.
+字节码文件显著大于源码——一般比源码大 2-8 倍。
 
-### Why is bytecode so much larger?
+### 为什么字节码更大？
 
-**Bytecode instructions are verbose**:
-A single line of minified JavaScript might compile to dozens of bytecode instructions. For example:
+**字节码指令冗长**  
+一行压缩后的 JS 代码可能对应数十条字节码指令，例如：
 
 ```js
 const sum = arr.reduce((a, b) => a + b, 0);
 ```
 
-Compiles to bytecode that:
+产生的字节码包括：
 
-- Loads the `arr` variable
-- Gets the `reduce` property
-- Creates the arrow function (which itself has bytecode)
-- Loads the initial value `0`
-- Sets up the call with the right number of arguments
-- Actually performs the call
-- Stores the result in `sum`
+- 加载 `arr` 变量
+- 取 `reduce` 属性
+- 创建箭头函数（其本身含字节码）
+- 加载初始值 0
+- 设定调用参数数量
+- 执行调用
+- 结果赋值给 `sum`
 
-Each of these steps is a separate bytecode instruction with its own metadata.
+每步都是独立操作指令附带元信息。
 
-**Constant pools store everything**:
-Every string literal, number, property name - everything gets stored in the constant pool. Even if your source code has `"hello"` a hundred times, the constant pool stores it once, but the identifier table and constant references add overhead.
+**常量池存储所有字面量**  
+例如字符串 `"hello"` 出现 100 次，常量池只存储一次，但标识符表和引用增加额外空间。
 
-**Per-function metadata**:
-Each function - even small one-line functions - gets its own complete metadata:
+**每函数元数据**  
+即使是一行小函数，也有完整的元数据：
 
-- Register allocation info
-- Code features bitmask
-- Parse mode
-- Exception handlers
-- Expression info for debugging
+- 寄存器分配信息
+- 代码特性掩码
+- 解析模式
+- 异常处理
+- 调试用表达式信息
 
-A file with 1,000 small functions has 1,000 sets of metadata.
+文件中有 1000 个小函数即有 1000 份这类数据。
 
-**Profiling data structures**:
-Even though profiling data isn't populated yet, the _structures_ to hold profiling data are allocated. This includes:
+**性能分析结构**  
+即使未填充，也有用来记录性能数据的结构：
 
-- Value profile slots (tracking what types flow through each operation)
-- Array profile slots (tracking array access patterns)
-- Binary arithmetic profile slots (tracking number types in math operations)
-- Unary arithmetic profile slots
+- 值类型分析槽
+- 数组访问分析槽
+- 二元算术分析槽
+- 一元算术分析槽
 
-These take up space even when empty.
+都占用空间。
 
-**Pre-computed control flow**:
-Jump targets, switch tables, and exception handler boundaries are all pre-computed and stored. This makes execution faster but increases file size.
+**预计算控制流**  
+跳转目标、switch 表、异常边界预先计算存储，加快执行也增加大小。
 
-### Mitigation strategies
+### 减少体积的策略
 
-**Compression**:
-Bytecode compresses extremely well with gzip/brotli (60-70% compression). The repetitive structure and metadata compress efficiently.
+**压缩**  
+字节码对 gzip / brotli 压缩非常友好，可减小 60-70%。
 
-**Minification first**:
-Using `--minify` before bytecode generation helps:
+**先压缩代码**  
+先用 `--minify` 可带来：
 
-- Shorter identifiers → smaller identifier table
-- Dead code elimination → less bytecode generated
-- Constant folding → fewer constants in the pool
+- 较短的标识符 → 标识符表更小
+- 消除死代码 → 减少字节码
+- 常量折叠 → 常量池变小
 
-**The tradeoff**:
-You're trading 2-4x larger files for 2-4x faster startup. For CLIs, this is usually worth it. For long-running servers where a few megabytes of disk space don't matter, it's even less of an issue.
+**权衡考虑**  
+通常你用 2-4 倍更大的文件换 2-4 倍更快的启动。对 CLI 来说极具价值；对长时间运行服务器，几兆字节无所谓。
 
-## Versioning and portability
+## 版本与可移植性
 
-### Cross-architecture portability: ✅
+### 跨架构可移植：✅
 
-Bytecode is **architecture-independent**. You can:
+字节码与架构无关。可以：
 
-- Build on macOS ARM64, deploy to Linux x64
-- Build on Linux x64, deploy to AWS Lambda ARM64
-- Build on Windows x64, deploy to macOS ARM64
+- macOS ARM64 构建，部署到 Linux x64
+- Linux x64 构建，部署到 AWS Lambda ARM64
+- Windows x64 构建，部署到 macOS ARM64
 
-The bytecode contains abstract instructions that work on any architecture. Architecture-specific optimizations happen during JIT compilation at runtime, not in the cached bytecode.
+字节码是抽象指令，由运行时 JIT 编译针对架构优化。
 
-### Cross-version portability: ❌
+### 跨版本可移植：❌
 
-Bytecode is **not stable across Bun versions**. Here's why:
+字节码不兼容不同 Bun 版本，原因：
 
-**Bytecode format changes**:
-JavaScriptCore's bytecode format evolves. New opcodes get added, old ones get removed or changed, metadata structures change. Each version of JavaScriptCore has a different bytecode format.
+**字节码格式持续演进**  
+新旧 JavaScriptCore 版本不断变更操作码、元数据结构，格式不一致。
 
-**Version validation**:
-The cache version in the `.jsc` file header is a hash of the JavaScriptCore framework. When Bun loads bytecode:
+**版本验证**  
+`.jsc` 文件头部包含缓存版本哈希。加载时：
 
-1. It extracts the cache version from the `.jsc` file
-2. It computes the current JavaScriptCore version
-3. If they don't match, the bytecode is **silently rejected**
-4. Bun falls back to parsing the `.js` source code
+1. 读取 `.jsc` 中缓存版本
+2. 计算当前 JavaScriptCore 版本哈希
+3. 不匹配时字节码**静默拒绝**
+4. 回退解析 `.js` 源码
 
-Your application still runs - you just lose the performance optimization.
+应用仍然运行，只是性能优化失效。
 
-**Graceful degradation**:
-This design means bytecode caching "fails open" - if anything goes wrong (version mismatch, corrupted file, missing file), your code still runs normally. You might see slower startup, but you won't see errors.
+**降级设计**  
+字节码缓存对异常“开放失败”：出错时自动回退解析，无异常抛出，保证代码运行。
 
-## Unlinked vs. linked bytecode
+## 未链接与已链接字节码
 
-JavaScriptCore makes a crucial distinction between "unlinked" and "linked" bytecode. This separation is what makes bytecode caching possible:
+JavaScriptCore 区分“未链接”和“已链接”字节码，这使字节码缓存成为可能。
 
-### Unlinked bytecode (what's cached)
+### 未链接字节码（缓存内容）
 
-The bytecode saved in `.jsc` files is **unlinked bytecode**. It contains:
+`.jsc` 文件保存的是**未链接字节码**。包含：
 
-- The compiled bytecode instructions
-- Structural information about the code
-- Constants and identifiers
-- Control flow information
+- 编译的字节码指令
+- 代码结构信息
+- 常量与标识符
+- 控制流信息
 
-But it **doesn't** contain:
+不包含：
 
-- Pointers to actual runtime objects
-- JIT-compiled machine code
-- Profiling data from previous runs
-- Call link information (which functions call which)
+- 指向运行时对象的指针
+- JIT 编译的机器码
+- 运行时性能分析数据
+- 调用链接信息（函数调用关系）
 
-Unlinked bytecode is **immutable and shareable**. Multiple executions of the same code can all reference the same unlinked bytecode.
+未链接字节码是**不可变且可共享的**，同一代码多次运行共用一份。
 
-### Linked bytecode (runtime execution)
+### 已链接字节码（运行时）
 
-When Bun runs bytecode, it "links" it - creating a runtime wrapper that adds:
+运行时，Bun 对字节码完成“链接”过程，生成运行时结构，附加：
 
-- **Call link information**: As your code runs, the engine learns which functions call which and optimizes those call sites.
-- **Profiling data**: The engine tracks how many times each instruction executes, what types of values flow through the code, array access patterns, etc.
-- **JIT compilation state**: References to baseline JIT or optimizing JIT (DFG/FTL) compiled versions of hot code.
-- **Runtime objects**: Pointers to actual JavaScript objects, prototypes, scopes, etc.
+- **调用链接信息**：优化函数调用路径
+- **性能分析数据**：统计指令执行次数、类型流、数组模式等
+- **JIT 编译状态**：基线 JIT 或优化 JIT（DFG/FTL）的代码
+- **运行时对象**：JavaScript 对象、原型、作用域指针等
 
-This linked representation is created fresh every time you run your code. This allows:
+每次运行产生新链接副本，允许：
 
-1. **Caching the expensive work** (parsing and compilation to unlinked bytecode)
-2. **Still collecting runtime profiling data** to guide optimizations
-3. **Still applying JIT optimizations** based on actual execution patterns
+1. 缓存昂贵的解析编译（未链接字节码）
+2. 收集运行时分析数据
+3. 启用基于分析的 JIT 优化
 
-Bytecode caching moves expensive work (parsing and compiling to bytecode) from runtime to build time. For applications that start frequently, this can halve your startup time at the cost of larger files on disk.
+字节码缓存将编译工作从运行时移至构建时，对于频繁启动的应用，可将启动时间减半，但换来更大的磁盘文件。
 
-For production CLIs and serverless deployments, the combination of `--bytecode --minify --sourcemap` gives you the best performance while maintaining debuggability.
+在生产 CLI 和无服务器部署中，结合 `--bytecode --minify --sourcemap` 可获得性能和调试性的平衡。
+
+# 结束

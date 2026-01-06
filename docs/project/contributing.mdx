@@ -1,29 +1,29 @@
 ---
-title: Contributing
-description: Contributing to Bun
+title: 贡献
+description: 贡献给 Bun
 ---
 
-Configuring a development environment for Bun can take 10-30 minutes depending on your internet connection and computer speed. You will need ~10GB of free disk space for the repository and build artifacts.
+配置 Bun 的开发环境可能需要 10 到 30 分钟，具体取决于您的网络连接和计算机速度。您需要大约 10GB 的可用磁盘空间用于存储仓库和构建产物。
 
-If you are using Windows, please refer to [this guide](/project/building-windows)
+如果您使用的是 Windows，请参考 [此指南](/project/building-windows)
 
-## Using Nix (Alternative)
+## 使用 Nix（可选方案）
 
-A Nix flake is provided as an alternative to manual dependency installation:
+提供了一个 Nix flake 作为手动安装依赖的替代方案：
 
 ```bash
 nix develop
-# or explicitly use the pure shell
+# 或显式使用纯净 shell
 # nix develop .#pure
 export CMAKE_SYSTEM_PROCESSOR=$(uname -m)
 bun bd
 ```
 
-This provides all dependencies in an isolated, reproducible environment without requiring sudo.
+这样可以在隔离且可复现的环境中提供所有依赖，无需 sudo。
 
-## Install Dependencies (Manual)
+## 安装依赖（手动）
 
-Using your system's package manager, install Bun's dependencies:
+使用系统的包管理器安装 Bun 的依赖：
 
 <CodeGroup>
 
@@ -49,9 +49,9 @@ sudo zypper install go cmake ninja automake git icu rustup && rustup toolchain i
 
 </CodeGroup>
 
-> **Note**: The Zig compiler is automatically installed and updated by the build scripts. Manual installation is not required.
+> **注意**：Zig 编译器由构建脚本自动安装和更新，无需手动安装。
 
-Before starting, you will need to already have a release build of Bun installed, as we use our bundler to transpile and minify our code, as well as for code generation scripts.
+开始之前，您需要已安装 Bun 的发布版本构建，因为我们使用自己的打包器来转译和压缩代码，以及用于代码生成脚本。
 
 <CodeGroup>
 
@@ -70,32 +70,32 @@ brew install bun
 
 </CodeGroup>
 
-### Optional: Install `ccache`
+### 可选：安装 `ccache`
 
-ccache is used to cache compilation artifacts, significantly speeding up builds:
+ccache 用于缓存编译产物，大幅加速构建过程：
 
 ```bash
-# For macOS
+# macOS
 brew install ccache
 
-# For Ubuntu/Debian
+# Ubuntu/Debian
 sudo apt install ccache
 
-# For Arch
+# Arch
 sudo pacman -S ccache
 
-# For Fedora
+# Fedora
 sudo dnf install ccache
 
-# For openSUSE
+# openSUSE
 sudo zypper install ccache
 ```
 
-Our build scripts will automatically detect and use `ccache` if available. You can check cache statistics with `ccache --show-stats`.
+构建脚本会自动检测并使用 `ccache`（如可用）。您可以通过 `ccache --show-stats` 查看缓存统计信息。
 
-## Install LLVM
+## 安装 LLVM
 
-Bun requires LLVM 19 (`clang` is part of LLVM). This version requirement is to match WebKit (precompiled), as mismatching versions will cause memory allocation failures at runtime. In most cases, you can install LLVM through your system package manager:
+Bun 需要 LLVM 19（`clang` 是 LLVM 的一部分）。这个版本需求是为了匹配 WebKit（预编译版本），版本不匹配会导致运行时内存分配失败。大多数情况下，您可以通过系统包管理器安装 LLVM：
 
 <CodeGroup>
 
@@ -104,7 +104,7 @@ brew install llvm@19
 ```
 
 ```bash Ubuntu/Debian
-# LLVM has an automatic installation script that is compatible with all versions of Ubuntu
+# LLVM 提供了一个兼容所有 Ubuntu 版本的自动安装脚本
 wget https://apt.llvm.org/llvm.sh -O - | sudo bash -s -- 19 all
 ```
 
@@ -122,44 +122,44 @@ sudo zypper install clang19 lld19 llvm19
 
 </CodeGroup>
 
-If none of the above solutions apply, you will have to install it [manually](https://github.com/llvm/llvm-project/releases/tag/llvmorg-19.1.7).
+如果上述方案都不适用，您需要[手动安装](https://github.com/llvm/llvm-project/releases/tag/llvmorg-19.1.7)。
 
-Make sure Clang/LLVM 19 is in your path:
+确保 Clang/LLVM 19 在您的路径中：
 
 ```bash
 which clang-19
 ```
 
-If not, run this to manually add it:
+如果没有，请手动添加：
 
 <CodeGroup>
 
 ```bash macOS (Homebrew)
-# use fish_add_path if you're using fish
-# use path+="$(brew --prefix llvm@19)/bin" if you are using zsh
+# 如果使用 fish shell，使用 fish_add_path
+# 如果使用 zsh，使用 path+="$(brew --prefix llvm@19)/bin"
 export PATH="$(brew --prefix llvm@19)/bin:$PATH"
 ```
 
 ```bash Arch
-# use fish_add_path if you're using fish
+# 如果使用 fish shell，使用 fish_add_path
 export PATH="$PATH:/usr/lib/llvm19/bin"
 ```
 
 </CodeGroup>
 
 <Warning>
-⚠️ Ubuntu distributions (\<= 20.04) may require installation of the C++ standard library independently. See the [troubleshooting section](#span-file-not-found-on-ubuntu) for more information.
+⚠️ Ubuntu 发行版（版本 ≤ 20.04）可能需要单独安装 C++ 标准库。详情见[故障排查章节](#span-file-not-found-on-ubuntu)。
 </Warning>
 
-## Building Bun
+## 构建 Bun
 
-After cloning the repository, run the following command to build. This may take a while as it will clone submodules and build dependencies.
+克隆仓库后，运行以下命令构建。这可能需要一些时间，因为会克隆子模块和构建依赖。
 
 ```bash
 bun run build
 ```
 
-The binary will be located at `./build/debug/bun-debug`. It is recommended to add this to your `$PATH`. To verify the build worked, let's print the version number on the development build of Bun.
+生成的二进制文件位于 `./build/debug/bun-debug`。建议将其添加到您的 `$PATH` 中。验证构建是否成功，可以打印开发版 Bun 的版本号：
 
 ```bash
 build/debug/bun-debug --version
@@ -168,19 +168,19 @@ x.y.z_debug
 
 ## VSCode
 
-VSCode is the recommended IDE for working on Bun, as it has been configured. Once opening, you can run `Extensions: Show Recommended Extensions` to install the recommended extensions for Zig and C++. ZLS is automatically configured.
+VSCode 是推荐的 Bun 开发 IDE，且已配置好。打开后，您可以运行 `Extensions: Show Recommended Extensions` 来安装 Zig 和 C++ 的推荐扩展。ZLS 会自动配置。
 
-If you use a different editor, make sure that you tell ZLS to use the automatically installed Zig compiler, which is located at `./vendor/zig/zig.exe`. The filename is `zig.exe` so that it works as expected on Windows, but it still works on macOS/Linux (it just has a surprising file extension).
+如果您使用其他编辑器，请确保将 ZLS 配置为使用自动安装的 Zig 编译器，路径为 `./vendor/zig/zig.exe`。文件名为 `zig.exe` 是为了兼容 Windows，但在 macOS/Linux 上同样有效（只是扩展名比较特殊）。
 
-We recommend adding `./build/debug` to your `$PATH` so that you can run `bun-debug` in your terminal:
+推荐将 `./build/debug` 添加到您的 `$PATH`，这样就可以在终端中直接运行：
 
 ```sh
 bun-debug
 ```
 
-## Running debug builds
+## 运行调试构建
 
-The `bd` package.json script compiles and runs a debug build of Bun, only printing the output of the build process if it fails.
+`bd` package.json 脚本会编译并运行 Bun 的调试构建，仅在失败时打印构建过程输出。
 
 ```sh
 bun bd <args>
@@ -188,120 +188,119 @@ bun bd test foo.test.ts
 bun bd ./foo.ts
 ```
 
-Bun generally takes about 2.5 minutes to compile a debug build when there are Zig changes. If your development workflow is "change one line, save, rebuild", you will spend too much time waiting for the build to finish. Instead:
+Bun 通常在 Zig 代码改动时，调试构建大约需要 2.5 分钟。如果您的开发流程是“改一行，保存，重建”，等待时间会很长。建议：
 
-- Batch up your changes
-- Ensure zls is running with incremental watching for LSP errors (if you use VSCode and install Zig and run `bun run build` once to download Zig, this should just work)
-- Prefer using the debugger ("CodeLLDB" in VSCode) to step through the code.
-- Use debug logs. `BUN_DEBUG_<scope>=1` will enable debug logging for the corresponding `Output.scoped(.<scope>, .hidden)` logs. You can also set `BUN_DEBUG_QUIET_LOGS=1` to disable all debug logging that isn't explicitly enabled. To dump debug logs into a file, `BUN_DEBUG=<path-to-file>.log`. Debug logs are aggressively removed in release builds.
-- src/js/\*\*.ts changes are pretty much instant to rebuild. C++ changes are a bit slower, but still much faster than the Zig code (Zig is one compilation unit, C++ is many).
+- 批量提交改动
+- 确保 zls 在增量模式下运行以检查 LSP 错误（如果您使用 VSCode 并且安装了 Zig，且运行过 `bun run build` 下载 Zig，应当自动生效）
+- 优先使用调试器（VSCode 中的 "CodeLLDB"）逐步调试代码
+- 使用调试日志。设置 `BUN_DEBUG_<scope>=1` 可启用对应 `Output.scoped(.<scope>, .hidden)` 的调试日志。可设置 `BUN_DEBUG_QUIET_LOGS=1` 关闭所有未显式开启的调试日志。要将调试日志输出到文件，设置 `BUN_DEBUG=<日志文件路径>.log`。发布版本会严格移除调试日志。
+- `src/js/**/*.ts` 文件的改动重建几乎是即时的。C++ 改动慢一些，但仍远快于 Zig（Zig 是单一编译单元，C++ 是多个编译单元）。
 
-## Code generation scripts
+## 代码生成脚本
 
-Several code generation scripts are used during Bun's build process. These are run automatically when changes are made to certain files.
+Bun 构建过程中使用了多个代码生成脚本。这些脚本在相关文件改动时自动运行。
 
-In particular, these are:
+主要有：
 
-- `./src/codegen/generate-jssink.ts` -- Generates `build/debug/codegen/JSSink.cpp`, `build/debug/codegen/JSSink.h` which implement various classes for interfacing with `ReadableStream`. This is internally how `FileSink`, `ArrayBufferSink`, `"type": "direct"` streams and other code related to streams works.
-- `./src/codegen/generate-classes.ts` -- Generates `build/debug/codegen/ZigGeneratedClasses*`, which generates Zig & C++ bindings for JavaScriptCore classes implemented in Zig. In `**/*.classes.ts` files, we define the interfaces for various classes, methods, prototypes, getters/setters etc which the code generator reads to generate boilerplate code implementing the JavaScript objects in C++ and wiring them up to Zig
-- `./src/codegen/cppbind.ts` -- Generates automatic Zig bindings for C++ functions marked with `[[ZIG_EXPORT]]` attributes.
-- `./src/codegen/bundle-modules.ts` -- Bundles built-in modules like `node:fs`, `bun:ffi` into files we can include in the final binary. In development, these can be reloaded without rebuilding Zig (you still need to run `bun run build`, but it re-reads the transpiled files from disk afterwards). In release builds, these are embedded into the binary.
-- `./src/codegen/bundle-functions.ts` -- Bundles globally-accessible functions implemented in JavaScript/TypeScript like `ReadableStream`, `WritableStream`, and a handful more. These are used similarly to the builtin modules, but the output more closely aligns with what WebKit/Safari does for Safari's built-in functions so that we can copy-paste the implementations from WebKit as a starting point.
+- `./src/codegen/generate-jssink.ts` — 生成 `build/debug/codegen/JSSink.cpp` 和 `JSSink.h`，实现多个用于与 `ReadableStream` 交互的类。这是 `FileSink`、`ArrayBufferSink`、`"type": "direct"` 流以及其他流相关功能的内部实现。
+- `./src/codegen/generate-classes.ts` — 生成 `build/debug/codegen/ZigGeneratedClasses*`，生成 Zig 和 C++ 绑定，用于 Zig 实现的 JavaScriptCore 类。在 `**/*.classes.ts` 文件中定义各种类、方法、原型、getter/setter 等接口，代码生成器读取这些定义生成在 C++ 中实现JavaScript对象的模板代码并与 Zig 绑定。
+- `./src/codegen/cppbind.ts` — 生成对带有 `[[ZIG_EXPORT]]` 特性的 C++ 函数的自动 Zig 绑定。
+- `./src/codegen/bundle-modules.ts` — 打包内置模块如 `node:fs`、`bun:ffi` 成为可包含于最终二进制的文件。开发时可重新加载这些文件，无需重建 Zig（仍需运行 `bun run build`，但会从磁盘重新读取转译文件）。发布时嵌入二进制中。
+- `./src/codegen/bundle-functions.ts` — 打包用 JavaScript/TypeScript 实现的全局函数，如 `ReadableStream`、`WritableStream` 等。这与内置模块类似，但生成的代码更接近 WebKit/Safari 的实现，方便从 WebKit 复制粘贴作为起点。
 
-## Modifying ESM modules
+## 修改 ESM 模块
 
-Certain modules like `node:fs`, `node:stream`, `bun:sqlite`, and `ws` are implemented in JavaScript. These live in `src/js/{node,bun,thirdparty}` files and are pre-bundled using Bun.
+某些模块如 `node:fs`、`node:stream`、`bun:sqlite` 和 `ws` 用 JavaScript 实现，位于 `src/js/{node,bun,thirdparty}`，并由 Bun 预打包。
 
-## Release build
+## 发布版本构建
 
-To compile a release build of Bun, run:
+编译 Bun 的发布版本，运行：
 
 ```bash
 bun run build:release
 ```
 
-The binary will be located at `./build/release/bun` and `./build/release/bun-profile`.
+生成的二进制位于 `./build/release/bun` 和 `./build/release/bun-profile`。
 
-### Download release build from pull requests
+### 从 Pull Request 下载发布版本构建
 
-To save you time spent building a release build locally, we provide a way to run release builds from pull requests. This is useful for manually testing changes in a release build before they are merged.
+为节省本地编译发布版的时间，我们提供了从 Pull Request 运行发布构建的方法。方便在合并前手动测试更改。
 
-To run a release build from a pull request, you can use the `bun-pr` npm package:
+运行 PR 的发布版，可以使用 `bun-pr` npm 包：
 
 ```sh
 bunx bun-pr <pr-number>
 bunx bun-pr <branch-name>
 bunx bun-pr "https://github.com/oven-sh/bun/pull/1234566"
-bunx bun-pr --asan <pr-number> # Linux x64 only
+bunx bun-pr --asan <pr-number> # 仅限 Linux x64
 ```
 
-This will download the release build from the pull request and add it to `$PATH` as `bun-${pr-number}`. You can then run the build with `bun-${pr-number}`.
+它会从 PR 的 GitHub Actions 构建产物下载发布版本并添加到 `$PATH`，命名为 `bun-${pr-number}`。然后可以用命令 `bun-${pr-number}` 运行：
 
 ```sh
 bun-1234566 --version
 ```
 
-This works by downloading the release build from the GitHub Actions artifacts on the linked pull request. You may need the `gh` CLI installed to authenticate with GitHub.
+需要安装 `gh` CLI 以进行 GitHub 认证。
 
 ## AddressSanitizer
 
-[AddressSanitizer](https://en.wikipedia.org/wiki/AddressSanitizer) helps find memory issues, and is enabled by default in debug builds of Bun on Linux and macOS. This includes the Zig code and all dependencies. It makes the Zig code take about 2x longer to build, if that's stopping you from being productive you can disable it by setting `-Denable_asan=$<IF:$<BOOL:${ENABLE_ASAN}>,true,false>` to `-Denable_asan=false` in the `cmake/targets/BuildBun.cmake` file, but generally we recommend batching your changes up between builds.
+[AddressSanitizer](https://en.wikipedia.org/wiki/AddressSanitizer) 用于检测内存问题，默认在 Linux 和 macOS 的 Bun 调试版启用，包括 Zig 代码和所有依赖。它使 Zig 代码构建时间大约增加两倍。如果这阻碍了您的效率，可以在 `cmake/targets/BuildBun.cmake` 文件中，将 `-Denable_asan=$<IF:$<BOOL:${ENABLE_ASAN}>,true,false>` 参数改为 `-Denable_asan=false` 以禁用，但推荐批量提交改动后再构建。
 
-To build a release build with Address Sanitizer, run:
+构建带 Address Sanitizer 的发布版，运行：
 
 ```bash
 bun run build:release:asan
 ```
 
-In CI, we run our test suite with at least one target that is built with Address Sanitizer.
+在 CI 中，我们至少有一个目标使用 Address Sanitizer 来运行测试套件。
 
-## Building WebKit locally + Debug mode of JSC
+## 本地构建 WebKit + JSC 调试模式
 
-WebKit is not cloned by default (to save time and disk space). To clone and build WebKit locally, run:
+默认不克隆 WebKit（节约时间和空间）。要本地克隆并构建 WebKit：
 
 ```bash
-# Clone WebKit into ./vendor/WebKit
+# 克隆 WebKit 到 ./vendor/WebKit
 git clone https://github.com/oven-sh/WebKit vendor/WebKit
 
-# Check out the commit hash specified in `set(WEBKIT_VERSION <commit_hash>)` in cmake/tools/SetupWebKit.cmake
+# 检出 cmake/tools/SetupWebKit.cmake 中 set(WEBKIT_VERSION <commit_hash>) 指定的提交
 git -C vendor/WebKit checkout <commit_hash>
 
-# Make a debug build of JSC. This will output build artifacts in ./vendor/WebKit/WebKitBuild/Debug
-# Optionally, you can use `bun run jsc:build` for a release build
+# 构建 JSC 的调试版本，产物在 ./vendor/WebKit/WebKitBuild/Debug
+# 可选：用 `bun run jsc:build` 构建发布版
 bun run jsc:build:debug && rm vendor/WebKit/WebKitBuild/Debug/JavaScriptCore/DerivedSources/inspector/InspectorProtocolObjects.h
 
-# After an initial run of `make jsc-debug`, you can rebuild JSC with:
+# 初次运行 `make jsc-debug` 后，可以用下面命令重建 JSC：
 cmake --build vendor/WebKit/WebKitBuild/Debug --target jsc && rm vendor/WebKit/WebKitBuild/Debug/JavaScriptCore/DerivedSources/inspector/InspectorProtocolObjects.h
 
-# Build bun with the local JSC build
+# 用本地 JSC 构建 Bun
 bun run build:local
 ```
 
-Using `bun run build:local` will build Bun in the `./build/debug-local` directory (instead of `./build/debug`), you'll have to change a couple of places to use this new directory:
+使用 `bun run build:local` 时，Bun 会构建到 `./build/debug-local` 目录（非默认 `./build/debug`），需要修改以下位置：
 
-- The first line in `src/js/builtins.d.ts`
-- The `CompilationDatabase` line in `.clangd` config should be `CompilationDatabase: build/debug-local`
-- In `build.zig`, the `codegen_path` option should be `build/debug-local/codegen` (instead of `build/debug/codegen`)
-- In `.vscode/launch.json`, many configurations use `./build/debug/`, change them as you see fit
+- `src/js/builtins.d.ts` 第一行
+- `.clangd` 配置中的 `CompilationDatabase` 路径改为 `build/debug-local`
+- `build.zig` 中的 `codegen_path` 改为 `build/debug-local/codegen`
+- `.vscode/launch.json` 中相应配置的路径改为 `./build/debug-local/`
 
-Note that the WebKit folder, including build artifacts, is 8GB+ in size.
+注意 WebKit 文件夹（含构建产物）大小超过 8GB。
 
-If you are using a JSC debug build and using VScode, make sure to run the `C/C++: Select a Configuration` command to configure intellisense to find the debug headers.
+如果使用 JSC 调试构建且用 VSCode，务必运行 “C/C++: Select a Configuration” 以配置 IntelliSense 找到调试头文件。
 
-Note that if you change make changes to our [WebKit fork](https://github.com/oven-sh/WebKit), you will also have to change `SetupWebKit.cmake` to point to the commit hash.
+修改我们 [WebKit 仓库](https://github.com/oven-sh/WebKit) 的代码后，还需同步修改 `SetupWebKit.cmake` 中的提交哈希。
 
-## Troubleshooting
+## 故障排查
 
-### 'span' file not found on Ubuntu
+### Ubuntu 上出现 'span' 文件未找到
 
 <Warning>
-  ⚠️ Please note that the instructions below are specific to issues occurring on Ubuntu. It is unlikely that the same
-  issues will occur on other Linux distributions.
+  ⚠️ 以下说明针对 Ubuntu 特有的问题，其他 Linux 发行版一般不会遇到此类问题。
 </Warning>
 
-The Clang compiler typically uses the `libstdc++` C++ standard library by default. `libstdc++` is the default C++ Standard Library implementation provided by the GNU Compiler Collection (GCC). While Clang may link against the `libc++` library, this requires explicitly providing the `-stdlib` flag when running Clang.
+Clang 编译器默认使用 `libstdc++` 作为 C++ 标准库，这也是 GCC 默认提供的。虽然 Clang 可以链接 `libc++`，但需要显式传递 `-stdlib` 参数。
 
-Bun relies on C++20 features like `std::span`, which are not available in GCC versions lower than 11. GCC 10 doesn't have all of the C++20 features implemented. As a result, running `make setup` may fail with the following error:
+Bun 依赖 C++20 特性，如 `std::span`，GCC 11 以下版本不支持。GCC 10 不支持所有 C++20 特性，因此运行 `make setup` 可能会报错：
 
 ```txt
 fatal error: 'span' file not found
@@ -309,7 +308,7 @@ fatal error: 'span' file not found
          ^~~~~~
 ```
 
-The issue may manifest when initially running `bun setup` as Clang being unable to compile a simple program:
+该错误可能出现在初次运行 `bun setup` 时，Clang 无法编译简单程序：
 
 ```txt
 The C++ compiler
@@ -319,19 +318,18 @@ The C++ compiler
 is not able to compile a simple test program.
 ```
 
-To fix the error, we need to update the GCC version to 11. To do this, we'll need to check if the latest version is available in the distribution's official repositories or use a third-party repository that provides GCC 11 packages. Here are general steps:
+解决方法是将 GCC 更新到 11。可以先检查发行版官方仓库是否有该版本，或添加第三方仓库。通用步骤：
 
 ```bash
 sudo apt update
 sudo apt install gcc-11 g++-11
-# If the above command fails with `Unable to locate package gcc-11` we need
-# to add the APT repository
+# 如果报错找不到包，需添加 APT 仓库
 sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-# Now run `apt install` again
+# 再试安装
 sudo apt install gcc-11 g++-11
 ```
 
-Now, we need to set GCC 11 as the default compiler:
+更新完成后，将 GCC 11 设置为默认：
 
 ```bash
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100
@@ -340,32 +338,32 @@ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
 
 ### libarchive
 
-If you see an error on macOS when compiling `libarchive`, run:
+macOS 上编译 `libarchive` 出错时，运行：
 
 ```bash
 brew install pkg-config
 ```
 
-### macOS `library not found for -lSystem`
+### macOS 编译时出现 `library not found for -lSystem`
 
-If you see this error when compiling, run:
+出现此错误，运行：
 
 ```bash
 xcode-select --install
 ```
 
-### Cannot find `libatomic.a`
+### 找不到 `libatomic.a`
 
-Bun defaults to linking `libatomic` statically, as not all systems have it. If you are building on a distro that does not have a static libatomic available, you can run the following command to enable dynamic linking:
+Bun 默认静态链接 `libatomic`，因非所有系统都提供静态库。如果在没有静态 `libatomic` 的发行版上构建，可使用动态链接：
 
 ```bash
 bun run build -DUSE_STATIC_LIBATOMIC=OFF
 ```
 
-The built version of Bun may not work on other systems if compiled this way.
+但这样构建的 Bun 可能无法在其他系统运行。
 
-## Using bun-debug
+## 使用 bun-debug
 
-- Disable logging: `BUN_DEBUG_QUIET_LOGS=1 bun-debug ...` (to disable all debug logging)
-- Enable logging for a specific zig scope: `BUN_DEBUG_EventLoop=1 bun-debug ...` (to allow `std.log.scoped(.EventLoop)`)
-- Bun transpiles every file it runs, to see the actual executed source in a debug build find it in `/tmp/bun-debug-src/...path/to/file`, for example the transpiled version of `/home/bun/index.ts` would be in `/tmp/bun-debug-src/home/bun/index.ts`
+- 禁用日志：`BUN_DEBUG_QUIET_LOGS=1 bun-debug ...`（关闭所有调试日志）
+- 为指定 Zig 作用域启用日志：`BUN_DEBUG_EventLoop=1 bun-debug ...`（启用 `std.log.scoped(.EventLoop)` 日志）
+- Bun 会对运行的每个文件进行转译，在调试构建中实际执行的代码位于 `/tmp/bun-debug-src/...path/to/file`，例如 `/home/bun/index.ts` 转译后在 `/tmp/bun-debug-src/home/bun/index.ts`

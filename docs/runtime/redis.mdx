@@ -1,195 +1,191 @@
 ---
 title: Redis
-description: Use Bun's native Redis client with a Promise-based API
+description: 使用 Bun 原生 Redis 客户端，基于 Promise 的 API
 ---
 
-<Note>Bun's Redis client supports Redis server versions 7.2 and up.</Note>
+<Note>Bun 的 Redis 客户端支持 Redis 服务器版本 7.2 及以上。</Note>
 
-Bun provides native bindings for working with Redis databases with a modern, Promise-based API. The interface is designed to be simple and performant, with built-in connection management, fully typed responses, and TLS support.
+Bun 提供用于操作 Redis 数据库的原生绑定，采用现代化的 Promise API。该接口设计简洁高效，具备内置连接管理、全类型化响应和 TLS 支持。
 
 ```ts redis.ts icon="/icons/typescript.svg"
 import { redis } from "bun";
 
-// Set a key
+// 设置键值
 await redis.set("greeting", "Hello from Bun!");
 
-// Get a key
+// 获取键值
 const greeting = await redis.get("greeting");
 console.log(greeting); // "Hello from Bun!"
 
-// Increment a counter
+// 递增计数器
 await redis.set("counter", 0);
 await redis.incr("counter");
 
-// Check if a key exists
+// 检查键是否存在
 const exists = await redis.exists("greeting");
 
-// Delete a key
+// 删除键
 await redis.del("greeting");
 ```
 
 ---
 
-## Getting Started
+## 入门
 
-To use the Redis client, you first need to create a connection:
+使用 Redis 客户端，首先需要创建一个连接：
 
 ```ts redis.ts icon="/icons/typescript.svg"
 import { redis, RedisClient } from "bun";
 
-// Using the default client (reads connection info from environment)
-// process.env.REDIS_URL is used by default
+// 使用默认客户端（连接信息从环境变量读取）
+// 默认使用 process.env.REDIS_URL
 await redis.set("hello", "world");
 const result = await redis.get("hello");
 
-// Creating a custom client
+// 创建自定义客户端
 const client = new RedisClient("redis://username:password@localhost:6379");
 await client.set("counter", "0");
 await client.incr("counter");
 ```
 
-By default, the client reads connection information from the following environment variables (in order of precedence):
+默认情况下，客户端按优先级从以下环境变量读取连接信息：
 
 - `REDIS_URL`
 - `VALKEY_URL`
-- If not set, defaults to `"redis://localhost:6379"`
+- 若未设置，默认使用 `"redis://localhost:6379"`
 
-### Connection Lifecycle
+### 连接生命周期
 
-The Redis client automatically handles connections in the background:
+Redis 客户端会自动在后台管理连接：
 
 ```ts redis.ts icon="/icons/typescript.svg"
-// No connection is made until a command is executed
+// 未执行命令前不会连接
 const client = new RedisClient();
 
-// First command initiates the connection
+// 第一次命令触发连接建立
 await client.set("key", "value");
 
-// Connection remains open for subsequent commands
+// 连接保持开启，供后续命令使用
 await client.get("key");
 
-// Explicitly close the connection when done
+// 使用结束后显式关闭连接
 client.close();
 ```
 
-You can also manually control the connection lifecycle:
+你也可以手动控制连接生命周期：
 
 ```ts redis.ts icon="/icons/typescript.svg"
 const client = new RedisClient();
 
-// Explicitly connect
+// 显式连接
 await client.connect();
 
-// Run commands
+// 执行命令
 await client.set("key", "value");
 
-// Disconnect when done
+// 完成后断开连接
 client.close();
 ```
 
 ---
 
-## Basic Operations
+## 基本操作
 
-### String Operations
+### 字符串操作
 
 ```ts redis.ts icon="/icons/typescript.svg"
-// Set a key
+// 设置键值
 await redis.set("user:1:name", "Alice");
 
-// Get a key
+// 获取键值
 const name = await redis.get("user:1:name");
 
-// Get a key as Uint8Array
+// 以 Uint8Array 形式获取键值
 const buffer = await redis.getBuffer("user:1:name");
 
-// Delete a key
+// 删除键
 await redis.del("user:1:name");
 
-// Check if a key exists
+// 检查键是否存在
 const exists = await redis.exists("user:1:name");
 
-// Set expiration (in seconds)
+// 设置过期时间（秒）
 await redis.set("session:123", "active");
-await redis.expire("session:123", 3600); // expires in 1 hour
+await redis.expire("session:123", 3600); // 一小时后过期
 
-// Get time to live (in seconds)
+// 获取剩余生存时间（秒）
 const ttl = await redis.ttl("session:123");
 ```
 
-### Numeric Operations
+### 数值操作
 
 ```ts redis.ts icon="/icons/typescript.svg"
-// Set initial value
+// 设置初始值
 await redis.set("counter", "0");
 
-// Increment by 1
+// 自增 1
 await redis.incr("counter");
 
-// Decrement by 1
+// 自减 1
 await redis.decr("counter");
 ```
 
-### Hash Operations
+### 哈希操作
 
 ```ts redis.ts icon="/icons/typescript.svg"
-// Set multiple fields in a hash
+// 设置哈希多个字段
 await redis.hmset("user:123", ["name", "Alice", "email", "alice@example.com", "active", "true"]);
 
-// Get multiple fields from a hash
+// 获取哈希多个字段
 const userFields = await redis.hmget("user:123", ["name", "email"]);
 console.log(userFields); // ["Alice", "alice@example.com"]
 
-// Get single field from hash (returns value directly, null if missing)
+// 获取单个哈希字段（不存在返回 null）
 const userName = await redis.hget("user:123", "name");
 console.log(userName); // "Alice"
 
-// Increment a numeric field in a hash
+// 哈希字段数值递增
 await redis.hincrby("user:123", "visits", 1);
 
-// Increment a float field in a hash
+// 哈希字段浮点数递增
 await redis.hincrbyfloat("user:123", "score", 1.5);
 ```
 
-### Set Operations
+### 集合操作
 
 ```ts redis.ts icon="/icons/typescript.svg"
-// Add member to set
+// 添加成员到集合
 await redis.sadd("tags", "javascript");
 
-// Remove member from set
+// 从集合移除成员
 await redis.srem("tags", "javascript");
 
-// Check if member exists in set
+// 检查成员是否在集合中
 const isMember = await redis.sismember("tags", "javascript");
 
-// Get all members of a set
+// 获取集合所有成员
 const allTags = await redis.smembers("tags");
 
-// Get a random member
+// 获取随机成员
 const randomTag = await redis.srandmember("tags");
 
-// Pop (remove and return) a random member
+// 弹出（移除并返回）随机成员
 const poppedTag = await redis.spop("tags");
 ```
 
 ---
 
-## Pub/Sub
+## 发布/订阅（Pub/Sub）
 
-Bun provides native bindings for the [Redis
-Pub/Sub](https://redis.io/docs/latest/develop/pubsub/) protocol. **New in Bun
-1.2.23**
+Bun 提供了对[Redis 发布/订阅](https://redis.io/docs/latest/develop/pubsub/)协议的原生支持。**Bun 1.2.23 新增**
 
 <Warning>
-  The Redis Pub/Sub feature is experimental. Although we expect it to be stable, we're currently actively looking for
-  feedback and areas for improvement.
+  Redis 发布/订阅功能目前处于实验阶段。虽然我们期望其稳定，但目前正在积极收集反馈和改进点。
 </Warning>
 
-### Basic Usage
+### 基本用法
 
-To get started publishing messages, you can set up a publisher in
-`publisher.ts`:
+要开始发布消息，可以在 `publisher.ts` 中设置发布者：
 
 ```typescript publisher.ts icon="/icons/typescript.svg"
 import { RedisClient } from "bun";
@@ -202,7 +198,7 @@ writer.publish("general", "Hello everyone!");
 writer.close();
 ```
 
-In another file, create the subscriber in `subscriber.ts`:
+在另一个文件 `subscriber.ts` 中创建订阅者：
 
 ```typescript subscriber.ts icon="/icons/typescript.svg"
 import { RedisClient } from "bun";
@@ -215,23 +211,20 @@ await listener.subscribe("general", (message, channel) => {
 });
 ```
 
-In one shell, run your subscriber:
+在一个终端运行订阅者：
 
 ```bash terminal icon="terminal"
 bun run subscriber.ts
 ```
 
-and, in another, run your publisher:
+另一个终端运行发布者：
 
 ```bash terminal icon="terminal"
 bun run publisher.ts
 ```
 
 <Note>
-The subscription mode takes over the `RedisClient` connection. A
-client with subscriptions can only call `RedisClient.prototype.subscribe()`. In
-other words, applications which need to message Redis need a separate
-connection, acquirable through `.duplicate()`:
+订阅模式会占用 `RedisClient` 的连接。具有订阅的客户端只能调用 `RedisClient.prototype.subscribe()`。也就是说，应用中如果需要同时向 Redis 发送消息，需要使用单独的连接，可通过 `.duplicate()` 获得：
 
 ```ts redis.ts icon="/icons/typescript.svg"
 import { RedisClient } from "bun";
@@ -246,43 +239,42 @@ await redis.set("bar", "baz");
 
 </Note>
 
-### Publishing
+### 发布消息
 
-Publishing messages is done through the `publish()` method:
+使用 `publish()` 方法发布消息：
 
 ```typescript redis.ts icon="/icons/typescript.svg"
 await client.publish(channelName, message);
 ```
 
-### Subscriptions
+### 订阅频道
 
-The Bun `RedisClient` allows you to subscribe to channels through the
-`.subscribe()` method:
+Bun 的 `RedisClient` 通过 `.subscribe()` 方法订阅频道：
 
 ```typescript redis.ts icon="/icons/typescript.svg"
 await client.subscribe(channel, (message, channel) => {});
 ```
 
-You can unsubscribe through the `.unsubscribe()` method:
+可通过 `.unsubscribe()` 方法取消订阅：
 
 ```typescript redis.ts icon="/icons/typescript.svg"
-await client.unsubscribe(); // Unsubscribe from all channels.
-await client.unsubscribe(channel); // Unsubscribe a particular channel.
-await client.unsubscribe(channel, listener); // Unsubscribe a particular listener.
+await client.unsubscribe(); // 取消所有频道订阅
+await client.unsubscribe(channel); // 取消指定频道订阅
+await client.unsubscribe(channel, listener); // 取消指定监听器订阅
 ```
 
-## Advanced Usage
+## 高级用法
 
-### Command Execution and Pipelining
+### 命令执行与流水线
 
-The client automatically pipelines commands, improving performance by sending multiple commands in a batch and processing responses as they arrive.
+客户端默认自动进行流水线处理，通过批量发送多个命令并在响应到达时依序处理，提升性能：
 
 ```ts redis.ts icon="/icons/typescript.svg"
-// Commands are automatically pipelined by default
+// 命令默认自动流水线处理
 const [infoResult, listResult] = await Promise.all([redis.get("user:1:name"), redis.get("user:2:email")]);
 ```
 
-To disable automatic pipelining, you can set the `enableAutoPipelining` option to `false`:
+可通过设置 `enableAutoPipelining` 选项关闭自动流水线：
 
 ```ts redis.ts icon="/icons/typescript.svg"
 const client = new RedisClient("redis://localhost:6379", {
@@ -290,75 +282,75 @@ const client = new RedisClient("redis://localhost:6379", {
 });
 ```
 
-### Raw Commands
+### 原生命令执行
 
-When you need to use commands that don't have convenience methods, you can use the `send` method:
+当需要执行没有封装为便捷方法的命令时，可以使用 `send` 方法：
 
 ```ts redis.ts icon="/icons/typescript.svg"
-// Run any Redis command
+// 执行任意 Redis 命令
 const info = await redis.send("INFO", []);
 
-// LPUSH to a list
+// 向列表 LPUSH
 await redis.send("LPUSH", ["mylist", "value1", "value2"]);
 
-// Get list range
+// 获取列表范围
 const list = await redis.send("LRANGE", ["mylist", "0", "-1"]);
 ```
 
-The `send` method allows you to use any Redis command, even ones that don't have dedicated methods in the client. The first argument is the command name, and the second argument is an array of string arguments.
+`send` 方法第一个参数是命令名称，第二个参数是字符串数组形式的命令参数。
 
-### Connection Events
+### 连接事件
 
-You can register handlers for connection events:
+可以注册连接事件处理函数：
 
 ```ts redis.ts icon="/icons/typescript.svg"
 const client = new RedisClient();
 
-// Called when successfully connected to Redis server
+// 成功连接 Redis 服务器时调用
 client.onconnect = () => {
   console.log("Connected to Redis server");
 };
 
-// Called when disconnected from Redis server
+// 与 Redis 服务器断开连接时调用
 client.onclose = error => {
   console.error("Disconnected from Redis server:", error);
 };
 
-// Manually connect/disconnect
+// 手动连接与断开
 await client.connect();
 client.close();
 ```
 
-### Connection Status and Monitoring
+### 连接状态及监控
 
 ```ts redis.ts icon="/icons/typescript.svg"
-// Check if connected
-console.log(client.connected); // boolean indicating connection status
+// 检查连接状态
+console.log(client.connected); // 布尔值，表示连接是否建立
 
-// Check amount of data buffered (in bytes)
+// 查看缓冲区数据大小（字节）
 console.log(client.bufferedAmount);
 ```
 
-### Type Conversion
+### 类型转换
 
-The Redis client handles automatic type conversion for Redis responses:
+Redis 客户端自动处理响应的类型转换：
 
-- Integer responses are returned as JavaScript numbers
-- Bulk strings are returned as JavaScript strings
-- Simple strings are returned as JavaScript strings
-- Null bulk strings are returned as `null`
-- Array responses are returned as JavaScript arrays
-- Error responses throw JavaScript errors with appropriate error codes
-- Boolean responses (RESP3) are returned as JavaScript booleans
-- Map responses (RESP3) are returned as JavaScript objects
-- Set responses (RESP3) are returned as JavaScript arrays
+- 整数类型返回 JavaScript 数字
+- 大块字符串返回 JavaScript 字符串
+- 简单字符串返回 JavaScript 字符串
+- 空字符串返回 `null`
+- 数组返回 JavaScript 数组
+- 错误响应抛出对应错误对象，包含错误代码
+- 布尔类型（RESP3）返回 JavaScript 布尔值
+- 映射类型（RESP3）返回 JavaScript 对象
+- 集合类型（RESP3）返回 JavaScript 数组
 
-Special handling for specific commands:
+特殊命令特别处理：
 
-- `EXISTS` returns a boolean instead of a number (1 becomes true, 0 becomes false)
-- `SISMEMBER` returns a boolean (1 becomes true, 0 becomes false)
+- `EXISTS` 返回布尔值（1 转 true，0 转 false）
+- `SISMEMBER` 返回布尔值（1 转 true，0 转 false）
 
-The following commands disable automatic pipelining:
+以下命令会禁用自动流水线：
 
 - `AUTH`
 - `INFO`
@@ -378,33 +370,33 @@ The following commands disable automatic pipelining:
 
 ---
 
-## Connection Options
+## 连接选项
 
-When creating a client, you can pass various options to configure the connection:
+创建客户端时，可传入多种选项配置连接：
 
 ```ts redis.ts icon="/icons/typescript.svg"
 const client = new RedisClient("redis://localhost:6379", {
-  // Connection timeout in milliseconds (default: 10000)
+  // 连接超时（毫秒），默认 10000
   connectionTimeout: 5000,
 
-  // Idle timeout in milliseconds (default: 0 = no timeout)
+  // 空闲超时（毫秒），默认 0（不超时）
   idleTimeout: 30000,
 
-  // Whether to automatically reconnect on disconnection (default: true)
+  // 断线后是否自动重连，默认 true
   autoReconnect: true,
 
-  // Maximum number of reconnection attempts (default: 10)
+  // 最大重连次数，默认 10 次
   maxRetries: 10,
 
-  // Whether to queue commands when disconnected (default: true)
+  // 断线时是否队列命令，默认 true
   enableOfflineQueue: true,
 
-  // Whether to automatically pipeline commands (default: true)
+  // 是否自动流水线命令，默认 true
   enableAutoPipelining: true,
 
-  // TLS options (default: false)
+  // TLS 配置（默认 false）
   tls: true,
-  // Alternatively, provide custom TLS config:
+  // 或者提供自定义 TLS 配置：
   // tls: {
   //   rejectUnauthorized: true,
   //   ca: "path/to/ca.pem",
@@ -414,95 +406,95 @@ const client = new RedisClient("redis://localhost:6379", {
 });
 ```
 
-### Reconnection Behavior
+### 重连行为
 
-When a connection is lost, the client automatically attempts to reconnect with exponential backoff:
+连接断开时，客户端会自动尝试使用指数退避算法重连：
 
-1. The client starts with a small delay (50ms) and doubles it with each attempt
-2. Reconnection delay is capped at 2000ms (2 seconds)
-3. The client attempts to reconnect up to `maxRetries` times (default: 10)
-4. Commands executed during disconnection are:
-   - Queued if `enableOfflineQueue` is true (default)
-   - Rejected immediately if `enableOfflineQueue` is false
+1. 初始延迟较短（50 毫秒），之后每次尝试倍增延迟
+2. 重连延迟封顶为 2000 毫秒（2 秒）
+3. 最多尝试重连 `maxRetries` 次（默认 10 次）
+4. 断线期间执行的命令：
+   - 若 `enableOfflineQueue` 为 true，会加入队列等待重连后执行（默认）
+   - 若为 false，则立即拒绝执行
 
 ---
 
-## Supported URL Formats
+## 支持的 URL 格式
 
-The Redis client supports various URL formats:
+Redis 客户端支持多种连接 URL 格式：
 
 ```ts redis.ts icon="/icons/typescript.svg"
-// Standard Redis URL
+// 标准 Redis URL
 new RedisClient("redis://localhost:6379");
 new RedisClient("redis://localhost:6379");
 
-// With authentication
+// 带认证信息
 new RedisClient("redis://username:password@localhost:6379");
 
-// With database number
+// 带数据库编号
 new RedisClient("redis://localhost:6379/0");
 
-// TLS connections
+// TLS 连接
 new RedisClient("rediss://localhost:6379");
 new RedisClient("rediss://localhost:6379");
 new RedisClient("redis+tls://localhost:6379");
 new RedisClient("redis+tls://localhost:6379");
 
-// Unix socket connections
+// Unix 套接字连接
 new RedisClient("redis+unix:///path/to/socket");
 new RedisClient("redis+unix:///path/to/socket");
 
-// TLS over Unix socket
+// Unix 套接字上的 TLS
 new RedisClient("redis+tls+unix:///path/to/socket");
 new RedisClient("redis+tls+unix:///path/to/socket");
 ```
 
 ---
 
-## Error Handling
+## 错误处理
 
-The Redis client throws typed errors for different scenarios:
+Redis 客户端会抛出带类型的错误，用于不同场景的异常：
 
 ```ts redis.ts icon="/icons/typescript.svg"
 try {
   await redis.get("non-existent-key");
 } catch (error) {
   if (error.code === "ERR_REDIS_CONNECTION_CLOSED") {
-    console.error("Connection to Redis server was closed");
+    console.error("与 Redis 服务器的连接已关闭");
   } else if (error.code === "ERR_REDIS_AUTHENTICATION_FAILED") {
-    console.error("Authentication failed");
+    console.error("认证失败");
   } else {
-    console.error("Unexpected error:", error);
+    console.error("意外错误:", error);
   }
 }
 ```
 
-Common error codes:
+常见错误码：
 
-- `ERR_REDIS_CONNECTION_CLOSED` - Connection to the server was closed
-- `ERR_REDIS_AUTHENTICATION_FAILED` - Failed to authenticate with the server
-- `ERR_REDIS_INVALID_RESPONSE` - Received an invalid response from the server
+- `ERR_REDIS_CONNECTION_CLOSED` - 服务器连接关闭
+- `ERR_REDIS_AUTHENTICATION_FAILED` - 认证失败
+- `ERR_REDIS_INVALID_RESPONSE` - 收到服务器无效响应
 
 ---
 
-## Example Use Cases
+## 示例用例
 
-### Caching
+### 缓存
 
 ```ts redis.ts icon="/icons/typescript.svg"
 async function getUserWithCache(userId) {
   const cacheKey = `user:${userId}`;
 
-  // Try to get from cache first
+  // 尝试先从缓存获取
   const cachedUser = await redis.get(cacheKey);
   if (cachedUser) {
     return JSON.parse(cachedUser);
   }
 
-  // Not in cache, fetch from database
+  // 缓存未命中，从数据库获取
   const user = await database.getUser(userId);
 
-  // Store in cache for 1 hour
+  // 缓存 1 小时
   await redis.set(cacheKey, JSON.stringify(user));
   await redis.expire(cacheKey, 3600);
 
@@ -510,21 +502,21 @@ async function getUserWithCache(userId) {
 }
 ```
 
-### Rate Limiting
+### 限流
 
 ```ts redis.ts icon="/icons/typescript.svg"
 async function rateLimit(ip, limit = 100, windowSecs = 3600) {
   const key = `ratelimit:${ip}`;
 
-  // Increment counter
+  // 计数自增
   const count = await redis.incr(key);
 
-  // Set expiry if this is the first request in window
+  // 第一次请求设置过期时间
   if (count === 1) {
     await redis.expire(key, windowSecs);
   }
 
-  // Check if limit exceeded
+  // 检测是否超出限制
   return {
     limited: count > limit,
     remaining: Math.max(0, limit - count),
@@ -532,16 +524,16 @@ async function rateLimit(ip, limit = 100, windowSecs = 3600) {
 }
 ```
 
-### Session Storage
+### 会话存储
 
 ```ts redis.ts icon="/icons/typescript.svg"
 async function createSession(userId, data) {
   const sessionId = crypto.randomUUID();
   const key = `session:${sessionId}`;
 
-  // Store session with expiration
+  // 存储会话，设置过期时间
   await redis.hmset(key, ["userId", userId.toString(), "created", Date.now().toString(), "data", JSON.stringify(data)]);
-  await redis.expire(key, 86400); // 24 hours
+  await redis.expire(key, 86400); // 24小时
 
   return sessionId;
 }
@@ -549,7 +541,7 @@ async function createSession(userId, data) {
 async function getSession(sessionId) {
   const key = `session:${sessionId}`;
 
-  // Get session data
+  // 获取会话数据
   const exists = await redis.exists(key);
   if (!exists) return null;
 
@@ -565,19 +557,19 @@ async function getSession(sessionId) {
 
 ---
 
-## Implementation Notes
+## 实现说明
 
-Bun's Redis client is implemented in Zig and uses the Redis Serialization Protocol (RESP3). It manages connections efficiently and provides automatic reconnection with exponential backoff.
+Bun 的 Redis 客户端使用 Zig 实现，基于 Redis 序列化协议（RESP3）。它高效管理连接，具备自动断线重连机制，采用指数退避策略。
 
-The client supports pipelining commands, meaning multiple commands can be sent without waiting for the replies to previous commands. This significantly improves performance when sending multiple commands in succession.
+客户端支持命令流水线，即发送多个命令后无需等待先前命令响应，可显著提升多条命令顺序执行时的性能。
 
-## Limitations and Future Plans
+## 限制及未来规划
 
-Current limitations of the Redis client we are planning to address in future versions:
+当前 Redis 客户端存在的一些限制，未来版本有计划改进：
 
-- Transactions (MULTI/EXEC) must be done through raw commands for now
+- 事务（MULTI/EXEC）目前需通过原生命令执行
 
-Unsupported features:
+不支持的功能：
 
 - Redis Sentinel
 - Redis Cluster

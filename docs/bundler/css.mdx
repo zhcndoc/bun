@@ -1,26 +1,26 @@
 ---
 title: CSS
-description: Bun's bundler has built-in support for CSS with modern features
+description: Bun 的打包工具内置支持带有现代特性的 CSS
 ---
 
-Bun's bundler has built-in support for CSS with the following features:
+Bun 的打包工具内置支持 CSS，具有以下功能：
 
-- Transpiling modern/future features to work on all browsers (including vendor prefixing)
-- Minification
-- CSS Modules
-- Tailwind (via a native bundler plugin)
+- 转译现代/未来特性以兼容所有浏览器（包括厂商前缀）
+- 压缩
+- CSS 模块
+- Tailwind（通过原生打包插件）
 
-## Transpiling
+## 转译
 
-Bun's CSS bundler lets you use modern/future CSS features without having to worry about browser compatibility — all thanks to its transpiling and vendor prefixing features which are enabled by default.
+Bun 的 CSS 打包工具让你可以使用现代/未来的 CSS 特性，而不必担心浏览器兼容性 —— 这都要归功于其默认启用的转译和厂商前缀功能。
 
-Bun's CSS parser and bundler is a direct Rust → Zig port of LightningCSS, with a bundling approach inspired by esbuild. The transpiler converts modern CSS syntax into backwards-compatible equivalents that work across browsers.
+Bun 的 CSS 解析器和打包工具是 LightningCSS 从 Rust 到 Zig 的直接移植，打包方法则受 esbuild 启发。转译器将现代 CSS 语法转换为适用于各种浏览器的向后兼容等价物。
 
-<Note>A huge thanks goes to the amazing work from the authors of LightningCSS and esbuild.</Note>
+<Note>特别感谢 LightningCSS 和 esbuild 的作者们的出色工作。</Note>
 
-## Browser Compatibility
+## 浏览器兼容性
 
-By default, Bun's CSS bundler targets the following browsers:
+默认情况下，Bun 的 CSS 打包目标浏览器包括：
 
 - ES2020
 - Edge 88+
@@ -28,14 +28,14 @@ By default, Bun's CSS bundler targets the following browsers:
 - Chrome 87+
 - Safari 14+
 
-## Syntax Lowering
+## 语法降级
 
-### Nesting
+### 嵌套
 
-The CSS Nesting specification allows you to write more concise and intuitive stylesheets by nesting selectors inside one another. Instead of repeating parent selectors across your CSS file, you can write child styles directly within their parent blocks.
+CSS 嵌套规范允许你通过将选择器嵌套在彼此内部来编写更简洁、更直观的样式表。你无需在整个 CSS 文件中重复父选择器，可以直接在父块内书写子样式。
 
 ```scss title="styles.css" icon="file-code"
-/* With nesting */
+/* 使用嵌套 */
 .card {
   background: white;
   border-radius: 4px;
@@ -51,10 +51,10 @@ The CSS Nesting specification allows you to write more concise and intuitive sty
 }
 ```
 
-Bun's CSS bundler automatically converts this nested syntax into traditional flat CSS that works in all browsers:
+Bun 的 CSS 打包工具会自动将此嵌套语法转换成传统的扁平 CSS，以兼容所有浏览器：
 
 ```css title="styles.css" icon="file-code"
-/* Compiled output */
+/* 编译输出 */
 .card {
   background: white;
   border-radius: 4px;
@@ -70,7 +70,7 @@ Bun's CSS bundler automatically converts this nested syntax into traditional fla
 }
 ```
 
-You can also nest media queries and other at-rules inside selectors, eliminating the need to repeat selector patterns:
+你也可以在选择器内嵌套媒体查询和其他 at 规则，避免重复选择器模式：
 
 ```scss title="styles.css" icon="file-code"
 .responsive-element {
@@ -82,7 +82,7 @@ You can also nest media queries and other at-rules inside selectors, eliminating
 }
 ```
 
-This compiles to:
+编译后为：
 
 ```css title="styles.css" icon="file-code"
 .responsive-element {
@@ -96,27 +96,27 @@ This compiles to:
 }
 ```
 
-### Color mix
+### 颜色混合
 
-The `color-mix()` function gives you an easy way to blend two colors together according to a specified ratio in a chosen color space. This powerful feature lets you create color variations without manually calculating the resulting values.
+`color-mix()` 函数让你根据指定比例在选定的色彩空间内轻松混合两种颜色。这个强大的特性让你无需手动计算结果值就能创建颜色变化。
 
 ```scss title="styles.css" icon="file-code"
 .button {
-  /* Mix blue and red in the RGB color space with a 30/70 proportion */
+  /* 在 RGB 色彩空间中以 30%:70% 混合蓝色和红色 */
   background-color: color-mix(in srgb, blue 30%, red);
 
-  /* Create a lighter variant for hover state */
+  /* 为悬停状态创建较浅的变体 */
   &:hover {
     background-color: color-mix(in srgb, blue 30%, red, white 20%);
   }
 }
 ```
 
-Bun's CSS bundler evaluates these color mixes at build time when all color values are known (not CSS variables), generating static color values that work in all browsers:
+Bun 的 CSS 打包工具会在构建时评估这些颜色混合（当所有颜色值已确定，非 CSS 变量），生成适用于所有浏览器的静态颜色值：
 
 ```css title="styles.css" icon="file-code"
 .button {
-  /* Computed to the exact resulting color */
+  /* 精确计算得到的结果色 */
   background-color: #b31a1a;
 }
 
@@ -125,23 +125,23 @@ Bun's CSS bundler evaluates these color mixes at build time when all color value
 }
 ```
 
-This feature is particularly useful for creating color systems with programmatically derived shades, tints, and accents without needing preprocessors or custom tooling.
+此功能特别适合创建程序推导的颜色系统，如色调、色深和强调色，无需预处理器或自定义工具。
 
-### Relative colors
+### 相对颜色
 
-CSS now allows you to modify individual components of a color using relative color syntax. This powerful feature lets you create color variations by adjusting specific attributes like lightness, saturation, or individual channels without having to recalculate the entire color.
+CSS 现在允许你使用相对颜色语法修改颜色的单个组成部分。此强大功能让你通过调整亮度、饱和度或单独通道来创建颜色变体，而无需重新计算整个颜色。
 
 ```css title="styles.css" icon="file-code"
 .theme-color {
-  /* Start with a base color and increase lightness by 15% */
+  /* 以基础色为起点，将亮度增加 15% */
   --accent: lch(from purple calc(l + 15%) c h);
 
-  /* Take our brand blue and make a desaturated version */
+  /* 以我们的品牌蓝色为基色，制作一个去饱和版本 */
   --subtle-blue: oklch(from var(--brand-blue) l calc(c * 0.8) h);
 }
 ```
 
-Bun's CSS bundler computes these relative color modifications at build time (when not using CSS variables) and generates static color values for browser compatibility:
+Bun 的 CSS 打包工具会在构建时计算这些相对颜色修改（不使用 CSS 变量时），生成适用于浏览器的静态颜色值：
 
 ```css
 .theme-color {
@@ -150,31 +150,31 @@ Bun's CSS bundler computes these relative color modifications at build time (whe
 }
 ```
 
-This approach is extremely useful for theme generation, creating accessible color variants, or building color scales based on mathematical relationships instead of hard-coding each value.
+这种方式非常适用于主题生成、创建无障碍颜色变体或基于数学关系构建颜色刻度，而非硬编码每个值。
 
-### LAB colors
+### LAB 颜色
 
-Modern CSS supports perceptually uniform color spaces like LAB, LCH, OKLAB, and OKLCH that offer significant advantages over traditional RGB. These color spaces can represent colors outside the standard RGB gamut, resulting in more vibrant and visually consistent designs.
+现代 CSS 支持 LAB、LCH、OKLAB 和 OKLCH 等感知均匀色彩空间，相较于传统 RGB 有显著优势。这些色彩空间能表示超出标准 RGB 色域的颜色，带来更鲜明和视觉一致的设计。
 
 ```css title="styles.css" icon="file-code"
 .vibrant-element {
-  /* A vibrant red that exceeds sRGB gamut boundaries */
+  /* 一种超出 sRGB 色域边界的鲜艳红色 */
   color: lab(55% 78 35);
 
-  /* A smooth gradient using perceptual color space */
+  /* 使用感知色彩空间的平滑渐变 */
   background: linear-gradient(to right, oklch(65% 0.25 10deg), oklch(65% 0.25 250deg));
 }
 ```
 
-Bun's CSS bundler automatically converts these advanced color formats to backwards-compatible alternatives for browsers that don't yet support them:
+Bun 的 CSS 打包工具会自动将这些高级色彩格式转换为向后兼容的备选方案，以支持尚未实现的浏览器：
 
 ```css title="styles.css" icon="file-code"
 .vibrant-element {
-  /* Fallback to closest RGB approximation */
+  /* 退回到最接近的 RGB 近似 */
   color: #ff0f52;
-  /* P3 fallback for browsers with wider gamut support */
+  /* 支持更宽色域的浏览器使用 P3 备选 */
   color: color(display-p3 1 0.12 0.37);
-  /* Original value preserved for browsers that support it */
+  /* 支持该格式的浏览器保持原值 */
   color: lab(55% 78 35);
 
   background: linear-gradient(to right, #cd4e15, #3887ab);
@@ -182,29 +182,29 @@ Bun's CSS bundler automatically converts these advanced color formats to backwar
 }
 ```
 
-This layered approach ensures optimal color rendering across all browsers while allowing you to use the latest color technologies in your designs.
+此分层方法确保所有浏览器间获得最佳色彩渲染，同时让你在设计中使用最新的色彩技术。
 
-### Color function
+### color 函数
 
-The `color()` function provides a standardized way to specify colors in various predefined color spaces, expanding your design options beyond the traditional RGB space. This allows you to access wider color gamuts and create more vibrant designs.
+`color()` 函数提供了一种标准化方式，使用各种预定义色彩空间来指定颜色，拓展了传统 RGB 空间以外的设计选项。这样可访问更宽广的色域，创造更鲜艳的设计。
 
 ```css title="styles.css" icon="file-code"
 .vivid-element {
-  /* Using the Display P3 color space for wider gamut colors */
+  /* 使用 Display P3 色彩空间实现更宽色域 */
   color: color(display-p3 1 0.1 0.3);
 
-  /* Using A98 RGB color space */
+  /* 使用 A98 RGB 色彩空间 */
   background-color: color(a98-rgb 0.44 0.5 0.37);
 }
 ```
 
-For browsers that don't support these advanced color functions yet, Bun's CSS bundler provides appropriate RGB fallbacks:
+对于尚不支持这些高级色彩函数的浏览器，Bun 的 CSS 打包工具会提供合适的 RGB 备选：
 
 ```css title="styles.css" icon="file-code"
 .vivid-element {
-  /* RGB fallback first for maximum compatibility */
+  /* 优先使用 RGB 备选以获得最大兼容 */
   color: #fa1a4c;
-  /* Keep original for browsers that support it */
+  /* 保留原色以支持兼容浏览器 */
   color: color(display-p3 1 0.1 0.3);
 
   background-color: #6a805d;
@@ -212,29 +212,29 @@ For browsers that don't support these advanced color functions yet, Bun's CSS bu
 }
 ```
 
-This functionality lets you use modern color spaces immediately while ensuring your designs remain functional across all browsers, with optimal colors displayed in supporting browsers and reasonable approximations elsewhere.
+该功能让你立即使用现代色彩空间，同时保证设计在所有浏览器上均可正常使用，支持浏览器显示最佳色彩，其他浏览器显示合理近似值。
 
-### HWB colors
+### HWB 颜色
 
-The HWB (Hue, Whiteness, Blackness) color model provides an intuitive way to express colors based on how much white or black is mixed with a pure hue. Many designers find this approach more natural for creating color variations compared to manipulating RGB or HSL values.
+HWB（色相、白度、黑度）色彩模型提供了基于纯色相中掺加白色或黑色比例的直观表达方式。许多设计师发现这一方法比调整 RGB 或 HSL 值更自然，便于创建颜色变体。
 
 ```css title="styles.css" icon="file-code"
 .easy-theming {
-  /* Pure cyan with no white or black added */
+  /* 纯青色，无白无黑 */
   --primary: hwb(180 0% 0%);
 
-  /* Same hue, but with 20% white added (tint) */
+  /* 同色相，加入 20% 白色（色调） */
   --primary-light: hwb(180 20% 0%);
 
-  /* Same hue, but with 30% black added (shade) */
+  /* 同色相，加入 30% 黑色（阴影） */
   --primary-dark: hwb(180 0% 30%);
 
-  /* Muted version with both white and black added */
+  /* 添加白色和黑色的柔和版本 */
   --primary-muted: hwb(180 30% 20%);
 }
 ```
 
-Bun's CSS bundler automatically converts HWB colors to RGB for compatibility with all browsers:
+Bun 的 CSS 打包工具会自动将 HWB 颜色转换为兼容所有浏览器的 RGB：
 
 ```css title="styles.css" icon="file-code"
 .easy-theming {
@@ -245,65 +245,65 @@ Bun's CSS bundler automatically converts HWB colors to RGB for compatibility wit
 }
 ```
 
-The HWB model makes it particularly easy to create systematic color variations for design systems, providing a more intuitive approach to creating consistent tints and shades than working directly with RGB or HSL values.
+HWB 模型特别适合为设计系统创建系统化颜色变化，比直接操作 RGB 或 HSL 更直观地制作一致的色调与阴影。
 
-### Color notation
+### 颜色表示法
 
-Modern CSS has introduced more intuitive and concise ways to express colors. Space-separated color syntax eliminates the need for commas in RGB and HSL values, while hex colors with alpha channels provide a compact way to specify transparency.
+现代 CSS 引入了更直观简洁的颜色写法。空格分隔的颜色语法省去 RGB 和 HSL 里的逗号，带 alpha 通道的十六进制形式能紧凑指定透明度。
 
 ```css title="styles.css" icon="file-code"
 .modern-styling {
-  /* Space-separated RGB notation (no commas) */
+  /* 空格分隔的 RGB 表示法（无逗号） */
   color: rgb(50 100 200);
 
-  /* Space-separated RGB with alpha */
+  /* 空格分隔带 alpha 的 RGB */
   border-color: rgba(100 50 200 / 75%);
 
-  /* Hex with alpha channel (8 digits) */
+  /* 带 alpha 通道的 8 位十六进制 */
   background-color: #00aaff80;
 
-  /* HSL with simplified notation */
+  /* 简化的 HSL 表示 */
   box-shadow: 0 5px 10px hsl(200 50% 30% / 40%);
 }
 ```
 
-Bun's CSS bundler automatically converts these modern color formats to ensure compatibility with older browsers:
+Bun 的 CSS 打包工具自动将这些现代颜色格式转为兼容旧版浏览器的格式：
 
 ```css title="styles.css" icon="file-code"
 .modern-styling {
-  /* Converted to comma format for older browsers */
+  /* 转为旧版需要的逗号格式 */
   color: rgb(50, 100, 200);
 
-  /* Alpha channels handled appropriately */
+  /* 透明度通道妥善处理 */
   border-color: rgba(100, 50, 200, 0.75);
 
-  /* Hex+alpha converted to rgba when needed */
+  /* 十六进制带 alpha 转为 rgba */
   background-color: rgba(0, 170, 255, 0.5);
 
   box-shadow: 0 5px 10px rgba(38, 115, 153, 0.4);
 }
 ```
 
-This conversion process lets you write cleaner, more modern CSS while ensuring your styles work correctly across all browsers.
+这一转换过程让你编写更简洁现代的 CSS，同时确保样式在所有浏览器中正常工作。
 
-### light-dark() color function
+### light-dark() 颜色函数
 
-The `light-dark()` function provides an elegant solution for implementing color schemes that respect the user's system preference without requiring complex media queries. This function accepts two color values and automatically selects the appropriate one based on the current color scheme context.
+`light-dark()` 函数为实现尊重用户系统偏好的明暗色方案提供了优雅方案，无需复杂的媒体查询。该函数接受两个颜色值，并自动基于当前色彩方案上下文选择合适的颜色。
 
 ```css title="styles.css" icon="file-code"
 :root {
-  /* Define color scheme support */
+  /* 定义支持的颜色方案 */
   color-scheme: light dark;
 }
 
 .themed-component {
-  /* Automatically picks the right color based on system preference */
+  /* 根据系统偏好自动选择颜色 */
   background-color: light-dark(#ffffff, #121212);
   color: light-dark(#333333, #eeeeee);
   border-color: light-dark(#dddddd, #555555);
 }
 
-/* Override system preference when needed */
+/* 需要时覆盖系统偏好 */
 .light-theme {
   color-scheme: light;
 }
@@ -313,7 +313,7 @@ The `light-dark()` function provides an elegant solution for implementing color 
 }
 ```
 
-For browsers that don't support this feature yet, Bun's CSS bundler converts it to use CSS variables with proper fallbacks:
+对于尚不支持本特性的浏览器，Bun 的 CSS 打包工具将其转换为使用 CSS 变量及适当回退的写法：
 
 ```css title="styles.css" icon="file-code"
 :root {
@@ -348,33 +348,33 @@ For browsers that don't support this feature yet, Bun's CSS bundler converts it 
 }
 ```
 
-This approach gives you a clean way to handle light and dark themes without duplicating styles or writing complex media queries, while maintaining compatibility with browsers that don't yet support the feature natively.
+此方法让你无需复制样式或编写复杂媒体查询，即可优雅地处理明暗主题，同时兼容尚不原生支持此功能的浏览器。
 
-### Logical properties
+### 逻辑属性
 
-CSS logical properties let you define layout, spacing, and sizing relative to the document's writing mode and text direction rather than physical screen directions. This is crucial for creating truly international layouts that automatically adapt to different writing systems.
+CSS 逻辑属性允许你根据文档的书写模式和文本方向定义布局、间距及尺寸，而非物理屏幕方向。对于创建自动适配不同书写系统的国际化布局至关重要。
 
 ```css title="styles.css" icon="file-code"
 .multilingual-component {
-  /* Margin that adapts to writing direction */
+  /* 适应书写方向的外边距 */
   margin-inline-start: 1rem;
 
-  /* Padding that makes sense regardless of text direction */
+  /* 无论文本方向，都合理的内边距 */
   padding-block: 1rem 2rem;
 
-  /* Border radius for the starting corner at the top */
+  /* 顶部起始角的边框半径 */
   border-start-start-radius: 4px;
 
-  /* Size that respects the writing mode */
+  /* 尊重书写模式的尺寸 */
   inline-size: 80%;
   block-size: auto;
 }
 ```
 
-For browsers that don't fully support logical properties, Bun's CSS bundler compiles them to physical properties with appropriate directional adjustments:
+对于不完全支持逻辑属性的浏览器，Bun 的 CSS 打包工具会将其编译为带适当方向调整的物理属性：
 
 ```css title="styles.css" icon="file-code"
-/* For left-to-right languages */
+/* 左到右语言 */
 .multilingual-component:dir(ltr) {
   margin-left: 1rem;
   padding-top: 1rem;
@@ -384,7 +384,7 @@ For browsers that don't fully support logical properties, Bun's CSS bundler comp
   height: auto;
 }
 
-/* For right-to-left languages */
+/* 右到左语言 */
 .multilingual-component:dir(rtl) {
   margin-right: 1rem;
   padding-top: 1rem;
@@ -395,14 +395,14 @@ For browsers that don't fully support logical properties, Bun's CSS bundler comp
 }
 ```
 
-If the `:dir()` selector isn't supported, additional fallbacks are automatically generated to ensure your layouts work properly across all browsers and writing systems. This makes creating internationalized designs much simpler while maintaining compatibility with older browsers.
+若不支持 `:dir()` 选择器，还会自动生成额外回退，确保布局跨所有浏览器和书写系统正常。此举简化了国际化设计的创建过程，同时兼容旧版浏览器。
 
-### :dir() selector
+### :dir() 选择器
 
-The `:dir()` pseudo-class selector allows you to style elements based on their text direction (RTL or LTR), providing a powerful way to create direction-aware designs without JavaScript. This selector matches elements based on their directionality as determined by the document or explicit direction attributes.
+`:dir()` 伪类选择器允许你基于文本方向（RTL 或 LTR）样式化元素，提供无需 JavaScript 即可创建方向感知设计的强大方案。该选择器基于文档方向或显式方向属性匹配元素。
 
 ```css title="styles.css" icon="file-code"
-/* Apply different styles based on text direction */
+/* 根据文本方向应用不同样式 */
 .nav-arrow:dir(ltr) {
   transform: rotate(0deg);
 }
@@ -411,7 +411,7 @@ The `:dir()` pseudo-class selector allows you to style elements based on their t
   transform: rotate(180deg);
 }
 
-/* Position elements based on text flow */
+/* 基于文本流的位置定位元素 */
 .sidebar:dir(ltr) {
   border-right: 1px solid #ddd;
 }
@@ -421,10 +421,10 @@ The `:dir()` pseudo-class selector allows you to style elements based on their t
 }
 ```
 
-For browsers that don't support the `:dir()` selector yet, Bun's CSS bundler converts it to the more widely supported `:lang()` selector with appropriate language mappings:
+对于尚不支持 `:dir()` 选择器的浏览器，Bun 的 CSS 打包工具将其转换为支持更广的 `:lang()` 选择器并添加适当语言映射：
 
 ```css title="styles.css" icon="file-code"
-/* Converted to use language-based selectors as fallback */
+/* 作为回退转换为基于语言的选择器 */
 .nav-arrow:lang(en, fr, de, es, it, pt, nl) {
   transform: rotate(0deg);
 }
@@ -442,20 +442,20 @@ For browsers that don't support the `:dir()` selector yet, Bun's CSS bundler con
 }
 ```
 
-This conversion lets you write direction-aware CSS that works reliably across browsers, even those that don't yet support the `:dir()` selector natively. If multiple arguments to `:lang()` aren't supported, further fallbacks are automatically provided.
+此转换允许你编写方向感知的 CSS，确保在不支持 `:dir()` 的浏览器中也能可靠工作。如多参数 `:lang()` 不被支持，工具会自动生成进一步回退。
 
-### :lang() selector
+### :lang() 选择器
 
-The `:lang()` pseudo-class selector allows you to target elements based on the language they're in, making it easy to apply language-specific styling. Modern CSS allows the `:lang()` selector to accept multiple language codes, letting you group language-specific rules more efficiently.
+`:lang()` 伪类选择器允许你基于元素的语言设置应用样式，使得轻松实现语言特定样式成为可能。现代 CSS 支持 `:lang()` 接受多个语言代码，能更高效组合语言规则。
 
 ```css title="styles.css" icon="file-code"
-/* Typography adjustments for CJK languages */
+/* 针对中日韩语言的排版调整 */
 :lang(zh, ja, ko) {
   line-height: 1.8;
   font-size: 1.05em;
 }
 
-/* Different quote styles by language group */
+/* 不同语言组的引号样式 */
 blockquote:lang(fr, it, es, pt) {
   font-style: italic;
 }
@@ -465,10 +465,10 @@ blockquote:lang(de, nl, da, sv) {
 }
 ```
 
-For browsers that don't support multiple arguments in the `:lang()` selector, Bun's CSS bundler converts this syntax to use the `:is()` selector to maintain the same behavior:
+对于不支持多参数 `:lang()` 的浏览器，Bun 的 CSS 打包工具将其转换为使用 `:is()` 选择器以保持相同行为：
 
 ```css title="styles.css" icon="file-code"
-/* Multiple languages grouped with :is() for better browser support */
+/* 使用 :is() 组合多个语言以提高兼容 */
 :is(:lang(zh), :lang(ja), :lang(ko)) {
   line-height: 1.8;
   font-size: 1.05em;
@@ -483,14 +483,14 @@ blockquote:is(:lang(de), :lang(nl), :lang(da), :lang(sv)) {
 }
 ```
 
-If needed, Bun can provide additional fallbacks for `:is()` as well, ensuring your language-specific styles work across all browsers. This approach simplifies creating internationalized designs with distinct typographic and styling rules for different language groups.
+如有需要，Bun 可提供额外的 `:is()` 回退，确保语言特定样式跨所有浏览器正常工作。这种方案简化带有不同语言组排版和样式规则的国际化设计。
 
-### :is() selector
+### :is() 选择器
 
-The `:is()` pseudo-class function (formerly `:matches()`) allows you to create more concise and readable selectors by grouping multiple selectors together. It accepts a selector list as its argument and matches if any of the selectors in that list match, significantly reducing repetition in your CSS.
+`:is()` 伪类函数（前称 `:matches()`）允许你通过组合多个选择器书写更简洁且可读的选择器。其接受选择器列表作为参数，只要其中任意选择器匹配即生效，显著减少 CSS 书写重复。
 
 ```css title="styles.css" icon="file-code"
-/* Instead of writing these separately */
+/* 不用分别写这些 */
 /* 
 .article h1,
 .article h2,
@@ -499,36 +499,36 @@ The `:is()` pseudo-class function (formerly `:matches()`) allows you to create m
 }
 */
 
-/* You can write this */
+/* 可以写成 */
 .article :is(h1, h2, h3) {
   margin-top: 1.5em;
 }
 
-/* Complex example with multiple groups */
+/* 复杂示例，多个组合 */
 :is(header, main, footer) :is(h1, h2, .title) {
   font-family: "Heading Font", sans-serif;
 }
 ```
 
-For browsers that don't support `:is()`, Bun's CSS bundler provides fallbacks using vendor-prefixed alternatives:
+对于不支持 `:is()` 的浏览器，Bun 的 CSS 打包工具提供使用厂商前缀的替代写法：
 
 ```css
-/* Fallback using -webkit-any */
+/* 使用 -webkit-any 回退 */
 .article :-webkit-any(h1, h2, h3) {
   margin-top: 1.5em;
 }
 
-/* Fallback using -moz-any */
+/* 使用 -moz-any 回退 */
 .article :-moz-any(h1, h2, h3) {
   margin-top: 1.5em;
 }
 
-/* Original preserved for modern browsers */
+/* 现代浏览器保留原写法 */
 .article :is(h1, h2, h3) {
   margin-top: 1.5em;
 }
 
-/* Complex example with fallbacks */
+/* 复杂示例的回退 */
 :-webkit-any(header, main, footer) :-webkit-any(h1, h2, .title) {
   font-family: "Heading Font", sans-serif;
 }
@@ -543,32 +543,30 @@ For browsers that don't support `:is()`, Bun's CSS bundler provides fallbacks us
 ```
 
 <Warning>
-  The vendor-prefixed versions have some limitations compared to the standardized `:is()` selector, particularly with
-  complex selectors. Bun handles these limitations intelligently, only using prefixed versions when they'll work
-  correctly.
+  厂商前缀版本相比标准化的 `:is()` 选择器存在一定限制，尤其在复杂选择器中。Bun 会智能处理这些限制，仅在能正确工作的情况下使用前缀版本。
 </Warning>
 
-### :not() selector
+### :not() 选择器
 
-The `:not()` pseudo-class allows you to exclude elements that match a specific selector. The modern version of this selector accepts multiple arguments, letting you exclude multiple patterns with a single, concise selector.
+`:not()` 伪类允许你排除匹配指定选择器的元素。现代版本支持多个参数，允许你用更简洁的选择器排除多种模式。
 
 ```css title="styles.css" icon="file-code"
-/* Select all buttons except primary and secondary variants */
+/* 选择所有按钮，排除主按钮和次按钮 */
 button:not(.primary, .secondary) {
   background-color: #f5f5f5;
   border: 1px solid #ddd;
 }
 
-/* Apply styles to all headings except those inside sidebars or footers */
+/* 应用样式于所有标题，排除侧边栏或页脚内的 */
 h2:not(.sidebar *, footer *) {
   margin-top: 2em;
 }
 ```
 
-For browsers that don't support multiple arguments in `:not()`, Bun's CSS bundler converts this syntax to a more compatible form while preserving the same behavior:
+对于不支持多参数 `:not()` 的浏览器，Bun 的 CSS 打包工具将该语法转换成兼容版本，并保留相同行为：
 
 ```css title="styles.css" icon="file-code"
-/* Converted to use :not with :is() for compatibility */
+/* 转换为使用带 :is() 的 :not() */
 button:not(:is(.primary, .secondary)) {
   background-color: #f5f5f5;
   border: 1px solid #ddd;
@@ -579,10 +577,10 @@ h2:not(:is(.sidebar *, footer *)) {
 }
 ```
 
-And if `:is()` isn't supported, Bun can generate further fallbacks:
+如果 `:is()` 不被支持，Bun 会生成进一步回退：
 
 ```css title="styles.css" icon="file-code"
-/* Even more fallbacks for maximum compatibility */
+/* 额外回退以确保最大兼容 */
 button:not(:-webkit-any(.primary, .secondary)) {
   background-color: #f5f5f5;
   border: 1px solid #ddd;
@@ -599,30 +597,30 @@ button:not(:is(.primary, .secondary)) {
 }
 ```
 
-This conversion ensures your negative selectors work correctly across all browsers while maintaining the correct specificity and behavior of the original selector.
+此转换确保否定选择器在各浏览器间正常工作，同时保持正确优先级和原选择器行为。
 
-### Math functions
+### 数学函数
 
-CSS now includes a rich set of mathematical functions that let you perform complex calculations directly in your stylesheets. These include standard math functions (`round()`, `mod()`, `rem()`, `abs()`, `sign()`), trigonometric functions (`sin()`, `cos()`, `tan()`, `asin()`, `acos()`, `atan()`, `atan2()`), and exponential functions (`pow()`, `sqrt()`, `exp()`, `log()`, `hypot()`).
+CSS 现在包含丰富的数学函数，允许你直接在样式表中执行复杂计算。这包括标准数学函数 (`round()`、`mod()`、`rem()`、`abs()`、`sign()`)、三角函数 (`sin()`、`cos()`、`tan()`、`asin()`、`acos()`、`atan()`、`atan2()`) 以及指数函数 (`pow()`、`sqrt()`、`exp()`、`log()`、`hypot()`)。
 
 ```css title="styles.css" icon="file-code"
 .dynamic-sizing {
-  /* Clamp a value between minimum and maximum */
+  /* 限定值在最小和最大之间 */
   width: clamp(200px, 50%, 800px);
 
-  /* Round to the nearest multiple */
+  /* 四舍五入到最接近的倍数 */
   padding: round(14.8px, 5px);
 
-  /* Trigonometry for animations or layouts */
+  /* 动画或布局的三角函数 */
   transform: rotate(calc(sin(45deg) * 50deg));
 
-  /* Complex math with multiple functions */
+  /* 组合多个函数的复杂数学 */
   --scale-factor: pow(1.25, 3);
   font-size: calc(16px * var(--scale-factor));
 }
 ```
 
-Bun's CSS bundler evaluates these mathematical expressions at build time when all values are known constants (not variables), resulting in optimized output:
+Bun 的 CSS 打包工具会在构建时对所有已知常量（非变量）求值，生成优化的输出：
 
 ```css title="styles.css" icon="file-code"
 .dynamic-sizing {
@@ -634,28 +632,28 @@ Bun's CSS bundler evaluates these mathematical expressions at build time when al
 }
 ```
 
-This approach lets you write more expressive and maintainable CSS with meaningful mathematical relationships, which then gets compiled to optimized values for maximum browser compatibility and performance.
+此方式让你能以更具表现力和可维护性的数学关系编写 CSS，然后编译为优化的值，实现最高浏览器兼容性和性能。
 
-### Media query ranges
+### 媒体查询范围
 
-Modern CSS supports intuitive range syntax for media queries, allowing you to specify breakpoints using comparison operators like `<`, `>`, `<=`, and `>=` instead of the more verbose `min-` and `max-` prefixes. This syntax is more readable and matches how we normally think about values and ranges.
+现代 CSS 支持直观的范围语法，用比较运算符 `<`、`>`、`<=`、`>=` 来指定断点，替代冗长的 `min-` 和 `max-` 前缀。这样语法更符合我们对值和范围的习惯理解。
 
 ```css title="styles.css" icon="file-code"
-/* Modern syntax with comparison operators */
+/* 比较运算符的现代写法 */
 @media (width >= 768px) {
   .container {
     max-width: 720px;
   }
 }
 
-/* Inclusive range using <= and >= */
+/* 使用 <= 和 >= 的包含范围 */
 @media (768px <= width <= 1199px) {
   .sidebar {
     display: flex;
   }
 }
 
-/* Exclusive range using < and > */
+/* 使用 < 和 > 的排他范围 */
 @media (width > 320px) and (width < 768px) {
   .mobile-only {
     display: block;
@@ -663,10 +661,10 @@ Modern CSS supports intuitive range syntax for media queries, allowing you to sp
 }
 ```
 
-Bun's CSS bundler converts these modern range queries to traditional media query syntax for compatibility with all browsers:
+Bun 的 CSS 打包工具会将这些现代范围查询转换为传统媒体查询语法，确保兼容所有浏览器：
 
 ```css title="styles.css" icon="file-code"
-/* Converted to traditional min/max syntax */
+/* 转换为传统 min/max 语法 */
 @media (min-width: 768px) {
   .container {
     max-width: 720px;
@@ -686,51 +684,51 @@ Bun's CSS bundler converts these modern range queries to traditional media query
 }
 ```
 
-This lets you write more intuitive and mathematical media queries while ensuring your stylesheets work correctly across all browsers, including those that don't support the modern range syntax.
+这让你编写更直观、数学化的媒体查询，同时确保样式表在不支持现代范围语法的浏览器中正常工作。
 
-### Shorthands
+### 简写属性
 
-CSS has introduced several modern shorthand properties that improve code readability and maintainability. Bun's CSS bundler ensures these convenient shorthands work on all browsers by converting them to their longhand equivalents when needed.
+CSS 引入了多个现代简写属性，提升代码可读性和可维护性。Bun 的 CSS 打包工具确保这些便捷简写在所有浏览器上可用，必要时转成长写属性。
 
 ```css title="styles.css" icon="file-code"
-/* Alignment shorthands */
+/* 对齐简写 */
 .flex-container {
-  /* Shorthand for align-items and justify-items */
+  /* align-items 和 justify-items 的简写 */
   place-items: center start;
 
-  /* Shorthand for align-content and justify-content */
+  /* align-content 和 justify-content 的简写 */
   place-content: space-between center;
 }
 
 .grid-item {
-  /* Shorthand for align-self and justify-self */
+  /* align-self 和 justify-self 的简写 */
   place-self: end center;
 }
 
-/* Two-value overflow */
+/* 双值溢出属性 */
 .content-box {
-  /* First value for horizontal, second for vertical */
+  /* 第一个值对应水平，第二个垂直 */
   overflow: hidden auto;
 }
 
-/* Enhanced text-decoration */
+/* 增强的文本装饰 */
 .fancy-link {
-  /* Combines multiple text decoration properties */
+  /* 结合多条文本装饰属性 */
   text-decoration: underline dotted blue 2px;
 }
 
-/* Two-value display syntax */
+/* 双值 display 语法 */
 .component {
-  /* Outer display type + inner display type */
+  /* 外层和内层显示类型 */
   display: inline flex;
 }
 ```
 
-For browsers that don't support these modern shorthands, Bun converts them to their component longhand properties:
+对于不支持这些现代简写的浏览器，Bun 会转换为对应的长写组件属性：
 
 ```css title="styles.css" icon="file-code"
 .flex-container {
-  /* Expanded alignment properties */
+  /* 展开对齐属性 */
   align-items: center;
   justify-items: start;
 
@@ -744,13 +742,13 @@ For browsers that don't support these modern shorthands, Bun converts them to th
 }
 
 .content-box {
-  /* Separate overflow properties */
+  /* 分别控制溢出方向 */
   overflow-x: hidden;
   overflow-y: auto;
 }
 
 .fancy-link {
-  /* Individual text decoration properties */
+  /* 单独文本装饰属性 */
   text-decoration-line: underline;
   text-decoration-style: dotted;
   text-decoration-color: blue;
@@ -758,45 +756,45 @@ For browsers that don't support these modern shorthands, Bun converts them to th
 }
 
 .component {
-  /* Single value display */
+  /* 单值 display */
   display: inline-flex;
 }
 ```
 
-This conversion ensures your stylesheets remain clean and maintainable while providing the broadest possible browser compatibility.
+该转换确保样式表既保持简洁现代，又兼容最广浏览器。
 
-### Double position gradients
+### 双点位置渐变
 
-The double position gradient syntax is a modern CSS feature that allows you to create hard color stops in gradients by specifying the same color at two adjacent positions. This creates a sharp transition rather than a smooth fade, which is useful for creating stripes, color bands, and other multi-color designs.
+双点位置渐变语法是现代 CSS 特性，通过在渐变中相邻的两个位置指定相同颜色，创建硬色阶过渡。适合制作条纹、色带及多色设计。
 
 ```css title="styles.css" icon="file-code"
 .striped-background {
-  /* Creates a sharp transition from green to red at 30%-40% */
+  /* 在 30%-40% 制造绿色到红色的硬切换 */
   background: linear-gradient(
     to right,
     yellow 0%,
     green 20%,
     green 30%,
     red 30%,
-    /* Double position creates hard stop */ red 70%,
+    /* 双点位置制造硬边界 */ red 70%,
     blue 70%,
     blue 100%
   );
 }
 
 .progress-bar {
-  /* Creates distinct color sections */
+  /* 制造明显色块 */
   background: linear-gradient(
     to right,
     #4caf50 0% 25%,
-    /* Green from 0% to 25% */ #ffc107 25% 50%,
-    /* Yellow from 25% to 50% */ #2196f3 50% 75%,
-    /* Blue from 50% to 75% */ #9c27b0 75% 100% /* Purple from 75% to 100% */
+    /* 绿色从 0% 到 25% */ #ffc107 25% 50%,
+    /* 黄色从 25% 到 50% */ #2196f3 50% 75%,
+    /* 蓝色从 50% 到 75% */ #9c27b0 75% 100% /* 紫色从 75% 到 100% */
   );
 }
 ```
 
-For browsers that don't support this syntax, Bun's CSS bundler automatically converts it to the traditional format by duplicating color stops:
+对于不支持该语法的浏览器，Bun 的 CSS 打包工具自动转换为传统格式，复制颜色停点：
 
 ```css title="styles.css" icon="file-code"
 .striped-background {
@@ -806,7 +804,7 @@ For browsers that don't support this syntax, Bun's CSS bundler automatically con
     green 20%,
     green 30%,
     red 30%,
-    /* Split into two color stops */ red 70%,
+    /* 分成两段色点 */ red 70%,
     blue 70%,
     blue 100%
   );
@@ -817,39 +815,39 @@ For browsers that don't support this syntax, Bun's CSS bundler automatically con
     to right,
     #4caf50 0%,
     #4caf50 25%,
-    /* Two stops for green section */ #ffc107 25%,
+    /* 两段色点绿段 */ #ffc107 25%,
     #ffc107 50%,
-    /* Two stops for yellow section */ #2196f3 50%,
+    /* 两段色点黄段 */ #2196f3 50%,
     #2196f3 75%,
-    /* Two stops for blue section */ #9c27b0 75%,
-    #9c27b0 100% /* Two stops for purple section */
+    /* 两段色点蓝段 */ #9c27b0 75%,
+    #9c27b0 100% /* 两段色点紫段 */
   );
 }
 ```
 
-This conversion lets you use the cleaner double position syntax in your source code while ensuring gradients display correctly in all browsers.
+此转换让你在源代码使用更简洁的双定位语法，同时确保渐变在所有浏览器正常显示。
 
-### system-ui font
+### system-ui 字体
 
-The `system-ui` generic font family lets you use the device's native UI font, creating interfaces that feel more integrated with the operating system. This provides a more native look and feel without having to specify different font stacks for each platform.
+`system-ui` 通用字体族让你使用设备的原生 UI 字体，创造与操作系统更为融合的界面外观。无需为每个平台指定不同字体堆栈即可达到更原生的感觉。
 
 ```css title="styles.css" icon="file-code"
 .native-interface {
-  /* Use the system's default UI font */
+  /* 使用系统默认 UI 字体 */
   font-family: system-ui;
 }
 
 .fallback-aware {
-  /* System UI font with explicit fallbacks */
+  /* 带显式回退的系统 UI 字体 */
   font-family: system-ui, sans-serif;
 }
 ```
 
-For browsers that don't support `system-ui`, Bun's CSS bundler automatically expands it to a comprehensive cross-platform font stack:
+对于不支持 `system-ui` 的浏览器，Bun 的 CSS 打包工具自动扩展为跨平台的综合字体堆栈：
 
 ```css title="styles.css" icon="file-code"
 .native-interface {
-  /* Expanded to support all major platforms */
+  /* 为所有主流平台扩展 */
   font-family:
     system-ui,
     -apple-system,
@@ -863,7 +861,7 @@ For browsers that don't support `system-ui`, Bun's CSS bundler automatically exp
 }
 
 .fallback-aware {
-  /* Preserves the original fallback after the expanded stack */
+  /* 扩展字体堆栈后保留原轮廓回退 */
   font-family:
     system-ui,
     -apple-system,
@@ -878,24 +876,24 @@ For browsers that don't support `system-ui`, Bun's CSS bundler automatically exp
 }
 ```
 
-This approach gives you the simplicity of writing just `system-ui` in your source code while ensuring your interface adapts correctly to all operating systems and browsers. The expanded font stack includes appropriate system fonts for macOS/iOS, Windows, Android, Linux, and fallbacks for older browsers.
+此方案让你只用简单写 `system-ui`，但确保界面在所有操作系统和浏览器上都适当适配。扩展字体堆栈包含适合 macOS/iOS、Windows、Android、Linux 的系统字体及旧浏览器回退。
 
-## CSS Modules
+## CSS 模块
 
-Bun's bundler also supports bundling CSS modules in addition to regular CSS with support for the following features:
+除常规 CSS 外，Bun 的打包工具还支持打包 CSS 模块，具有如下特性：
 
-- Automatically detecting CSS module files (`.module.css`) with zero configuration
-- Composition (`composes` property)
-- Importing CSS modules into JSX/TSX
-- Warnings/errors for invalid usages of CSS modules
+- 零配置自动检测 CSS 模块文件（`.module.css`）
+- 组合（`composes` 属性）
+- 在 JSX/TSX 中导入 CSS 模块
+- 对 CSS 模块错误用法给予警告/错误提示
 
-A CSS module is a CSS file (with the `.module.css` extension) where are all class names and animations are scoped to the file. This helps you avoid class name collisions as CSS declarations are globally scoped by default.
+CSS 模块是采用 `.module.css` 扩展名的 CSS 文件，其中所有类名和动画都限定于文件内，避免因 CSS 声明默认全局导致的类名冲突。
 
-Under the hood, Bun's bundler transforms locally scoped class names into unique identifiers.
+底层，Bun 的打包工具将局部作用域的类名转为唯一标识符。
 
-### Getting started
+### 快速入门
 
-Create a CSS file with the `.module.css` extension:
+创建一个以 `.module.css` 结尾的 CSS 文件：
 
 ```css title="styles.module.css" icon="file-code"
 .button {
@@ -909,7 +907,7 @@ Create a CSS file with the `.module.css` extension:
 }
 ```
 
-You can then import this file, for example into a TSX file:
+然后你可以导入此文件，比如在 TSX 文件中：
 
 ```tsx title="app.tsx" icon="/icons/typescript.svg"
 import styles from "./styles.module.css";
@@ -925,7 +923,7 @@ export default function App() {
 }
 ```
 
-The styles object from importing the CSS module file will be an object with all class names as keys and their unique identifiers as values:
+导入的 `styles` 对象将包含所有类名及其唯一标识符：
 
 ```ts title="app.tsx" icon="/icons/typescript.svg"
 import styles from "./styles.module.css";
@@ -935,7 +933,7 @@ console.log(styles);
 console.log(otherStyles);
 ```
 
-This will output:
+输出将为：
 
 ```ts title="app.tsx" icon="/icons/typescript.svg"
 {
@@ -947,13 +945,13 @@ This will output:
 }
 ```
 
-As you can see, the class names are unique to each file, avoiding any collisions!
+由此可见，每个文件的类名都是独一无二的，避免冲突！
 
-### Composition
+### 组合
 
-CSS modules allow you to compose class selectors together. This lets you reuse style rules across multiple classes.
+CSS 模块允许你组合类选择器，实现样式规则的复用。
 
-For example:
+例如：
 
 ```css title="styles.module.css" icon="file-code"
 .button {
@@ -966,7 +964,7 @@ For example:
 }
 ```
 
-Would be the same as writing:
+等同于写：
 
 ```css title="styles.module.css" icon="file-code"
 .button {
@@ -979,29 +977,30 @@ Would be the same as writing:
 }
 ```
 
-There are a couple rules to keep in mind when using `composes`:
+使用 `composes` 有几点规则要注意：
 
 <Info>
-  **Composition Rules:** - A `composes` property must come before any regular CSS properties or declarations - You can
-  only use `composes` on a simple selector with a single class name
+  **组合规则：** 
+  - `composes` 属性必须写在任何常规 CSS 属性之前
+  - 只能在带有单个类名的简单选择器上使用 `composes`
 </Info>
 
 ```css title="styles.module.css" icon="file-code"
 #button {
-  /* Invalid! `#button` is not a class selector */
+  /* 无效！`#button` 不是类选择器 */
   composes: background;
 }
 
 .button,
 .button-secondary {
-  /* Invalid! `.button, .button-secondary` is not a simple selector */
+  /* 无效！`.button, .button-secondary` 不是简单选择器 */
   composes: background;
 }
 ```
 
-### Composing from a separate CSS module file
+### 从独立 CSS 模块文件组合
 
-You can also compose from a separate CSS module file:
+你也可以从其他 CSS 模块文件中组合类：
 
 ```css title="background.module.css" icon="file-code"
 .background {
@@ -1017,8 +1016,7 @@ You can also compose from a separate CSS module file:
 ```
 
 <Warning>
-When composing classes from separate files, be sure that they do not contain the same properties.
+组合来自不同文件的类时，请确保它们不包含相同的属性。
 
-The CSS module spec says that composing classes from separate files with conflicting properties is undefined behavior, meaning that the output may differ and be unreliable.
-
+CSS 模块规范指出，来自不同文件且属性冲突的组合行为未定义，导致输出可能不同且不可靠。
 </Warning>

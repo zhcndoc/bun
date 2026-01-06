@@ -1,34 +1,34 @@
 ---
-title: Configure a private registry for an organization scope with bun install
-sidebarTitle: Configure a scoped registry
+title: 使用 bun install 为组织作用域配置私有注册表
+sidebarTitle: 配置作用域注册表
 mode: center
 ---
 
-Private registries can be configured using either [`.npmrc`](/pm/npmrc) or [`bunfig.toml`](/runtime/bunfig#install-registry). While both are supported, we recommend using **bunfig.toml** for enhanced flexibility and Bun-specific options.
+私有注册表可以通过 [`.npmrc`](/pm/npmrc) 或 [`bunfig.toml`](/runtime/bunfig#install-registry) 配置。两者均受支持，但我们推荐使用 **bunfig.toml** 以获得更高的灵活性和针对 Bun 的专用选项。
 
-To configure a registry for a particular npm scope:
+要为特定的 npm 作用域配置注册表：
 
 ```toml bunfig.toml icon="settings"
 [install.scopes]
-# as a string
+# 作为字符串
 "@myorg1" = "https://usertitle:password@registry.myorg.com/"
 
-# as an object with username/password
-# you can reference environment variables
+# 作为带有用户名/密码的对象
+# 你可以引用环境变量
 "@myorg2" = {
   username = "myusername",
   password = "$npm_pass",
   url = "https://registry.myorg.com/"
 }
 
-# as an object with token
+# 作为带有令牌的对象
 "@myorg3" = { token = "$npm_token", url = "https://registry.myorg.com/" }
 
 ```
 
 ---
 
-Your `bunfig.toml` can reference environment variables. Bun automatically loads environment variables from `.env.local`, `.env.[NODE_ENV]`, and `.env`. See [Docs > Environment variables](/runtime/environment-variables) for more information.
+你的 `bunfig.toml` 可以引用环境变量。Bun 会自动从 `.env.local`、`.env.[NODE_ENV]` 和 `.env` 载入环境变量。更多信息请参见 [文档 > 环境变量](/runtime/environment-variables)。
 
 ```toml bunfig.toml icon="settings"
 [install.scopes]
@@ -37,4 +37,4 @@ Your `bunfig.toml` can reference environment variables. Bun automatically loads 
 
 ---
 
-See [Docs > Package manager](/pm/cli/install) for complete documentation of Bun's package manager.
+完整的 Bun 包管理器文档请参见 [文档 > 包管理器](/pm/cli/install)。

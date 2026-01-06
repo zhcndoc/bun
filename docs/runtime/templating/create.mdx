@@ -1,25 +1,24 @@
 ---
 title: bun create
-description: Create a new Bun project from a React component, a `create-<template>` npm package, a GitHub repo, or a local template
+description: 从 React 组件、`create-<template>` npm 包、GitHub 仓库或本地模板创建新的 Bun 项目
 ---
 
 <Note>
-  You don't need `bun create` to use Bun. You don't need any configuration at all. This command exists to make getting
-  started a bit quicker and easier.
+  你不需要 `bun create` 来使用 Bun。其实你完全不需要任何配置。这个命令的存在只是为了让入门更快更简单一些。
 </Note>
 
 ---
 
-Template a new Bun project with `bun create`. This is a flexible command that can be used to create a new project from a React component, a `create-<template>` npm package, a GitHub repo, or a local template.
+使用 `bun create` 模板化一个新的 Bun 项目。这个命令非常灵活，可以用来从 React 组件、`create-<template>` npm 包、GitHub 仓库或本地模板创建新项目。
 
-If you're looking to create a brand new empty project, use [`bun init`](/runtime/templating/init).
+如果你想创建一个全新的空白项目，请使用 [`bun init`](/runtime/templating/init)。
 
-## From a React component
+## 从 React 组件创建
 
-`bun create ./MyComponent.tsx` turns an existing React component into a complete dev environment with hot reload and production builds in one command.
+`bun create ./MyComponent.tsx` 会将已有的 React 组件转变成一个包含热重载和生产构建的一体化开发环境。
 
 ```bash
-bun create ./MyComponent.jsx # .tsx also supported
+bun create ./MyComponent.jsx # 同时支持 .tsx
 ```
 
 <Frame>
@@ -39,29 +38,29 @@ bun create ./MyComponent.jsx # .tsx also supported
 </Frame>
 
 <Note>
-🚀 **Create React App Successor** — `bun create <component>` provides everything developers loved about Create React App, but with modern tooling, faster builds, and backend support.
+🚀 **Create React App 的继任者** — `bun create <component>` 提供了开发者们喜爱的 Create React App 体验，但配备了现代工具链、更快的构建速度以及后端支持。
 </Note>
 
-#### How this works
+#### 工作原理
 
-When you run `bun create <component>`, Bun:
+当你运行 `bun create <component>` 时，Bun 会：
 
-1. Uses [Bun's JavaScript bundler](/bundler) to analyze your module graph.
-2. Collects all the dependencies needed to run the component.
-3. Scans the exports of the entry point for a React component.
-4. Generates a `package.json` file with the dependencies and scripts needed to run the component.
-5. Installs any missing dependencies using [`bun install --only-missing`](/pm/cli/install).
-6. Generates the following files:
+1. 使用 [Bun 的 JavaScript 打包器](/bundler) 分析你的模块图。
+2. 收集运行该组件所需的所有依赖。
+3. 扫描入口点导出中是否存在 React 组件。
+4. 生成包含所需依赖和脚本的 `package.json` 文件，用来运行该组件。
+5. 使用 [`bun install --only-missing`](/pm/cli/install) 安装缺失的依赖。
+6. 生成以下文件：
    - `${component}.html`
-   - `${component}.client.tsx` (entry point for the frontend)
-   - `${component}.css` (css file)
-7. Starts a frontend dev server automatically.
+   - `${component}.client.tsx`（前端入口文件）
+   - `${component}.css`（CSS 文件）
+7. 自动启动前端开发服务器。
 
-### Using TailwindCSS with Bun
+### 在 Bun 中使用 TailwindCSS
 
-[TailwindCSS](https://tailwindcss.com/) is an extremely popular utility-first CSS framework used to style web applications.
+[TailwindCSS](https://tailwindcss.com/) 是一个极受欢迎的实用优先 CSS 框架，用于为 web 应用添加样式。
 
-When you run `bun create <component>`, Bun scans your JSX/TSX file for TailwindCSS class names (and any files it imports). If it detects TailwindCSS class names, it will add the following dependencies to your `package.json`:
+当你运行 `bun create <component>` 时，Bun 会扫描你的 JSX/TSX 文件（以及任何导入的文件）中是否有 TailwindCSS 的类名。如果检测到 TailwindCSS 类名，它会将以下依赖添加到你的 `package.json` 中：
 
 ```json package.json icon="file-json"
 {
@@ -72,99 +71,98 @@ When you run `bun create <component>`, Bun scans your JSX/TSX file for TailwindC
 }
 ```
 
-We also configure `bunfig.toml` to use Bun's TailwindCSS plugin with `Bun.serve()`
+同时我们会配置 `bunfig.toml`，使其在 `Bun.serve()` 中使用 Bun 的 TailwindCSS 插件：
 
 ```toml bunfig.toml icon="settings"
 [serve.static]
 plugins = ["bun-plugin-tailwind"]
 ```
 
-And a `${component}.css` file with `@import "tailwindcss";` at the top:
+并在 `${component}.css` 文件顶部添加：
 
 ```css MyComponent.css icon="file-code"
 @import "tailwindcss";
 ```
 
-### Using `shadcn/ui` with Bun
+### 在 Bun 中使用 `shadcn/ui`
 
-[`shadcn/ui`](https://ui.shadcn.com/) is an extremely popular component library tool for building web applications.
+[`shadcn/ui`](https://ui.shadcn.com/) 是一个构建 Web 应用时极受欢迎的组件库工具。
 
-`bun create <component>` scans for any shadcn/ui components imported from `@/components/ui`.
+`bun create <component>` 会扫描是否有任何从 `@/components/ui` 导入的 shadcn/ui 组件。
 
-If it finds any, it runs:
+如果找到，它会执行：
 
 ```bash terminal icon="terminal"
-# Assuming bun detected imports to @/components/ui/accordion and @/components/ui/button
-bunx shadcn@canary add accordion button # and any other components
+# 假设 bun 检测到导入了 @/components/ui/accordion 和 @/components/ui/button
+bunx shadcn@canary add accordion button # 以及其他组件
 ```
 
-Since `shadcn/ui` itself uses TailwindCSS, `bun create` also adds the necessary TailwindCSS dependencies to your `package.json` and configures `bunfig.toml` to use Bun's TailwindCSS plugin with `Bun.serve()` as described above.
+由于 `shadcn/ui` 本身使用 TailwindCSS，`bun create` 同样会向你的 `package.json` 添加必要的 TailwindCSS 依赖，并照前述方式配置 `bunfig.toml` 以使用 Bun 的 TailwindCSS 插件。
 
-Additionally, we setup the following:
+此外，我们还会配置以下内容：
 
-- `tsconfig.json` to alias `"@/*"` to `"src/*"` or `.` (depending on if there is a `src/` directory)
-- `components.json` so that shadcn/ui knows its a shadcn/ui project
-- `styles/globals.css` file that configures Tailwind v4 in the way that shadcn/ui expects
-- `${component}.build.ts` file that builds the component for production with `bun-plugin-tailwind` configured
+- `tsconfig.json`，将 `"@/*"` 别名指向 `"src/*"` 或 `.`（取决于是否存在 `src/` 目录）
+- `components.json`，使 shadcn/ui 知道这是一个 shadcn/ui 项目
+- `styles/globals.css`，按照 shadcn/ui 的要求配置 Tailwind v4
+- `${component}.build.ts`，配置了 `bun-plugin-tailwind` 用于生产构建该组件文件
 
-`bun create ./MyComponent.jsx` is one of the easiest ways to run code generated from LLMs like [Claude](https://claude.ai) or ChatGPT locally.
+`bun create ./MyComponent.jsx` 是运行由 LLM（如 [Claude](https://claude.ai) 或 ChatGPT）生成代码的最简单方式之一。
 
-## From `npm`
+## 从 npm 创建
 
 ```sh terminal icon="terminal"
 bun create <template> [<destination>]
 ```
 
-Assuming you don't have a [local template](#from-a-local-template) with the same name, this command will download and execute the `create-<template>` package from npm. The following two commands will behave identically:
+假如你本地没有同名的 [本地模板](#从本地模板创建)，此命令会从 npm 下载并执行 `create-<template>` 包。下面两个命令效果相同：
 
 ```sh terminal icon="terminal"
 bun create remix
 bunx create-remix
 ```
 
-Refer to the documentation of the associated `create-<template>` package for complete documentation and usage instructions.
+关于使用方法和完整文档，请查阅对应 `create-<template>` 包的说明。
 
-## From GitHub
+## 从 GitHub 创建
 
-This will download the contents of the GitHub repo to disk.
+此操作将从 GitHub 仓库下载内容到本地磁盘。
 
 ```bash terminal icon="terminal"
 bun create <user>/<repo>
 bun create github.com/<user>/<repo>
 ```
 
-Optionally specify a name for the destination folder. If no destination is specified, the repo name will be used.
+你也可以指定目标文件夹名称。如果不指定，则默认使用仓库名。
 
 ```bash terminal icon="terminal"
 bun create <user>/<repo> mydir
 bun create github.com/<user>/<repo> mydir
 ```
 
-Bun will perform the following steps:
+Bun 会执行以下步骤：
 
-- Download the template
-- Copy all template files into the destination folder
-- Install dependencies with `bun install`.
-- Initialize a fresh Git repo. Opt out with the `--no-git` flag.
-- Run the template's configured `start` script, if defined.
+- 下载模板
+- 将模板中所有文件复制到目标文件夹
+- 使用 `bun install` 安装依赖
+- 初始化空的 Git 仓库。若不想初始化使用 `--no-git` 参数。
+- 如果模板定义了 `start` 脚本，则执行
 
-<Note>By default Bun will _not overwrite_ any existing files. Use the `--force` flag to overwrite existing files.</Note>
+<Note>默认情况下，Bun 不会覆盖任何已存在的文件。使用 `--force` 参数可强制覆盖。</Note>
 
-## From a local template
+## 从本地模板创建
 
 <Warning>
-  Unlike remote templates, running `bun create` with a local template will delete the entire destination folder if it
-  already exists! Be careful.
+  与远程模板不同，使用本地模板运行 `bun create` 会删除目标文件夹及其所有内容！请谨慎操作。
 </Warning>
 
-Bun's templater can be extended to support custom templates defined on your local file system. These templates should live in one of the following directories:
+Bun 的模板功能可以扩展，支持从本地文件系统加载自定义模板。这些模板应位于以下目录之一：
 
-- `$HOME/.bun-create/<name>`: global templates
-- `<project root>/.bun-create/<name>`: project-specific templates
+- `$HOME/.bun-create/<name>`：全局模板目录
+- `<项目根目录>/.bun-create/<name>`：项目专属模板目录
 
-<Note>You can customize the global template path by setting the `BUN_CREATE_DIR` environment variable.</Note>
+<Note>你可以通过设置环境变量 `BUN_CREATE_DIR` 来自定义全局模板路径。</Note>
 
-To create a local template, navigate to `$HOME/.bun-create` and create a new directory with the desired name of your template.
+创建本地模板时，请进入 `$HOME/.bun-create` 并创建一个以模板名命名的文件夹。
 
 ```bash
 cd $HOME/.bun-create
@@ -172,7 +170,7 @@ mkdir foo
 cd foo
 ```
 
-Then, create a `package.json` file in that directory with the following contents:
+然后，在该目录下创建 `package.json` 文件，内容如下：
 
 ```json package.json icon="file-json"
 {
@@ -180,11 +178,11 @@ Then, create a `package.json` file in that directory with the following contents
 }
 ```
 
-You can run `bun create foo` elsewhere on your file system to verify that Bun is correctly finding your local template.
+你可以在文件系统其他地方执行 `bun create foo`，验证 Bun 是否能正确找到本地模板。
 
-#### Setup logic
+#### 设置逻辑
 
-You can specify pre- and post-install setup scripts in the `"bun-create"` section of your local template's `package.json`.
+你可以在本地模板的 `package.json` 的 `"bun-create"` 字段中指定安装前后运行的脚本。
 
 ```json package.json icon="file-json"
 {
@@ -196,74 +194,74 @@ You can specify pre- and post-install setup scripts in the `"bun-create"` sectio
     "react-dom": "^17.0.2"
   },
   "bun-create": {
-    "preinstall": "echo 'Installing...'", // a single command
-    "postinstall": ["echo 'Done!'"], // an array of commands
+    "preinstall": "echo 'Installing...'", // 单条命令
+    "postinstall": ["echo 'Done!'"], // 命令数组，会依次执行
     "start": "bun run echo 'Hello world!'"
   }
 }
 ```
 
-The following fields are supported. Each of these can correspond to a string or array of strings. An array of commands will be executed in order.
+支持以下字段，每个字段可以是字符串或者字符串数组。数组中的命令会按顺序执行。
 
-| Field         | Description                         |
-| ------------- | ----------------------------------- |
-| `postinstall` | runs after installing dependencies  |
-| `preinstall`  | runs before installing dependencies |
+| 字段           | 描述                             |
+| -------------- | -------------------------------- |
+| `postinstall`  | 在安装依赖后运行                 |
+| `preinstall`   | 在安装依赖前运行                 |
 
-After cloning a template, `bun create` will automatically remove the `"bun-create"` section from `package.json` before writing it to the destination folder.
+克隆模板后，`bun create` 会自动从写入目标文件夹前移除 `package.json` 中的 `"bun-create"` 部分。
 
-## Reference
+## 参考
 
-### CLI flags
+### CLI 参数
 
-| Flag           | Description                            |
-| -------------- | -------------------------------------- |
-| `--force`      | Overwrite existing files               |
-| `--no-install` | Skip installing `node_modules` & tasks |
-| `--no-git`     | Don't initialize a git repository      |
-| `--open`       | Start & open in-browser after finish   |
+| 参数            | 描述                                  |
+| --------------- | ------------------------------------- |
+| `--force`       | 覆盖已存在的文件                      |
+| `--no-install`  | 跳过安装 `node_modules` 和相关任务   |
+| `--no-git`      | 不初始化 git 仓库                    |
+| `--open`        | 运行完成后启动并在浏览器中打开        |
 
-### Environment variables
+### 环境变量
 
-| Name                                      | Description                                                                                                                                          |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GITHUB_API_DOMAIN`                       | If you're using a GitHub enterprise or a proxy, you can customize the GitHub domain Bun pings for downloads                                          |
-| `GITHUB_TOKEN` (or `GITHUB_ACCESS_TOKEN`) | This lets `bun create` work with private repositories or if you get rate-limited. `GITHUB_TOKEN` is chosen over `GITHUB_ACCESS_TOKEN` if both exist. |
+| 名称                                      | 描述                                                                                  |
+| ----------------------------------------- | ------------------------------------------------------------------------------------- |
+| `GITHUB_API_DOMAIN`                       | 如果使用 GitHub 企业版或代理服务器，可自定义 Bun 下载时访问的 GitHub 域名。          |
+| `GITHUB_TOKEN`（或 `GITHUB_ACCESS_TOKEN`） | 用于让 `bun create` 支持私有仓库或避免速率限制。如果两个都存在，优先使用 `GITHUB_TOKEN`。 |
 
-<Accordion title={<span>How <code>bun create</code> works</span>}>
+<Accordion title={<span>关于 <code>bun create</code> 的工作流程</span>}>
 
-When you run `bun create ${template} ${destination}`, here’s what happens:
+当你运行 `bun create ${template} ${destination}` 时，流程如下：
 
-IF remote template
+如果是远程模板
 
-1. GET `registry.npmjs.org/@bun-examples/${template}/latest` and parse it
-2. GET `registry.npmjs.org/@bun-examples/${template}/-/${template}-${latestVersion}.tgz`
-3. Decompress & extract `${template}-${latestVersion}.tgz` into `${destination}`
-   - If there are files that would overwrite, warn and exit unless `--force` is passed
+1. 请求 `registry.npmjs.org/@bun-examples/${template}/latest` 解析最新版本信息
+2. 请求下载 `registry.npmjs.org/@bun-examples/${template}/-/${template}-${latestVersion}.tgz`
+3. 解压并提取 `${template}-${latestVersion}.tgz` 到 `${destination}`
+   - 如存在会覆盖的文件，会提示并退出，除非传入 `--force`
 
-IF GitHub repo
+如果是 GitHub 仓库
 
-1. Download the tarball from GitHub’s API
-2. Decompress & extract into `${destination}`
-   - If there are files that would overwrite, warn and exit unless `--force` is passed
+1. 从 GitHub API 下载 tar 包
+2. 解压并提取到 `${destination}`
+   - 如存在会覆盖的文件，会提示并退出，除非传入 `--force`
 
-ELSE IF local template
+如果是本地模板
 
-1. Open local template folder
-2. Delete destination directory recursively
-3. Copy files recursively using the fastest system calls available (on macOS `fcopyfile` and Linux, `copy_file_range`). Do not copy or traverse into `node_modules` folder if exists (this alone makes it faster than `cp`)
+1. 打开本地模板文件夹
+2. 递归删除目标目录
+3. 递归复制文件，使用最快的系统调用（macOS 上为 `fcopyfile`，Linux 上为 `copy_file_range`）。且不会复制或遍历任何 `node_modules` 目录（这使得速度优于 `cp`）
 
-4. Parse the `package.json` (again!), update `name` to be `${basename(destination)}`, remove the `bun-create` section from the `package.json` and save the updated `package.json` to disk.
-   - IF Next.js is detected, add `bun-framework-next` to the list of dependencies
-   - IF Create React App is detected, add the entry point in `/src/index.{js,jsx,ts,tsx}` to `public/index.html`
-   - IF Relay is detected, add `bun-macro-relay` so that Relay works
-5. Auto-detect the npm client, preferring `pnpm`, `yarn` (v1), and lastly `npm`
-6. Run any tasks defined in `"bun-create": { "preinstall" }` with the npm client
-7. Run `${npmClient} install` unless `--no-install` is passed OR no dependencies are in package.json
-8. Run any tasks defined in `"bun-create": { "postinstall" }` with the npm client
-9. Run `git init; git add -A .; git commit -am "Initial Commit";`
-   - Rename `gitignore` to `.gitignore`. NPM automatically removes `.gitignore` files from appearing in packages.
-   - If there are dependencies, this runs in a separate thread concurrently while node_modules are being installed
-   - Using libgit2 if available was tested and performed 3x slower in microbenchmarks
+4. 重新解析 `package.json`，更新 `name` 为 `${basename(destination)}`，移除 `bun-create` 部分，并保存。
+   - 如果检测到 Next.js，添加 `bun-framework-next` 依赖
+   - 如果检测到 Create React App，添加 `/src/index.{js,jsx,ts,tsx}` 入口至 `public/index.html`
+   - 如果检测到 Relay，添加 `bun-macro-relay` 确保 Relay 工作
+5. 自动检测 npm 客户端，优先使用 `pnpm`，其次是 `yarn`（v1），最后是 `npm`
+6. 运行 `"bun-create": { "preinstall" }` 中定义的任务，使用检测到的 npm 客户端
+7. 运行 `${npmClient} install`，除非传入 `--no-install` 或者 `package.json` 中无依赖
+8. 运行 `"bun-create": { "postinstall" }` 中定义的任务
+9. 运行 `git init; git add -A .; git commit -am "Initial Commit";`
+   - 将 `gitignore` 文件重命名为 `.gitignore`。由于 npm 自动移除 `.gitignore` 文件，故此操作必需。
+   - 如果存在依赖，这步会在安装 `node_modules` 线程同时并行运行。
+   - 使用 libgit2 测试过，性能比此方案慢 3 倍。
 
 </Accordion>

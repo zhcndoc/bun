@@ -1,17 +1,17 @@
 ---
-title: "Module Resolution"
-description: "How Bun resolves modules and handles imports in JavaScript and TypeScript"
+title: "模块解析"
+description: "Bun 如何解析模块以及处理 JavaScript 和 TypeScript 中的导入"
 ---
 
-Module resolution in JavaScript is a complex topic.
+JavaScript 中的模块解析是一个复杂的话题。
 
-The ecosystem is currently in the midst of a years-long transition from CommonJS modules to native ES modules. TypeScript enforces its own set of rules around import extensions that aren't compatible with ESM. Different build tools support path re-mapping via disparate non-compatible mechanisms.
+生态系统目前正处于从 CommonJS 模块向原生 ES 模块的多年过渡期。TypeScript 强制执行自己的一套关于导入扩展名的规则，这些规则与 ESM 不兼容。不同的构建工具通过各自不兼容的机制支持路径重映射。
 
-Bun aims to provide a consistent and predictable module resolution system that just works. Unfortunately it's still quite complex.
+Bun 旨在提供一个一致且可预测的模块解析系统，确保“开箱即用”。但不幸的是，这仍然相当复杂。
 
-## Syntax
+## 语法
 
-Consider the following files.
+考虑以下文件。
 
 <CodeGroup>
 
@@ -29,14 +29,14 @@ export function hello() {
 
 </CodeGroup>
 
-When we run `index.ts`, it prints "Hello world!".
+当我们运行 `index.ts` 时，它会打印 "Hello world!"。
 
 ```bash icon="terminal" terminal
 bun index.ts
 Hello world!
 ```
 
-In this case, we are importing from `./hello`, a relative path with no extension. **Extensioned imports are optional but supported.** To resolve this import, Bun will check for the following files in order:
+在这种情况下，我们从 `./hello` 导入，这是一个没有扩展名的相对路径。**带扩展名的导入是可选的，但同样支持。** 为了解析此导入，Bun 会按顺序检查以下文件：
 
 - `./hello.tsx`
 - `./hello.jsx`
@@ -53,22 +53,22 @@ In this case, we are importing from `./hello`, a relative path with no extension
 - `./hello/index.cjs`
 - `./hello/index.json`
 
-Import paths can optionally include extensions. If an extension is present, Bun will only check for a file with that exact extension.
+导入路径可以选择性地包含扩展名。如果有扩展名，Bun 将只检查具有该确切扩展名的文件。
 
 ```ts index.ts icon="/icons/typescript.svg"
 import { hello } from "./hello";
-import { hello } from "./hello.ts"; // this works
+import { hello } from "./hello.ts"; // 这样写是可以的
 ```
 
-If you import `from "*.js{x}"`, Bun will additionally check for a matching `*.ts{x}` file, to be compatible with TypeScript's [ES module support](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-7.html#new-file-extensions).
+如果你导入 `from "*.js{x}"`，Bun 会额外检查匹配的 `*.ts{x}` 文件，以兼容 TypeScript 的[ES 模块支持](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-7.html#new-file-extensions)。
 
 ```ts index.ts icon="/icons/typescript.svg"
 import { hello } from "./hello";
-import { hello } from "./hello.ts"; // this works
-import { hello } from "./hello.js"; // this also works
+import { hello } from "./hello.ts"; // 这样写是可以的
+import { hello } from "./hello.js"; // 这也可以
 ```
 
-Bun supports both ES modules (`import`/`export` syntax) and CommonJS modules (`require()`/`module.exports`). The following CommonJS version would also work in Bun.
+Bun 支持 ES 模块（`import`/`export` 语法）和 CommonJS 模块（`require()`/`module.exports`）。下面的 CommonJS 版本在 Bun 中也同样有效。
 
 <CodeGroup>
 
@@ -88,75 +88,75 @@ exports.hello = hello;
 
 </CodeGroup>
 
-That said, using CommonJS is discouraged in new projects.
+不过，建议新项目避免使用 CommonJS。
 
 ---
 
-## Module systems
+## 模块系统
 
-Bun has native support for CommonJS and ES modules. ES Modules are the recommended module format for new projects, but CommonJS modules are still widely used in the Node.js ecosystem.
+Bun 原生支持 CommonJS 和 ES 模块。ES 模块是新项目推荐使用的模块格式，但 CommonJS 模块在 Node.js 生态中仍被广泛使用。
 
-In Bun's JavaScript runtime, `require` can be used by both ES Modules and CommonJS modules. If the target module is an ES Module, `require` returns the module namespace object (equivalent to `import * as`). If the target module is a CommonJS module, `require` returns the `module.exports` object (as in Node.js).
+在 Bun 的 JavaScript 运行时中，`require` 可被 ES 模块和 CommonJS 模块调用。如果目标模块是 ES 模块，`require` 返回模块命名空间对象（等同于 `import * as`）。如果目标模块是 CommonJS 模块，`require` 返回 `module.exports` 对象（与 Node.js 一致）。
 
-| Module Type | `require()`      | `import * as`                                                           |
-| ----------- | ---------------- | ----------------------------------------------------------------------- |
-| ES Module   | Module Namespace | Module Namespace                                                        |
-| CommonJS    | module.exports   | `default` is `module.exports`, keys of module.exports are named exports |
+| 模块类型    | `require()`      | `import * as`                                                        |
+| ----------- | ---------------- | ------------------------------------------------------------------- |
+| ES 模块     | 模块命名空间对象 | 模块命名空间对象                                                    |
+| CommonJS    | module.exports   | `default` 是 `module.exports`，`module.exports` 的键作为命名导出 |
 
-### Using `require()`
+### 使用 `require()`
 
-You can `require()` any file or package, even `.ts` or `.mjs` files.
+你可以 `require()` 任何文件或包，甚至是 `.ts` 或 `.mjs` 文件。
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
-const { foo } = require("./foo"); // extensions are optional
+const { foo } = require("./foo"); // 扩展名可选
 const { bar } = require("./bar.mjs");
 const { baz } = require("./baz.tsx");
 ```
 
-<Accordion title="What is a CommonJS module?">
+<Accordion title="什么是 CommonJS 模块？">
 
-In 2016, ECMAScript added support for [ES Modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules). ES Modules are the standard for JavaScript modules. However, millions of npm packages still use CommonJS modules.
+2016 年，ECMAScript 添加了对[ES 模块](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)的支持。ES 模块是 JavaScript 模块的标准。但数以百万计的 npm 包仍采用 CommonJS 模块。
 
-CommonJS modules are modules that use `module.exports` to export values. Typically, `require` is used to import CommonJS modules.
+CommonJS 模块是使用 `module.exports` 导出值的模块。通常使用 `require` 来导入 CommonJS 模块。
 
 ```ts my-commonjs.cjs icon="/icons/javascript.svg"
 const stuff = require("./stuff");
 module.exports = { stuff };
 ```
 
-The biggest difference between CommonJS and ES Modules is that CommonJS modules are synchronous, while ES Modules are asynchronous. There are other differences too.
+CommonJS 与 ES 模块之间的最大区别是 CommonJS 模块是同步的，而 ES 模块是异步的。还有其他区别：
 
-- ES Modules support top-level `await` and CommonJS modules don't.
-- ES Modules are always in [strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode), while CommonJS modules are not.
-- Browsers do not have native support for CommonJS modules, but they do have native support for ES Modules via `<script type="module">`.
-- CommonJS modules are not statically analyzable, while ES Modules only allow static imports and exports.
+- ES 模块支持顶层 `await`，CommonJS 模块不支持。
+- ES 模块始终处于[严格模式](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode)，而 CommonJS 模块则不一定。
+- 浏览器不原生支持 CommonJS 模块，但通过 `<script type="module">` 方式原生支持 ES 模块。
+- CommonJS 模块不可静态分析，而 ES 模块只允许静态导入和导出。
 
-**CommonJS Modules:** These are a type of module system used in JavaScript. One key feature of CommonJS modules is that they load and execute synchronously. This means that when you import a CommonJS module, the code in that module runs immediately, and your program waits for it to finish before moving on to the next task. It's similar to reading a book from start to finish without skipping pages.
+**CommonJS 模块：** 是 JavaScript 中一种模块系统。其关键特点是加载和执行是同步的。也就是说，当你导入 CommonJS 模块时，其代码会立即执行，且程序必须等待它执行完毕后才能继续。就像从头到尾读完一本书，不跳页。
 
-**ES Modules (ESM):** These are another type of module system introduced in JavaScript. They have a slightly different behavior compared to CommonJS. In ESM, static imports (imports made using `import` statements) are synchronous, just like CommonJS. This means that when you import an ESM using a regular `import` statement, the code in that module runs immediately, and your program proceeds in a step-by-step manner. Think of it like reading a book page by page.
+**ES 模块（ESM）：** 是另一种引入的模块系统。它的行为与 CommonJS 略有不同。ESM 中，静态导入（使用 `import`）是同步的，就像 CommonJS 一样。当你用常规的 `import` 语句导入 ESM 时，其模块代码会立即执行，程序会一步一步执行相应操作。类似于逐页阅读一本书。
 
-**Dynamic imports:** Now, here comes the part that might be confusing. ES Modules also support importing modules on the fly via the `import()` function. This is called a "dynamic import" and it's asynchronous, so it doesn't block the main program execution. Instead, it fetches and loads the module in the background while your program continues to run. Once the module is ready, you can use it. This is like getting additional information from a book while you're still reading it, without having to pause your reading.
+**动态导入：** 令人迷惑的是，ES 模块支持通过 `import()` 函数动态导入模块。这是“动态导入”，是异步的，不会阻塞主程序执行。它会在后台加载模块，同时主程序继续运行。模块准备好后即可使用。就像边读书边获取补充信息，不需要暂停阅读。
 
-**In summary:**
+**总结：**
 
-- CommonJS modules and static ES Modules (`import` statements) work in a similar synchronous way, like reading a book from start to finish.
-- ES Modules also offer the option to import modules asynchronously using the `import()` function. This is like looking up additional information in the middle of reading the book without stopping.
+- CommonJS 模块和静态 ES 模块 (`import` 语句) 工作方式类似，都是同步的，像连贯读完一本书。
+- ES 模块还支持用动态 `import()` 异步导入模块。这就像在阅读过程中查找额外信息而不中止。
 
 </Accordion>
 
-### Using `import`
+### 使用 `import`
 
-You can `import` any file or package, even `.cjs` files.
+你可以 `import` 任何文件或包，甚至是 `.cjs` 文件。
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
-import { foo } from "./foo"; // extensions are optional
+import { foo } from "./foo"; // 扩展名可选
 import bar from "./bar.ts";
 import { stuff } from "./my-commonjs.cjs";
 ```
 
-### Using `import` and `require()` together
+### 同时使用 `import` 和 `require()`
 
-In Bun, you can use `import` or `require` in the same file—they both work, all the time.
+在 Bun 中，你可以在同一文件内同时使用 `import` 和 `require` —— 它们都随时有效。
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 import { stuff } from "./my-commonjs.cjs";
@@ -165,27 +165,27 @@ import Stuff from "./my-commonjs.cjs";
 const myStuff = require("./my-commonjs.cjs");
 ```
 
-### Top level await
+### 顶层 await
 
-The only exception to this rule is top-level await. You can't `require()` a file that uses top-level await, since the `require()` function is inherently synchronous.
+唯一的例外是顶层 await。你不能 `require()` 使用了顶层 await 的文件，因为 `require()` 是同步函数。
 
-Fortunately, very few libraries use top-level await, so this is rarely a problem. But if you're using top-level await in your application code, make sure that file isn't being `require()` from elsewhere in your application. Instead, you should use `import` or [dynamic `import()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import).
+幸好很少有库用顶层 await，所以这很少成为问题。但如果你的应用代码用到了顶层 await，确保该文件没有被项目中其他地方 `require()`。建议用 `import` 或[动态 `import()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import)。
 
 ---
 
-## Importing packages
+## 导入包
 
-Bun implements the Node.js module resolution algorithm, so you can import packages from `node_modules` with a bare specifier.
+Bun 实现了 Node.js 的模块解析算法，因此可以用裸模块名从 `node_modules` 中导入包。
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 import { stuff } from "foo";
 ```
 
-The full specification of this algorithm are officially documented in the [Node.js documentation](https://nodejs.org/api/modules.html); we won't rehash it here. Briefly: if you import `from "foo"`, Bun scans up the file system for a `node_modules` directory containing the package `foo`.
+该算法的完整规范在 [Node.js 文档](https://nodejs.org/api/modules.html) 中有官方说明，这里不再赘述。简要地说：如果你导入 `from "foo"`，Bun 会向上遍历文件系统，寻找包含 `foo` 包的 `node_modules` 目录。
 
 ### NODE_PATH
 
-Bun supports `NODE_PATH` for additional module resolution directories:
+Bun 支持 `NODE_PATH` 用于额外的模块解析目录：
 
 ```bash
 NODE_PATH=./packages bun run src/index.js
@@ -199,14 +199,14 @@ export const hello = "world";
 import { hello } from "foo";
 ```
 
-Multiple paths use the platform's delimiter (`:` on Unix, `;` on Windows):
+多个路径用平台的分隔符分隔（Unix 是 `:`，Windows 是 `;`）：
 
 ```bash
 NODE_PATH=./packages:./lib bun run src/index.js  # Unix/macOS
 NODE_PATH=./packages;./lib bun run src/index.js  # Windows
 ```
 
-Once it finds the `foo` package, Bun reads the `package.json` to determine how the package should be imported. To determine the package's entrypoint, Bun first reads the `exports` field and checks for the following conditions.
+找到 `foo` 包后，Bun 会读取 `package.json` 来确定包的导入方式。为确定包的入口，Bun 首先读取 `exports` 字段并检查以下条件：
 
 ```json package.json icon="file-json"
 {
@@ -214,16 +214,16 @@ Once it finds the `foo` package, Bun reads the `package.json` to determine how t
   "exports": {
     "bun": "./index.js",
     "node": "./index.js",
-    "require": "./index.js", // if importer is CommonJS
-    "import": "./index.mjs", // if importer is ES module
+    "require": "./index.js", // 如果导入者是 CommonJS
+    "import": "./index.mjs", // 如果导入者是 ES 模块
     "default": "./index.js"
   }
 }
 ```
 
-Whichever one of these conditions occurs _first_ in the `package.json` is used to determine the package's entrypoint.
+`package.json` 中首先匹配的这个条件将决定包的入口。
 
-Bun respects subpath [`"exports"`](https://nodejs.org/api/packages.html#subpath-exports) and [`"imports"`](https://nodejs.org/api/packages.html#imports).
+Bun 支持子路径的 [`"exports"`](https://nodejs.org/api/packages.html#subpath-exports) 和 [`"imports"`](https://nodejs.org/api/packages.html#imports)。
 
 ```json package.json icon="file-json"
 {
@@ -234,7 +234,7 @@ Bun respects subpath [`"exports"`](https://nodejs.org/api/packages.html#subpath-
 }
 ```
 
-Subpath imports and conditional imports work in conjunction with each other.
+子路径导入和条件导入可以共同使用。
 
 ```json package.json icon="file-json"
 {
@@ -248,20 +248,18 @@ Subpath imports and conditional imports work in conjunction with each other.
 }
 ```
 
-As in Node.js, Specifying any subpath in the `"exports"` map will prevent other subpaths from being importable; you can only import files that are explicitly exported. Given the `package.json` above:
+与 Node.js 一样，若在 `"exports"` 映射中指定了任何子路径，则禁止导入未明确导出的其他子路径；只能导入明确导出的文件。以上述 `package.json` 为例：
 
 ```ts index.ts icon="/icons/typescript.svg"
-import stuff from "foo"; // this works
-import stuff from "foo/index.mjs"; // this doesn't
+import stuff from "foo"; // 这样可行
+import stuff from "foo/index.mjs"; // 这样不行
 ```
 
 <Note>
-  **Shipping TypeScript** — Note that Bun supports the special `"bun"` export condition. If your library is written in
-  TypeScript, you can publish your (un-transpiled!) TypeScript files to `npm` directly. If you specify your package's
-  `*.ts` entrypoint in the `"bun"` condition, Bun will directly import and execute your TypeScript source files.
+  **发布 TypeScript** — 请注意 Bun 支持特殊的 `"bun"` 导出条件。如果你的库是用 TypeScript 编写的，可以直接将未转译的 TypeScript 文件发布到 `npm`。只需在包的 `"bun"` 条件中指定你的 `*.ts` 入口，Bun 将直接导入并执行你的 TypeScript 源文件。
 </Note>
 
-If `exports` is not defined, Bun falls back to `"module"` (ESM imports only) then [`"main"`](https://nodejs.org/api/packages.html#main).
+如果未定义 `exports`，Bun 会回退到先使用 `"module"`（仅用于 ESM 导入），然后是 [`"main"`](https://nodejs.org/api/packages.html#main)。
 
 ```json package.json icon="file-json"
 {
@@ -271,21 +269,21 @@ If `exports` is not defined, Bun falls back to `"module"` (ESM imports only) the
 }
 ```
 
-### Custom conditions
+### 自定义条件
 
-The `--conditions` flag allows you to specify a list of conditions to use when resolving packages from package.json `"exports"`.
+`--conditions` 标志允许你指定一个条件列表，用于解析 `package.json` 的 `"exports"`。
 
-This flag is supported in both `bun build` and Bun's runtime.
+此标志既支持 `bun build`，也支持 Bun 的运行时。
 
 ```sh terminal icon="terminal"
-# Use it with bun build:
+# 使用 bun build：
 bun build --conditions="react-server" --target=bun ./app/foo/route.js
 
-# Use it with bun's runtime:
+# 使用 Bun 运行时：
 bun --conditions="react-server" ./app/foo/route.js
 ```
 
-You can also use `conditions` programmatically with `Bun.build`:
+你也可以在 `Bun.build` 中以编程方式使用 `conditions`：
 
 ```ts build.ts icon="/icons/typescript.svg"
 await Bun.build({
@@ -297,47 +295,47 @@ await Bun.build({
 
 ---
 
-## Path re-mapping
+## 路径重映射
 
-Bun supports import path re-mapping through TypeScript's [`compilerOptions.paths`](https://www.typescriptlang.org/tsconfig#paths) in `tsconfig.json`, which works well with editors. If you aren't a TypeScript user, you can achieve the same behavior by using a [`jsconfig.json`](https://code.visualstudio.com/docs/languages/jsconfig) in your project root.
+Bun 支持通过 TypeScript 的 `tsconfig.json` 中的 [`compilerOptions.paths`](https://www.typescriptlang.org/tsconfig#paths) 进行导入路径重映射，这对编辑器支持良好。如果你不用 TypeScript，可以使用项目根目录下的 [`jsconfig.json`](https://code.visualstudio.com/docs/languages/jsconfig) 实现相同功能。
 
 ```json tsconfig.json icon="file-json"
 {
   "compilerOptions": {
     "paths": {
-      "config": ["./config.ts"], // map specifier to file
-      "components/*": ["components/*"] // wildcard matching
+      "config": ["./config.ts"],     // 映射标识符到文件
+      "components/*": ["components/*"] // 通配符匹配
     }
   }
 }
 ```
 
-Bun also supports [Node.js-style subpath imports](https://nodejs.org/api/packages.html#subpath-imports) in `package.json`, where mapped paths must start with `#`. This approach doesn’t work as well with editors, but both options can be used together.
+Bun 也支持 Node.js 风格的子路径导入，可在 `package.json` 中配置；映射路径必须以 `#` 开头。这种方法对编辑器支持不如前者，但两种方案可以同时使用。
 
 ```json package.json icon="file-json"
 {
   "imports": {
-    "#config": "./config.ts", // map specifier to file
-    "#components/*": "./components/*" // wildcard matching
+    "#config": "./config.ts",       // 映射标识符到文件
+    "#components/*": "./components/*" // 通配符匹配
   }
 }
 ```
 
-<Accordion title="Low-level details of CommonJS interop in Bun">
+<Accordion title="Bun 中 CommonJS 互操作的底层细节">
 
-Bun's JavaScript runtime has native support for CommonJS. When Bun's JavaScript transpiler detects usages of `module.exports`, it treats the file as CommonJS. The module loader will then wrap the transpiled module in a function shaped like this:
+Bun 的 JavaScript 运行时对 CommonJS 有原生支持。当 Bun 的 JavaScript 转译器检测到 `module.exports` 的用法时，会将文件视作 CommonJS。模块加载器会把转译后的模块包裹进如下形式的函数：
 
 ```js
 (function (module, exports, require) {
-  // transpiled module
+  // 转译后的模块代码
 })(module, exports, require);
 ```
 
-`module`, `exports`, and `require` are very much like the `module`, `exports`, and `require` in Node.js. These are assigned via a [`with scope`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with) in C++. An internal `Map` stores the `exports` object to handle cyclical `require` calls before the module is fully loaded.
+`module`、`exports` 和 `require` 十分类似于 Node.js 中的同名变量。它们通过 C++ 中的 [`with 作用域`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with) 赋值。一个内部的 `Map` 用来存储 `exports` 对象，以处理模块未完全加载完前的循环 `require` 调用。
 
-Once the CommonJS module is successfully evaluated, a Synthetic Module Record is created with the `default` ES Module [export set to `module.exports`](https://github.com/oven-sh/bun/blob/9b6913e1a674ceb7f670f917fc355bb8758c6c72/src/bun.js/bindings/CommonJSModuleRecord.cpp#L212-L213) and keys of the `module.exports` object are re-exported as named exports (if the `module.exports` object is an object).
+当 CommonJS 模块成功评估后，会创建一个合成的模块记录（Synthetic Module Record），其 `default` ES 模块导出被设置为 `module.exports`，而 `module.exports` 对象中的键（如果是对象）会被重新导出为命名导出。
 
-When using Bun's bundler, this works differently. The bundler will wrap the CommonJS module in a `require_${moduleName}` function which returns the `module.exports` object.
+使用 Bun 的打包器时，上述机制有所不同。打包器会将 CommonJS 模块包裹进 `require_${moduleName}` 函数，该函数返回 `module.exports` 对象。
 
 </Accordion>
 
@@ -345,9 +343,9 @@ When using Bun's bundler, this works differently. The bundler will wrap the Comm
 
 ## `import.meta`
 
-The `import.meta` object is a way for a module to access information about itself. It's part of the JavaScript language, but its contents are not standardized. Each "host" (browser, runtime, etc) is free to implement any properties it wishes on the `import.meta` object.
+`import.meta` 对象允许模块访问有关自身的信息。它是 JavaScript 语言的一部分，但其内容未标准化。每个宿主环境（浏览器、运行时等）都可以自由实现各自的 `import.meta` 属性。
 
-Bun implements the following properties.
+Bun 实现了如下属性。
 
 ```ts /path/to/project/file.ts
 import.meta.dir; // => "/path/to/project"
@@ -355,20 +353,20 @@ import.meta.file; // => "file.ts"
 import.meta.path; // => "/path/to/project/file.ts"
 import.meta.url; // => "file:///path/to/project/file.ts"
 
-import.meta.main; // `true` if this file is directly executed by `bun run`
-// `false` otherwise
+import.meta.main; // 如果此文件是由 `bun run` 直接执行，返回 `true`
+// 否则返回 `false`
 
 import.meta.resolve("zod"); // => "file:///path/to/project/node_modules/zod/index.js"
 ```
 
-| Property               | Description                                                                                                                                                                                                                                                                                                                   |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `import.meta.dir`      | Absolute path to the directory containing the current file, e.g. `/path/to/project`. Equivalent to `__dirname` in CommonJS modules (and Node.js)                                                                                                                                                                              |
-| `import.meta.dirname`  | An alias to `import.meta.dir`, for Node.js compatibility                                                                                                                                                                                                                                                                      |
-| `import.meta.env`      | An alias to `process.env`.                                                                                                                                                                                                                                                                                                    |
-| `import.meta.file`     | The name of the current file, e.g. `index.tsx`                                                                                                                                                                                                                                                                                |
-| `import.meta.path`     | Absolute path to the current file, e.g. `/path/to/project/index.ts`. Equivalent to `__filename` in CommonJS modules (and Node.js)                                                                                                                                                                                             |
-| `import.meta.filename` | An alias to `import.meta.path`, for Node.js compatibility                                                                                                                                                                                                                                                                     |
-| `import.meta.main`     | Indicates whether the current file is the entrypoint to the current `bun` process. Is the file being directly executed by `bun run` or is it being imported?                                                                                                                                                                  |
-| `import.meta.resolve`  | Resolve a module specifier (e.g. `"zod"` or `"./file.tsx"`) to a url. Equivalent to [`import.meta.resolve` in browsers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import.meta#resolve). Example: `import.meta.resolve("zod")` returns `"file:///path/to/project/node_modules/zod/index.ts"` |
-| `import.meta.url`      | A `string` url to the current file, e.g. `file:///path/to/project/index.ts`. Equivalent to [`import.meta.url` in browsers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import.meta#url)                                                                                                       |
+| 属性                   | 说明                                                                                                                                                                                                                                                                                                 |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `import.meta.dir`      | 当前文件所在目录的绝对路径，例如 `/path/to/project`。等价于 CommonJS 模块（及 Node.js）中的 `__dirname`                                                                                                                                                                                             |
+| `import.meta.dirname`  | `import.meta.dir` 的别名，兼容 Node.js                                                                                                                                                                                                                                                             |
+| `import.meta.env`      | `process.env` 的别名                                                                                                                                                                                                                                                                                 |
+| `import.meta.file`     | 当前文件名，例如 `index.tsx`                                                                                                                                                                                                                                                                         |
+| `import.meta.path`     | 当前文件的绝对路径，例如 `/path/to/project/index.ts`。等价于 CommonJS 模块（及 Node.js）中的 `__filename`                                                                                                                                                                                            |
+| `import.meta.filename` | `import.meta.path` 的别名，兼容 Node.js                                                                                                                                                                                                                                                             |
+| `import.meta.main`     | 指示当前文件是否是当前 `bun` 进程的入口点。即是否由 `bun run` 直接执行，还是被导入                                                                                                                                                                                                                   |
+| `import.meta.resolve`  | 将模块标识符（例如 `"zod"` 或 `"./file.tsx"`）解析为 URL。等效于浏览器中的[`import.meta.resolve`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import.meta#resolve)。例如：`import.meta.resolve("zod")` 返回 `"file:///path/to/project/node_modules/zod/index.ts"` |
+| `import.meta.url`      | 当前文件的字符串 URL，例如 `file:///path/to/project/index.ts`。等效于浏览器中的[`import.meta.url`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import.meta#url)                                                                                                                                          |

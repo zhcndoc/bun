@@ -1,19 +1,19 @@
 ---
-title: Bundler
-description: Bun's fast native bundler for JavaScript, TypeScript, JSX, and more
+title: Bundler（打包器）
+description: Bun 的快速原生打包器，支持 JavaScript、TypeScript、JSX 等多种语言
 ---
 
 import Build from "/snippets/cli/build.mdx";
 
-Bun's fast native bundler can be used via the `bun build` CLI command or the `Bun.build()` JavaScript API.
+Bun 的快速原生打包器可以通过 `bun build` CLI 命令或 `Bun.build()` JavaScript API 使用。
 
-### At a Glance
+### 一览
 
 - JS API: `await Bun.build({ entrypoints, outdir })`
-- CLI: `bun build <entry> --outdir ./out`
-- Watch: `--watch` for incremental rebuilds
-- Targets: `--target browser|bun|node`
-- Formats: `--format esm|cjs|iife` (experimental for cjs/iife)
+- CLI: `bun build <入口文件> --outdir ./out`
+- 监视：`--watch` 实现增量重建
+- 目标环境：`--target browser|bun|node`
+- 格式：`--format esm|cjs|iife`（cjs/iife 为实验性功能）
 
 <Tabs>
   <Tab title="JavaScript">
@@ -31,31 +31,31 @@ Bun's fast native bundler can be used via the `bun build` CLI command or the `Bu
   </Tab>
 </Tabs>
 
-It's fast. The numbers below represent performance on esbuild's [three.js benchmark](https://github.com/oven-sh/bun/tree/main/bench/bundle).
+它非常快。下面数字基于 esbuild 的 [three.js benchmark](https://github.com/oven-sh/bun/tree/main/bench/bundle) 性能测试。
 
 <Frame>
   <img
     src="/images/bundler-speed.png"
-    caption="Bundling 10 copies of three.js from scratch, with sourcemaps and minification"
+    caption="从零打包 10 份 three.js 副本，带有 sourcemaps 和代码压缩"
   />
 </Frame>
 
-## Why bundle?
+## 为什么要打包？
 
-The bundler is a key piece of infrastructure in the JavaScript ecosystem. As a brief overview of why bundling is so important:
+打包器是 JavaScript 生态系统中的关键基础设施。简要介绍打包为何如此重要：
 
-- **Reducing HTTP requests.** A single package in `node_modules` may consist of hundreds of files, and large applications may have dozens of such dependencies. Loading each of these files with a separate HTTP request becomes untenable very quickly, so bundlers are used to convert our application source code into a smaller number of self-contained "bundles" that can be loaded with a single request.
-- **Code transforms.** Modern apps are commonly built with languages or tools like TypeScript, JSX, and CSS modules, all of which must be converted into plain JavaScript and CSS before they can be consumed by a browser. The bundler is the natural place to configure these transformations.
-- **Framework features.** Frameworks rely on bundler plugins & code transformations to implement common patterns like file-system routing, client-server code co-location (think `getServerSideProps` or Remix loaders), and server components.
-- **Full-stack Applications.** Bun's bundler can handle both server and client code in a single command, enabling optimized production builds and single-file executables. With build-time HTML imports, you can bundle your entire application — frontend assets and backend server — into a single deployable unit.
+- **减少 HTTP 请求。** `node_modules` 中的单个包可能包含数百个文件，大型应用可能有数十个此类依赖。用单独的 HTTP 请求加载每个文件很快就不可行，因此打包器用来将源代码转换成较少数量的自包含“包”，能用一次请求加载。
+- **代码转换。** 现代应用常使用 TypeScript、JSX、CSS Modules 等语言和工具，这些都必须转换成纯 JavaScript 和 CSS，浏览器才能识别。打包器是配置这些转换的自然位置。
+- **框架特性。** 框架依赖打包器插件和代码转换来实现常见模式，比如文件系统路由、客户端-服务器代码共置（比如 `getServerSideProps` 或 Remix loaders）以及服务器组件。
+- **全栈应用。** Bun 的打包器可以同时处理服务端和客户端代码，只需一个命令，支持优化的生产构建和单文件可执行文件。通过构建时的 HTML 导入，你可以将整个应用（前端资源和后端服务器）打包成一个可部署单元。
 
-Let's jump into the bundler API.
+接下来一起看看打包器的 API。
 
-<Note>The Bun bundler is not intended to replace `tsc` for typechecking or generating type declarations.</Note>
+<Note>Bun 打包器不替代 `tsc` 做类型检查或生成类型声明。</Note>
 
-## Basic example
+## 基本示例
 
-Let's build our first bundle. You have the following two files, which implement a simple client-side rendered React app.
+让我们构建第一个 bundle。你有以下两个文件，实现了一个简单的客户端渲染 React 应用。
 
 <CodeGroup>
 
@@ -75,9 +75,9 @@ export function Component(props: { message: string }) {
 
 </CodeGroup>
 
-Here, `index.tsx` is the "entrypoint" to our application. Commonly, this will be a script that performs some side effect, like starting a server or—in this case—initializing a React root. Because we're using TypeScript & JSX, we need to bundle our code before it can be sent to the browser.
+这里，`index.tsx` 是应用的“入口点”。通常它是执行某些副作用的脚本，比如启动服务器，或者像这里这样，初始化 React 根节点。由于用到 TypeScript 和 JSX，代码需先打包才能发送给浏览器。
 
-To create our bundle:
+构建 bundle：
 
 <CodeGroup>
 
@@ -94,7 +94,7 @@ bun build ./index.tsx --outdir ./out
 
 </CodeGroup>
 
-For each file specified in `entrypoints`, Bun will generate a new bundle. This bundle will be written to disk in the `./out` directory (as resolved from the current working directory). After running the build, the file system looks like this:
+对于 `entrypoints` 数组中指定的每个文件，Bun 都会生成一个新的 bundle。bundle 会写入磁盘的 `./out` 目录（相对于当前工作目录解析）。构建后文件系统如下：
 
 ```text title="file system" icon="folder-tree"
 .
@@ -104,14 +104,14 @@ For each file specified in `entrypoints`, Bun will generate a new bundle. This b
     └── index.js
 ```
 
-The contents of `out/index.js` will look something like this:
+`out/index.js` 内容大致如下：
 
 ```js title="out/index.js" icon="/icons/javascript.svg"
 // out/index.js
 // ...
-// ~20k lines of code
-// including the contents of `react-dom/client` and all its dependencies
-// this is where the $jsxDEV and $createRoot functions are defined
+// 约 2 万行代码
+// 包含了 `react-dom/client` 及所有依赖的内容
+// 这里定义了 $jsxDEV 和 $createRoot 函数
 
 // Component.tsx
 function Component(props) {
@@ -144,65 +144,65 @@ root.render(
 );
 ```
 
-## Watch mode
+## 监听模式
 
-Like the runtime and test runner, the bundler supports watch mode natively.
+和运行时与测试器一样，打包器原生支持监听模式。
 
 ```bash terminal icon="terminal"
 bun build ./index.tsx --outdir ./out --watch
 ```
 
-## Content types
+## 支持的内容类型
 
-Like the Bun runtime, the bundler supports an array of file types out of the box. The following table breaks down the bundler's set of standard "loaders". Refer to [Bundler > File types](/bundler/loaders) for full documentation.
+和 Bun 运行时一致，打包器开箱支持多种文件类型。下表介绍了默认的“加载器”。完整文档请参考[打包器 > 文件类型](/bundler/loaders)。
 
-| Extensions                                            | Details                                                                                                                                                                                                                                                                                                                                                      |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `.js` `.jsx` `.cjs` `.mjs` `.mts` `.cts` `.ts` `.tsx` | Uses Bun's built-in transpiler to parse the file and transpile TypeScript/JSX syntax to vanilla JavaScript. The bundler executes a set of default transforms including dead code elimination and tree shaking. At the moment Bun does not attempt to down-convert syntax; if you use recently ECMAScript syntax, that will be reflected in the bundled code. |
-| `.json`                                               | JSON files are parsed and inlined into the bundle as a JavaScript object.<br/><br/>`js<br/>import pkg from "./package.json";<br/>pkg.name; // => "my-package"<br/>`                                                                                                                                                                                          |
-| `.jsonc`                                              | JSON with comments. Files are parsed and inlined into the bundle as a JavaScript object.<br/><br/>`js<br/>import config from "./config.jsonc";<br/>config.name; // => "my-config"<br/>`                                                                                                                                                                      |
-| `.toml`                                               | TOML files are parsed and inlined into the bundle as a JavaScript object.<br/><br/>`js<br/>import config from "./bunfig.toml";<br/>config.logLevel; // => "debug"<br/>`                                                                                                                                                                                      |
-| `.yaml` `.yml`                                        | YAML files are parsed and inlined into the bundle as a JavaScript object.<br/><br/>`js<br/>import config from "./config.yaml";<br/>config.name; // => "my-app"<br/>`                                                                                                                                                                                         |
-| `.txt`                                                | The contents of the text file are read and inlined into the bundle as a string.<br/><br/>`js<br/>import contents from "./file.txt";<br/>console.log(contents); // => "Hello, world!"<br/>`                                                                                                                                                                   |
-| `.html`                                               | HTML files are processed and any referenced assets (scripts, stylesheets, images) are bundled.                                                                                                                                                                                                                                                               |
-| `.css`                                                | CSS files are bundled together into a single `.css` file in the output directory.                                                                                                                                                                                                                                                                            |
-| `.node` `.wasm`                                       | These files are supported by the Bun runtime, but during bundling they are treated as assets.                                                                                                                                                                                                                                                                |
+| 扩展名                                               | 说明                                                                                                                                                                                                                                                                                                                                                                                        |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.js` `.jsx` `.cjs` `.mjs` `.mts` `.cts` `.ts` `.tsx` | 使用 Bun 内置转译器解析并转译 TypeScript/JSX 语法为普通 JavaScript。执行默认转换，包括无用代码消除和摇树优化。当前 Bun 不对语法做向下转换，使用较新 ECMAScript 语法会反映在打包后的代码中。                                                                                                                                                |
+| `.json`                                             | 解析 JSON 文件，将其内联到 bundle 中，作为 JavaScript 对象。<br/><br/>`js<br/>import pkg from "./package.json";<br/>pkg.name; // => "my-package"<br/>`                                                                                                                                                                                                                                   |
+| `.jsonc`                                            | 支持带注释的 JSON。解析后内联成 JavaScript 对象。<br/><br/>`js<br/>import config from "./config.jsonc";<br/>config.name; // => "my-config"<br/>`                                                                                                                                                                                                                                       |
+| `.toml`                                             | 解析 TOML 文件，内联成 JavaScript 对象。<br/><br/>`js<br/>import config from "./bunfig.toml";<br/>config.logLevel; // => "debug"<br/>`                                                                                                                                                                                                                                                |
+| `.yaml` `.yml`                                      | 解析 YAML 文件，内联成 JavaScript 对象。<br/><br/>`js<br/>import config from "./config.yaml";<br/>config.name; // => "my-app"<br/>`                                                                                                                                                                                                                                                   |
+| `.txt`                                              | 读取文本文件内容，内联成字符串。<br/><br/>`js<br/>import contents from "./file.txt";<br/>console.log(contents); // => "Hello, world!"<br/>`                                                                                                                                                                                                                                           |
+| `.html`                                             | 处理 HTML 文件，打包引用的资源（脚本、样式表、图片等）。                                                                                                                                                                                                                                                                                                                                                   |
+| `.css`                                              | 将所有 CSS 文件打包成一个 `.css` 文件输出至目标目录。                                                                                                                                                                                                                                                                                                                                         |
+| `.node` `.wasm`                                     | Bun 运行时支持这些文件，但打包时会作为资源处理。                                                                                                                                                                                                                                                                                                                                               |
 
-### Assets
+### 资源文件
 
-If the bundler encounters an import with an unrecognized extension, it treats the imported file as an external file. The referenced file is copied as-is into `outdir`, and the import is resolved as a path to the file.
+遇到无法识别的文件后缀时，打包器会将该文件视为外部资源。会将引用文件原封不动复制到 `outdir` 目录，同时导入被替换为文件路径。
 
 <CodeGroup>
 
 ```ts Input icon="/icons/typescript.svg"
-// bundle entrypoint
+// bundle入口文件
 import logo from "./logo.svg";
 console.log(logo);
 ```
 
 ```ts Output icon="/icons/javascript.svg"
-// bundled output
+// 打包输出
 var logo = "./logo-a7305bdef.svg";
 console.log(logo);
 ```
 
 </CodeGroup>
 
-The exact behavior of the file loader is also impacted by [`naming`](#naming) and [`publicPath`](#publicpath).
+文件加载器的具体行为也受 [`naming`](#naming) 和 [`publicPath`](#publicpath) 影响。
 
-<Info>Refer to the [Bundler > Loaders](/bundler/loaders) page for more complete documentation on the file loader.</Info>
+<Info>详情请参考[打包器 > 加载器](/bundler/loaders)页面。</Info>
 
-### Plugins
+### 插件
 
-The behavior described in this table can be overridden or extended with plugins. Refer to the [Bundler > Loaders](/bundler/loaders) page for complete documentation.
+上表中的行为可以通过插件覆盖或扩展。请查阅[打包器 > 加载器](/bundler/loaders)页面完整说明。
 
 ## API
 
 ### entrypoints
 
-<Badge>Required</Badge>
+<Badge>必填</Badge>
 
-An array of paths corresponding to the entrypoints of our application. One bundle will be generated for each entrypoint.
+应用入口点文件路径数组。为每个入口生成一个 bundle。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -222,7 +222,7 @@ An array of paths corresponding to the entrypoints of our application. One bundl
 
 ### outdir
 
-The directory where output files will be written.
+输出文件目录。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -241,7 +241,7 @@ The directory where output files will be written.
   </Tab>
 </Tabs>
 
-If `outdir` is not passed to the JavaScript API, bundled code will not be written to disk. Bundled files are returned in an array of `BuildArtifact` objects. These objects are Blobs with extra properties; see [Outputs](#outputs) for complete documentation.
+未传 `outdir` 时，打包后的代码不会写入磁盘。文件内容以 `BuildArtifact` 对象数组形式返回。`BuildArtifact` 是带附加属性的 Blob；详见[输出](#outputs)。
 
 ```ts title="build.ts" icon="/icons/typescript.svg"
 const result = await Bun.build({
@@ -249,22 +249,22 @@ const result = await Bun.build({
 });
 
 for (const res of result.outputs) {
-  // Can be consumed as blobs
+  // 可作为 Blob 处理
   await res.text();
 
-  // Bun will set Content-Type and Etag headers
+  // Bun 会自动设置 Content-Type 和 Etag 头
   new Response(res);
 
-  // Can be written manually, but you should use `outdir` in this case.
+  // 也可手动写入，但此时推荐使用 `outdir` 选项。
   Bun.write(path.join("out", res.path), res);
 }
 ```
 
-When `outdir` is set, the `path` property on a `BuildArtifact` will be the absolute path to where it was written to.
+设置了 `outdir` 时，`BuildArtifact` 的 `path` 是文件写入的绝对路径。
 
 ### target
 
-The intended execution environment for the bundle.
+指定目标执行环境。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -272,7 +272,7 @@ The intended execution environment for the bundle.
     await Bun.build({
       entrypoints: ['./index.ts'],
       outdir: './out',
-      target: 'browser', // default
+      target: 'browser', // 默认
     })
     ```
   </Tab>
@@ -283,40 +283,35 @@ The intended execution environment for the bundle.
   </Tab>
 </Tabs>
 
-Depending on the target, Bun will apply different module resolution rules and optimizations.
+不同目标环境，Bun 会应用不同的模块解析规则和优化。
 
 <Card title="browser" icon="globe">
-  **Default.** For generating bundles that are intended for execution by a browser. Prioritizes the `"browser"` export
-  condition when resolving imports. Importing any built-in modules, like `node:events` or `node:path` will work, but
-  calling some functions, like `fs.readFile` will not work.
+  **默认。** 生成面向浏览器的 bundle。解析导入时优先使用 `"browser"` export 条件。导入内建模块（如 `node:events` 或 `node:path`）可行，但调用部分函数（如 `fs.readFile`）无效。
 </Card>
 
 <Card title="bun" icon="server">
-For generating bundles that are intended to be run by the Bun runtime. In many cases, it isn't necessary to bundle server-side code; you can directly execute the source code without modification. However, bundling your server code can reduce startup times and improve running performance. This is the target to use for building full-stack applications with build-time HTML imports, where both server and client code are bundled together.
+生成面向 Bun 运行时的 bundle。通常不强制要求将服务端代码打包，可直接执行源代码。但打包服务端代码有助于减少启动时间并提升运行性能。使用构建时 HTML 导入创建全栈应用时，应使用此目标，将客户端和服务端代码共享打包。
 
-All bundles generated with `target: "bun"` are marked with a special `// @bun` pragma, which indicates to the Bun runtime that there's no need to re-transpile the file before execution.
+所有带 `target: "bun"` 的 bundle 都会带有特殊的 `// @bun` 编译指令，告知 Bun 运行时无需重转译即可执行。
 
-If any entrypoints contains a Bun shebang (`#!/usr/bin/env bun`) the bundler will default to `target: "bun"` instead of `"browser"`.
+若入口文件含 Bun shebang（`#!/usr/bin/env bun`），打包器默认改用 `target: "bun"`。
 
-When using `target: "bun"` and `format: "cjs"` together, the `// @bun @bun-cjs` pragma is added and the CommonJS wrapper function is not compatible with Node.js.
-
+结合使用 `target: "bun"` 和 `format: "cjs"` 时，会添加 `// @bun @bun-cjs` 编译指令，且 CommonJS 包装函数不兼容 Node.js。
 </Card>
 
 <Card title="node" icon="node">
-  For generating bundles that are intended to be run by Node.js. Prioritizes the `"node"` export condition when
-  resolving imports, and outputs `.mjs`. In the future, this will automatically polyfill the Bun global and other
-  built-in `bun:*` modules, though this is not yet implemented.
+生成面向 Node.js 的 bundle。解析导入时优先 `"node"` export 条件，输出 `.mjs` 文件。未来将自动为 Bun 全局对象以及 `bun:*` 内建模块提供 polyfill（尚未实现）。
 </Card>
 
 ### format
 
-Specifies the module format to be used in the generated bundles.
+指定生成 bundle 的模块格式。
 
-Bun defaults to `"esm"`, and provides experimental support for `"cjs"` and `"iife"`.
+Bun 默认为 `"esm"`，并提供 `"cjs"` 和 `"iife"` 实验性支持。
 
-#### format: "esm" - ES Module
+#### 格式: "esm" - ES 模块
 
-This is the default format, which supports ES Module syntax including top-level await, `import.meta`, and more.
+默认格式，支持 ES 模块语法，包括顶层 await、`import.meta` 等。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -335,11 +330,11 @@ This is the default format, which supports ES Module syntax including top-level 
   </Tab>
 </Tabs>
 
-To use ES Module syntax in browsers, set `format` to `"esm"` and make sure your `<script type="module">` tag has `type="module"` set.
+浏览器中使用 ES 模块时，需确保 `<script>` 标签带有 `type="module"`，并设置 `format` 为 `"esm"`。
 
-#### format: "cjs" - CommonJS
+#### 格式: "cjs" - CommonJS
 
-To build a CommonJS module, set `format` to `"cjs"`. When choosing `"cjs"`, the default target changes from `"browser"` (esm) to `"node"` (cjs). CommonJS modules transpiled with `format: "cjs"`, `target: "node"` can be executed in both Bun and Node.js (assuming the APIs in use are supported by both).
+设置为 `"cjs"` 以构建 CommonJS 模块。此时默认 `target` 会从 `"browser"` (esm) 自动切换为 `"node"` (cjs)。使用 `format: "cjs"`，`target: "node"` 转译的 CommonJS 模块，在 Bun 和 Node.js 都可执行（前提是 API 受支持）。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -358,15 +353,15 @@ To build a CommonJS module, set `format` to `"cjs"`. When choosing `"cjs"`, the 
   </Tab>
 </Tabs>
 
-#### format: "iife" - IIFE
+#### 格式: "iife" - IIFE
 
-TODO: document IIFE once we support globalNames.
+待完善文档，支持 globalNames 后发布。
 
 ### `jsx`
 
-Configure JSX transform behavior. Allows fine-grained control over how JSX is compiled.
+配置 JSX 转换行为，精细控制 JSX 编译方式。
 
-**Classic runtime example** (uses `factory` and `fragment`):
+**Classic 运行时示例**（使用 `factory` 和 `fragment`）：
 
 <CodeGroup>
 
@@ -383,13 +378,13 @@ await Bun.build({
 ```
 
 ```bash terminal icon="terminal"
-# JSX configuration is handled via bunfig.toml or tsconfig.json
+# JSX 配置可通过 bunfig.toml 或 tsconfig.json 管理
 bun build ./app.tsx --outdir ./out
 ```
 
 </CodeGroup>
 
-**Automatic runtime example** (uses `importSource`):
+**自动运行时示例**（使用 `importSource`）：
 
 <CodeGroup>
 
@@ -405,7 +400,7 @@ await Bun.build({
 ```
 
 ```bash terminal icon="terminal"
-# JSX configuration is handled via bunfig.toml or tsconfig.json
+# JSX 配置可通过 bunfig.toml 或 tsconfig.json 管理
 bun build ./app.tsx --outdir ./out
 ```
 
@@ -413,7 +408,7 @@ bun build ./app.tsx --outdir ./out
 
 ### splitting
 
-Whether to enable code splitting.
+是否启用代码拆分。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -421,7 +416,7 @@ Whether to enable code splitting.
     await Bun.build({
       entrypoints: ['./index.tsx'],
       outdir: './out',
-      splitting: false, // default
+      splitting: false, // 默认关闭
     })
     ```
   </Tab>
@@ -432,7 +427,7 @@ Whether to enable code splitting.
   </Tab>
 </Tabs>
 
-When `true`, the bundler will enable code splitting. When multiple entrypoints both import the same file, module, or set of files/modules, it's often useful to split the shared code into a separate bundle. This shared bundle is known as a chunk. Consider the following files:
+启用后，多个入口若共享同一文件、模块或模块集合，打包器会将共享代码拆分为独立 bundle，称为 chunk。示例文件如：
 
 <CodeGroup>
 
@@ -450,7 +445,7 @@ export const shared = "shared";
 
 </CodeGroup>
 
-To bundle `entry-a.ts` and `entry-b.ts` with code-splitting enabled:
+启用拆分打包：
 
 <Tabs>
   <Tab title="JavaScript">
@@ -469,7 +464,7 @@ To bundle `entry-a.ts` and `entry-b.ts` with code-splitting enabled:
   </Tab>
 </Tabs>
 
-Running this build will result in the following files:
+打包结果文件结构：
 
 ```text title="file system" icon="folder-tree"
 .
@@ -482,11 +477,11 @@ Running this build will result in the following files:
     └── chunk-2fce6291bf86559d.js
 ```
 
-The generated `chunk-2fce6291bf86559d.js` file contains the shared code. To avoid collisions, the file name automatically includes a content hash by default. This can be customized with [`naming`](#naming).
+`chunk-2fce6291bf86559d.js` 为共享代码 chunk，默认文件名包含 hash 防止冲突，可通过 [`naming`](#naming) 自定义。
 
 ### plugins
 
-A list of plugins to use during bundling.
+打包时应用的插件列表。
 
 ```ts title="build.ts" icon="/icons/typescript.svg"
 await Bun.build({
@@ -498,15 +493,15 @@ await Bun.build({
 });
 ```
 
-Bun implements a universal plugin system for both Bun's runtime and bundler. Refer to the [plugin documentation](/bundler/plugins) for complete documentation.
+Bun 实现了统一的插件系统，适用于运行时和打包器。详见[插件文档](/bundler/plugins)。
 
 ### env
 
-Controls how environment variables are handled during bundling. Internally, this uses `define` to inject environment variables into the bundle, but makes it easier to specify the environment variables to inject.
+控制打包时环境变量的处理方式。内部使用 `define` 注入环境变量，简化指定注入内容。
 
 #### env: "inline"
 
-Injects environment variables into the bundled output by converting `process.env.FOO` references to string literals containing the actual environment variable values.
+将 `process.env.FOO` 替换为包含环境变量实际值的字符串字面量，内联进 bundle。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -525,7 +520,7 @@ Injects environment variables into the bundled output by converting `process.env
   </Tab>
 </Tabs>
 
-For the input below:
+示例输入：
 
 ```js title="input.js" icon="/icons/javascript.svg"
 // input.js
@@ -533,7 +528,7 @@ console.log(process.env.FOO);
 console.log(process.env.BAZ);
 ```
 
-The generated bundle will contain the following code:
+输出变为：
 
 ```js title="output.js" icon="/icons/javascript.svg"
 // output.js
@@ -541,9 +536,9 @@ console.log("bar");
 console.log("123");
 ```
 
-#### env: "PUBLIC\_\*" (prefix)
+#### env: "PUBLIC\_\*"（前缀）
 
-Inlines environment variables matching the given prefix (the part before the `*` character), replacing `process.env.FOO` with the actual environment variable value. This is useful for selectively inlining environment variables for things like public-facing URLs or client-side tokens, without worrying about injecting private credentials into output bundles.
+内联所有匹配给定前缀的环境变量（即 `*` 之前的部分），替换对应的 `process.env`。适合选择性注入公共 URL 或客户端 token，避免私密信息泄漏。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -552,7 +547,7 @@ Inlines environment variables matching the given prefix (the part before the `*`
       entrypoints: ['./index.tsx'],
       outdir: './out',
       
-      // Inline all env vars that start with "ACME_PUBLIC_"
+      // 内联所有以 "ACME_PUBLIC_" 开头的环境变量
       env: "ACME_PUBLIC_*",
     })
     ```
@@ -564,13 +559,13 @@ Inlines environment variables matching the given prefix (the part before the `*`
   </Tab>
 </Tabs>
 
-For example, given the following environment variables:
+设环境变量如下：
 
 ```bash terminal icon="terminal"
 FOO=bar BAZ=123 ACME_PUBLIC_URL=https://acme.com
 ```
 
-And source code:
+源码：
 
 ```tsx index.tsx icon="/icons/typescript.svg"
 console.log(process.env.FOO);
@@ -578,7 +573,7 @@ console.log(process.env.ACME_PUBLIC_URL);
 console.log(process.env.BAZ);
 ```
 
-The generated bundle will contain the following code:
+输出：
 
 ```js title="output.js" icon="/icons/javascript.svg"
 console.log(process.env.FOO);
@@ -588,11 +583,11 @@ console.log(process.env.BAZ);
 
 #### env: "disable"
 
-Disables environment variable injection entirely.
+完全禁用环境变量注入。
 
 ### sourcemap
 
-Specifies the type of sourcemap to generate.
+指定生成哪种类型的 sourcemap。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -600,7 +595,7 @@ Specifies the type of sourcemap to generate.
     await Bun.build({
       entrypoints: ['./index.tsx'],
       outdir: './out',
-      sourcemap: 'linked', // default 'none'
+      sourcemap: 'linked', // 默认 'none'
     })
     ```
   </Tab>
@@ -611,22 +606,22 @@ Specifies the type of sourcemap to generate.
   </Tab>
 </Tabs>
 
-| Value        | Description                                                                                                                                                                                                                                                                                                                                                                                     |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `"none"`     | Default. No sourcemap is generated.                                                                                                                                                                                                                                                                                                                                                             |
-| `"linked"`   | A separate `*.js.map` file is created alongside each `*.js` bundle using a `//# sourceMappingURL` comment to link the two. Requires `--outdir` to be set. The base URL of this can be customized with `--public-path`.<br/><br/>`js<br/>// <bundled code here><br/><br/>//# sourceMappingURL=bundle.js.map<br/>`                                                                                |
-| `"external"` | A separate `*.js.map` file is created alongside each `*.js` bundle without inserting a `//# sourceMappingURL` comment.<br/><br/>Generated bundles contain a debug id that can be used to associate a bundle with its corresponding sourcemap. This `debugId` is added as a comment at the bottom of the file.<br/><br/>`js<br/>// <generated bundle code><br/><br/>//# debugId=<DEBUG ID><br/>` |
-| `"inline"`   | A sourcemap is generated and appended to the end of the generated bundle as a base64 payload.<br/><br/>`js<br/>// <bundled code here><br/><br/>//# sourceMappingURL=data:application/json;base64,<encoded sourcemap here><br/>`                                                                                                                                                                 |
+| 值         | 说明                                                                                                                                                                                                                                                                                                                                                                            |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `"none"`   | 默认。不生成 sourcemap。                                                                                                                                                                                                                                                                                                                                                         |
+| `"linked"` | 生成独立的 `*.js.map` 文件，与每个 `*.js` bundle 同目录。bundle 中插入 `//# sourceMappingURL` 注释关联两者。需确保设置了 `--outdir`。可通过 `--public-path` 自定义基础路径。<br/><br/>示例：<br/>`js<br/>// <打包代码><br/><br/>//# sourceMappingURL=bundle.js.map<br/>`                                                                                                        |
+| `"external"` | 生成独立的 `*.js.map` 文件，不插入 `//# sourceMappingURL` 注释。bundle 包含调试 id（debugId），可用于关联 map 文件，该 id 作为注释添加至 bundle 底部。<br/><br/>示例：<br/>`js<br/>// <打包代码><br/><br/>//# debugId=<DEBUG ID><br/>`                                                                                                                                            |
+| `"inline"` | 生成 sourcemap 并以 base64 编码数据嵌入到 bundle 末尾。<br/><br/>示例：<br/>`js<br/>// <打包代码><br/><br/>//# sourceMappingURL=data:application/json;base64,<编码数据><br/>`                                                                                                                                                                                                  |
 
-The associated `*.js.map` sourcemap will be a JSON file containing an equivalent `debugId` property.
+对应的 `*.js.map` 文件是 JSON 格式，包含同样的 `debugId` 字段。
 
 ### minify
 
-Whether to enable minification. Default `false`.
+是否启用代码压缩，默认 `false`。
 
-<Note>When targeting `bun`, identifiers will be minified by default.</Note>
+<Note>若目标为 `bun`，默认会压缩标识符。</Note>
 
-To enable all minification options:
+启用所有压缩选项：
 
 <Tabs>
   <Tab title="JavaScript">
@@ -634,7 +629,7 @@ To enable all minification options:
     await Bun.build({
       entrypoints: ['./index.tsx'],
       outdir: './out',
-      minify: true, // default false
+      minify: true, // 默认 false
     })
     ```
   </Tab>
@@ -645,7 +640,7 @@ To enable all minification options:
   </Tab>
 </Tabs>
 
-To granularly enable certain minifications:
+细粒度开启压缩：
 
 <Tabs>
   <Tab title="JavaScript">
@@ -670,7 +665,7 @@ To granularly enable certain minifications:
 
 ### external
 
-A list of import paths to consider external. Defaults to `[]`.
+外部依赖列表，默认空数组 `[]`。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -678,7 +673,7 @@ A list of import paths to consider external. Defaults to `[]`.
     await Bun.build({
       entrypoints: ['./index.tsx'],
       outdir: './out',
-      external: ["lodash", "react"], // default: []
+      external: ["lodash", "react"], // 默认 []
     })
     ```
   </Tab>
@@ -689,9 +684,9 @@ A list of import paths to consider external. Defaults to `[]`.
   </Tab>
 </Tabs>
 
-An external import is one that will not be included in the final bundle. Instead, the import statement will be left as-is, to be resolved at runtime.
+外部导入不会打包进最终文件，导入语句保留原样，运行时解析。
 
-For instance, consider the following entrypoint file:
+示例入口：
 
 ```tsx index.tsx icon="/icons/typescript.svg"
 import _ from "lodash";
@@ -701,7 +696,7 @@ const value = z.string().parse("Hello world!");
 console.log(_.upperCase(value));
 ```
 
-Normally, bundling `index.tsx` would generate a bundle containing the entire source code of the "zod" package. If instead, we want to leave the import statement as-is, we can mark it as external:
+默认打包会将整个 "zod" 包源码包含进 bundle。如果想保留导入不打包，可标记为外部：
 
 <Tabs>
   <Tab title="JavaScript">
@@ -720,20 +715,20 @@ Normally, bundling `index.tsx` would generate a bundle containing the entire sou
   </Tab>
 </Tabs>
 
-The generated bundle will look something like this:
+生成的 bundle 可能如下：
 
 ```js title="out/index.js" icon="/icons/javascript.svg"
 import { z } from "zod";
 
 // ...
-// the contents of the "lodash" package
-// including the `_.upperCase` function
+// lodash 源码
+// 包括 `_.upperCase` 函数
 
 var value = z.string().parse("Hello world!");
 console.log(_.upperCase(value));
 ```
 
-To mark all imports as external, use the wildcard `*`:
+可使用通配符 `*` 标记所有导入为外部：
 
 <Tabs>
   <Tab title="JavaScript">
@@ -754,7 +749,7 @@ To mark all imports as external, use the wildcard `*`:
 
 ### packages
 
-Control whether package dependencies are included to bundle or not. Possible values: `bundle` (default), `external`. Bun treats any import which path do not start with `.`, `..` or `/` as package.
+控制是否将包依赖（非相对或绝对路径）打包。可选值：`bundle`（默认）或 `external`。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -774,7 +769,7 @@ Control whether package dependencies are included to bundle or not. Possible val
 
 ### naming
 
-Customizes the generated file names. Defaults to `./[dir]/[name].[ext]`.
+自定义生成文件名。默认 `'./[dir]/[name].[ext]'`。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -782,7 +777,7 @@ Customizes the generated file names. Defaults to `./[dir]/[name].[ext]`.
     await Bun.build({
       entrypoints: ['./index.tsx'],
       outdir: './out',
-      naming: "[dir]/[name].[ext]", // default
+      naming: "[dir]/[name].[ext]", // 默认
     })
     ```
   </Tab>
@@ -793,7 +788,7 @@ Customizes the generated file names. Defaults to `./[dir]/[name].[ext]`.
   </Tab>
 </Tabs>
 
-By default, the names of the generated bundles are based on the name of the associated entrypoint.
+默认情况下，生成文件名基于入口文件名。
 
 ```text title="file system" icon="folder-tree"
 .
@@ -802,7 +797,7 @@ By default, the names of the generated bundles are based on the name of the asso
     └── index.js
 ```
 
-With multiple entrypoints, the generated file hierarchy will reflect the directory structure of the entrypoints.
+多入口项目，生成文件层级反映入口目录结构：
 
 ```text title="file system" icon="folder-tree"
 .
@@ -815,21 +810,21 @@ With multiple entrypoints, the generated file hierarchy will reflect the directo
         └── index.js
 ```
 
-The names and locations of the generated files can be customized with the `naming` field. This field accepts a template string that is used to generate the filenames for all bundles corresponding to entrypoints. where the following tokens are replaced with their corresponding values:
+用 `naming` 自定义名称，支持以下变量：
 
-- `[name]` - The name of the entrypoint file, without the extension.
-- `[ext]` - The extension of the generated bundle.
-- `[hash]` - A hash of the bundle contents.
-- `[dir]` - The relative path from the project root to the parent directory of the source file.
+- `[name]` - 入口文件名（无扩展名）
+- `[ext]` - 生成文件扩展名
+- `[hash]` - 文件内容哈希值
+- `[dir]` - 项目根目录相对路径到源文件父目录
 
-For example:
+举例：
 
-| Token               | `[name]` | `[ext]` | `[hash]`   | `[dir]`             |
-| ------------------- | -------- | ------- | ---------- | ------------------- |
-| `./index.tsx`       | `index`  | `js`    | `a1b2c3d4` | `""` (empty string) |
-| `./nested/entry.ts` | `entry`  | `js`    | `c3d4e5f6` | `"nested"`          |
+| 示例文件               | `[name]` | `[ext]` | `[hash]`   | `[dir]`             |
+| ---------------------- | -------- | ------- | ---------- | ------------------- |
+| `./index.tsx`          | `index`  | `js`    | `a1b2c3d4` | `""`（空字符串）     |
+| `./nested/entry.ts`    | `entry`  | `js`    | `c3d4e5f6` | `"nested"`          |
 
-We can combine these tokens to create a template string. For instance, to include the hash in the generated bundle names:
+示例设置让文件名包含 hash：
 
 <Tabs>
   <Tab title="JavaScript">
@@ -848,7 +843,7 @@ We can combine these tokens to create a template string. For instance, to includ
   </Tab>
 </Tabs>
 
-This build would result in the following file structure:
+示例输出结构：
 
 ```text title="file system" icon="folder-tree"
 .
@@ -858,7 +853,7 @@ This build would result in the following file structure:
         └── index-a1b2c3d4.js
 ```
 
-When a string is provided for the `naming` field, it is used only for bundles that correspond to entrypoints. The names of chunks and copied assets are not affected. Using the JavaScript API, separate template strings can be specified for each type of generated file.
+若只传字符串到 `naming`，仅作用于入口对应的 bundle，chunk 和资源文件名不受影响。JS API 允许分别为入口、chunk 和资源指定模板字符串。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -867,7 +862,7 @@ When a string is provided for the `naming` field, it is used only for bundles th
       entrypoints: ['./index.tsx'],
       outdir: './out',
       naming: {
-        // default values
+        // 默认值
         entry: '[dir]/[name].[ext]',
         chunk: '[name]-[hash].[ext]',
         asset: '[name]-[hash].[ext]',
@@ -887,7 +882,7 @@ When a string is provided for the `naming` field, it is used only for bundles th
 
 ### root
 
-The root directory of the project.
+项目根目录。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -906,7 +901,7 @@ The root directory of the project.
   </Tab>
 </Tabs>
 
-If unspecified, it is computed to be the first common ancestor of all entrypoint files. Consider the following file structure:
+默认为所有入口文件的第一个公共祖先目录。示例文件结构：
 
 ```text title="file system" icon="folder-tree"
 .
@@ -915,7 +910,7 @@ If unspecified, it is computed to be the first common ancestor of all entrypoint
   └── settings.tsx
 ```
 
-We can build both entrypoints in the `pages` directory:
+构建两个入口：
 
 <Tabs>
   <Tab title="JavaScript">
@@ -933,7 +928,7 @@ We can build both entrypoints in the `pages` directory:
   </Tab>
 </Tabs>
 
-This would result in a file structure like this:
+结果：
 
 ```text title="file system" icon="folder-tree"
 .
@@ -945,9 +940,9 @@ This would result in a file structure like this:
   └── settings.js
 ```
 
-Since the `pages` directory is the first common ancestor of the entrypoint files, it is considered the project root. This means that the generated bundles live at the top level of the `out` directory; there is no `out/pages` directory.
+由于 `pages` 是入口文件第一个公共祖先，视为项目根，生成 bundle 放在 `out` 顶层，而非 `out/pages`。
 
-This behavior can be overridden by specifying the `root` option:
+可通过 `root` 参数覆写：
 
 <Tabs>
   <Tab title="JavaScript">
@@ -966,7 +961,7 @@ This behavior can be overridden by specifying the `root` option:
   </Tab>
 </Tabs>
 
-By specifying `.` as `root`, the generated file structure will look like this:
+此时文件结构变为：
 
 ```
 .
@@ -981,15 +976,15 @@ By specifying `.` as `root`, the generated file structure will look like this:
 
 ### publicPath
 
-A prefix to be appended to any import paths in bundled code.
+打包后代码中所有导入路径的前缀。
 
-In many cases, generated bundles will contain no import statements. After all, the goal of bundling is to combine all of the code into a single file. However there are a number of cases with the generated bundles will contain import statements.
+通常打包会合并代码，不留导入语句，但以下情况例外：
 
-- **Asset imports** — When importing an unrecognized file type like `*.svg`, the bundler defers to the file loader, which copies the file into `outdir` as is. The import is converted into a variable
-- **External modules** — Files and modules can be marked as external, in which case they will not be included in the bundle. Instead, the import statement will be left in the final bundle.
-- **Chunking.** When `splitting` is enabled, the bundler may generate separate "chunk" files that represent code that is shared among multiple entrypoints.
+- **资源导入** — 导入类似 `*.svg` 这类非代码资源时，文件复制到 `outdir`，导入变变量引用
+- **外部模块** — 标记为外部的模块，导入语句保留
+- **代码拆分 chunk** — 当启用拆分时，共享代码会抽成多个文件，导入路径不能相对。
 
-In any of these cases, the final bundles may contain paths to other files. By default these imports are relative. Here is an example of a simple asset import:
+例如：
 
 <CodeGroup>
 
@@ -1005,7 +1000,7 @@ console.log(logo);
 
 </CodeGroup>
 
-Setting `publicPath` will prefix all file paths with the specified value.
+设置 `publicPath` 后，所有路径被加前缀：
 
 <Tabs>
   <Tab title="JavaScript">
@@ -1013,7 +1008,7 @@ Setting `publicPath` will prefix all file paths with the specified value.
     await Bun.build({
       entrypoints: ['./index.tsx'],
       outdir: './out',
-      publicPath: 'https://cdn.example.com/', // default is undefined
+      publicPath: 'https://cdn.example.com/', // 默认为 undefined
     })
     ```
   </Tab>
@@ -1024,7 +1019,7 @@ Setting `publicPath` will prefix all file paths with the specified value.
   </Tab>
 </Tabs>
 
-The output file would now look something like this.
+生成文件示例：
 
 ```js title="out/index.js" icon="/icons/javascript.svg"
 var logo = "https://cdn.example.com/logo-a7305bdef.svg";
@@ -1032,7 +1027,7 @@ var logo = "https://cdn.example.com/logo-a7305bdef.svg";
 
 ### define
 
-A map of global identifiers to be replaced at build time. Keys of this object are identifier names, and values are JSON strings that will be inlined.
+构建时全局标识符替换映射。键为标识符名，值是 JSON 字符串字面量，内联替代。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -1056,7 +1051,7 @@ A map of global identifiers to be replaced at build time. Keys of this object ar
 
 ### loader
 
-A map of file extensions to built-in loader names. This can be used to quickly customize how certain files are loaded.
+文件扩展名和内置加载器名称映射，快速定制加载行为。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -1080,7 +1075,7 @@ A map of file extensions to built-in loader names. This can be used to quickly c
 
 ### banner
 
-A banner to be added to the final bundle, this can be a directive like `"use client"` for react or a comment block such as a license for the code.
+在最终 bundle 顶部添加 banner，比如 React 的 `"use client"` 指令或版权声明注释。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -1101,7 +1096,7 @@ A banner to be added to the final bundle, this can be a directive like `"use cli
 
 ### footer
 
-A footer to be added to the final bundle, this can be something like a comment block for a license or just a fun easter egg.
+在最终 bundle 底部添加内容，比如许可证注释或彩蛋。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -1122,7 +1117,7 @@ A footer to be added to the final bundle, this can be something like a comment b
 
 ### drop
 
-Remove function calls from a bundle. For example, `--drop=console` will remove all calls to `console.log`. Arguments to calls will also be removed, regardless of if those arguments may have side effects. Dropping `debugger` will remove all `debugger` statements.
+从 bundle 中移除函数调用。例如，`--drop=console` 会移除所有 `console.log` 调用，参数也会被移除（无论参数是否有副作用）。移除 `debugger` 时，会删除所有 `debugger` 语句。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -1143,18 +1138,18 @@ Remove function calls from a bundle. For example, `--drop=console` will remove a
 
 ### features
 
-Enable compile-time feature flags for dead-code elimination. This provides a way to conditionally include or exclude code paths at bundle time using `import { feature } from "bun:bundle"`.
+编译时启用特性标记以实现死代码删除。通过 `import { feature } from "bun:bundle"` 条件包含代码。
 
 ```ts title="app.ts" icon="/icons/typescript.svg"
 import { feature } from "bun:bundle";
 
 if (feature("PREMIUM")) {
-  // Only included when PREMIUM flag is enabled
+  // 仅 PREMIUM 标记启用时包含
   initPremiumFeatures();
 }
 
 if (feature("DEBUG")) {
-  // Only included when DEBUG flag is enabled
+  // 仅 DEBUG 标记启用时包含
   console.log("Debug mode");
 }
 ```
@@ -1176,38 +1171,38 @@ if (feature("DEBUG")) {
   </Tab>
 </Tabs>
 
-The `feature()` function is replaced with `true` or `false` at bundle time. Combined with minification, unreachable code is eliminated:
+`feature()` 在打包时替换为布尔值，结合压缩，可剔除不可达分支：
 
-```ts title="Input" icon="/icons/typescript.svg"
+```ts title="输入" icon="/icons/typescript.svg"
 import { feature } from "bun:bundle";
 const mode = feature("PREMIUM") ? "premium" : "free";
 ```
 
-```js title="Output (with --feature PREMIUM --minify)" icon="/icons/javascript.svg"
+```js title="输出（启用 --feature PREMIUM --minify）" icon="/icons/javascript.svg"
 var mode = "premium";
 ```
 
-```js title="Output (without --feature PREMIUM, with --minify)" icon="/icons/javascript.svg"
+```js title="输出（不启用 --feature PREMIUM，启用 --minify）" icon="/icons/javascript.svg"
 var mode = "free";
 ```
 
-**Key behaviors:**
+**主要注意事项：**
 
-- `feature()` requires a string literal argument — dynamic values are not supported
-- The `bun:bundle` import is completely removed from the output
-- Works with `bun build`, `bun run`, and `bun test`
-- Multiple flags can be enabled: `--feature FLAG_A --feature FLAG_B`
-- For type safety, augment the `Registry` interface to restrict `feature()` to known flags (see below)
+- `feature()` 只能接受字符串字面量参数，不支持动态值
+- `bun:bundle` 导入会被移除，不会出现在输出代码
+- 支持 `bun build`、`bun run` 及 `bun test`
+- 可启用多条特性：`--feature FLAG_A --feature FLAG_B`
+- 为类型安全，可扩展 `Registry` 接口限制只能使用指定特性（见下）
 
-**Use cases:**
+**应用场景：**
 
-- Platform-specific code (`feature("SERVER")` vs `feature("CLIENT")`)
-- Environment-based features (`feature("DEVELOPMENT")`)
-- Gradual feature rollouts
-- A/B testing variants
-- Paid tier features
+- 平台差异代码（`feature("SERVER")` vs `feature("CLIENT")`）
+- 环境变量控制功能（`feature("DEVELOPMENT")`）
+- 渐进式功能发布
+- A/B 测试
+- 付费版功能区分
 
-**Type safety:** By default, `feature()` accepts any string. To get autocomplete and catch typos at compile time, create an `env.d.ts` file (or add to an existing `.d.ts`) and augment the `Registry` interface:
+**类型安全：** 默认 `feature()` 可传任意字符串。想实现自动提示防错，可新建 `env.d.ts` 文件（或补充到已有 `.d.ts`）并声明扩展：
 
 ```ts title="env.d.ts" icon="/icons/typescript.svg"
 declare module "bun:bundle" {
@@ -1217,17 +1212,17 @@ declare module "bun:bundle" {
 }
 ```
 
-Ensure the file is included in your `tsconfig.json` (e.g., `"include": ["src", "env.d.ts"]`). Now `feature()` only accepts those flags, and invalid strings like `feature("TYPO")` become type errors.
+确保文件包含在 `tsconfig.json`（如 `"include": ["src", "env.d.ts"]`）内。此后 `feature()` 仅接受这些字符串，使用其他字符串则会提示类型错误。
 
-## Outputs
+## 输出
 
-The `Bun.build` function returns a `Promise<BuildOutput>`, defined as:
+`Bun.build` 返回一个 `Promise<BuildOutput>`，定义如下：
 
 ```ts title="build.ts" icon="/icons/typescript.svg"
 interface BuildOutput {
   outputs: BuildArtifact[];
   success: boolean;
-  logs: Array<object>; // see docs for details
+  logs: Array<object>; // 详见文档
 }
 
 interface BuildArtifact extends Blob {
@@ -1239,7 +1234,7 @@ interface BuildArtifact extends Blob {
 }
 ```
 
-The `outputs` array contains all the files that were generated by the build. Each artifact implements the Blob interface.
+`outputs` 数组包含构建生成的所有文件，每个 Artifact 实现了 Blob 接口。
 
 ```ts title="build.ts" icon="/icons/typescript.svg"
 const build = await Bun.build({
@@ -1253,17 +1248,17 @@ for (const output of build.outputs) {
 }
 ```
 
-Each artifact also contains the following properties:
+每个 Artifact 还拥有：
 
-| Property    | Description                                                                                                                                                  |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `kind`      | What kind of build output this file is. A build generates bundled entrypoints, code-split "chunks", sourcemaps, bytecode, and copied assets (like images).   |
-| `path`      | Absolute path to the file on disk                                                                                                                            |
-| `loader`    | The loader was used to interpret the file. See [Bundler > Loaders](/bundler/loaders) to see how Bun maps file extensions to the appropriate built-in loader. |
-| `hash`      | The hash of the file contents. Always defined for assets.                                                                                                    |
-| `sourcemap` | The sourcemap file corresponding to this file, if generated. Only defined for entrypoints and chunks.                                                        |
+| 属性       | 说明                                                                                                                                                  |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`    | 文件类型：入口点、代码拆分块、资源、sourcemap、字节码等                                                                                                  |
+| `path`    | 磁盘上的绝对路径                                                                                                                                       |
+| `loader`  | 用于加载该文件的加载器，详见[打包器 > 加载器](/bundler/loaders)                                                                                           |
+| `hash`    | 文件内容哈希。资源文件必定含有                                                                                                                        |
+| `sourcemap` | 该文件对应的 sourcemap 文件，若生成则存在。仅入口点和 chunk 有值。                                                                                    |
 
-Similar to `BunFile`, `BuildArtifact` objects can be passed directly into `new Response()`.
+`BuildArtifact` 对象可以直接传给 `new Response()`。
 
 ```ts title="build.ts" icon="/icons/typescript.svg"
 const build = await Bun.build({
@@ -1272,11 +1267,11 @@ const build = await Bun.build({
 
 const artifact = build.outputs[0];
 
-// Content-Type header is automatically set
+// 会自动设置 Content-Type 头
 return new Response(artifact);
 ```
 
-The Bun runtime implements special pretty-printing of `BuildArtifact` object to make debugging easier.
+Bun 运行时支持对 `BuildArtifact` 对象的漂亮打印，便于调试：
 
 <CodeGroup>
 
@@ -1316,9 +1311,9 @@ BuildArtifact (entry-point) {
 
 </CodeGroup>
 
-## Bytecode
+## 字节码
 
-The `bytecode: boolean` option can be used to generate bytecode for any JavaScript/TypeScript entrypoints. This can greatly improve startup times for large applications. Only supported for `"cjs"` format, only supports `"target": "bun"` and dependent on a matching version of Bun. This adds a corresponding `.jsc` file for each entrypoint.
+`bytecode: boolean` 选项用于生成入口的字节码，显著提高大型应用启动速度。仅支持 `"cjs"` 格式，只能与 `target: "bun"` 配合使用，且依赖 Bun 版本匹配。每个入口会生成对应 `.jsc` 文件。
 
 <Tabs>
   <Tab title="JavaScript">
@@ -1337,20 +1332,20 @@ The `bytecode: boolean` option can be used to generate bytecode for any JavaScri
   </Tab>
 </Tabs>
 
-## Executables
+## 可执行文件
 
-Bun supports "compiling" a JavaScript/TypeScript entrypoint into a standalone executable. This executable contains a copy of the Bun binary.
+Bun 支持将 JavaScript/TypeScript 入口“编译”为独立可执行文件，其中包含 Bun 二进制。
 
 ```bash terminal icon="terminal"
 bun build ./cli.tsx --outfile mycli --compile
 ./mycli
 ```
 
-Refer to [Bundler > Executables](/bundler/executables) for complete documentation.
+详见[打包器 > 可执行文件](/bundler/executables)。
 
-## Logs and errors
+## 日志和错误
 
-On failure, `Bun.build` returns a rejected promise with an `AggregateError`. This can be logged to the console for pretty printing of the error list, or programmatically read with a try/catch block.
+构建失败时，`Bun.build` 返回一个拒绝的 `AggregateError`，可打印查看列表错误，或用 try/catch 捕获处理。
 
 ```ts title="build.ts" icon="/icons/typescript.svg"
 try {
@@ -1359,21 +1354,21 @@ try {
     outdir: "./out",
   });
 } catch (e) {
-  // TypeScript does not allow annotations on the catch clause
+  // TS 不允许在 catch 加类型注解，故用断言
   const error = e as AggregateError;
-  console.error("Build Failed");
+  console.error("构建失败");
 
-  // Example: Using the built-in formatter
+  // 示例：内置格式化打印
   console.error(error);
 
-  // Example: Serializing the failure as a JSON string.
+  // 示例：序列化成 JSON 字符串打印
   console.error(JSON.stringify(error, null, 2));
 }
 ```
 
-Most of the time, an explicit try/catch is not needed, as Bun will neatly print uncaught exceptions. It is enough to just use a top-level await on the `Bun.build` call.
+通常无需 try/catch，Bun 会优雅打印未捕获异常。直接顶层 await 即可。
 
-Each item in `error.errors` is an instance of `BuildMessage` or `ResolveMessage` (subclasses of `Error`), containing detailed information for each error.
+错误列表中每条均为 `BuildMessage` 或 `ResolveMessage` 实例（继承自 `Error`），含详细信息：
 
 ```ts title="build.ts" icon="/icons/typescript.svg"
 class BuildMessage {
@@ -1391,7 +1386,7 @@ class ResolveMessage extends BuildMessage {
 }
 ```
 
-On build success, the returned object contains a `logs` property, which contains bundler warnings and info messages.
+构建成功时，返回对象有 `logs` 字段，包含打包警告和信息。
 
 ```ts title="build.ts" icon="/icons/typescript.svg"
 const result = await Bun.build({
@@ -1400,15 +1395,15 @@ const result = await Bun.build({
 });
 
 if (result.logs.length > 0) {
-  console.warn("Build succeeded with warnings:");
+  console.warn("构建成功但有警告：");
   for (const message of result.logs) {
-    // Bun will pretty print the message object
+    // Bun 将美化打印信息
     console.warn(message);
   }
 }
 ```
 
-## Reference
+## 参考
 
 ```ts Typescript Definitions icon="/icons/typescript.svg" expandable
 interface Bun {
@@ -1416,22 +1411,22 @@ interface Bun {
 }
 
 interface BuildConfig {
-  entrypoints: string[]; // list of file path
-  outdir?: string; // output directory
-  target?: Target; // default: "browser"
+  entrypoints: string[]; // 入口文件数组
+  outdir?: string; // 输出目录
+  target?: Target; // 默认 "browser"
   /**
-   * Output module format. Top-level await is only supported for `"esm"`.
+   * 输出模块格式，顶层 await 仅支持 "esm"
    *
-   * Can be:
-   * - `"esm"`
-   * - `"cjs"` (**experimental**)
-   * - `"iife"` (**experimental**)
+   * 可选:
+   * - "esm"
+   * - "cjs" (**实验性**)
+   * - "iife" (**实验性**)
    *
    * @default "esm"
    */
   format?: "esm" | "cjs" | "iife";
   /**
-   * JSX configuration object for controlling JSX transform behavior
+   * JSX 配置对象，控制 JSX 转换行为
    */
   jsx?: {
     runtime?: "automatic" | "classic";
@@ -1448,33 +1443,31 @@ interface BuildConfig {
         entry?: string;
         asset?: string;
       };
-  root?: string; // project root
-  splitting?: boolean; // default true, enable code splitting
+  root?: string; // 项目根目录
+  splitting?: boolean; // 默认 true，启用代码拆分
   plugins?: BunPlugin[];
   external?: string[];
   packages?: "bundle" | "external";
   publicPath?: string;
   define?: Record<string, string>;
   loader?: { [k in string]: Loader };
-  sourcemap?: "none" | "linked" | "inline" | "external" | boolean; // default: "none", true -> "inline"
+  sourcemap?: "none" | "linked" | "inline" | "external" | boolean; // 默认 "none"，true 相当于 "inline"
   /**
-   * package.json `exports` conditions used when resolving imports
+   * package.json 的 `exports` 条件，用于解析导入
    *
-   * Equivalent to `--conditions` in `bun build` or `bun run`.
+   * 等同于 CLI 中 `--conditions` 参数
    *
    * https://nodejs.org/api/packages.html#exports
    */
   conditions?: Array<string> | string;
 
   /**
-   * Controls how environment variables are handled during bundling.
+   * 打包时环境变量处理方式
    *
-   * Can be one of:
-   * - `"inline"`: Injects environment variables into the bundled output by converting `process.env.FOO`
-   *   references to string literals containing the actual environment variable values
-   * - `"disable"`: Disables environment variable injection entirely
-   * - A string ending in `*`: Inlines environment variables that match the given prefix.
-   *   For example, `"MY_PUBLIC_*"` will only include env vars starting with "MY_PUBLIC_"
+   * 可选:
+   * - "inline": 将 `process.env.FOO` 替换为实际值字符串字面量
+   * - "disable": 禁用环境变量注入
+   * - 以 "*" 结尾的字符串: 内联匹配前缀的环境变量，如 "MY_PUBLIC_*"
    */
   env?: "inline" | "disable" | `${string}*`;
   minify?:
@@ -1485,54 +1478,46 @@ interface BuildConfig {
         identifiers?: boolean;
       };
   /**
-   * Ignore dead code elimination/tree-shaking annotations such as @__PURE__ and package.json
-   * "sideEffects" fields. This should only be used as a temporary workaround for incorrect
-   * annotations in libraries.
+   * 忽略无用代码消除相关注释和 package.json 中 "sideEffects" 设置，仅作为库注释错误的临时解决方案
    */
   ignoreDCEAnnotations?: boolean;
   /**
-   * Force emitting @__PURE__ annotations even if minify.whitespace is true.
+   * 即使 minify.whitespace 为 true，也强制保留 @__PURE__ 注释
    */
   emitDCEAnnotations?: boolean;
 
   /**
-   * Generate bytecode for the output. This can dramatically improve cold
-   * start times, but will make the final output larger and slightly increase
-   * memory usage.
+   * 生成字节码，可显著减少冷启动时间，但会增加体积和内存占用。
    *
-   * Bytecode is currently only supported for CommonJS (`format: "cjs"`).
-   *
-   * Must be `target: "bun"`
+   * 仅支持 CommonJS (`format: "cjs"`)，必须配合 `target: "bun"` 使用
    * @default false
    */
   bytecode?: boolean;
   /**
-   * Add a banner to the bundled code such as "use client";
+   * 添加代码顶部 banner，例如 "use client";
    */
   banner?: string;
   /**
-   * Add a footer to the bundled code such as a comment block like
-   *
-   * `// made with bun!`
+   * 添加代码底部内容，如版权注释
    */
   footer?: string;
 
   /**
-   * Drop function calls to matching property accesses.
+   * 移除匹配的函数调用
    */
   drop?: string[];
 
   /**
-   * - When set to `true`, the returned promise rejects with an AggregateError when a build failure happens.
-   * - When set to `false`, returns a {@link BuildOutput} with `{success: false}`
+   * - true 时构建失败时拒绝并抛出 AggregateError；
+   * - false 时返回 `{success: false}` 的 BuildOutput
    *
    * @default true
    */
   throw?: boolean;
 
   /**
-   * Custom tsconfig.json file path to use for path resolution.
-   * Equivalent to `--tsconfig-override` in the CLI.
+   * 指定自定义 tsconfig.json 路径，用于路径解析
+   * 等同于 CLI 的 `--tsconfig-override`
    */
   tsconfig?: string;
 

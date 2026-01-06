@@ -1,9 +1,9 @@
 ---
-title: HTML & static sites
-description: Build static sites, landing pages, and web applications with Bun's bundler
+title: HTML 和静态站点
+description: 使用 Bun 的打包工具构建静态站点、落地页和 web 应用
 ---
 
-Bun's bundler has first-class support for HTML. Build static sites, landing pages, and web applications with zero configuration. Just point Bun at your HTML file and it handles everything else.
+Bun 的打包工具对 HTML 拥有一级支持。可以零配置构建静态站点、落地页和 web 应用。只需将 Bun 指向你的 HTML 文件，其他一切交给它处理。
 
 ```html title="index.html" icon="file-code"
 <!doctype html>
@@ -18,7 +18,7 @@ Bun's bundler has first-class support for HTML. Build static sites, landing page
 </html>
 ```
 
-To get started, pass HTML files to `bun`.
+要开始使用，只需将 HTML 文件传入 `bun`。
 
 ```bash terminal icon="terminal"
 bun ./index.html
@@ -31,20 +31,20 @@ ready in 6.62ms
 Press h + Enter to show shortcuts
 ```
 
-Bun's development server provides powerful features with zero configuration:
+Bun 的开发服务器提供强大的功能且无需任何配置：
 
-- **Automatic Bundling** - Bundles and serves your HTML, JavaScript, and CSS
-- **Multi-Entry Support** - Handles multiple HTML entry points and glob entry points
-- **Modern JavaScript** - TypeScript & JSX support out of the box
-- **Smart Configuration** - Reads `tsconfig.json` for paths, JSX options, experimental decorators, and more
-- **Plugins** - Plugins for TailwindCSS and more
-- **ESM & CommonJS** - Use ESM and CommonJS in your JavaScript, TypeScript, and JSX files
-- **CSS Bundling & Minification** - Bundles CSS from `<link>` tags and `@import` statements
-- **Asset Management** - Automatic copying & hashing of images and assets; Rewrites asset paths in JavaScript, CSS, and HTML
+- **自动打包** - 打包并服务你的 HTML、JavaScript 和 CSS
+- **多入口支持** - 支持多个 HTML 入口点和通配符入口点
+- **现代 JavaScript** - 内置支持 TypeScript 和 JSX
+- **智能配置** - 读取 `tsconfig.json` 中的路径、JSX 选项、实验性装饰器等配置
+- **插件** - 支持 TailwindCSS 等插件
+- **ESM 与 CommonJS** - JavaScript、TypeScript 和 JSX 文件中可同时使用 ESM 和 CommonJS
+- **CSS 打包与压缩** - 打包 `<link>` 标签和 `@import` 语句中的 CSS
+- **资源管理** - 自动复制并哈希图片和资源；重写 JavaScript、CSS 和 HTML 中的资源路径
 
-## Single Page Apps (SPA)
+## 单页应用 (SPA)
 
-When you pass a single `.html` file to Bun, Bun will use it as a fallback route for all paths. This makes it perfect for single page apps that use client-side routing:
+当你传入一个单一 `.html` 文件给 Bun 时，Bun 会用这个文件作为所有路径的回退路由。这使得它非常适合使用客户端路由的单页应用：
 
 ```bash terminal icon="terminal"
 bun index.html
@@ -57,7 +57,7 @@ ready in 6.62ms
 Press h + Enter to show shortcuts
 ```
 
-Your React or other SPA will work out of the box — no configuration needed. All routes like `/about`, `/users/123`, etc. will serve the same HTML file, letting your client-side router handle the navigation.
+你的 React 或其他 SPA 将无需配置即可开箱即用。所有诸如 `/about`, `/users/123` 等路由都会返回同一个 HTML 文件，由客户端路由处理导航。
 
 ```html title="index.html" icon="file-code"
 <!doctype html>
@@ -72,9 +72,9 @@ Your React or other SPA will work out of the box — no configuration needed. Al
 </html>
 ```
 
-## Multi-page apps (MPA)
+## 多页应用 (MPA)
 
-Some projects have several separate routes or HTML files as entry points. To support multiple entry points, pass them all to `bun`:
+有些项目有几个独立的路由或多个 HTML 文件作为入口点。要支持多个入口点，可以全部传给 `bun`：
 
 ```bash terminal icon="terminal"
 bun ./index.html ./about.html
@@ -90,14 +90,14 @@ Routes:
 Press h + Enter to show shortcuts
 ```
 
-This will serve:
+这将提供以下服务：
 
-- `index.html` at `/`
-- `about.html` at `/about`
+- `/` 路由对应 `index.html`
+- `/about` 路由对应 `about.html`
 
-### Glob patterns
+### 通配符模式
 
-To specify multiple files, you can use glob patterns that end in `.html`:
+要指定多个文件，可以使用以 `.html` 结尾的通配符模式：
 
 ```bash terminal icon="terminal"
 bun ./**/*.html
@@ -113,9 +113,9 @@ Routes:
 Press h + Enter to show shortcuts
 ```
 
-### Path normalization
+### 路径规范化
 
-The base path is chosen from the longest common prefix among all the files.
+基路径取所有文件最长的公共前缀。
 
 ```bash terminal icon="terminal"
 bun ./index.html ./about/index.html ./about/foo/index.html
@@ -132,27 +132,27 @@ Routes:
 Press h + Enter to show shortcuts
 ```
 
-## JavaScript, TypeScript, and JSX
+## JavaScript、TypeScript 和 JSX
 
-Bun's transpiler natively implements JavaScript, TypeScript, and JSX support. Learn more about loaders in Bun.
+Bun 的转译器原生支持 JavaScript、TypeScript 和 JSX。你可以在 Bun 中了解更多关于加载器的内容。
 
-<Note>Bun's transpiler is also used at runtime.</Note>
+<Note>Bun 的转译器也在运行时使用。</Note>
 
-### ES Modules & CommonJS
+### ES 模块与 CommonJS
 
-You can use ESM and CJS in your JavaScript, TypeScript, and JSX files. Bun will handle the transpilation and bundling automatically.
+你可以在 JavaScript、TypeScript 和 JSX 文件中使用 ESM 和 CJS。Bun 会自动处理转译和打包。
 
-There is no pre-build or separate optimization step. It's all done at the same time.
+无需预先构建或单独优化步骤，全程同步完成。
 
-Learn more about module resolution in Bun.
+了解更多 Bun 中的模块解析。
 
 ## CSS
 
-Bun's CSS parser is also natively implemented (clocking in around 58,000 lines of Zig).
+Bun 的 CSS 解析器同样原生实现（大约 58,000 行 Zig 代码）。
 
-It's also a CSS bundler. You can use `@import` in your CSS files to import other CSS files.
+它也是一个 CSS 打包器。你可以在 CSS 文件中使用 `@import` 导入其他 CSS 文件。
 
-For example:
+例如：
 
 <CodeGroup>
 
@@ -172,7 +172,7 @@ body {
 
 </CodeGroup>
 
-This outputs:
+最终输出为：
 
 ```css styles.css icon="file-code"
 body {
@@ -184,9 +184,9 @@ body {
 }
 ```
 
-### Referencing local assets in CSS
+### CSS 中引用本地资源
 
-You can reference local assets in your CSS files.
+你可以在 CSS 文件中引用本地资源。
 
 ```css styles.css icon="file-code"
 body {
@@ -194,7 +194,7 @@ body {
 }
 ```
 
-This will copy `./logo.png` to the output directory and rewrite the path in the CSS file to include a content hash.
+这会将 `./logo.png` 复制到输出目录，并在 CSS 文件中重写路径以包含内容哈希。
 
 ```css styles.css icon="file-code"
 body {
@@ -202,44 +202,44 @@ body {
 }
 ```
 
-### Importing CSS in JavaScript
+### 在 JavaScript 中导入 CSS
 
-To associate a CSS file with a JavaScript file, you can import it in your JavaScript file.
+要将 CSS 文件与 JavaScript 文件关联，可以在 JavaScript 中导入它。
 
 ```ts app.ts icon="/icons/typescript.svg"
 import "./styles.css";
 import "./more-styles.css";
 ```
 
-This generates `./app.css` and `./app.js` in the output directory. All CSS files imported from JavaScript will be bundled into a single CSS file per entry point. If you import the same CSS file from multiple JavaScript files, it will only be included once in the output CSS file.
+这将在输出目录中生成 `./app.css` 和 `./app.js`。所有从 JavaScript 导入的 CSS 文件都会被打包成每个入口点的单个 CSS 文件。如果从多个 JavaScript 文件导入了同一个 CSS 文件，它在输出中仅会包含一次。
 
-## Plugins
+## 插件
 
-The dev server supports plugins.
+开发服务器支持插件。
 
 ### Tailwind CSS
 
-To use TailwindCSS, install the `bun-plugin-tailwind` plugin:
+要使用 TailwindCSS，安装 `bun-plugin-tailwind` 插件：
 
 ```bash terminal icon="terminal"
-# Or any npm client
+# 或任意 npm 客户端
 bun install --dev bun-plugin-tailwind
 ```
 
-Then, add the plugin to your `bunfig.toml`:
+然后，将插件添加到你的 `bunfig.toml`：
 
 ```toml title="bunfig.toml" icon="settings"
 [serve.static]
 plugins = ["bun-plugin-tailwind"]
 ```
 
-Then, reference TailwindCSS in your HTML via `<link>` tag, `@import` in CSS, or import in JavaScript.
+接着，在 HTML 中通过 `<link>` 标签、CSS 中的 `@import` 或 JavaScript 中导入引用 TailwindCSS。
 
 <Tabs>
   <Tab title="index.html">
 
     ```html title="index.html" icon="file-code"
-    <!-- Reference TailwindCSS in your HTML -->
+    <!-- 在 HTML 中引用 TailwindCSS -->
     <link rel="stylesheet" href="tailwindcss" />
     ```
 
@@ -260,100 +260,95 @@ Then, reference TailwindCSS in your HTML via `<link>` tag, `@import` in CSS, or 
   </Tab>
 </Tabs>
 
-<Info>Only one of those are necessary, not all three.</Info>
+<Info>三者只需其中一个即可，无需全部添加。</Info>
 
-## Inline environment variables
+## 内联环境变量
 
-Bun can replace `process.env.*` references in your JavaScript and TypeScript with their actual values at build time. This is useful for injecting configuration like API URLs or feature flags into your frontend code.
+Bun 可以在构建时将 JavaScript 和 TypeScript 文件中的 `process.env.*` 替换为实际的值。这对将配置（如 API URL 或功能开关）注入前端代码非常有用。
 
-### Dev server (runtime)
+### 开发服务器（运行时）
 
-To inline environment variables when using `bun ./index.html`, configure the `env` option in your `bunfig.toml`:
+使用 `bun ./index.html` 时，可在 `bunfig.toml` 中配置 `env` 选项以内联环境变量：
 
 ```toml title="bunfig.toml" icon="settings"
 [serve.static]
-env = "PUBLIC_*"  # only inline env vars starting with PUBLIC_ (recommended)
-# env = "inline"  # inline all environment variables
-# env = "disable" # disable env var replacement (default)
+env = "PUBLIC_*"  # 仅内联以 PUBLIC_ 开头的环境变量（推荐）
+# env = "inline"  # 内联所有环境变量
+# env = "disable" # 禁用环境变量替换（默认）
 ```
 
 <Note>
-  This only works with literal `process.env.FOO` references, not `import.meta.env` or indirect access like `const env =
-  process.env; env.FOO`.
+  仅支持直接字面量的 `process.env.FOO`，不支持 `import.meta.env` 或间接访问如 `const env = process.env; env.FOO`。
 
-If an environment variable is not set, you may see runtime errors like `ReferenceError: process
-  is not defined` in the browser.
-
+若环境变量未设置，浏览器可能会出现运行时错误，如 `ReferenceError: process is not defined`。
 </Note>
 
-Then run the dev server:
+然后运行开发服务器：
 
 ```bash terminal icon="terminal"
 PUBLIC_API_URL=https://api.example.com bun ./index.html
 ```
 
-### Build for production
+### 生产构建
 
-When building static HTML for production, use the `env` option to inline environment variables:
+构建静态 HTML 生产版本时，使用 `env` 选项内联环境变量：
 
 <Tabs>
   <Tab title="CLI">
     ```bash terminal icon="terminal"
-    # Inline all environment variables
+    # 内联所有环境变量
     bun build ./index.html --outdir=dist --env=inline
 
-    # Only inline env vars with a specific prefix (recommended)
+    # 仅内联带指定前缀的环境变量（推荐）
     bun build ./index.html --outdir=dist --env=PUBLIC_*
     ```
-
   </Tab>
   <Tab title="API">
     ```ts title="build.ts" icon="/icons/typescript.svg"
-    // Inline all environment variables
+    // 内联所有环境变量
     await Bun.build({
       entrypoints: ["./index.html"],
       outdir: "./dist",
       env: "inline", // [!code highlight]
     });
 
-    // Only inline env vars with a specific prefix (recommended)
+    // 仅内联带指定前缀的环境变量（推荐）
     await Bun.build({
       entrypoints: ["./index.html"],
       outdir: "./dist",
       env: "PUBLIC_*", // [!code highlight]
     });
     ```
-
   </Tab>
 </Tabs>
 
-### Example
+### 示例
 
-Given this source file:
+给定以下源文件：
 
 ```ts title="app.ts" icon="/icons/typescript.svg"
 const apiUrl = process.env.PUBLIC_API_URL;
 console.log(`API URL: ${apiUrl}`);
 ```
 
-And running with `PUBLIC_API_URL=https://api.example.com`:
+使用 `PUBLIC_API_URL=https://api.example.com` 运行：
 
 ```bash terminal icon="terminal"
 PUBLIC_API_URL=https://api.example.com bun build ./index.html --outdir=dist --env=PUBLIC_*
 ```
 
-The bundled output will contain:
+打包输出将为：
 
 ```js title="dist/app.js" icon="/icons/javascript.svg"
 const apiUrl = "https://api.example.com";
 console.log(`API URL: ${apiUrl}`);
 ```
 
-## Echo console logs from browser to terminal
+## 将浏览器控制台日志回显至终端
 
-Bun's dev server supports streaming console logs from the browser to the terminal.
+Bun 的开发服务器支持将浏览器中的控制台日志流式传输到终端。
 
-To enable, pass the `--console` CLI flag.
+要启用，传入 CLI 参数 `--console`。
 
 ```bash terminal icon="terminal"
 bun ./index.html --console
@@ -366,25 +361,25 @@ ready in 6.62ms
 Press h + Enter to show shortcuts
 ```
 
-Each call to `console.log` or `console.error` will be broadcast to the terminal that started the server. This is useful to see errors from the browser in the same place you run your server. This is also useful for AI agents that watch terminal output.
+每次调用 `console.log` 或 `console.error` 都会广播到启动服务器的终端。这对于在服务器运行同一终端查看浏览器错误非常有用，也适合监控终端输出的 AI 代理。
 
-Internally, this reuses the existing WebSocket connection from hot module reloading to send the logs.
+内部复用了热模块重载的现有 WebSocket 连接来发送日志。
 
-## Edit files in the browser
+## 在浏览器中编辑文件
 
-Bun's frontend dev server has support for Automatic Workspace Folders in Chrome DevTools, which lets you save edits to files in the browser.
+Bun 的前端开发服务器支持 Chrome DevTools 的自动工作区文件夹功能，可让你在浏览器中保存文件修改。
 
-## Keyboard Shortcuts
+## 键盘快捷键
 
-While the server is running:
+服务器运行时：
 
-- `o + Enter` - Open in browser
-- `c + Enter` - Clear console
-- `q + Enter` (or `Ctrl+C`) - Quit server
+- `o + Enter` - 在浏览器中打开
+- `c + Enter` - 清除控制台
+- `q + Enter` 或 `Ctrl+C` - 退出服务器
 
-## Build for Production
+## 生产构建
 
-When you're ready to deploy, use `bun build` to create optimized production bundles:
+准备部署时，使用 `bun build` 创建优化的生产包：
 
 <Tabs>
   <Tab title="CLI">
@@ -404,19 +399,18 @@ When you're ready to deploy, use `bun build` to create optimized production bund
 </Tabs>
 
 <Warning>
-  Currently, plugins are only supported through `Bun.build`'s API or through `bunfig.toml` with the frontend dev server
-  - not yet supported in `bun build`'s CLI.
+  当前，插件仅支持通过 `Bun.build` 的 API 或通过前端开发服务器的 `bunfig.toml` 使用，还不支持 `bun build` CLI。
 </Warning>
 
-### Watch Mode
+### 监听模式
 
-You can run `bun build --watch` to watch for changes and rebuild automatically. This works nicely for library development.
+你可以运行 `bun build --watch` 自动监听文件变更并重建，非常适合库开发。
 
-<Info>You've never seen a watch mode this fast.</Info>
+<Info>你从未见过如此快速的监听模式。</Info>
 
-## Plugin API
+## 插件 API
 
-Need more control? Configure the bundler through the JavaScript API and use Bun's builtin `HTMLRewriter` to preprocess HTML.
+需要更灵活的控制？可以通过 JavaScript API 配置打包器，并使用 Bun 内置的 `HTMLRewriter` 预处理 HTML。
 
 ```ts title="build.ts" icon="/icons/typescript.svg"
 await Bun.build({
@@ -426,7 +420,7 @@ await Bun.build({
 
   plugins: [
     {
-      // A plugin that makes every HTML tag lowercase
+      // 一个将所有 HTML 标签名改为小写的插件
       name: "lowercase-html-plugin",
       setup({ onLoad }) {
         const rewriter = new HTMLRewriter().on("*", {
@@ -442,8 +436,7 @@ await Bun.build({
           const html = await Bun.file(args.path).text();
 
           return {
-            // Bun's bundler will scan the HTML for <script> tags, <link rel="stylesheet"> tags, and other assets
-            // and bundle them automatically
+            // Bun 的打包器会自动扫描 HTML 中的 <script> 标签、<link rel="stylesheet"> 标签及其他资源并打包
             contents: rewriter.transform(html),
             loader: "html",
           };
@@ -454,35 +447,34 @@ await Bun.build({
 });
 ```
 
-## What Gets Processed?
+## 处理了哪些内容？
 
-Bun automatically handles all common web assets:
+Bun 自动处理所有常见的 Web 资源：
 
-- **Scripts** (`<script src>`) are run through Bun's JavaScript/TypeScript/JSX bundler
-- **Stylesheets** (`<link rel="stylesheet">`) are run through Bun's CSS parser & bundler
-- **Images** (`<img>`, `<picture>`) are copied and hashed
-- **Media** (`<video>`, `<audio>`, `<source>`) are copied and hashed
-- Any `<link>` tag with an `href` attribute pointing to a local file is rewritten to the new path, and hashed
+- **脚本** (`<script src>`) 会进入 Bun 的 JavaScript/TypeScript/JSX 打包器
+- **样式表** (`<link rel="stylesheet">`) 会进入 Bun 的 CSS 解析器和打包器
+- **图片** (`<img>`, `<picture>`) 会复制并哈希处理
+- **媒体** (`<video>`, `<audio>`, `<source>`) 会复制并哈希
+- 任何带有指向本地文件 `href` 的 `<link>` 标签会被重写路径并哈希
 
-All paths are resolved relative to your HTML file, making it easy to organize your project however you want.
+所有路径均相对于你的 HTML 文件解析，让你可以自由组织项目结构。
 
 <Warning>
-**This is a work in progress**
-- Need more plugins
-- Need more configuration options for things like asset handling
-- Need a way to configure CORS, headers, etc.
+**此功能仍在开发中**
+- 需要更多插件支持
+- 需要更多配置选项以支持资源处理等
+- 需要配置 CORS、头信息等的方式
 
-{/* todo: find the correct link to link to as this 404's and there isn't any similar files */}
-{/* If you want to submit a PR, most of the code is [here](https://github.com/oven-sh/bun/blob/main/src/bun.js/api/bun/html-rewriter.ts). You could even copy paste that file into your project and use it as a starting point. */}
-
+{/* 待办：寻找正确的链接，因为此链接 404 并且没有类似文件 */}
+{/* 如果你想提交 PR，大部分代码在 [这里](https://github.com/oven-sh/bun/blob/main/src/bun.js/api/bun/html-rewriter.ts)。你甚至可以将该文件复制到项目中作为起点。 */}
 </Warning>
 
-## How this works
+## 工作原理
 
-This is a small wrapper around Bun's support for HTML imports in JavaScript.
+这是 Bun 对 JavaScript 中 HTML 导入支持的一个简单封装。
 
-## Adding a backend to your frontend
+## 给前端添加后端
 
-To add a backend to your frontend, you can use the "routes" option in `Bun.serve`.
+想给前端添加后端支持， 可以使用 `Bun.serve` 的“routes”选项。
 
-Learn more in the full-stack docs.
+详见全栈文档。

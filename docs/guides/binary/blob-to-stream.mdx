@@ -1,10 +1,10 @@
 ---
-title: Convert a Blob to a ReadableStream
-sidebarTitle: "Blob to ReadableStream"
+title: 将 Blob 转换为 ReadableStream
+sidebarTitle: "Blob 转 ReadableStream"
 mode: center
 ---
 
-The [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) class provides a number of methods for consuming its contents in different formats, including `.stream()`. This returns `Promise<ReadableStream>`.
+[`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) 类提供了多种方法以不同格式使用其内容，其中包括 `.stream()`。该方法返回 `Promise<ReadableStream>`。
 
 ```ts
 const blob = new Blob(["hello world"]);
@@ -13,4 +13,4 @@ const stream = await blob.stream();
 
 ---
 
-See [Docs > API > Binary Data](/runtime/binary-data#conversion) for complete documentation on manipulating binary data with Bun.
+完整的二进制数据操作文档，请参见 [文档 > API > 二进制数据](/runtime/binary-data#conversion)。

@@ -1,37 +1,37 @@
 ---
-title: Migrate from npm install to bun install
-sidebarTitle: Migrate from npm to bun
+title: 从 npm install 迁移到 bun install
+sidebarTitle: 从 npm 迁移到 bun
 mode: center
 ---
 
-`bun install` is a Node.js compatible npm client designed to be an incredibly fast successor to npm.
+`bun install` 是一个兼容 Node.js 的 npm 客户端，旨在成为极其快速的 npm 继任者。
 
-We've put a lot of work into making sure that the migration path from `npm install` to `bun install` is as easy as running `bun install` instead of `npm install`.
+我们投入了大量工作，确保从 `npm install` 迁移到 `bun install` 的路径就像运行 `bun install` 替代 `npm install` 一样简单。
 
-- **Designed for Node.js & Bun**: `bun install` installs a Node.js compatible `node_modules` folder. You can use it in place of `npm install` for Node.js projects without any code changes and without using Bun's runtime.
-- **Automatically converts `package-lock.json`** to bun's `bun.lock` lockfile format, preserving your existing resolved dependency versions without any manual work on your part. You can secretly use `bun install` in place of `npm install` at work without anyone noticing.
-- **`.npmrc` compatible**: bun install reads npm registry configuration from npm's `.npmrc`, so you can use the same configuration for both npm and Bun.
-- **Hardlinks**: On Windows and Linux, `bun install` uses hardlinks to conserve disk space and install times.
+- **为 Node.js 和 Bun 设计**：`bun install` 会安装一个兼容 Node.js 的 `node_modules` 文件夹。你可以在 Node.js 项目中直接替代 `npm install` 使用，无需任何代码更改，也无需使用 Bun 的运行时。
+- **自动将 `package-lock.json` 转换为 bun 的锁文件格式 `bun.lock`**，保留你现有解析的依赖版本，无需任何手动操作。你可以在公司偷偷用 `bun install` 替代 `npm install`，没人会发现。
+- **兼容 `.npmrc`**：bun install 会读取 npm 的 `.npmrc` 里的 npm registry 配置，因此你可以为 npm 和 Bun 使用同样的配置。
+- **硬链接**：在 Windows 和 Linux 上，`bun install` 使用硬链接以节省磁盘空间和缩短安装时间。
 
 ```bash terminal icon="terminal"
-# It only takes one command to migrate
+# 迁移只需一条命令
 bun i
 
-# To add dependencies:
+# 添加依赖：
 bun i @types/bun
 
-# To add devDependencies:
+# 添加开发依赖：
 bun i -d @types/bun
 
-# To remove a dependency:
+# 移除依赖：
 bun rm @types/bun
 ```
 
 ---
 
-## Run package.json scripts faster
+## 更快地运行 package.json 脚本
 
-Run scripts from package.json, executables from `node_modules/.bin` (sort of like `npx`), and JavaScript/TypeScript files (just like `node`) - all from a single simple command.
+运行 package.json 中的脚本，`node_modules/.bin` 里的可执行文件（类似 `npx`），以及 JavaScript/TypeScript 文件（就像 `node`），全部通过一个简单的命令完成。
 
 | NPM                | Bun              |
 | ------------------ | ---------------- |
@@ -40,28 +40,28 @@ Run scripts from package.json, executables from `node_modules/.bin` (sort of lik
 | `node <file>`      | `bun <file>`     |
 | `npx <package>`    | `bunx <package>` |
 
-When you use `bun run <executable>`, it will choose the locally-installed executable
+当你使用 `bun run <executable>` 时，它会选择本地安装的可执行文件。
 
 ```sh terminal icon="terminal"
-# Run a package.json script:
+# 运行 package.json 脚本：
 bun my-script
 bun run my-script
 
-# Run an executable in node_modules/.bin:
-bun my-executable # such as tsc, esbuild, etc.
+# 运行 node_modules/.bin 中的可执行程序：
+bun my-executable # 例如 tsc，esbuild 等
 bun run my-executable
 
-# Run a JavaScript/TypeScript file:
+# 运行一个 JavaScript/TypeScript 文件：
 bun ./index.ts
 ```
 
 ---
 
-## Workspaces? Yes.
+## 支持工作区（Workspaces）
 
-`bun install` supports workspaces similarly to npm, with more features.
+`bun install` 支持类似 npm 的工作区功能，且拥有更多特性。
 
-In package.json, you can set `"workspaces"` to an array of relative paths.
+在 package.json 中，你可以设置 `"workspaces"` 为一组相对路径数组。
 
 ```json package.json icon="file-json"
 {
@@ -72,44 +72,44 @@ In package.json, you can set `"workspaces"` to an array of relative paths.
 
 ---
 
-### Filter scripts by workspace name
+### 按工作区名称筛选脚本
 
-In Bun, the `--filter` flag accepts a glob pattern, and will run the command concurrently for all workspace packages with a `name` that matches the pattern, respecting dependency order.
+在 Bun 中，`--filter` 标志接受一个通配符模式，会并行执行命令到所有 `name` 匹配该模式的工作区包，并遵循依赖顺序。
 
 ```sh terminal icon="terminal"
 bun --filter 'lib-*' my-script
-# instead of:
+# 替代以下写法：
 # npm run --workspace lib-foo --workspace lib-bar my-script
 ```
 
 ---
 
-## Update dependencies
+## 更新依赖
 
-To update a dependency, you can use `bun update <package>`. This will update the dependency to the latest version that satisfies the semver range specified in package.json.
+要更新依赖，可以使用 `bun update <package>`。该命令会将依赖更新到符合 semver 范围的最新版本。
 
 ```sh terminal icon="terminal"
-# Update a single dependency
+# 更新单个依赖
 bun update @types/bun
 
-# Update all dependencies
+# 更新所有依赖
 bun update
 
-# Ignore semver, update to the latest version
+# 忽略 semver 范围，更新到最新版本
 bun update @types/bun --latest
 
-# Update a dependency to a specific version
+# 更新依赖到指定版本
 bun update @types/bun@1.3.3
 
-# Update all dependencies to the latest versions
+# 更新所有依赖到最新版本
 bun update --latest
 ```
 
 ---
 
-### View outdated dependencies
+### 查看过期依赖
 
-To view outdated dependencies, run `bun outdated`. This is like `npm outdated` but with more compact output.
+要查看过期依赖，运行 `bun outdated`。这类似于 `npm outdated`，但输出更为简洁。
 
 ```sh terminal icon="terminal"
 bun outdated
@@ -145,12 +145,12 @@ bun outdated
 
 ---
 
-## List installed packages
+## 列出已安装的包
 
-To list installed packages, you can use `bun pm ls`. This will list all the packages that are installed in the `node_modules` folder using Bun's lockfile as the source of truth. You can pass the `-a` flag to list all installed packages, including transitive dependencies.
+要列出已安装的包，可以使用 `bun pm ls`。这会列出 `node_modules` 文件夹中安装的所有包，bun 的锁文件作为事实依据。你可以传入 `-a` 标志来列出所有已安装的依赖，包括传递依赖。
 
 ```sh terminal icon="terminal"
-# List top-level installed packages:
+# 列出顶级已安装的包：
 bun pm ls
 ```
 
@@ -165,7 +165,7 @@ my-pkg node_modules (781)
 ```
 
 ```sh terminal icon="terminal"
-# List all installed packages:
+# 列出所有已安装的包：
 bun pm ls -a
 ```
 
@@ -182,12 +182,12 @@ my-pkg node_modules
 
 ---
 
-## Create a package tarball
+## 创建包的压缩包
 
-To create a package tarball, you can use `bun pm pack`. This will create a tarball of the package in the current directory.
+要创建包的 tar 压缩包，可以使用 `bun pm pack`。这会在当前目录创建一个包的 tarball。
 
 ```sh terminal icon="terminal"
-# Create a tarball
+# 创建一个 tarball
 bun pm pack
 ```
 
@@ -203,28 +203,28 @@ Packed size: 117.50KB
 
 ## Shebang
 
-If the package references `node` in the `#!/usr/bin/env node` shebang, `bun run` will by default respect it and use the system's `node` executable. You can force it to use Bun's `node` by passing `--bun` to `bun run`.
+如果包的 shebang 中引用了 `node`（例如 `#!/usr/bin/env node`），`bun run` 默认会尊重它并使用系统的 `node` 可执行文件。你也可以通过传递 `--bun` 参数强制使用 Bun 的 `node`。
 
-When you pass `--bun` to `bun run`, we create a symlink to the locally-installed Bun executable named `"node"` in a temporary directory and add that to your `PATH` for the duration of the script's execution.
+当你传入 `--bun` 给 `bun run`，我们会在临时目录创建一个指向本地已安装 Bun 可执行文件的 `"node"` 符号链接，并在脚本执行期间将该目录添加到你的 `PATH`。
 
 ```sh terminal icon="terminal"
-# Force using Bun's runtime instead of node
+# 强制使用 Bun 运行时而非 node
 bun --bun my-script
 
-# This also works:
+# 以下用法同样有效：
 bun run --bun my-script
 ```
 
 ---
 
-## Global installs
+## 全局安装
 
-You can install packages globally using `bun i -g <package>`. This will install into a `.bun/install/global/node_modules` folder inside your home directory by default.
+你可以使用 `bun i -g <package>` 全局安装包。默认情况下，这会安装到你用户主目录下的 `.bun/install/global/node_modules` 文件夹。
 
 ```sh terminal icon="terminal"
-# Install a package globally
+# 全局安装一个包
 bun i -g eslint
 
-# Run a globally-installed package without the `bun run` prefix
+# 运行全局安装的包，无需 `bun run` 前缀
 eslint --init
 ```

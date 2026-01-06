@@ -1,11 +1,11 @@
 ---
-title: Codesign a single-file JavaScript executable on macOS
-description: Fix the "can't be opened because it is from an unidentified developer" Gatekeeper warning when running your JavaScript executable.
-sidebarTitle: Codesign on macOS
+title: 在 macOS 上为单文件 JavaScript 可执行文件进行代码签名
+description: 解决运行 JavaScript 可执行文件时出现的“无法打开，因为来自未识别的开发者”Gatekeeper 警告。
+sidebarTitle: macOS 上的代码签名
 mode: center
 ---
 
-Compile your executable using the `--compile` flag.
+使用 `--compile` 标志编译你的可执行文件。
 
 ```sh
 bun build --compile ./path/to/entry.ts --outfile myapp
@@ -13,7 +13,7 @@ bun build --compile ./path/to/entry.ts --outfile myapp
 
 ---
 
-List your available signing identities. One of these will be your signing identity that you pass to the `codesign` command. This command requires macOS.
+列出你可用的签名身份。其中一个将作为你传递给 `codesign` 命令的签名身份。此命令需要 macOS。
 
 ```sh terminal icon="terminal"
 security find-identity -v -p codesigning
@@ -26,7 +26,7 @@ security find-identity -v -p codesigning
 
 ---
 
-Optional, but recommended: create an `entitlements.plist` file with the necessary permissions for the JavaScript engine to work correctly.
+可选，但推荐：创建一个包含必要权限的 `entitlements.plist` 文件，以保证 JavaScript 引擎正常工作。
 
 ```xml entitlements.plist icon="file-code"
 <?xml version="1.0" encoding="UTF-8"?>
@@ -49,7 +49,7 @@ Optional, but recommended: create an `entitlements.plist` file with the necessar
 
 ---
 
-Sign your executable using the `codesign` command and verify it works.
+使用 `codesign` 命令对你的可执行文件进行签名并验证其有效性。
 
 ```bash terminal icon="terminal"
 codesign --entitlements entitlements.plist -vvvv --deep --sign "XXXXXXXXXX" ./myapp --force
@@ -58,4 +58,4 @@ codesign -vvv --verify ./myapp
 
 ---
 
-For more information on macOS codesigning, refer to [Apple's Code Signing documentation](https://developer.apple.com/documentation/security/code_signing_services). For details about creating single-file executables with Bun, see [Standalone Executables](/bundler/executables). This guide requires Bun v1.2.4 or newer.
+有关 macOS 代码签名的更多信息，请参阅 [Apple 的代码签名文档](https://developer.apple.com/documentation/security/code_signing_services)。有关使用 Bun 创建单文件可执行文件的详细信息，请参阅 [Standalone Executables](/bundler/executables)。本指南要求 Bun 版本 1.2.4 或更新版本。

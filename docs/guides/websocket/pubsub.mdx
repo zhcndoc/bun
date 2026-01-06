@@ -1,12 +1,12 @@
 ---
-title: Build a publish-subscribe WebSocket server
-sidebarTitle: Pub-sub server
+title: 构建一个发布-订阅 WebSocket 服务器
+sidebarTitle: 发布-订阅服务器
 mode: center
 ---
 
-Bun's server-side `WebSocket` API provides a native pub-sub API. Sockets can be subscribed to a set of named channels using `socket.subscribe(<name>)`; messages can be published to a channel using `socket.publish(<name>, <message>)`.
+Bun 的服务器端 `WebSocket` API 提供了原生的发布-订阅（pub-sub）API。可以使用 `socket.subscribe(<name>)` 让套接字订阅一组命名频道；可以使用 `socket.publish(<name>, <message>)` 向某个频道发布消息。
 
-This code snippet implements a simple single-channel chat server.
+以下代码片段实现了一个简单的单频道聊天室服务器。
 
 ```ts server.ts icon="/icons/typescript.svg"
 const server = Bun.serve({
@@ -19,25 +19,25 @@ const server = Bun.serve({
     return new Response("Hello world");
   },
   websocket: {
-    // TypeScript: specify the type of ws.data like this
+    // TypeScript: 像这样指定 ws.data 的类型
     data: {} as { username: string },
 
     open(ws) {
-      const msg = `${ws.data.username} has entered the chat`;
+      const msg = `${ws.data.username} 已进入聊天室`;
       ws.subscribe("the-group-chat");
       server.publish("the-group-chat", msg);
     },
     message(ws, message) {
-      // the server re-broadcasts incoming messages to everyone
+      // 服务器将接收到的消息重新广播给所有人
       server.publish("the-group-chat", `${ws.data.username}: ${message}`);
     },
     close(ws) {
-      const msg = `${ws.data.username} has left the chat`;
+      const msg = `${ws.data.username} 已离开聊天室`;
       server.publish("the-group-chat", msg);
       ws.unsubscribe("the-group-chat");
     },
   },
 });
 
-console.log(`Listening on ${server.hostname}:${server.port}`);
+console.log(`监听中，地址为 ${server.hostname}:${server.port}`);
 ```

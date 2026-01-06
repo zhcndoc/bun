@@ -1,11 +1,11 @@
 ---
-title: "Workspaces"
-description: "Develop complex monorepos with multiple independent packages"
+title: "工作区 (Workspaces)"
+description: "开发包含多个独立包的复杂多包仓库（monorepo）"
 ---
 
-Bun supports [`workspaces`](https://docs.npmjs.com/cli/v9/using-npm/workspaces?v=true#description) in `package.json`. Workspaces make it easy to develop complex software as a _monorepo_ consisting of several independent packages.
+Bun 支持在 `package.json` 中使用 [`workspaces`](https://docs.npmjs.com/cli/v9/using-npm/workspaces?v=true#description)。工作区使得将复杂软件作为包含多个独立包的 _monorepo_ 进行开发变得简单。
 
-It's common for a monorepo to have the following structure:
+一个 monorepo 通常具有如下结构：
 
 ```txt File Tree icon="folder-tree"
 <root>
@@ -28,7 +28,7 @@ It's common for a monorepo to have the following structure:
         └── tsconfig.json
 ```
 
-In the root `package.json`, the `"workspaces"` key is used to indicate which subdirectories should be considered packages/workspaces within the monorepo. It's conventional to place all the workspace in a directory called `packages`.
+在根目录的 `package.json` 中，使用 `"workspaces"` 键来表示哪些子目录应被视为 monorepo 内的包/工作区。通常将所有工作区放置在名为 `packages` 的目录下。
 
 ```json package.json icon="file-json"
 {
@@ -42,8 +42,7 @@ In the root `package.json`, the `"workspaces"` key is used to indicate which sub
 ```
 
 <Note>
-  **Glob support** — Bun supports full glob syntax in `"workspaces"`, including negative patterns (e.g.
-  `!**/excluded/**`). See [here](/runtime/glob#supported-glob-patterns) for a comprehensive list of supported syntax.
+  **支持 Glob 语法** — Bun 在 `"workspaces"` 中支持完整的 glob 语法，包括否定模式（例如 `!**/excluded/**`）。详细支持语法列表见 [这里](/runtime/glob#supported-glob-patterns)。
 </Note>
 
 ```json package.json icon="file-json"
@@ -54,7 +53,7 @@ In the root `package.json`, the `"workspaces"` key is used to indicate which sub
 }
 ```
 
-Each workspace has it's own `package.json`. When referencing other packages in the monorepo, semver or workspace protocols (e.g. `workspace:*`) can be used as the version field in your `package.json`.
+每个工作区有自己的 `package.json`。当引用 monorepo 中的其他包时，可以在 `package.json` 的版本字段中使用语义化版本号（semver）或工作区协议（例如 `workspace:*`）。
 
 ```json packages/pkg-a/package.json icon="file-json"
 {
@@ -66,17 +65,17 @@ Each workspace has it's own `package.json`. When referencing other packages in t
 }
 ```
 
-`bun install` will install dependencies for all workspaces in the monorepo, de-duplicating packages if possible. If you only want to install dependencies for specific workspaces, you can use the `--filter` flag.
+`bun install` 会为 monorepo 中的所有工作区安装依赖，如果可能会去重包。如果只想为指定工作区安装依赖，可以使用 `--filter` 标志。
 
 ```bash
-# Install dependencies for all workspaces starting with `pkg-` except for `pkg-c`
+# 安装所有以 `pkg-` 开头且不包含 `pkg-c` 的工作区依赖
 bun install --filter "pkg-*" --filter "!pkg-c"
 
-# Paths can also be used. This is equivalent to the command above.
-bun install --filter "./packages/pkg-*" --filter "!pkg-c" # or --filter "!./packages/pkg-c"
+# 也可以使用路径，这与上面命令效果相同。
+bun install --filter "./packages/pkg-*" --filter "!pkg-c" # 或 --filter "!./packages/pkg-c"
 ```
 
-When publishing, `workspace:` versions are replaced by the package's `package.json` version,
+发布时，`workspace:` 版本会被替换为包的 `package.json` 中的版本号：
 
 ```
 "workspace:*" -> "1.0.1"
@@ -84,32 +83,28 @@ When publishing, `workspace:` versions are replaced by the package's `package.js
 "workspace:~" -> "~1.0.1"
 ```
 
-Setting a specific version takes precedence over the package's `package.json` version,
+指定具体版本会优先于包的 `package.json` 版本：
 
 ```
-"workspace:1.0.2" -> "1.0.2" // Even if current version is 1.0.1
+"workspace:1.0.2" -> "1.0.2" // 即使当前版本是 1.0.1
 ```
 
-Workspaces have a couple major benefits.
+工作区有几个主要优势：
 
-- **Code can be split into logical parts.** If one package relies on another, you can simply add it as a dependency in `package.json`. If package `b` depends on `a`, `bun install` will install your local `packages/a` directory into `node_modules` instead of downloading it from the npm registry.
-- **Dependencies can be de-duplicated.** If `a` and `b` share a common dependency, it will be _hoisted_ to the root `node_modules` directory. This reduces redundant disk usage and minimizes "dependency hell" issues associated with having multiple versions of a package installed simultaneously.
-- **Run scripts in multiple packages.** You can use the [`--filter` flag](/pm/filter) to easily run `package.json` scripts in multiple packages in your workspace, , or `--workspaces` to run scripts across all workspaces.
+- **代码可以拆分成逻辑部分。** 如果一个包依赖另一个包，只需在 `package.json` 中添加依赖项即可。如果包 `b` 依赖 `a`，`bun install` 会将本地的 `packages/a` 目录安装到 `node_modules`，而不是从 npm 注册表下载。
+- **依赖可以去重。** 如果 `a` 和 `b` 有共同依赖，则会将其 _提升_ 到根目录的 `node_modules`，减少重复磁盘占用，并最小化因同时安装多个版本依赖引发的“依赖地狱”问题。
+- **可在多个包中运行脚本。** 你可以使用 [`--filter` 参数](/pm/filter) 在多个工作区中轻松运行 `package.json` 脚本，或用 `--workspaces` 在所有工作区间运行脚本。
 
-## Share versions with Catalogs
+## 使用 Catalogs 共享版本
 
-When many packages need the same dependency versions, catalogs let you define
-those versions once in the root `package.json` and reference them from your
-workspaces using the `catalog:` protocol. Updating the catalog automatically
-updates every package that references it. See
-[Catalogs](/pm/catalogs) for details.
+当多个包需要相同依赖版本时，Catalogs 允许你在根目录的 `package.json` 中一次性定义这些版本，并使用 `catalog:` 协议在工作区中引用。更新 Catalog 会自动更新所有引用它的包。详情请见 [Catalogs](/pm/catalogs)。
 
 <Note>
-⚡️ **Speed** — Installs are fast, even for big monorepos. Bun installs the [Remix](https://github.com/remix-run/remix) monorepo in about `500ms` on Linux.
+⚡️ **速度** — 即使是大型 monorepo，安装速度依然非常快。Bun 在 Linux 下安装 [Remix](https://github.com/remix-run/remix) monorepo 约需 `500ms`。
 
-- 28x faster than `npm install`
-- 12x faster than `yarn install` (v1)
-- 8x faster than `pnpm install`
+- 比 `npm install` 快 28 倍
+- 比 `yarn install` (v1) 快 12 倍
+- 比 `pnpm install` 快 8 倍
 
 <Image src="https://user-images.githubusercontent.com/709451/212829600-77df9544-7c9f-4d8d-a984-b2cd0fd2aa52.png" />
 </Note>

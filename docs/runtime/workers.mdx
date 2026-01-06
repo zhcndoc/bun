@@ -1,22 +1,21 @@
 ---
-title: Workers
-description: Use Bun's Workers API to create and communicate with a new JavaScript instance running on a separate thread while sharing I/O resources with the main thread
+title: Workers（工作线程）
+description: 使用 Bun 的 Workers API 创建并与一个在独立线程上运行、但与主线程共享 I/O 资源的新 JavaScript 实例进行通信
 ---
 
 <Warning>
-  The `Worker` API is still experimental (particularly for terminating workers). We are actively working on improving
-  this.
+  `Worker` API 仍处于实验阶段（尤其是终止 workers 功能）。我们正在积极改进这一点。
 </Warning>
 
-[`Worker`](https://developer.mozilla.org/en-US/docs/Web/API/Worker) lets you start and communicate with a new JavaScript instance running on a separate thread while sharing I/O resources with the main thread.
+[`Worker`](https://developer.mozilla.org/en-US/docs/Web/API/Worker) 允许你启动并与一个运行在独立线程上的新的 JavaScript 实例通信，同时与主线程共享 I/O 资源。
 
-Bun implements a minimal version of the [Web Workers API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API) with extensions that make it work better for server-side use cases. Like the rest of Bun, `Worker` in Bun support CommonJS, ES Modules, TypeScript, JSX, TSX and more out of the box. No extra build steps are necessary.
+Bun 实现了 [Web Workers API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API) 的一个简化版本，同时添加了扩展，使其更适合服务器端的使用场景。与 Bun 的其他部分一样，Bun 中的 `Worker` 原生支持 CommonJS、ES 模块、TypeScript、JSX、TSX 等，无需额外构建步骤。
 
-## Creating a `Worker`
+## 创建一个 `Worker`
 
-Like in browsers, [`Worker`](https://developer.mozilla.org/en-US/docs/Web/API/Worker) is a global. Use it to create a new worker thread.
+与浏览器中一样，[`Worker`](https://developer.mozilla.org/en-US/docs/Web/API/Worker) 是全局对象。使用它可以创建一个新的工作线程。
 
-### From the main thread
+### 在主线程中
 
 ```ts index.ts icon="/icons/typescript.svg"
 const worker = new Worker("./worker.ts");
@@ -27,10 +26,10 @@ worker.onmessage = event => {
 };
 ```
 
-### Worker thread
+### 工作线程
 
 ```ts worker.ts icon="file-code"
-// prevents TS errors
+// 防止 TypeScript 报错
 declare var self: Worker;
 
 self.onmessage = (event: MessageEvent) => {
@@ -39,26 +38,26 @@ self.onmessage = (event: MessageEvent) => {
 };
 ```
 
-To prevent TypeScript errors when using `self`, add this line to the top of your worker file.
+为防止在使用 `self` 时出现 TypeScript 报错，请在工作线程文件顶部添加以下声明：
 
 ```ts
 declare var self: Worker;
 ```
 
-You can use `import` and `export` syntax in your worker code. Unlike in browsers, there's no need to specify `{type: "module"}` to use ES Modules.
+你可以在工作线程代码中使用 `import` 和 `export` 语法。与浏览器不同的是，不需要指定 `{type: "module"}` 来使用 ES 模块。
 
-To simplify error handling, the initial script to load is resolved at the time `new Worker(url)` is called.
+为了简化错误处理，初始脚本会在调用 `new Worker(url)` 时立即解析。
 
 ```js
 const worker = new Worker("/not-found.js");
-// throws an error immediately
+// 会立即抛出错误
 ```
 
-The specifier passed to `Worker` is resolved relative to the project root (like typing `bun ./path/to/file.js`).
+传递给 `Worker` 的路径会相对于项目根目录解析（类似于在命令行运行 `bun ./path/to/file.js`）。
 
-### `preload` - load modules before the worker starts
+### `preload` - 在 worker 启动前加载模块
 
-You can pass an array of module specifiers to the `preload` option to load modules before the worker starts. This is useful when you want to ensure some code is always loaded before the application starts, like loading OpenTelemetry, Sentry, DataDog, etc.
+你可以通过 `preload` 选项传递一个模块路径数组，以便在 worker 启动前加载这些模块。这在你想确保某些代码（如加载 OpenTelemetry、Sentry、DataDog 等）总是在应用启动前加载时非常有用。
 
 ```ts index.ts icon="/icons/typescript.svg"
 const worker = new Worker("./worker.ts", {
@@ -66,9 +65,9 @@ const worker = new Worker("./worker.ts", {
 });
 ```
 
-Like the `--preload` CLI argument, the `preload` option is processed before the worker starts.
+和 `--preload` CLI 参数一样，`preload` 选项会在 worker 启动前处理。
 
-You can also pass a single string to the `preload` option:
+你也可以向 `preload` 选项传入单个字符串：
 
 ```ts index.ts icon="/icons/typescript.svg"
 const worker = new Worker("./worker.ts", {
@@ -76,9 +75,9 @@ const worker = new Worker("./worker.ts", {
 });
 ```
 
-### `blob:` URLs
+### `blob:` URL
 
-You can also pass a `blob:` URL to `Worker`. This is useful for creating workers from strings or other sources.
+你也可以向 `Worker` 传入 `blob:` URL。这对于从字符串或其他来源创建 worker 很有用。
 
 ```js
 const blob = new Blob([`self.onmessage = (event: MessageEvent) => postMessage(event.data)`], {
@@ -88,7 +87,7 @@ const url = URL.createObjectURL(blob);
 const worker = new Worker(url);
 ```
 
-Like the rest of Bun, workers created from `blob:` URLs support TypeScript, JSX, and other file types out of the box. You can communicate it should be loaded via typescript either via `type` or by passing a `filename` to the `File` constructor.
+和 Bun 的其他部分一样，从 `blob:` URL 创建的 workers 也默认支持 TypeScript、JSX 等文件类型。你可以通过设置 `type` 或在 `File` 构造函数里传入文件名来告诉它使用 TypeScript。
 
 ```ts
 const file = new File([`self.onmessage = (event: MessageEvent) => postMessage(event.data)`], "worker.ts");
@@ -96,62 +95,62 @@ const url = URL.createObjectURL(file);
 const worker = new Worker(url);
 ```
 
-### `"open"`
+### `"open"` 事件
 
-The `"open"` event is emitted when a worker is created and ready to receive messages. This can be used to send an initial message to a worker once it's ready. (This event does not exist in browsers.)
+当 worker 创建完成并准备好接收消息时，会发出 `"open"` 事件。你可以使用该事件向 worker 发送初始消息。（此事件在浏览器中不存在）
 
 ```ts index.ts icon="/icons/typescript.svg"
 const worker = new Worker(new URL("worker.ts", import.meta.url).href);
 
 worker.addEventListener("open", () => {
-  console.log("worker is ready");
+  console.log("worker 已准备好");
 });
 ```
 
-Messages are automatically enqueued until the worker is ready, so there is no need to wait for the `"open"` event to send messages.
+消息会自动排队等待发送，直到 worker 准备就绪，因此你无需等待 `"open"` 事件即可发送消息。
 
-## Messages with `postMessage`
+## 使用 `postMessage` 发送消息
 
-To send messages, use [`worker.postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Worker/postMessage) and [`self.postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage). This leverages the [HTML Structured Clone Algorithm](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm).
+要发送消息，使用 [`worker.postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Worker/postMessage) 和 [`self.postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage)。这利用了 [HTML 结构化克隆算法](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm)。
 
-### Performance optimizations
+### 性能优化
 
-Bun includes optimized fast paths for `postMessage` to dramatically improve performance for common data types:
+Bun 为 `postMessage` 包含了优化的快速路径，以显著提升常用数据类型的性能：
 
-**String fast path** - When posting pure string values, Bun bypasses the structured clone algorithm entirely, achieving significant performance gains with no serialization overhead.
+**字符串快速路径** - 当只发送纯字符串时，Bun 直接绕过结构化克隆算法，显著减少序列化开销。
 
-**Simple object fast path** - For plain objects containing only primitive values (strings, numbers, booleans, null, undefined), Bun uses an optimized serialization path that stores properties directly without full structured cloning.
+**简单对象快速路径** - 对于仅包含原始值（字符串、数字、布尔值、null 和 undefined）的普通对象，Bun 使用优化的序列化路径，直接存储属性，无需完整的结构化克隆。
 
-The simple object fast path activates when the object:
+简单对象快速路径适用条件：
 
-- Is a plain object with no prototype chain modifications
-- Contains only enumerable, configurable data properties
-- Has no indexed properties or getter/setter methods
-- All property values are primitives or strings
+- 是普通对象且没有修改原型链
+- 只包含可枚举、可配置的数据属性
+- 没有索引属性或 getter/setter 方法
+- 所有属性值都是原始类型或字符串
 
-With these fast paths, Bun's `postMessage` performs **2-241x faster** because the message length no longer has a meaningful impact on performance.
+有了这些快速路径，Bun 的 `postMessage` 性能可提升 **2 到 241 倍**，消息长度不再显著影响性能。
 
-**Bun (with fast paths):**
+**Bun（含快速路径）：**
 
 ```ts
-postMessage({ prop: 11 chars string, ...9 more props }) - 648ns
-postMessage({ prop: 14 KB string, ...9 more props })    - 719ns
-postMessage({ prop: 3 MB string, ...9 more props })     - 1.26µs
+postMessage({ prop: 11 字符串, ...9 个其他属性 }) - 648 纳秒
+postMessage({ prop: 14 KB 字符串, ...9 个其他属性 }) - 719 纳秒
+postMessage({ prop: 3 MB 字符串, ...9 个其他属性 }) - 1.26 微秒
 ```
 
-**Node.js v24.6.0 (for comparison):**
+**Node.js v24.6.0（对比）：**
 
 ```js
-postMessage({ prop: 11 chars string, ...9 more props }) - 1.19µs
-postMessage({ prop: 14 KB string, ...9 more props })    - 2.69µs
-postMessage({ prop: 3 MB string, ...9 more props })     - 304µs
+postMessage({ prop: 11 字符串, ...9 个其他属性 }) - 1.19 微秒
+postMessage({ prop: 14 KB 字符串, ...9 个其他属性 }) - 2.69 微秒
+postMessage({ prop: 3 MB 字符串, ...9 个其他属性 }) - 304 微秒
 ```
 
 ```js
-// String fast path - optimized
+// 字符串快速路径 - 优化处理
 postMessage("Hello, worker!");
 
-// Simple object fast path - optimized
+// 简单对象快速路径 - 优化处理
 postMessage({
   message: "Hello",
   count: 42,
@@ -159,7 +158,7 @@ postMessage({
   data: null,
 });
 
-// Complex objects still work but use standard structured clone
+// 复杂对象仍然可用，但会使用标准结构化克隆
 postMessage({
   nested: { deep: { object: true } },
   date: new Date(),
@@ -168,89 +167,89 @@ postMessage({
 ```
 
 ```js
-// On the worker thread, `postMessage` is automatically "routed" to the parent thread.
+// 在工作线程中，`postMessage` 自动“路由”至父线程。
 postMessage({ hello: "world" });
 
-// On the main thread
+// 在主线程中
 worker.postMessage({ hello: "world" });
 ```
 
-To receive messages, use the [`message` event handler](https://developer.mozilla.org/en-US/docs/Web/API/Worker/message_event) on the worker and main thread.
+接收消息可使用 worker 或主线程的 [`message` 事件处理器](https://developer.mozilla.org/en-US/docs/Web/API/Worker/message_event)：
 
 ```js
-// Worker thread:
+// 工作线程：
 self.addEventListener("message", event => {
   console.log(event.data);
 });
-// or use the setter:
+// 或者使用简写：
 // self.onmessage = fn
 
-// if on the main thread
+// 如果在主线程：
 worker.addEventListener("message", event => {
   console.log(event.data);
 });
-// or use the setter:
+// 或者使用简写：
 // worker.onmessage = fn
 ```
 
-## Terminating a worker
+## 终止工作线程
 
-A `Worker` instance terminates automatically once it's event loop has no work left to do. Attaching a `"message"` listener on the global or any `MessagePort`s will keep the event loop alive. To forcefully terminate a `Worker`, call `worker.terminate()`.
+当 `Worker` 实例的事件循环没有待处理任务时，它会自动终止。在全局范围或任何 `MessagePort` 上附加 `"message"` 监听器会保持事件循环活动。要强制终止 `Worker`，调用 `worker.terminate()`。
 
 ```ts index.ts icon="/icons/typescript.svg"
 const worker = new Worker(new URL("worker.ts", import.meta.url).href);
 
-// ...some time later
+// ...一段时间后
 worker.terminate();
 ```
 
-This will cause the worker's to exit as soon as possible.
+这会让 worker 尽快退出。
 
 ### `process.exit()`
 
-A worker can terminate itself with `process.exit()`. This does not terminate the main process. Like in Node.js, `process.on('beforeExit', callback)` and `process.on('exit', callback)` are emitted on the worker thread (and not on the main thread), and the exit code is passed to the `"close"` event.
+工作线程可以调用 `process.exit()` 自行终止，但这不会终止主进程。与 Node.js 相同，`process.on('beforeExit', callback)` 和 `process.on('exit', callback)` 会在工作线程中触发（不会在主线程触发），退出代码会通过 `"close"` 事件传递。
 
-### `"close"`
+### `"close"` 事件
 
-The `"close"` event is emitted when a worker has been terminated. It can take some time for the worker to actually terminate, so this event is emitted when the worker has been marked as terminated. The `CloseEvent` will contain the exit code passed to `process.exit()`, or 0 if closed for other reasons.
+当 worker 被终止时，会发出 `"close"` 事件。worker 实际终止可能需要时间，因此当 worker 被标记为已终止时会触发该事件。`CloseEvent` 包含传递给 `process.exit()` 的退出代码，如果因其他原因关闭则为 0。
 
 ```ts index.ts icon="/icons/typescript.svg"
 const worker = new Worker(new URL("worker.ts", import.meta.url).href);
 
 worker.addEventListener("close", event => {
-  console.log("worker is being closed");
+  console.log("worker 正在关闭");
 });
 ```
 
-This event does not exist in browsers.
+此事件在浏览器中不存在。
 
-## Managing lifetime
+## 生命周期管理
 
-By default, an active `Worker` will keep the main (spawning) process alive, so async tasks like `setTimeout` and promises will keep the process alive. Attaching `message` listeners will also keep the `Worker` alive.
+默认情况下，活跃的 `Worker` 会保持主进程运行，因此异步任务如 `setTimeout` 和 Promise 会让进程持续运行。附加 `message` 监听器也会保持 worker 活跃。
 
 ### `worker.unref()`
 
-To stop a running worker from keeping the process alive, call `worker.unref()`. This decouples the lifetime of the worker to the lifetime of the main process, and is equivalent to what Node.js' `worker_threads` does.
+调用 `worker.unref()` 可使 worker 不再阻止进程退出。这会将 worker 的生命周期与主进程解耦，相当于 Node.js 的 `worker_threads` 行为。
 
 ```ts index.ts icon="/icons/typescript.svg"
 const worker = new Worker(new URL("worker.ts", import.meta.url).href);
 worker.unref();
 ```
 
-Note: `worker.unref()` is not available in browsers.
+注意：`worker.unref()` 在浏览器中不可用。
 
 ### `worker.ref()`
 
-To keep the process alive until the `Worker` terminates, call `worker.ref()`. A ref'd worker is the default behavior, and still needs something going on in the event loop (such as a `"message"` listener) for the worker to continue running.
+调用 `worker.ref()` 可以保持进程运行直到 `Worker` 终止。带引用的 worker 是默认行为，仍需要事件循环中有活动（如 `"message"` 监听器）来保持运行。
 
 ```ts index.ts icon="/icons/typescript.svg"
 const worker = new Worker(new URL("worker.ts", import.meta.url).href);
 worker.unref();
-// later...
+// 以后...
 worker.ref();
 ```
 
-Alternatively, you can also pass an `options` object to `Worker`:
+你也可以通过向 `Worker` 传入 `options` 对象来设置：
 
 ```ts index.ts icon="/icons/typescript.svg"
 const worker = new Worker(new URL("worker.ts", import.meta.url).href, {
@@ -258,11 +257,11 @@ const worker = new Worker(new URL("worker.ts", import.meta.url).href, {
 });
 ```
 
-Note: `worker.ref()` is not available in browsers.
+注意：`worker.ref()` 在浏览器中不可用。
 
-## Memory usage with `smol`
+## 使用 `smol` 模式降低内存使用
 
-JavaScript instances can use a lot of memory. Bun's `Worker` supports a `smol` mode that reduces memory usage, at a cost of performance. To enable `smol` mode, pass `smol: true` to the `options` object in the `Worker` constructor.
+JavaScript 实例可能消耗大量内存。Bun 的 `Worker` 支持 `smol` 模式，可通过牺牲性能来降低内存占用。要启用 `smol` 模式，向 `Worker` 构造函数的 `options` 对象传入 `smol: true`。
 
 ```ts index.ts icon="/icons/typescript.svg"
 const worker = new Worker("./i-am-smol.ts", {
@@ -270,45 +269,45 @@ const worker = new Worker("./i-am-smol.ts", {
 });
 ```
 
-<Accordion title="What does `smol` mode actually do?">
-  Setting `smol: true` sets `JSC::HeapSize` to be `Small` instead of the default `Large`.
+<Accordion title="`smol` 模式究竟做了什么？">
+  设置 `smol: true` 会将 `JSC::HeapSize` 设置为 `Small`，而非默认的 `Large`。
 </Accordion>
 
-## Environment Data
+## 环境数据共享
 
-Share data between the main thread and workers using `setEnvironmentData()` and `getEnvironmentData()`.
+使用 `setEnvironmentData()` 和 `getEnvironmentData()` 在主线程和工作线程间共享数据。
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 import { setEnvironmentData, getEnvironmentData } from "worker_threads";
 
-// In main thread
+// 在主线程
 setEnvironmentData("config", { apiUrl: "https://api.example.com" });
 
-// In worker
+// 在工作线程
 const config = getEnvironmentData("config");
 console.log(config); // => { apiUrl: "https://api.example.com" }
 ```
 
-## Worker Events
+## Worker 事件
 
-Listen for worker creation events using `process.emit()`:
+使用 `process.emit()` 监听 worker 创建事件：
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 process.on("worker", worker => {
-  console.log("New worker created:", worker.threadId);
+  console.log("新 worker 已创建:", worker.threadId);
 });
 ```
 
 ## `Bun.isMainThread`
 
-You can check if you're in the main thread by checking `Bun.isMainThread`.
+你可以通过检测 `Bun.isMainThread` 来判断代码是否运行在主线程。
 
 ```ts
 if (Bun.isMainThread) {
-  console.log("I'm the main thread");
+  console.log("我是主线程");
 } else {
-  console.log("I'm in a worker");
+  console.log("我在 worker 中");
 }
 ```
 
-This is useful for conditionally running code based on whether you're in the main thread or not.
+这对于基于当前线程类型有条件地运行代码非常有用。

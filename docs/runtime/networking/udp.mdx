@@ -1,18 +1,18 @@
 ---
 title: UDP
-description: Use Bun's UDP API to implement services with advanced real-time requirements, such as voice chat.
+description: 使用 Bun 的 UDP API 实现具有高级实时需求的服务，例如语音聊天。
 ---
 
-## Bind a UDP socket (`Bun.udpSocket()`)
+## 绑定一个 UDP 套接字 (`Bun.udpSocket()`)
 
-To create a new (bound) UDP socket:
+要创建一个新的（绑定的）UDP 套接字：
 
 ```ts
 const socket = await Bun.udpSocket({});
-console.log(socket.port); // assigned by the operating system
+console.log(socket.port); // 由操作系统分配
 ```
 
-Specify a port:
+指定端口：
 
 ```ts
 const socket = await Bun.udpSocket({
@@ -22,26 +22,25 @@ const socket = await Bun.udpSocket({
 console.log(socket.port); // 41234
 ```
 
-### Send a datagram
+### 发送数据报
 
-Specify the data to send, as well as the destination port and address.
+指定要发送的数据，以及目标端口和地址。
 
 ```ts
 socket.send("Hello, world!", 41234, "127.0.0.1");
 ```
 
-Note that the address must be a valid IP address - `send` does not perform
-DNS resolution, as it is intended for low-latency operations.
+注意，地址必须是有效的 IP 地址 —— `send` 不执行 DNS 解析，因为它旨在用于低延迟操作。
 
-### Receive datagrams
+### 接收数据报
 
-When creating your socket, add a callback to specify what should be done when packets are received:
+创建套接字时，添加回调以指定接收数据包时应执行的操作：
 
 ```ts server.ts icon="/icons/typescript.svg"
 const server = await Bun.udpSocket({
   socket: {
     data(socket, buf, port, addr) {
-      console.log(`message from ${addr}:${port}:`);
+      console.log(`来自 ${addr}:${port} 的消息:`);
       console.log(buf.toString());
     },
   },
@@ -51,17 +50,17 @@ const client = await Bun.udpSocket({});
 client.send("Hello!", server.port, "127.0.0.1");
 ```
 
-### Connections
+### 连接
 
-While UDP does not have a concept of a connection, many UDP communications (especially as a client) involve only one peer.
-In such cases it can be beneficial to connect the socket to that peer, which specifies to which address all packets are sent
-and restricts incoming packets to that peer only.
+虽然 UDP 没有连接的概念，但许多 UDP 通信（尤其是作为客户端时）只涉及一个对等方。
+在这种情况下，将套接字“连接”到该对等方可能会带来好处，这指定了所有数据包发送的地址，
+并限制只接收来自该对等方的数据包。
 
 ```ts server.ts icon="/icons/typescript.svg"
 const server = await Bun.udpSocket({
   socket: {
     data(socket, buf, port, addr) {
-      console.log(`message from ${addr}:${port}:`);
+      console.log(`来自 ${addr}:${port} 的消息:`);
       console.log(buf.toString());
     },
   },
@@ -77,24 +76,24 @@ const client = await Bun.udpSocket({
 client.send("Hello");
 ```
 
-Because connections are implemented on the operating system level, you can potentially observe performance benefits, too.
+由于连接是在操作系统层面实现的，你也可能观察到性能上的提升。
 
-### Send many packets at once using `sendMany()`
+### 使用 `sendMany()` 一次发送多个数据包
 
-If you want to send a large volume of packets at once, it can make sense to batch them all together to avoid the overhead
-of making a system call for each. This is made possible by the `sendMany()` API:
+如果你想一次发送大量数据包，合并发送可以避免为每个包调用系统调用的开销。
+这可以通过 `sendMany()` API 实现：
 
-For an unconnected socket, `sendMany` takes an array as its only argument. Each set of three array elements describes a packet:
-The first item is the data to be sent, the second is the target port, and the last is the target address.
+对于未连接套接字，`sendMany` 接受一个数组作为唯一参数。每三项描述一个数据包：
+第一项是要发送的数据，第二项是目标端口，第三项是目标地址。
 
 ```ts server.ts icon="/icons/typescript.svg"
 const socket = await Bun.udpSocket({});
 
-// sends 'Hello' to 127.0.0.1:41234, and 'foo' to 1.1.1.1:53 in a single operation
+// 一次操作中发送 'Hello' 到 127.0.0.1:41234，以及 'foo' 到 1.1.1.1:53
 socket.sendMany(["Hello", 41234, "127.0.0.1", "foo", 53, "1.1.1.1"]);
 ```
 
-With a connected socket, `sendMany` simply takes an array, where each element represents the data to be sent to the peer.
+对于已连接套接字，`sendMany` 仅接受一个数组，每个元素表示要发送给对等方的数据。
 
 ```ts server.ts icon="/icons/typescript.svg"
 const socket = await Bun.udpSocket({
@@ -107,22 +106,22 @@ const socket = await Bun.udpSocket({
 socket.sendMany(["foo", "bar", "baz"]);
 ```
 
-`sendMany` returns the number of packets that were successfully sent. As with `send`, `sendMany` only takes valid IP addresses
-as destinations, as it does not perform DNS resolution.
+`sendMany` 返回成功发送的数据包数。与 `send` 一样，`sendMany` 只接受有效的 IP 地址作为目标，
+因为它不执行 DNS 解析。
 
-### Handle backpressure
+### 处理背压
 
-It may happen that a packet that you're sending does not fit into the operating system's packet buffer. You can detect that this
-has happened when:
+可能会发生你发送的数据包无法放入操作系统的数据包缓冲区。当出现以下情况时，你可以检测到这种情况：
 
-- `send` returns `false`
-- `sendMany` returns a number smaller than the number of packets you specified. In this case, the `drain` socket handler will be called once the socket becomes writable again:
+- `send` 返回 `false`
+- `sendMany` 返回的数字小于你指定的数据包数量。在这种情况下，一旦套接字变得可写，
+  `drain` 套接字处理程序会被调用：
 
 ```ts
 const socket = await Bun.udpSocket({
   socket: {
     drain(socket) {
-      // continue sending data
+      // 继续发送数据
     },
   },
 });

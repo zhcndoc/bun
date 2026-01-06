@@ -1,23 +1,23 @@
 ---
-title: "bun audit"
-description: "Check your installed packages for known security vulnerabilities"
+title: "bun 审计"
+description: "检查已安装的包是否存在已知的安全漏洞"
 ---
 
-Run the command in a project with a `bun.lock` file:
+在包含 `bun.lock` 文件的项目中运行命令：
 
 ```bash terminal icon="terminal"
 bun audit
 ```
 
-Bun sends the list of installed packages and versions to NPM, and prints a report of any vulnerabilities that were found. Packages installed from registries other than the default registry are skipped.
+Bun 会将已安装包及其版本列表发送到 NPM，并打印发现的任何漏洞报告。从默认注册表以外的注册表安装的包将被跳过。
 
-If no vulnerabilities are found, the command prints:
+如果未发现漏洞，命令会打印：
 
 ```
 No vulnerabilities found
 ```
 
-When vulnerabilities are detected, each affected package is listed along with the severity, a short description and a link to the advisory. At the end of the report Bun prints a summary and hints for updating:
+当检测到漏洞时，每个受影响的包会列出其严重程度、简要描述及安全通告链接。在报告结尾，Bun 会打印总结和更新提示：
 
 ```
 3 vulnerabilities (1 high, 2 moderate)
@@ -27,21 +27,21 @@ To update all dependencies to the latest versions (including breaking changes):
   bun update --latest
 ```
 
-### Filtering options
+### 过滤选项
 
-**`--audit-level=<low|moderate|high|critical>`** - Only show vulnerabilities at this severity level or higher:
+**`--audit-level=<low|moderate|high|critical>`** - 只显示该严重等级及以上的漏洞：
 
 ```bash terminal icon="terminal"
 bun audit --audit-level=high
 ```
 
-**`--prod`** - Audit only production dependencies (excludes devDependencies):
+**`--prod`** - 只审计生产依赖（排除 devDependencies）：
 
 ```bash terminal icon="terminal"
 bun audit --prod
 ```
 
-**`--ignore <CVE>`** - Ignore specific CVEs (can be used multiple times):
+**`--ignore <CVE>`** - 忽略指定的 CVE（可多次使用）：
 
 ```bash terminal icon="terminal"
 bun audit --ignore CVE-2022-25883 --ignore CVE-2023-26136
@@ -49,12 +49,12 @@ bun audit --ignore CVE-2022-25883 --ignore CVE-2023-26136
 
 ### `--json`
 
-Use the `--json` flag to print the raw JSON response from the registry instead of the formatted report:
+使用 `--json` 参数打印来自注册表的原始 JSON 响应，而非格式化报告：
 
 ```bash terminal icon="terminal"
 bun audit --json
 ```
 
-### Exit code
+### 退出码
 
-`bun audit` will exit with code `0` if no vulnerabilities are found and `1` if the report lists any vulnerabilities. This will still happen even if `--json` is passed.
+如果未发现漏洞，`bun audit` 会以代码 `0` 退出；如果报告中存在任何漏洞，则以代码 `1` 退出。即使使用了 `--json` 参数，此行为依然有效。

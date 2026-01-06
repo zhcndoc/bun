@@ -1,31 +1,31 @@
 ---
 title: Fetch
-description: Send HTTP requests with Bun's fetch API
+description: 使用 Bun 的 fetch API 发送 HTTP 请求
 ---
 
-Bun implements the WHATWG `fetch` standard, with some extensions to meet the needs of server-side JavaScript.
+Bun 实现了 WHATWG 的 `fetch` 标准，同时进行了扩展以满足服务端 JavaScript 的需求。
 
-Bun also implements `node:http`, but `fetch` is generally recommended instead.
+Bun 也实现了 `node:http`，但通常推荐使用 `fetch`。
 
-## Sending an HTTP request
+## 发送 HTTP 请求
 
-To send an HTTP request, use `fetch`
+要发送 HTTP 请求，使用 `fetch`
 
 ```ts
 const response = await fetch("http://example.com");
 
 console.log(response.status); // => 200
 
-const text = await response.text(); // or response.json(), response.formData(), etc.
+const text = await response.text(); // 或者 response.json(), response.formData() 等等
 ```
 
-`fetch` also works with HTTPS URLs.
+`fetch` 也支持 HTTPS URL。
 
 ```ts
 const response = await fetch("https://example.com");
 ```
 
-You can also pass `fetch` a [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object.
+你也可以传递一个 [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) 对象给 `fetch`。
 
 ```ts
 const request = new Request("http://example.com", {
@@ -36,9 +36,9 @@ const request = new Request("http://example.com", {
 const response = await fetch(request);
 ```
 
-### Sending a POST request
+### 发送 POST 请求
 
-To send a POST request, pass an object with the `method` property set to `"POST"`.
+要发送 POST 请求，传入一个 `method` 属性值为 `"POST"` 的对象。
 
 ```ts
 const response = await fetch("http://example.com", {
@@ -47,11 +47,11 @@ const response = await fetch("http://example.com", {
 });
 ```
 
-`body` can be a string, a `FormData` object, an `ArrayBuffer`, a `Blob`, and more. See the [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#setting_a_body) for more information.
+`body` 可以是字符串、`FormData` 对象、`ArrayBuffer`、`Blob` 等更多类型。更多信息请参考 [MDN 文档](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#setting_a_body)。
 
-### Proxying requests
+### 代理请求
 
-To proxy a request, pass an object with the `proxy` property set to a URL string:
+要代理请求，传入一个带有 `proxy` 属性的 URL 字符串：
 
 ```ts
 const response = await fetch("http://example.com", {
@@ -59,7 +59,7 @@ const response = await fetch("http://example.com", {
 });
 ```
 
-You can also use an object format to send custom headers to the proxy server:
+你也可以用对象格式发送自定义的代理请求头：
 
 ```ts
 const response = await fetch("http://example.com", {
@@ -73,11 +73,11 @@ const response = await fetch("http://example.com", {
 });
 ```
 
-The `headers` are sent directly to the proxy in `CONNECT` requests (for HTTPS targets) or in the proxy request (for HTTP targets). If you provide a `Proxy-Authorization` header, it overrides any credentials in the proxy URL.
+这些 `headers` 会直接在 `CONNECT` 请求（针对 HTTPS 目标）或代理请求（针对 HTTP 目标）中发送给代理。如果你提供了 `Proxy-Authorization` 头，它会覆盖代理 URL 中的任何凭据。
 
-### Custom headers
+### 自定义请求头
 
-To set custom headers, pass an object with the `headers` property set to an object.
+要设置自定义请求头，传入一个带有 `headers` 属性的对象。
 
 ```ts
 const response = await fetch("http://example.com", {
@@ -87,7 +87,7 @@ const response = await fetch("http://example.com", {
 });
 ```
 
-You can also set headers using the [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) object.
+你也可以使用 [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) 对象设置请求头。
 
 ```ts
 const headers = new Headers();
@@ -98,20 +98,20 @@ const response = await fetch("http://example.com", {
 });
 ```
 
-### Response bodies
+### 响应体
 
-To read the response body, use one of the following methods:
+要读取响应体，使用以下方法之一：
 
-- `response.text(): Promise<string>`: Returns a promise that resolves with the response body as a string.
-- `response.json(): Promise<any>`: Returns a promise that resolves with the response body as a JSON object.
-- `response.formData(): Promise<FormData>`: Returns a promise that resolves with the response body as a `FormData` object.
-- `response.bytes(): Promise<Uint8Array>`: Returns a promise that resolves with the response body as a `Uint8Array`.
-- `response.arrayBuffer(): Promise<ArrayBuffer>`: Returns a promise that resolves with the response body as an `ArrayBuffer`.
-- `response.blob(): Promise<Blob>`: Returns a promise that resolves with the response body as a `Blob`.
+- `response.text(): Promise<string>`：返回包含响应体文本的 Promise。
+- `response.json(): Promise<any>`：返回包含响应体 JSON 对象的 Promise。
+- `response.formData(): Promise<FormData>`：返回包含响应体 FormData 对象的 Promise。
+- `response.bytes(): Promise<Uint8Array>`：返回包含响应体 `Uint8Array` 的 Promise。
+- `response.arrayBuffer(): Promise<ArrayBuffer>`：返回包含响应体 `ArrayBuffer` 的 Promise。
+- `response.blob(): Promise<Blob>`：返回包含响应体 `Blob` 的 Promise。
 
-#### Streaming response bodies
+#### 流式响应体
 
-You can use async iterators to stream the response body.
+你可以使用异步迭代器来流式读取响应体。
 
 ```ts
 const response = await fetch("http://example.com");
@@ -121,7 +121,7 @@ for await (const chunk of response.body) {
 }
 ```
 
-You can also more directly access the `ReadableStream` object.
+你也可以直接访问 `ReadableStream` 对象。
 
 ```ts
 const response = await fetch("http://example.com");
@@ -132,9 +132,9 @@ const reader = stream.getReader();
 const { value, done } = await reader.read();
 ```
 
-### Streaming request bodies
+### 流式请求体
 
-You can also stream data in request bodies using a `ReadableStream`:
+你也可以使用 `ReadableStream` 来流式传输请求体数据：
 
 ```ts
 const stream = new ReadableStream({
@@ -152,21 +152,21 @@ const response = await fetch("http://example.com", {
 });
 ```
 
-When using streams with HTTP(S):
+使用 HTTP(S) 协议时的流式传输要点：
 
-- The data is streamed directly to the network without buffering the entire body in memory
-- If the connection is lost, the stream will be canceled
-- The `Content-Length` header is not automatically set unless the stream has a known size
+- 数据直接流式传输到网络，而不需要将整个请求体缓存在内存中
+- 如果连接丢失，流会被取消
+- 除非流大小已知，否则不会自动设置 `Content-Length` 头
 
-When using streams with S3:
+使用 S3 时：
 
-- For PUT/POST requests, Bun automatically uses multipart upload
-- The stream is consumed in chunks and uploaded in parallel
-- Progress can be monitored through the S3 options
+- 对于 PUT/POST 请求，Bun 会自动使用分块上传
+- 流以块的形式消费，并行上传
+- 可以通过 S3 选项监控上传进度
 
-### Fetching a URL with a timeout
+### 带超时的 URL 请求
 
-To fetch a URL with a timeout, use `AbortSignal.timeout`:
+要带超时发送请求，使用 `AbortSignal.timeout`：
 
 ```ts
 const response = await fetch("http://example.com", {
@@ -174,9 +174,9 @@ const response = await fetch("http://example.com", {
 });
 ```
 
-#### Canceling a request
+#### 取消请求
 
-To cancel a request, use an `AbortController`:
+要取消请求，使用 `AbortController`：
 
 ```ts
 const controller = new AbortController();
@@ -188,9 +188,9 @@ const response = await fetch("http://example.com", {
 controller.abort();
 ```
 
-### Unix domain sockets
+### Unix 域套接字
 
-To fetch a URL using a Unix domain socket, use the `unix: string` option:
+要通过 Unix 域套接字请求 URL，使用 `unix: string` 选项：
 
 ```ts
 const response = await fetch("https://hostname/a/path", {
@@ -205,7 +205,7 @@ const response = await fetch("https://hostname/a/path", {
 
 ### TLS
 
-To use a client certificate, use the `tls` option:
+使用客户端证书时，使用 `tls` 选项：
 
 ```ts
 await fetch("https://example.com", {
@@ -217,25 +217,25 @@ await fetch("https://example.com", {
 });
 ```
 
-#### Custom TLS Validation
+#### 自定义 TLS 验证
 
-To customize the TLS validation, use the `checkServerIdentity` option in `tls`
+要定制 TLS 验证，使用 `tls` 的 `checkServerIdentity` 选项：
 
 ```ts
 await fetch("https://example.com", {
   tls: {
     checkServerIdentity: (hostname, peerCertificate) => {
-      // Return an Error if the certificate is invalid
+      // 如果证书无效，返回一个 Error
     },
   },
 });
 ```
 
-This is similar to how it works in Node's `net` module.
+这与 Node 中 `net` 模块的工作方式类似。
 
-#### Disable TLS validation
+#### 禁用 TLS 验证
 
-To disable TLS validation, set `rejectUnauthorized` to `false`:
+要禁用 TLS 验证，将 `rejectUnauthorized` 设为 `false`：
 
 ```ts
 await fetch("https://example.com", {
@@ -245,39 +245,39 @@ await fetch("https://example.com", {
 });
 ```
 
-This is especially useful to avoid SSL errors when using self-signed certificates, but this disables TLS validation and should be used with caution.
+这在使用自签名证书时避免 SSL 错误时尤其有用，但会关闭 TLS 验证，应谨慎使用。
 
-### Request options
+### 请求选项
 
-In addition to the standard fetch options, Bun provides several extensions:
+除了标准的 fetch 选项，Bun 还提供了几个扩展：
 
 ```ts
 const response = await fetch("http://example.com", {
-  // Control automatic response decompression (default: true)
-  // Supports gzip, deflate, brotli (br), and zstd
+  // 控制自动响应解压（默认为 true）
+  // 支持 gzip、deflate、brotli (br) 和 zstd
   decompress: true,
 
-  // Disable connection reuse for this request
+  // 禁用此请求的连接复用
   keepalive: false,
 
-  // Debug logging level
-  verbose: true, // or "curl" for more detailed output
+  // 调试日志等级
+  verbose: true, // 或 "curl" 以获得更详细的输出
 });
 ```
 
-### Protocol support
+### 协议支持
 
-Beyond HTTP(S), Bun's fetch supports several additional protocols:
+除了 HTTP(S) 之外，Bun 的 fetch 还支持多种其他协议：
 
-#### S3 URLs - `s3://`
+#### S3 URL - `s3://`
 
-Bun supports fetching from S3 buckets directly.
+Bun 支持直接从 S3 桶读取。
 
 ```ts
-// Using environment variables for credentials
+// 使用环境变量提供凭据
 const response = await fetch("s3://my-bucket/path/to/object");
 
-// Or passing credentials explicitly
+// 或者显式提供凭据
 const response = await fetch("s3://my-bucket/path/to/object", {
   s3: {
     accessKeyId: "YOUR_ACCESS_KEY",
@@ -287,39 +287,39 @@ const response = await fetch("s3://my-bucket/path/to/object", {
 });
 ```
 
-Note: Only PUT and POST methods support request bodies when using S3. For uploads, Bun automatically uses multipart upload for streaming bodies.
+注意：使用 S3 时，只有 PUT 和 POST 方法支持请求体。上传时，Bun 会自动为流式请求体使用分块上传。
 
-You can read more about Bun's S3 support in the [S3](/runtime/s3) documentation.
+更多关于 Bun 的 S3 支持请查看 [S3](/runtime/s3) 文档。
 
-#### File URLs - `file://`
+#### 本地文件 URL - `file://`
 
-You can fetch local files using the `file:` protocol:
+你可以用 `file:` 协议获取本地文件：
 
 ```ts
 const response = await fetch("file:///path/to/file.txt");
 const text = await response.text();
 ```
 
-On Windows, paths are automatically normalized:
+在 Windows 上，路径会自动规范化：
 
 ```ts
-// Both work on Windows
+// 以下两者都能在 Windows 上工作
 const response = await fetch("file:///C:/path/to/file.txt");
 const response2 = await fetch("file:///c:/path\\to/file.txt");
 ```
 
-#### Data URLs - `data:`
+#### Data URL - `data:`
 
-Bun supports the `data:` URL scheme:
+Bun 支持 `data:` URL 方案：
 
 ```ts
 const response = await fetch("data:text/plain;base64,SGVsbG8sIFdvcmxkIQ==");
 const text = await response.text(); // "Hello, World!"
 ```
 
-#### Blob URLs - `blob:`
+#### Blob URL - `blob:`
 
-You can fetch blobs using URLs created by `URL.createObjectURL()`:
+你可以使用 `URL.createObjectURL()` 创建的 URL 来获取 Blob：
 
 ```ts
 const blob = new Blob(["Hello, World!"], { type: "text/plain" });
@@ -327,25 +327,25 @@ const url = URL.createObjectURL(blob);
 const response = await fetch(url);
 ```
 
-### Error handling
+### 错误处理
 
-Bun's fetch implementation includes several specific error cases:
+Bun 的 fetch 实现包含多个特定错误场景：
 
-- Using a request body with GET/HEAD methods will throw an error (which is expected for the fetch API)
-- Attempting to use both `proxy` and `unix` options together will throw an error
-- TLS certificate validation failures when `rejectUnauthorized` is true (or undefined)
-- S3 operations may throw specific errors related to authentication or permissions
+- 使用 GET/HEAD 方法时带请求体会抛出错误（这是 fetch API 的预期行为）
+- 同时使用 `proxy` 和 `unix` 选项会抛出错误
+- 当 `rejectUnauthorized` 为 true（或未定义）时，TLS 证书验证失败
+- S3 操作可能抛出与身份验证或权限相关的特定错误
 
-### Content-Type handling
+### Content-Type 处理
 
-Bun automatically sets the `Content-Type` header for request bodies when not explicitly provided:
+当未明确提供时，Bun 会自动为请求体设置 `Content-Type` 头：
 
-- For `Blob` objects, uses the blob's `type`
-- For `FormData`, sets appropriate multipart boundary
+- 对于 `Blob` 对象，使用 Blob 的 `type`
+- 对于 `FormData`，设置合适的 multipart 边界
 
-## Debugging
+## 调试
 
-To help with debugging, you can pass `verbose: true` to `fetch`:
+为了方便调试，你可以给 `fetch` 传入 `verbose: true`：
 
 ```ts
 const response = await fetch("http://example.com", {
@@ -353,7 +353,7 @@ const response = await fetch("http://example.com", {
 });
 ```
 
-This will print the request and response headers to your terminal:
+这将把请求和响应头打印到终端：
 
 ```sh
 [fetch] > HTTP/1.1 GET http://example.com/
@@ -378,21 +378,21 @@ This will print the request and response headers to your terminal:
 [fetch] < Content-Length: 648
 ```
 
-Note: `verbose: boolean` is not part of the Web standard `fetch` API and is specific to Bun.
+注意：`verbose: boolean` 不是 Web 标准 `fetch` API 的一部分，仅针对 Bun 特有。
 
-## Performance
+## 性能
 
-Before an HTTP request can be sent, the DNS lookup must be performed. This can take a significant amount of time, especially if the DNS server is slow or the network connection is poor.
+HTTP 请求发送前，必须完成 DNS 查找。这一步可能耗时较长，尤其当 DNS 服务器缓慢或网络差时。
 
-After the DNS lookup, the TCP socket must be connected and the TLS handshake might need to be performed. This can also take a significant amount of time.
+DNS 查找后，必须连接 TCP 套接字，且可能进行 TLS 握手。这也可能耗费显著时间。
 
-After the request completes, consuming the response body can also take a significant amount of time and memory.
+请求完成后，读取响应体也可能花费大量时间和内存。
 
-At every step of the way, Bun provides APIs to help you optimize the performance of your application.
+在各个阶段，Bun 提供了 API 以帮助你优化应用性能。
 
-### DNS prefetching
+### DNS 预读取
 
-To prefetch a DNS entry, you can use the `dns.prefetch` API. This API is useful when you know you'll need to connect to a host soon and want to avoid the initial DNS lookup.
+要预读取 DNS 条目，可以使用 `dns.prefetch` API。当你知道将要连接某个主机且想避免初始 DNS 查找时，此 API 非常有用。
 
 ```ts
 import { dns } from "bun";
@@ -400,15 +400,15 @@ import { dns } from "bun";
 dns.prefetch("bun.com");
 ```
 
-#### DNS caching
+#### DNS 缓存
 
-By default, Bun caches and deduplicates DNS queries in-memory for up to 30 seconds. You can see the cache stats by calling `dns.getCacheStats()`:
+默认情况下，Bun 会将 DNS 查询的结果缓存并去重，缓存时长最多 30 秒。你可以通过调用 `dns.getCacheStats()` 查看缓存状态。
 
-To learn more about DNS caching in Bun, see the [DNS caching](/runtime/networking/dns) documentation.
+想了解更多关于 Bun 中的 DNS 缓存，请参阅 [DNS 缓存](/runtime/networking/dns) 文档。
 
-### Preconnect to a host
+### 预连接到主机
 
-To preconnect to a host, you can use the `fetch.preconnect` API. This API is useful when you know you'll need to connect to a host soon and want to start the initial DNS lookup, TCP socket connection, and TLS handshake early.
+要预连接到主机，可以使用 `fetch.preconnect` API。当你知道将很快要连接某个主机并希望提前开始 DNS 查找、TCP 建连和 TLS 握手时，此 API 非常有用。
 
 ```ts
 import { fetch } from "bun";
@@ -416,44 +416,44 @@ import { fetch } from "bun";
 fetch.preconnect("https://bun.com");
 ```
 
-Note: calling `fetch` immediately after `fetch.preconnect` will not make your request faster. Preconnecting only helps if you know you'll need to connect to a host soon, but you're not ready to make the request yet.
+注意：紧跟着调用 `fetch.preconnect` 马上发起 `fetch` 请求不会更快。预连接仅在你知道将很快连接某主机，但尚未准备好发起请求时生效。
 
-#### Preconnect at startup
+#### 启动时预连接
 
-To preconnect to a host at startup, you can pass `--fetch-preconnect`:
+要在启动时预连接某主机，可以传入 `--fetch-preconnect` 参数：
 
 ```sh
 bun --fetch-preconnect https://bun.com ./my-script.ts
 ```
 
-This is sort of like `<link rel="preconnect">` in HTML.
+这有点类似 HTML 中的 `<link rel="preconnect">`。
 
-This feature is not implemented on Windows yet. If you're interested in using this feature on Windows, please file an issue and we can implement support for it on Windows.
+该功能尚未在 Windows 上实现。如果你希望在 Windows 上使用该功能，请提交 issue，方便我们实现支持。
 
-### Connection pooling & HTTP keep-alive
+### 连接池与 HTTP 长连接
 
-Bun automatically reuses connections to the same host. This is known as connection pooling. This can significantly reduce the time it takes to establish a connection. You don't need to do anything to enable this; it's automatic.
+Bun 会自动重用对同一个主机的连接，即连接池。这能显著减少建立连接所需的时间。你无需做任何配置，默认启用。
 
-#### Simultaneous connection limit
+#### 同时连接数限制
 
-By default, Bun limits the maximum number of simultaneous `fetch` requests to 256. We do this for several reasons:
+默认情况下，Bun 限制最大同时进行的 `fetch` 请求数量为 256。这样做有几个原因：
 
-- It improves overall system stability. Operating systems have an upper limit on the number of simultaneous open TCP sockets, usually in the low thousands. Nearing this limit causes your entire computer to behave strangely. Applications hang and crash.
-- It encourages HTTP Keep-Alive connection reuse. For short-lived HTTP requests, the slowest step is often the initial connection setup. Reusing connections can save a lot of time.
+- 改善系统整体稳定性。操作系统对同时打开的 TCP 套接字数有上限，通常在几千左右。接近该限制时，会导致整台电脑异常，应用挂起或崩溃。
+- 鼓励 HTTP Keep-Alive 的连接复用。对于短时 HTTP 请求，最慢的步骤往往是初次连接。连接复用可节省大量时间。
 
-When the limit is exceeded, the requests are queued and sent as soon as the next request ends.
+当超过限制时，请求会排队，等前一个请求完成后立即发出。
 
-You can increase the maximum number of simultaneous connections via the `BUN_CONFIG_MAX_HTTP_REQUESTS` environment variable:
+你可以通过环境变量 `BUN_CONFIG_MAX_HTTP_REQUESTS` 增加最大同时连接数：
 
 ```sh
 BUN_CONFIG_MAX_HTTP_REQUESTS=512 bun ./my-script.ts
 ```
 
-The max value for this limit is currently set to 65,336. The maximum port number is 65,535, so it's quite difficult for any one computer to exceed this limit.
+此限制的最大值当前设置为 65,336。考虑到最大端口号为 65,535，单台电脑很难超过此限制。
 
-### Response buffering
+### 响应体缓冲
 
-Bun goes to great lengths to optimize the performance of reading the response body. The fastest way to read the response body is to use one of these methods:
+Bun 非常优化了响应体读取的性能。读取响应体速度最快的方法是使用以下任一方法：
 
 - `response.text(): Promise<string>`
 - `response.json(): Promise<any>`
@@ -462,7 +462,7 @@ Bun goes to great lengths to optimize the performance of reading the response bo
 - `response.arrayBuffer(): Promise<ArrayBuffer>`
 - `response.blob(): Promise<Blob>`
 
-You can also use `Bun.write` to write the response body to a file on disk:
+你也可以使用 `Bun.write` 将响应体写入磁盘文件：
 
 ```ts
 import { write } from "bun";
@@ -470,15 +470,15 @@ import { write } from "bun";
 await write("output.txt", response);
 ```
 
-### Implementation details
+### 实现细节
 
-- Connection pooling is enabled by default but can be disabled per-request with `keepalive: false`. The `"Connection: close"` header can also be used to disable keep-alive.
-- Large file uploads are optimized using the operating system's `sendfile` syscall under specific conditions:
-  - The file must be larger than 32KB
-  - The request must not be using a proxy
-  - On macOS, only regular files (not pipes, sockets, or devices) can use `sendfile`
-  - When these conditions aren't met, or when using S3/streaming uploads, Bun falls back to reading the file into memory
-  - This optimization is particularly effective for HTTP (not HTTPS) requests where the file can be sent directly from the kernel to the network stack
-- S3 operations automatically handle signing requests and merging authentication headers
+- 连接池默认启用，但每个请求可通过 `keepalive: false` 禁用。同样，设置 `"Connection: close"` 头也会禁用长连接。
+- 大文件上传会在特定条件下利用操作系统的 `sendfile` 系统调用优化：
+  - 文件必须大于 32KB
+  - 请求不能使用代理
+  - 在 macOS 上，仅常规文件（非管道、套接字或设备）支持 `sendfile`
+  - 若条件不满足，或使用了 S3/流式上传，则回退到内存读取文件
+  - 此优化对 HTTP（非 HTTPS）请求特别有效，可直接将文件从内核发往网络栈
+- S3 操作自动处理请求签名和合并认证头
 
-Note: Many of these features are Bun-specific extensions to the standard fetch API.
+注意：许多功能是 Bun 针对标准 fetch API 的特定扩展。

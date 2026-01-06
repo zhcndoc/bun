@@ -1,27 +1,27 @@
 ---
-title: Proxy HTTP requests using fetch()
-sidebarTitle: Proxy HTTP requests using fetch()
+title: 使用 fetch() 代理 HTTP 请求
+sidebarTitle: 使用 fetch() 代理 HTTP 请求
 mode: center
 ---
 
-In Bun, `fetch` supports sending requests through an HTTP or HTTPS proxy. This is useful on corporate networks or when you need to ensure a request is sent through a specific IP address.
+在 Bun 中，`fetch` 支持通过 HTTP 或 HTTPS 代理发送请求。这在公司网络中或需要确保请求通过特定 IP 地址发送时非常有用。
 
 ```ts proxy.ts icon="/icons/typescript.svg"
 await fetch("https://example.com", {
-  // The URL of the proxy server
+  // 代理服务器的 URL
   proxy: "https://username:password@proxy.example.com:8080",
 });
 ```
 
 ---
 
-The `proxy` option can be a URL string or an object with `url` and optional `headers`. The URL can include the username and password if the proxy requires authentication. It can be `http://` or `https://`.
+`proxy` 选项可以是 URL 字符串，也可以是包含 `url` 和可选 `headers` 的对象。如果代理需要身份验证，URL 中可以包含用户名和密码。代理地址可以是 `http://` 或 `https://`。
 
 ---
 
-## Custom proxy headers
+## 自定义代理请求头
 
-To send custom headers to the proxy server (useful for proxy authentication tokens, custom routing, etc.), use the object format:
+如果需要向代理服务器发送自定义头（用于代理认证令牌、自定义路由等），可以使用对象格式：
 
 ```ts proxy-headers.ts icon="/icons/typescript.svg"
 await fetch("https://example.com", {
@@ -35,15 +35,15 @@ await fetch("https://example.com", {
 });
 ```
 
-The `headers` property accepts a plain object or a `Headers` instance. These headers are sent directly to the proxy server in `CONNECT` requests (for HTTPS targets) or in the proxy request (for HTTP targets).
+`headers` 属性可以是普通对象或 `Headers` 实例。这些请求头会直接发送给代理服务器，用于 `CONNECT` 请求（针对 HTTPS 目标）或代理请求（针对 HTTP 目标）。
 
-If you provide a `Proxy-Authorization` header, it will override any credentials specified in the proxy URL.
+如果你提供了 `Proxy-Authorization` 请求头，它会覆盖代理 URL 中指定的任何凭据。
 
 ---
 
-## Environment variables
+## 环境变量
 
-You can also set the `$HTTP_PROXY` or `$HTTPS_PROXY` environment variable to the proxy URL. This is useful when you want to use the same proxy for all requests.
+你也可以通过设置 `$HTTP_PROXY` 或 `$HTTPS_PROXY` 环境变量为代理 URL 来使用代理。这在希望所有请求使用同一代理时很有用。
 
 ```sh terminal icon="terminal"
 HTTPS_PROXY=https://username:password@proxy.example.com:8080 bun run index.ts

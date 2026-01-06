@@ -1,16 +1,16 @@
 ---
-title: "Environment Variables"
-description: "Read and configure environment variables in Bun, including automatic .env file support"
+title: "环境变量"
+description: "在 Bun 中读取和配置环境变量，包括自动支持 .env 文件"
 ---
 
-Bun reads your `.env` files automatically and provides idiomatic ways to read and write your environment variables programmatically. Plus, some aspects of Bun's runtime behavior can be configured with Bun-specific environment variables.
+Bun 会自动读取你的 `.env` 文件，并提供符合习惯用法的方式以编程方式读取和写入环境变量。此外，Bun 运行时行为的某些方面可以通过 Bun 特定的环境变量进行配置。
 
-## Setting environment variables
+## 设置环境变量
 
-Bun reads the following files automatically (listed in order of increasing precedence).
+Bun 会自动读取以下文件（按优先级升序排列）。
 
 - `.env`
-- `.env.production`, `.env.development`, `.env.test` (depending on value of `NODE_ENV`)
+- `.env.production`、`.env.development`、`.env.test`（取决于 `NODE_ENV` 的值）
 - `.env.local`
 
 ```ini .env icon="settings"
@@ -18,7 +18,7 @@ FOO=hello
 BAR=world
 ```
 
-Variables can also be set via the command line.
+也可以通过命令行设置变量。
 
 <CodeGroup>
 
@@ -27,24 +27,24 @@ FOO=helloworld bun run dev
 ```
 
 ```sh Windows icon="windows"
-# Using CMD
+# 使用 CMD
 set FOO=helloworld && bun run dev
 
-# Using PowerShell
+# 使用 PowerShell
 $env:FOO="helloworld"; bun run dev
 ```
 
 </CodeGroup>
 
-<Accordion title="Cross-platform solution with Windows">
+<Accordion title="跨平台的 Windows 解决方案">
 
-For a cross-platform solution, you can use [bun shell](/runtime/shell). For example, the `bun exec` command.
+对于跨平台的解决方案，你可以使用 [bun shell](/runtime/shell)，例如 `bun exec` 命令。
 
 ```sh
 bun exec 'FOO=helloworld bun run dev'
 ```
 
-On Windows, `package.json` scripts called with `bun run` will automatically use the **bun shell**, making the following also cross-platform.
+在 Windows 上，使用 `bun run` 调用的 `package.json` 脚本会自动使用 **bun shell**，因此以下写法也兼容跨平台。
 
 ```json package.json icon="file-json"
 "scripts": {
@@ -54,7 +54,7 @@ On Windows, `package.json` scripts called with `bun run` will automatically use 
 
 </Accordion>
 
-Or programmatically by assigning a property to `process.env`.
+或者通过给 `process.env` 赋值来编程设置。
 
 ```ts
 process.env.FOO = "hello";
@@ -62,9 +62,9 @@ process.env.FOO = "hello";
 
 ---
 
-## Manually specifying `.env` files
+## 手动指定 `.env` 文件
 
-Bun supports `--env-file` to override which specific `.env` file to load. You can use `--env-file` when running scripts in bun's runtime, or when running package.json scripts.
+Bun 支持 `--env-file` 来覆盖加载的特定 `.env` 文件。你可以在运行 Bun 运行时的脚本时，或者运行 package.json 脚本时使用 `--env-file`。
 
 ```sh
 bun --env-file=.env.1 src/index.ts
@@ -72,28 +72,28 @@ bun --env-file=.env.1 src/index.ts
 bun --env-file=.env.abc --env-file=.env.def run build
 ```
 
-## Disabling automatic `.env` loading
+## 禁用自动加载 `.env`
 
-Use `--no-env-file` to disable Bun's automatic `.env` file loading. This is useful in production environments or CI/CD pipelines where you want to rely solely on system environment variables.
+使用 `--no-env-file` 可以禁用 Bun 自动加载 `.env` 文件。这在生产环境或 CI/CD 管道中仅依赖系统环境变量时非常有用。
 
 ```sh
 bun run --no-env-file index.ts
 ```
 
-This can also be configured in `bunfig.toml`:
+这也可以在 `bunfig.toml` 中配置：
 
 ```toml bunfig.toml icon="settings"
-# Disable loading .env files
+# 禁用加载 .env 文件
 env = false
 ```
 
-Explicitly provided environment files via `--env-file` will still be loaded even when default loading is disabled.
+即使默认加载禁用，通过 `--env-file` 显式提供的环境文件仍然会被加载。
 
 ---
 
-## Quotation marks
+## 引号
 
-Bun supports double quotes, single quotes, and template literal backticks:
+Bun 支持双引号、单引号和模板字符串反引号：
 
 ```ini .env icon="settings"
 FOO='hello'
@@ -101,9 +101,9 @@ FOO="hello"
 FOO=`hello`
 ```
 
-### Expansion
+### 扩展
 
-Environment variables are automatically _expanded_. This means you can reference previously-defined variables in your environment variables.
+环境变量会被自动**展开**。这意味着你可以在环境变量中引用之前定义的变量。
 
 ```ini .env icon="settings"
 FOO=world
@@ -114,7 +114,7 @@ BAR=hello$FOO
 process.env.BAR; // => "helloworld"
 ```
 
-This is useful for constructing connection strings or other compound values.
+这对于构造连接字符串或其他复合值非常有用。
 
 ```ini .env icon="settings"
 DB_USER=postgres
@@ -124,7 +124,7 @@ DB_PORT=5432
 DB_URL=postgres://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME
 ```
 
-This can be disabled by escaping the `$` with a backslash.
+你也可以通过反斜杠转义 `$` 来禁用变量展开。
 
 ```ini .env icon="settings"
 FOO=world
@@ -137,42 +137,42 @@ process.env.BAR; // => "hello$FOO"
 
 ### `dotenv`
 
-Generally speaking, you won't need `dotenv` or `dotenv-expand` anymore, because Bun reads `.env` files automatically.
+一般来说，你不再需要 `dotenv` 或 `dotenv-expand`，因为 Bun 会自动读取 `.env` 文件。
 
-## Reading environment variables
+## 读取环境变量
 
-The current environment variables can be accessed via `process.env`.
+当前的环境变量可以通过 `process.env` 访问。
 
 ```ts
 process.env.API_TOKEN; // => "secret"
 ```
 
-Bun also exposes these variables via `Bun.env` and `import.meta.env`, which is a simple alias of `process.env`.
+Bun 也通过 `Bun.env` 和 `import.meta.env`（它们是 `process.env` 的简单别名）暴露这些变量。
 
 ```ts
 Bun.env.API_TOKEN; // => "secret"
 import.meta.env.API_TOKEN; // => "secret"
 ```
 
-To print all currently-set environment variables to the command line, run `bun --print process.env`. This is useful for debugging.
+要将所有当前设置的环境变量打印到命令行，可以运行 `bun --print process.env`，这对于调试非常有用。
 
 ```sh
 bun --print process.env
 BAZ=stuff
 FOOBAR=aaaaaa
-<lots more lines>
+<更多行>
 ```
 
 ## TypeScript
 
-In TypeScript, all properties of `process.env` are typed as `string | undefined`.
+在 TypeScript 中，`process.env` 的所有属性都被类型定义为 `string | undefined`。
 
 ```ts
 Bun.env.whatever;
 // string | undefined
 ```
 
-To get autocompletion and tell TypeScript to treat a variable as a non-optional string, we'll use [interface merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html#merging-interfaces).
+为了获得自动补全并告诉 TypeScript 将变量视为非可选字符串，我们可以使用 [接口合并](https://www.typescriptlang.org/docs/handbook/declaration-merging.html#merging-interfaces)。
 
 ```ts
 declare module "bun" {
@@ -182,50 +182,50 @@ declare module "bun" {
 }
 ```
 
-Add this line to any file in your project. It will globally add the `AWESOME` property to `process.env` and `Bun.env`.
+将此代码添加到项目中的任意文件中。它会全局为 `process.env` 和 `Bun.env` 添加 `AWESOME` 属性。
 
 ```ts
 process.env.AWESOME; // => string
 ```
 
-## Configuring Bun
+## 配置 Bun
 
-These environment variables are read by Bun and configure aspects of its behavior.
+以下环境变量由 Bun 读取并配置其行为的某些方面。
 
-| Name                                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NODE_TLS_REJECT_UNAUTHORIZED`           | `NODE_TLS_REJECT_UNAUTHORIZED=0` disables SSL certificate validation. This is useful for testing and debugging, but you should be very hesitant to use this in production. Note: This environment variable was originally introduced by Node.js and we kept the name for compatibility.                                                                                                                                                                                                                                                                                   |
-| `BUN_CONFIG_VERBOSE_FETCH`               | If `BUN_CONFIG_VERBOSE_FETCH=curl`, then fetch requests will log the url, method, request headers and response headers to the console. This is useful for debugging network requests. This also works with `node:http`. `BUN_CONFIG_VERBOSE_FETCH=1` is equivalent to `BUN_CONFIG_VERBOSE_FETCH=curl` except without the `curl` output.                                                                                                                                                                                                                                   |
-| `BUN_RUNTIME_TRANSPILER_CACHE_PATH`      | The runtime transpiler caches the transpiled output of source files larger than 50 kb. This makes CLIs using Bun load faster. If `BUN_RUNTIME_TRANSPILER_CACHE_PATH` is set, then the runtime transpiler will cache transpiled output to the specified directory. If `BUN_RUNTIME_TRANSPILER_CACHE_PATH` is set to an empty string or the string `"0"`, then the runtime transpiler will not cache transpiled output. If `BUN_RUNTIME_TRANSPILER_CACHE_PATH` is unset, then the runtime transpiler will cache transpiled output to the platform-specific cache directory. |
-| `TMPDIR`                                 | Bun occasionally requires a directory to store intermediate assets during bundling or other operations. If unset, defaults to the platform-specific temporary directory: `/tmp` on Linux, `/private/tmp` on macOS.                                                                                                                                                                                                                                                                                                                                                        |
-| `NO_COLOR`                               | If `NO_COLOR=1`, then ANSI color output is [disabled](https://no-color.org/).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `FORCE_COLOR`                            | If `FORCE_COLOR=1`, then ANSI color output is force enabled, even if `NO_COLOR` is set.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `BUN_CONFIG_MAX_HTTP_REQUESTS`           | Control the maximum number of concurrent HTTP requests sent by fetch and `bun install`. Defaults to `256`. If you are running into rate limits or connection issues, you can reduce this number.                                                                                                                                                                                                                                                                                                                                                                          |
-| `BUN_CONFIG_NO_CLEAR_TERMINAL_ON_RELOAD` | If `BUN_CONFIG_NO_CLEAR_TERMINAL_ON_RELOAD=true`, then `bun --watch` will not clear the console on reload                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `DO_NOT_TRACK`                           | Disable uploading crash reports to `bun.report` on crash. On macOS & Windows, crash report uploads are enabled by default. Otherwise, telemetry is not sent yet as of May 21st, 2024, but we are planning to add telemetry in the coming weeks. If `DO_NOT_TRACK=1`, then auto-uploading crash reports and telemetry are both [disabled](https://do-not-track.dev/).                                                                                                                                                                                                      |
-| `BUN_OPTIONS`                            | Prepends command-line arguments to any Bun execution. For example, `BUN_OPTIONS="--hot"` makes `bun run dev` behave like `bun --hot run dev`                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 名称                                     | 描述                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NODE_TLS_REJECT_UNAUTHORIZED`           | 设置 `NODE_TLS_REJECT_UNAUTHORIZED=0` 会禁用 SSL 证书验证。这在测试和调试时非常有用，但你在生产环境中应极其谨慎使用。注意：该环境变量最初由 Node.js 引入，我们保留此名字以保证兼容性。                                                                                                                                                                                                                                                                                                                                                                                        |
+| `BUN_CONFIG_VERBOSE_FETCH`               | 如果设置为 `BUN_CONFIG_VERBOSE_FETCH=curl`，fetch 请求将向控制台打印 url、方法、请求头和响应头，方便调试网络请求。该选项对 `node:http` 模块也有效。`BUN_CONFIG_VERBOSE_FETCH=1` 等同于 `BUN_CONFIG_VERBOSE_FETCH=curl`，但输出格式不含 curl 格式。                                                                                                                                                                                                                                                                                                                   |
+| `BUN_RUNTIME_TRANSPILER_CACHE_PATH`      | 运行时转译器会缓存大于 50 KB 的源文件的转译输出，这可以加快使用 Bun 的 CLI 启动速度。如果设置了 `BUN_RUNTIME_TRANSPILER_CACHE_PATH`，运行时转译器会将缓存存储到指定目录。如果设置为空字符串或 `"0"`，则不会缓存。未设置时缓存存储在平台特定的缓存目录中。                                                                                                                                                                                                                                                                                                               |
+| `TMPDIR`                                 | Bun 有时需要一个目录来存储打包或其他操作期间的临时资产。如果未设置，则默认使用平台特定的临时目录：Linux 下为 `/tmp`，macOS 下为 `/private/tmp`。                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `NO_COLOR`                               | 如果设置为 `NO_COLOR=1`，则禁用 ANSI 彩色输出，详见 [no-color.org](https://no-color.org/)。                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `FORCE_COLOR`                            | 如果设置为 `FORCE_COLOR=1`，则强制启用 ANSI 彩色输出，即使 `NO_COLOR` 被设置。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `BUN_CONFIG_MAX_HTTP_REQUESTS`           | 控制 fetch 和 `bun install` 发送的最大并发 HTTP 请求数。默认值为 `256`。如果遇到速率限制或连接问题，可适当降低此数值。                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `BUN_CONFIG_NO_CLEAR_TERMINAL_ON_RELOAD` | 如果设置为 `BUN_CONFIG_NO_CLEAR_TERMINAL_ON_RELOAD=true`，则 `bun --watch` 在重载时不会清除终端。                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `DO_NOT_TRACK`                           | 禁用崩溃报告上传到 `bun.report`。在 macOS 和 Windows 上，崩溃报告上传默认启用。其他平台截至 2024 年 5 月 21 日尚未发送遥测，但计划在未来几周内添加。如果设置为 `DO_NOT_TRACK=1`，则自动上传崩溃报告和遥测都会被禁用，详见 [do-not-track.dev](https://do-not-track.dev/)。                                                                                                                                                                                                                                                                                     |
+| `BUN_OPTIONS`                            | 在任何 Bun 执行前预先添加命令行参数。例如，设置 `BUN_OPTIONS="--hot"` 会使 `bun run dev` 行为相当于执行 `bun --hot run dev`。                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
-## Runtime transpiler caching
+## 运行时转译器缓存
 
-For files larger than 50 KB, Bun caches transpiled output into `$BUN_RUNTIME_TRANSPILER_CACHE_PATH` or the platform-specific cache directory. This makes CLIs using Bun load faster.
+对于大于 50 KB 的文件，Bun 会将转译后的输出缓存到 `$BUN_RUNTIME_TRANSPILER_CACHE_PATH` 或平台特定的缓存目录，从而加快 Bun CLI 启动速度。
 
-This transpiler cache is global and shared across all projects. It is safe to delete the cache at any time. It is a content-addressable cache, so it will never contain duplicate entries. It is also safe to delete the cache while a Bun process is running.
+此转译器缓存是全局共享的，跨所有项目有效。可以随时安全删除缓存。因为它是内容寻址缓存，永远不会包含重复条目。即使在 Bun 进程运行时删除缓存也是安全的。
 
-It is recommended to disable this cache when using ephemeral filesystems like Docker. Bun's Docker images automatically disable this cache.
+建议在使用类似 Docker 这样短暂文件系统时禁用此缓存。Bun 的 Docker 镜像会自动禁用该缓存。
 
-### Disable the runtime transpiler cache
+### 禁用运行时转译器缓存
 
-To disable the runtime transpiler cache, set `BUN_RUNTIME_TRANSPILER_CACHE_PATH` to an empty string or the string `"0"`.
+要禁用该缓存，将 `BUN_RUNTIME_TRANSPILER_CACHE_PATH` 设置为空字符串或字符串 `"0"`。
 
 ```sh
 BUN_RUNTIME_TRANSPILER_CACHE_PATH=0 bun run dev
 ```
 
-### What does it cache?
+### 它缓存什么？
 
-It caches:
+缓存内容包括：
 
-- The transpiled output of source files larger than 50 KB.
-- The sourcemap for the transpiled output of the file
+- 大于 50 KB 源文件的转译输出。
+- 转译输出对应的 sourcemap 文件。
 
-The file extension `.pile` is used for these cached files.
+缓存文件使用 `.pile` 扩展名。

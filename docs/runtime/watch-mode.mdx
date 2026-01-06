@@ -1,42 +1,42 @@
 ---
-title: "Watch Mode"
-description: "Automatic reloading in Bun with --watch and --hot modes"
+title: "观察模式"
+description: "Bun 中的自动重载，支持 --watch 和 --hot 模式"
 ---
 
-Bun supports two kinds of automatic reloading via CLI flags:
+Bun 支持通过 CLI 标志实现两种自动重载：
 
-- `--watch` mode, which hard restarts Bun's process when imported files change.
-- `--hot` mode, which soft reloads the code (without restarting the process) when imported files change.
+- `--watch` 模式：当导入的文件发生更改时，Bun 会硬重启进程。
+- `--hot` 模式：当导入的文件发生更改时，Bun 会软重载代码（不重启进程）。
 
 ---
 
-## `--watch` mode
+## `--watch` 模式
 
-Watch mode can be used with `bun test` or when running TypeScript, JSX, and JavaScript files.
+观察模式可以用于 `bun test` 或运行 TypeScript、JSX 和 JavaScript 文件时。
 
-To run a file in `--watch` mode:
+在 `--watch` 模式下运行文件：
 
 ```bash terminal icon="terminal"
 bun --watch index.tsx
 ```
 
-To run your tests in `--watch` mode:
+在 `--watch` 模式下运行测试：
 
 ```bash terminal icon="terminal"
 bun --watch test
 ```
 
-In `--watch` mode, Bun keeps track of all imported files and watches them for changes. When a change is detected, Bun restarts the process, preserving the same set of CLI arguments and environment variables used in the initial run. If Bun crashes, `--watch` will attempt to automatically restart the process.
+在 `--watch` 模式下，Bun 会跟踪所有导入的文件并监视它们的更改。当检测到更改时，Bun 会重启进程，保持初始运行时使用的相同 CLI 参数和环境变量。如果 Bun 崩溃，`--watch` 会尝试自动重启进程。
 
 <Note>
 
-**⚡️ Reloads are fast.** The filesystem watchers you're probably used to have several layers of libraries wrapping the native APIs or worse, rely on polling.
+**⚡️ 重载非常快。** 你可能习惯的文件系统监听器通常通过多层库来封装本地 API，或者更糟的是，依赖于轮询。
 
-Instead, Bun uses operating system native filesystem watcher APIs like kqueue or inotify to detect changes to files. Bun also does a number of optimizations to enable it scale to larger projects (such as setting a high rlimit for file descriptors, statically allocated file path buffers, reuse file descriptors when possible, etc).
+相反，Bun 使用操作系统本地的文件系统监听 API，如 kqueue 或 inotify 来检测文件变化。Bun 还做了许多优化以支持更大规模的项目（比如设置较高的文件描述符 rlimit、静态分配文件路径缓冲区、尽可能重用文件描述符等）。
 
 </Note>
 
-The following examples show Bun live-reloading a file as it is edited, with VSCode configured to save the file [on each keystroke](https://code.visualstudio.com/docs/editor/codebasics#_save-auto-save).
+以下示例演示了 Bun 在编辑文件时的实时重载，VSCode 被配置为[每次按键保存文件](https://code.visualstudio.com/docs/editor/codebasics#_save-auto-save)。
 
 ```sh terminal icon="terminal"
 bun run --watch watchy.tsx
@@ -45,7 +45,7 @@ bun run --watch watchy.tsx
 ```tsx title="watchy.tsx" icon="/icons/typescript.svg"
 import { serve } from "bun";
 
-console.log("I restarted at:", Date.now());
+console.log("我在此时重启:", Date.now());
 
 serve({
   port: 4003,
@@ -55,13 +55,13 @@ serve({
 });
 ```
 
-In this example, Bun is
+在此示例中，Bun 运行的效果如下：
 
 <Frame>
   ![bun watch gif](https://user-images.githubusercontent.com/709451/228439002-7b9fad11-0db2-4e48-b82d-2b88c8625625.gif)
 </Frame>
 
-Running `bun test` in watch mode and `save-on-keypress` enabled:
+在启用了 `save-on-keypress` 的情况下运行 `bun test` 的观察模式：
 
 ```bash terminal icon="terminal"
 bun --watch test
@@ -72,63 +72,56 @@ bun --watch test
 </Frame>
 
 <Note>
-  The **`--no-clear-screen`** flag is useful in scenarios where you don't want the terminal to clear, such as when
-  running multiple `bun build --watch` commands simultaneously using tools like `concurrently`. Without this flag, the
-  output of one instance could clear the output of others, potentially hiding errors from one instance beneath the
-  output of another. The `--no-clear-screen` flag, similar to TypeScript's `--preserveWatchOutput`, prevents this issue.
-  It can be used in combination with `--watch`, for example: `bun build --watch --no-clear-screen`.
+  **`--no-clear-screen`** 标志在你不希望终端清屏的情况下很有用，例如使用 `concurrently` 同时运行多个 `bun build --watch` 命令时。如果没有此标志，一个实例的输出可能会清除另一个实例的输出，导致错误信息被隐藏。`--no-clear-screen` 标志类似于 TypeScript 的 `--preserveWatchOutput`，可以防止这种问题。它可以与 `--watch` 组合使用，例如：`bun build --watch --no-clear-screen`。
 </Note>
 
 ---
 
-## `--hot` mode
+## `--hot` 模式
 
-Use `bun --hot` to enable hot reloading when executing code with Bun. This is distinct from `--watch` mode in that Bun does not hard-restart the entire process. Instead, it detects code changes and updates its internal module cache with the new code.
+通过 `bun --hot` 启用热重载以运行 Bun 代码。与 `--watch` 模式不同，Bun 不会硬重启整个进程，而是检测代码变化并用新代码更新内部模块缓存。
 
 <Note>
-  This is not the same as hot reloading in the browser! Many frameworks provide a "hot reloading" experience, where you
-  can edit & save your frontend code (say, a React component) and see the changes reflected in the browser without
-  refreshing the page. Bun's `--hot` is the server-side equivalent of this experience. To get hot reloading in the
-  browser, use a framework like [Vite](https://vite.dev).
+  这不同于浏览器中的热重载！很多框架提供 “热重载” 功能，可以编辑并保存前端代码（比如 React 组件），浏览器页面无需刷新即可看到变更。Bun 的 `--hot` 是这种体验在服务器端的对应实现。想要浏览器端的热重载，可以使用像 [Vite](https://vite.dev) 这样的框架。
 </Note>
 
 ```bash terminal icon="terminal"
 bun --hot server.ts
 ```
 
-Starting from the entrypoint (`server.ts` in the example above), Bun builds a registry of all imported source files (excluding those in `node_modules`) and watches them for changes. When a change is detected, Bun performs a "soft reload". All files are re-evaluated, but all global state (notably, the `globalThis` object) is persisted.
+从入口文件（上例中的 `server.ts`）开始，Bun 会构建所有导入源文件（排除 `node_modules` 中的文件）注册表并监视这些文件的变化。发现变化时，Bun 会执行 “软重载”。所有文件都重新求值，但所有全局状态（特别是 `globalThis` 对象）都会被保留。
 
 ```ts title="server.ts" icon="/icons/typescript.svg"
-// make TypeScript happy
+// 让 TypeScript 不报错
 declare global {
   var count: number;
 }
 
 globalThis.count ??= 0;
-console.log(`Reloaded ${globalThis.count} times`);
+console.log(`重载了 ${globalThis.count} 次`);
 globalThis.count++;
 
-// prevent `bun run` from exiting
+// 防止 `bun run` 退出
 setInterval(function () {}, 1000000);
 ```
 
-If you run this file with `bun --hot server.ts`, you'll see the reload count increment every time you save the file.
+如果你用 `bun --hot server.ts` 运行这个文件，每次保存文件时你都会看到重载计数递增。
 
 ```bash terminal icon="terminal"
 bun --hot index.ts
 ```
 
 ```txt
-Reloaded 1 times
-Reloaded 2 times
-Reloaded 3 times
+重载了 1 次
+重载了 2 次
+重载了 3 次
 ```
 
-Traditional file watchers like `nodemon` restart the entire process, so HTTP servers and other stateful objects are lost. By contrast, `bun --hot` is able to reflect the updated code without restarting the process.
+传统的文件观察器如 `nodemon` 会重启整个进程，因此 HTTP 服务器和其他有状态对象都会丢失。相比之下，`bun --hot` 能够在不重启进程的情况下反映代码更新。
 
-### HTTP servers
+### HTTP 服务器
 
-This makes it possible, for instance, to update your HTTP request handler without shutting down the server itself. When you save the file, your HTTP server will be reloaded with the updated code without the process being restarted. This results in seriously fast refresh speeds.
+这使得你可以更新 HTTP 请求处理函数，而无需关闭服务器本身。保存文件后，HTTP 服务器会用更新后的代码重新加载，进程不会重启。这带来了非常快的刷新速度。
 
 ```ts title="server.ts" icon="/icons/typescript.svg"
 globalThis.count ??= 0;
@@ -136,26 +129,25 @@ globalThis.count++;
 
 Bun.serve({
   fetch(req: Request) {
-    return new Response(`Reloaded ${globalThis.count} times`);
+    return new Response(`重载了 ${globalThis.count} 次`);
   },
   port: 3000,
 });
 ```
 
 <Note>
-**Note** — In a future version of Bun, support for Vite's `import.meta.hot` is planned to enable better lifecycle management for hot reloading and to align with the ecosystem.
-
+**注意** — 在未来版本的 Bun 中，计划支持 Vite 的 `import.meta.hot`，以便实现更好的生命周期管理和与生态系统的兼容。
 </Note>
 
-<Accordion title="Implementation details">
+<Accordion title="实现细节">
 
-On hot reload, Bun:
+热重载时，Bun 会：
 
-- Resets the internal `require` cache and ES module registry (`Loader.registry`)
-- Runs the garbage collector synchronously (to minimize memory leaks, at the cost of runtime performance)
-- Re-transpiles all of your code from scratch (including sourcemaps)
-- Re-evaluates the code with JavaScriptCore
+- 重置内部的 `require` 缓存和 ES 模块注册表（`Loader.registry`）
+- 同步运行垃圾回收（以减少内存泄漏，但会牺牲一定运行时性能）
+- 重新从头转译所有代码（包括 sourcemaps）
+- 使用 JavaScriptCore 重新求值代码
 
-This implementation isn't particularly optimized. It re-transpiles files that haven't changed. It makes no attempt at incremental compilation. It's a starting point.
+目前的实现并非特别优化，会重新转译未发生变化的文件，也没有尝试增量编译。这只是一个起点。
 
 </Accordion>

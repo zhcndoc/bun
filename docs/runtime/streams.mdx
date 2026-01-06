@@ -1,21 +1,21 @@
 ---
-title: Streams
-description: Use Bun's streams API to work with binary data without loading it all into memory at once
+title: 流 (Streams)
+description: 使用 Bun 的流 API 以无需一次性加载全部数据到内存中即可处理二进制数据
 ---
 
-Streams are an important abstraction for working with binary data without loading it all into memory at once. They are commonly used for reading and writing files, sending and receiving network requests, and processing large amounts of data.
+流是处理二进制数据而无需一次性加载全部到内存中的重要抽象。它们通常用于读写文件、发送和接收网络请求以及处理大量数据。
 
-Bun implements the Web APIs [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) and [`WritableStream`](https://developer.mozilla.org/en-US/docs/Web/API/WritableStream).
+Bun 实现了 Web API 中的 [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) 和 [`WritableStream`](https://developer.mozilla.org/en-US/docs/Web/API/WritableStream)。
 
 <Note>
-  Bun also implements the `node:stream` module, including
-  [`Readable`](https://nodejs.org/api/stream.html#stream_readable_streams),
-  [`Writable`](https://nodejs.org/api/stream.html#stream_writable_streams), and
-  [`Duplex`](https://nodejs.org/api/stream.html#stream_duplex_and_transform_streams). For complete documentation, refer
-  to the [Node.js docs](https://nodejs.org/api/stream.html).
+  Bun 也实现了 `node:stream` 模块，包含
+  [`Readable`](https://nodejs.org/api/stream.html#stream_readable_streams)、
+  [`Writable`](https://nodejs.org/api/stream.html#stream_writable_streams) 和
+  [`Duplex`](https://nodejs.org/api/stream.html#stream_duplex_and_transform_streams)。
+  更多完整文档请参考 [Node.js 文档](https://nodejs.org/api/stream.html)。
 </Note>
 
-To create a simple `ReadableStream`:
+创建一个简单的 `ReadableStream`：
 
 ```ts
 const stream = new ReadableStream({
@@ -27,7 +27,7 @@ const stream = new ReadableStream({
 });
 ```
 
-The contents of a `ReadableStream` can be read chunk-by-chunk with `for await` syntax.
+可以使用 `for await` 语法逐块读取 `ReadableStream` 的内容。
 
 ```ts
 for await (const chunk of stream) {
@@ -40,11 +40,11 @@ for await (const chunk of stream) {
 
 ---
 
-## Direct `ReadableStream`
+## 直接 `ReadableStream`
 
-Bun implements an optimized version of `ReadableStream` that avoid unnecessary data copying & queue management logic.
+Bun 实现了一个优化版本的 `ReadableStream`，避免了不必要的数据复制和队列管理逻辑。
 
-With a traditional `ReadableStream`, chunks of data are _enqueued_. Each chunk is copied into a queue, where it sits until the stream is ready to send more data.
+在传统的 `ReadableStream` 中，数据块是被 _入队_ 的。每个数据块都会被复制到一个队列中，直到流准备好发送更多数据时才会被读取。
 
 ```ts
 const stream = new ReadableStream({
@@ -56,7 +56,7 @@ const stream = new ReadableStream({
 });
 ```
 
-With a direct `ReadableStream`, chunks of data are written directly to the stream. No queueing happens, and there's no need to clone the chunk data into memory. The `controller` API is updated to reflect this; instead of `.enqueue()` you call `.write`.
+而直接 `ReadableStream` 中，数据块会直接写入流中。不会有排队，也无需将数据块复制到内存中。`controller` 的 API 也做了相应更新，不使用 `.enqueue()`，而是调用 `.write`。
 
 ```ts
 const stream = new ReadableStream({
@@ -68,13 +68,13 @@ const stream = new ReadableStream({
 });
 ```
 
-When using a direct `ReadableStream`, all chunk queueing is handled by the destination. The consumer of the stream receives exactly what is passed to `controller.write()`, without any encoding or modification.
+使用直接 `ReadableStream` 时，所有数据的排队由目标端负责。流的消费者接收到的正是传递给 `controller.write()` 的数据，没有任何编码或修改。
 
 ---
 
-## Async generator streams
+## 异步生成器流
 
-Bun also supports async generator functions as a source for `Response` and `Request`. This is an easy way to create a `ReadableStream` that fetches data from an asynchronous source.
+Bun 也支持将异步生成器函数作为 `Response` 和 `Request` 的数据源。这是创建从异步源获取数据的 `ReadableStream` 的简便方式。
 
 ```ts
 const response = new Response(
@@ -87,7 +87,7 @@ const response = new Response(
 await response.text(); // "helloworld"
 ```
 
-You can also use `[Symbol.asyncIterator]` directly.
+你也可以直接使用 `[Symbol.asyncIterator]`。
 
 ```ts
 const response = new Response({
@@ -100,7 +100,7 @@ const response = new Response({
 await response.text(); // "helloworld"
 ```
 
-If you need more granular control over the stream, `yield` will return the direct ReadableStream controller.
+如果你需要对流进行更细粒度的控制，`yield` 将返回直接的 ReadableStream 控制器。
 
 ```ts
 const response = new Response({
@@ -117,7 +117,7 @@ await response.text(); // "hello"
 
 ## `Bun.ArrayBufferSink`
 
-The `Bun.ArrayBufferSink` class is a fast incremental writer for constructing an `ArrayBuffer` of unknown size.
+`Bun.ArrayBufferSink` 类是一个用于构造未知大小 `ArrayBuffer` 的高速增量写入器。
 
 ```ts
 const sink = new Bun.ArrayBufferSink();
@@ -132,7 +132,7 @@ sink.end();
 // ArrayBuffer(5) [ 104, 101, 108, 108, 111 ]
 ```
 
-To instead retrieve the data as a `Uint8Array`, pass the `asUint8Array` option to the `start` method.
+如果需要以 `Uint8Array` 格式获取数据，可以向 `start` 方法传入 `asUint8Array` 选项。
 
 ```ts
 const sink = new Bun.ArrayBufferSink();
@@ -150,7 +150,7 @@ sink.end();
 // Uint8Array(5) [ 104, 101, 108, 108, 111 ]
 ```
 
-The `.write()` method supports strings, typed arrays, `ArrayBuffer`, and `SharedArrayBuffer`.
+`.write()` 方法支持字符串、类型化数组、`ArrayBuffer` 和 `SharedArrayBuffer`。
 
 ```ts
 sink.write("h");
@@ -160,7 +160,7 @@ sink.write(Buffer.from("lo").buffer);
 sink.end();
 ```
 
-Once `.end()` is called, no more data can be written to the `ArrayBufferSink`. However, in the context of buffering a stream, it's useful to continuously write data and periodically `.flush()` the contents (say, into a `WriteableStream`). To support this, pass `stream: true` to the constructor.
+一旦调用 `.end()`，就无法再向 `ArrayBufferSink` 写入数据。然而，在流缓冲的场景下，通常需要持续写入数据并定期调用 `.flush()` 将内容（例如写入到一个 `WritableStream`）。为支持此需求，可在构造时传入 `stream: true`。
 
 ```ts
 const sink = new Bun.ArrayBufferSink();
@@ -180,9 +180,9 @@ sink.flush();
 // ArrayBuffer(5) [ 108, 111 ]
 ```
 
-The `.flush()` method returns the buffered data as an `ArrayBuffer` (or `Uint8Array` if `asUint8Array: true`) and clears internal buffer.
+`.flush()` 方法返回缓冲数据（作为 `ArrayBuffer`，如果 `asUint8Array: true` 则返回 `Uint8Array`）并清空内部缓冲区。
 
-To manually set the size of the internal buffer in bytes, pass a value for `highWaterMark`:
+如果需要手动设置内部缓冲区的大小（以字节为单位），请传入 `highWaterMark`：
 
 ```ts
 const sink = new Bun.ArrayBufferSink();
@@ -193,11 +193,11 @@ sink.start({
 
 ---
 
-## Reference
+## 参考
 
 ```ts See Typescript Definitions expandable
 /**
- * Fast incremental writer that becomes an `ArrayBuffer` on end().
+ * 快速增量写入器，调用 end() 后生成 `ArrayBuffer`。
  */
 export class ArrayBufferSink {
   constructor();
@@ -205,26 +205,26 @@ export class ArrayBufferSink {
   start(options?: {
     asUint8Array?: boolean;
     /**
-     * Preallocate an internal buffer of this size
-     * This can significantly improve performance when the chunk size is small
+     * 预分配此大小的内部缓冲区
+     * 当数据块较小时，能显著提升性能
      */
     highWaterMark?: number;
     /**
-     * On {@link ArrayBufferSink.flush}, return the written data as a `Uint8Array`.
-     * Writes will restart from the beginning of the buffer.
+     * 在 {@link ArrayBufferSink.flush} 时返回写入数据为 `Uint8Array`。
+     * 写入将从缓冲区开头重新开始。
      */
     stream?: boolean;
   }): void;
 
   write(chunk: string | ArrayBufferView | ArrayBuffer | SharedArrayBuffer): number;
   /**
-   * Flush the internal buffer
+   * 刷新内部缓冲区
    *
-   * If {@link ArrayBufferSink.start} was passed a `stream` option, this will return a `ArrayBuffer`
-   * If {@link ArrayBufferSink.start} was passed a `stream` option and `asUint8Array`, this will return a `Uint8Array`
-   * Otherwise, this will return the number of bytes written since the last flush
+   * 如果 {@link ArrayBufferSink.start} 传入了 `stream` 选项，则返回一个 `ArrayBuffer`
+   * 若同时传入了 `stream` 和 `asUint8Array`，则返回 `Uint8Array`
+   * 否则，返回自上次刷新以来写入的字节数
    *
-   * This API might change later to separate Uint8ArraySink and ArrayBufferSink
+   * 该 API 以后可能拆分为 Uint8ArraySink 和 ArrayBufferSink
    */
   flush(): number | Uint8Array<ArrayBuffer> | ArrayBuffer;
   end(): ArrayBuffer | Uint8Array<ArrayBuffer>;

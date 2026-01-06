@@ -1,42 +1,42 @@
 ---
-title: Benchmarking
-description: How to benchmark Bun
+title: 性能基准测试
+description: 如何对 Bun 进行基准测试
 ---
 
-Bun is designed for speed. Hot paths are extensively profiled and benchmarked. The source code for all of Bun's public benchmarks can be found in the [`/bench`](https://github.com/oven-sh/bun/tree/main/bench) directory of the Bun repo.
+Bun 以速度为设计目标。关键路径经过广泛的性能分析和基准测试。所有 Bun 公共基准测试的源代码都可以在 Bun 仓库的 [`/bench`](https://github.com/oven-sh/bun/tree/main/bench) 目录中找到。
 
-## Measuring time
+## 测量时间
 
-To precisely measure time, Bun offers two runtime APIs functions:
+为了精确测量时间，Bun 提供了两个运行时 API 函数：
 
-1. The Web-standard [`performance.now()`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) function
-2. `Bun.nanoseconds()` which is similar to `performance.now()` except it returns the current time since the application started in nanoseconds. You can use `performance.timeOrigin` to convert this to a Unix timestamp.
+1. Web 标准的 [`performance.now()`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) 函数
+2. `Bun.nanoseconds()`，类似于 `performance.now()`，但它返回应用程序启动以来的当前时间，单位为纳秒。你可以使用 `performance.timeOrigin` 将其转换为 Unix 时间戳。
 
-## Benchmarking tools
+## 基准测试工具
 
-When writing your own benchmarks, it's important to choose the right tool.
+编写自己的基准测试时，选择合适的工具非常重要。
 
-- For microbenchmarks, a great general-purpose tool is [`mitata`](https://github.com/evanwashere/mitata).
-- For load testing, you _must use_ an HTTP benchmarking tool that is at least as fast as `Bun.serve()`, or your results will be skewed. Some popular Node.js-based benchmarking tools like [`autocannon`](https://github.com/mcollina/autocannon) are not fast enough. We recommend one of the following:
+- 对于微基准测试，一个很好的通用工具是 [`mitata`](https://github.com/evanwashere/mitata)。
+- 对于负载测试，你**必须使用**至少与 `Bun.serve()` 同样快速的 HTTP 基准测试工具，否则你的结果会受到影响。一些流行的基于 Node.js 的基准测试工具如 [`autocannon`](https://github.com/mcollina/autocannon) 速度不够。我们推荐以下工具之一：
   - [`bombardier`](https://github.com/codesenberg/bombardier)
   - [`oha`](https://github.com/hatoo/oha)
   - [`http_load_test`](https://github.com/uNetworking/uSockets/blob/master/examples/http_load_test.c)
-- For benchmarking scripts or CLI commands, we recommend [`hyperfine`](https://github.com/sharkdp/hyperfine).
+- 对于基准测试脚本或 CLI 命令，我们推荐 [`hyperfine`](https://github.com/sharkdp/hyperfine)。
 
-## Measuring memory usage
+## 测量内存使用
 
-Bun has two heaps. One heap is for the JavaScript runtime and the other heap is for everything else.
+Bun 有两个堆。一个堆用于 JavaScript 运行时，另一个堆用于其他所有内容。
 
-### JavaScript heap stats
+### JavaScript 堆统计
 
-The `bun:jsc` module exposes a few functions for measuring memory usage:
+`bun:jsc` 模块暴露了一些用于测量内存使用的函数：
 
 ```ts
 import { heapStats } from "bun:jsc";
 console.log(heapStats());
 ```
 
-<Accordion title="View example statistics">
+<Accordion title="查看示例统计">
 
 ```ts expandable icon="/icons/typescript.svg"
 {
@@ -47,7 +47,7 @@ console.log(heapStats());
   protectedObjectCount: 62,
   globalObjectCount: 1,
   protectedGlobalObjectCount: 1,
-  // A count of every object type in the heap
+  // 堆中每种对象类型的计数
   objectTypeCounts: {
     CallbackObject: 25,
     FunctionExecutable: 2078,
@@ -143,16 +143,16 @@ console.log(heapStats());
 
 </Accordion>
 
-JavaScript is a garbage-collected language, not reference counted. It's normal and correct for objects to not be freed immediately in all cases, though it's not normal for objects to never be freed.
+JavaScript 是一种垃圾回收语言，不是计数引用。对象在所有情况下不立即释放是正常且正确的，尽管对象永远不被释放是不正常的。
 
-To force garbage collection to run manually:
+要强制手动运行垃圾回收：
 
 ```ts
-Bun.gc(true); // synchronous
-Bun.gc(false); // asynchronous
+Bun.gc(true); // 同步执行
+Bun.gc(false); // 异步执行
 ```
 
-Heap snapshots let you inspect what objects are not being freed. You can use the `bun:jsc` module to take a heap snapshot and then view it with Safari or WebKit GTK developer tools. To generate a heap snapshot:
+堆快照让你能够检查哪些对象没有被释放。你可以使用 `bun:jsc` 模块生成堆快照，然后用 Safari 或 WebKit GTK 开发者工具查看。生成堆快照：
 
 ```ts
 import { generateHeapSnapshot } from "bun";
@@ -161,35 +161,35 @@ const snapshot = generateHeapSnapshot();
 await Bun.write("heap.json", JSON.stringify(snapshot, null, 2));
 ```
 
-To view the snapshot, open the `heap.json` file in Safari's Developer Tools (or WebKit GTK)
+要查看快照，在 Safari 开发者工具（或 WebKit GTK）中打开 `heap.json` 文件：
 
-1. Open the Developer Tools
-2. Click "Timeline"
-3. Click "JavaScript Allocations" in the menu on the left. It might not be visible until you click the pencil icon to show all the timelines
-4. Click "Import" and select your heap snapshot JSON
+1. 打开开发者工具
+2. 点击「Timeline」（时间轴）
+3. 在左侧菜单点击「JavaScript Allocations」（JavaScript 分配）。可能需要点击铅笔图标才能显示所有时间轴
+4. 点击「Import」（导入），选择你的堆快照 JSON
 
 <Frame>
   <img
     src="https://user-images.githubusercontent.com/709451/204428943-ba999e8f-8984-4f23-97cb-b4e3e280363e.png"
-    alt="Importing a heap snapshot"
+    alt="导入堆快照"
   />
 </Frame>
 
-Once imported, you should see something like this:
+导入后，你应该看到类似以下界面：
 
 <Frame>
   <img
-    alt="Viewing heap snapshot in Safari"
+    alt="在 Safari 中查看堆快照"
     src="https://user-images.githubusercontent.com/709451/204429337-b0d8935f-3509-4071-b991-217794d1fb27.png"
-    caption="Viewing heap snapshot in Safari Dev Tools"
+    caption="在 Safari 开发者工具中查看堆快照"
   />
 </Frame>
 
-> The [web debugger](/runtime/debugger#inspect) also offers the timeline feature which allows you to track and examine the memory usage of the running debug session.
+> [网页调试器](/runtime/debugger#inspect) 也提供时间轴功能，允许你追踪并检查运行中的调试会话的内存使用情况。
 
-### Native heap stats
+### 本地堆统计
 
-Bun uses mimalloc for the other heap. To report a summary of non-JavaScript memory usage, set the `MIMALLOC_SHOW_STATS=1` environment variable. and stats will print on exit.
+Bun 另外使用 mimalloc 管理其他堆。要报告非 JavaScript 内存使用的汇总信息，设置环境变量 `MIMALLOC_SHOW_STATS=1`，退出时会打印统计信息。
 
 ```sh terminal icon="terminal"
 MIMALLOC_SHOW_STATS=1 bun script.js
@@ -217,25 +217,25 @@ numa nodes:       1
    process: user: 0.061 s, system: 0.014 s, faults: 0, rss: 57.4 MiB, commit: 64.0 MiB
 ```
 
-## CPU profiling
+## CPU 性能分析
 
-Profile JavaScript execution to identify performance bottlenecks with the `--cpu-prof` flag.
+使用 `--cpu-prof` 标志分析 JavaScript 执行性能，以识别性能瓶颈。
 
 ```sh terminal icon="terminal"
 bun --cpu-prof script.js
 ```
 
-This generates a `.cpuprofile` file you can open in Chrome DevTools (Performance tab → Load profile) or VS Code's CPU profiler.
+这会生成一个 `.cpuprofile` 文件，你可以在 Chrome DevTools（性能标签页 → 加载配置文件）或 VS Code 的 CPU 分析器中打开。
 
-### Options
+### 选项
 
 ```sh terminal icon="terminal"
 bun --cpu-prof --cpu-prof-name my-profile.cpuprofile script.js
 bun --cpu-prof --cpu-prof-dir ./profiles script.js
 ```
 
-| Flag                         | Description          |
+| 标志                         | 说明                 |
 | ---------------------------- | -------------------- |
-| `--cpu-prof`                 | Enable profiling     |
-| `--cpu-prof-name <filename>` | Set output filename  |
-| `--cpu-prof-dir <dir>`       | Set output directory |
+| `--cpu-prof`                 | 启用性能分析         |
+| `--cpu-prof-name <filename>` | 设置输出文件名       |
+| `--cpu-prof-dir <dir>`       | 设置输出目录         |

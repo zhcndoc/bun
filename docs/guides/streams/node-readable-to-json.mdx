@@ -1,10 +1,10 @@
 ---
-title: Convert a Node.js Readable to JSON
-sidebarTitle: Readable to JSON
+title: 将 Node.js Readable 转换为 JSON
+sidebarTitle: Readable 转 JSON
 mode: center
 ---
 
-To convert a Node.js `Readable` stream to a JSON object in Bun, you can create a new [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object with the stream as the body, then use [`response.json()`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json) to read the stream into a JSON object.
+要在 Bun 中将 Node.js 的 `Readable` 流转换为 JSON 对象，可以创建一个以该流作为主体的新 [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) 对象，然后使用 [`response.json()`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json) 将流读取为 JSON 对象。
 
 ```ts
 import { Readable } from "stream";

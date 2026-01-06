@@ -1,17 +1,17 @@
 ---
-title: C Compiler
-description: Compile and run C from JavaScript with low overhead
+title: C 编译器
+description: 使用低开销从 JavaScript 编译和运行 C 代码
 ---
 
-`bun:ffi` has experimental support for compiling and running C from JavaScript with low overhead.
+`bun:ffi` 具有从 JavaScript 以低开销编译和运行 C 代码的实验性支持。
 
 ---
 
-## Usage (cc in `bun:ffi`)
+## 使用方法（`bun:ffi` 中的 cc）
 
-See the [introduction blog post](https://bun.com/blog/compile-and-run-c-in-js) for more information.
+更多信息请参阅[介绍博客文章](https://bun.com/blog/compile-and-run-c-in-js)。
 
-JavaScript:
+JavaScript 代码：
 
 ```ts hello.ts icon="file-code"
 import { cc } from "bun:ffi";
@@ -29,10 +29,10 @@ const {
   },
 });
 
-console.log("What is the answer to the universe?", hello());
+console.log("宇宙的答案是什么？", hello());
 ```
 
-C source:
+C 源代码：
 
 ```c hello.c
 int hello() {
@@ -40,52 +40,52 @@ int hello() {
 }
 ```
 
-When you run `hello.js`, it will print:
+运行 `hello.js` 时，将打印：
 
 ```sh terminal icon="terminal"
 bun hello.js
-What is the answer to the universe? 42
+宇宙的答案是什么？ 42
 ```
 
-Under the hood, `cc` uses [TinyCC](https://bellard.org/tcc/) to compile the C code and then link it with the JavaScript runtime, efficiently converting types in-place.
+底层，`cc` 使用 [TinyCC](https://bellard.org/tcc/) 来编译 C 代码，然后与 JavaScript 运行时链接，高效地进行类型原地转换。
 
-### Primitive types
+### 基本类型
 
-The same `FFIType` values in [`dlopen`](/runtime/ffi) are supported in `cc`.
+`cc` 支持 [`dlopen`](/runtime/ffi) 中相同的 `FFIType` 值。
 
-| `FFIType`  | C Type         | Aliases                     |
-| ---------- | -------------- | --------------------------- |
-| cstring    | `char*`        |                             |
-| function   | `(void*)(*)()` | `fn`, `callback`            |
-| ptr        | `void*`        | `pointer`, `void*`, `char*` |
-| i8         | `int8_t`       | `int8_t`                    |
-| i16        | `int16_t`      | `int16_t`                   |
-| i32        | `int32_t`      | `int32_t`, `int`            |
-| i64        | `int64_t`      | `int64_t`                   |
-| i64_fast   | `int64_t`      |                             |
-| u8         | `uint8_t`      | `uint8_t`                   |
-| u16        | `uint16_t`     | `uint16_t`                  |
-| u32        | `uint32_t`     | `uint32_t`                  |
-| u64        | `uint64_t`     | `uint64_t`                  |
-| u64_fast   | `uint64_t`     |                             |
-| f32        | `float`        | `float`                     |
-| f64        | `double`       | `double`                    |
-| bool       | `bool`         |                             |
-| char       | `char`         |                             |
-| napi_env   | `napi_env`     |                             |
-| napi_value | `napi_value`   |                             |
+| `FFIType`  | C 类型          | 别名                        |
+| ---------- | --------------- | --------------------------- |
+| cstring    | `char*`         |                             |
+| function   | `(void*)(*)()`  | `fn`，`callback`            |
+| ptr        | `void*`         | `pointer`，`void*`，`char*` |
+| i8         | `int8_t`        | `int8_t`                    |
+| i16        | `int16_t`       | `int16_t`                   |
+| i32        | `int32_t`       | `int32_t`，`int`            |
+| i64        | `int64_t`       | `int64_t`                   |
+| i64_fast   | `int64_t`       |                             |
+| u8         | `uint8_t`       | `uint8_t`                   |
+| u16        | `uint16_t`      | `uint16_t`                  |
+| u32        | `uint32_t`      | `uint32_t`                  |
+| u64        | `uint64_t`      | `uint64_t`                  |
+| u64_fast   | `uint64_t`      |                             |
+| f32        | `float`         | `float`                     |
+| f64        | `double`        | `double`                    |
+| bool       | `bool`          |                             |
+| char       | `char`          |                             |
+| napi_env   | `napi_env`      |                             |
+| napi_value | `napi_value`    |                             |
 
-### Strings, objects, and non-primitive types
+### 字符串、对象及非基本类型
 
-To make it easier to work with strings, objects, and other non-primitive types that don't map 1:1 to C types, `cc` supports N-API.
+为方便操作字符串、对象以及其他无法 1:1 映射到 C 类型的非基本类型，`cc` 支持 N-API。
 
-To pass or receive a JavaScript values without any type conversions from a C function, you can use `napi_value`.
+如果想在 C 函数中传递或接收 JavaScript 值且不进行任何类型转换，可以使用 `napi_value`。
 
-You can also pass a `napi_env` to receive the N-API environment used to call the JavaScript function.
+你也可以传递一个 `napi_env`，用以接收调用 JavaScript 函数时使用的 N-API 环境。
 
-#### Returning a C string to JavaScript
+#### 从 C 返回字符串到 JavaScript
 
-For example, if you have a string in C, you can return it to JavaScript like this:
+例如，如果 C 中有一个字符串，可以这样返回给 JavaScript：
 
 ```ts hello.ts
 import { cc } from "bun:ffi";
@@ -106,7 +106,7 @@ const {
 const result = hello();
 ```
 
-And in C:
+对应的 C 代码：
 
 ```c hello.c
 #include <node/node_api.h>
@@ -118,7 +118,7 @@ napi_value hello(napi_env env) {
 }
 ```
 
-You can also use this to return other types like objects and arrays:
+你也可以用此方式返回其他类型，比如对象和数组：
 
 ```c hello.c
 #include <node/node_api.h>
@@ -130,11 +130,11 @@ napi_value hello(napi_env env) {
 }
 ```
 
-### `cc` Reference
+### `cc` 参考文档
 
 #### `library: string[]`
 
-The `library` array is used to specify the libraries that should be linked with the C code.
+`library` 数组用于指定应与 C 代码链接的库。
 
 ```ts
 type Library = string[];
@@ -147,7 +147,7 @@ cc({
 
 #### `symbols`
 
-The `symbols` object is used to specify the functions and variables that should be exposed to JavaScript.
+`symbols` 对象用于指定应向 JavaScript 公开的函数和变量。
 
 ```ts
 type Symbols = {
@@ -160,7 +160,7 @@ type Symbols = {
 
 #### `source`
 
-The `source` is a file path to the C code that should be compiled and linked with the JavaScript runtime.
+`source` 是要编译并与 JavaScript 运行时链接的 C 代码文件路径。
 
 ```ts
 type Source = string | URL | BunFile;
@@ -178,17 +178,17 @@ cc({
 
 #### `flags: string | string[]`
 
-The `flags` is an optional array of strings that should be passed to the TinyCC compiler.
+`flags` 是一个可选的字符串数组，传递给 TinyCC 编译器。
 
 ```ts
 type Flags = string | string[];
 ```
 
-These are flags like `-I` for include directories and `-D` for preprocessor definitions.
+这些是类似 `-I` 指定包含目录和 `-D` 预处理定义的标志。
 
 #### `define: Record<string, string>`
 
-The `define` is an optional object that should be passed to the TinyCC compiler.
+`define` 是一个可选对象，传递给 TinyCC 编译器。
 
 ```ts
 type Defines = Record<string, string>;
@@ -201,4 +201,4 @@ cc({
 });
 ```
 
-These are preprocessor definitions passed to the TinyCC compiler.
+这些是传递给 TinyCC 编译器的预处理定义。

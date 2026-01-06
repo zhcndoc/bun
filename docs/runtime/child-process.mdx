@@ -1,34 +1,34 @@
 ---
-title: Spawn
-description: Spawn child processes with `Bun.spawn` or `Bun.spawnSync`
+title: Spawn（创建子进程）
+description: 使用 `Bun.spawn` 或 `Bun.spawnSync` 创建子进程
 ---
 
-## Spawn a process (`Bun.spawn()`)
+## 创建一个进程 (`Bun.spawn()`)
 
-Provide a command as an array of strings. The result of `Bun.spawn()` is a `Bun.Subprocess` object.
+提供一个字符串数组作为命令。`Bun.spawn()` 返回一个 `Bun.Subprocess` 对象。
 
 ```ts
 const proc = Bun.spawn(["bun", "--version"]);
 console.log(await proc.exited); // 0
 ```
 
-The second argument to `Bun.spawn` is a parameters object that can be used to configure the subprocess.
+`Bun.spawn` 的第二个参数是一个参数对象，用来配置子进程。
 
 ```ts
 const proc = Bun.spawn(["bun", "--version"], {
-  cwd: "./path/to/subdir", // specify a working directory
-  env: { ...process.env, FOO: "bar" }, // specify environment variables
+  cwd: "./path/to/subdir", // 指定工作目录
+  env: { ...process.env, FOO: "bar" }, // 指定环境变量
   onExit(proc, exitCode, signalCode, error) {
-    // exit handler
+    // 退出处理器
   },
 });
 
-proc.pid; // process ID of subprocess
+proc.pid; // 子进程的进程ID
 ```
 
-## Input stream
+## 输入流
 
-By default, the input stream of the subprocess is undefined; it can be configured with the `stdin` parameter.
+默认情况下，子进程的输入流是 `undefined`；可以通过 `stdin` 参数进行配置。
 
 ```ts
 const proc = Bun.spawn(["cat"], {
@@ -39,41 +39,41 @@ const text = await proc.stdout.text();
 console.log(text); // "const input = "hello world".repeat(400); ..."
 ```
 
-| Value                    | Description                                      |
-| ------------------------ | ------------------------------------------------ |
-| `null`                   | **Default.** Provide no input to the subprocess  |
-| `"pipe"`                 | Return a `FileSink` for fast incremental writing |
-| `"inherit"`              | Inherit the `stdin` of the parent process        |
-| `Bun.file()`             | Read from the specified file                     |
-| `TypedArray \| DataView` | Use a binary buffer as input                     |
-| `Response`               | Use the response `body` as input                 |
-| `Request`                | Use the request `body` as input                  |
-| `ReadableStream`         | Use a readable stream as input                   |
-| `Blob`                   | Use a blob as input                              |
-| `number`                 | Read from the file with a given file descriptor  |
+| 值                       | 描述                                                   |
+| ------------------------ | ------------------------------------------------------ |
+| `null`                   | **默认。** 不向子进程提供输入                          |
+| `"pipe"`                 | 返回一个 `FileSink` 用于快速增量写入                   |
+| `"inherit"`              | 继承父进程的 `stdin`                                   |
+| `Bun.file()`             | 从指定文件读取                                        |
+| `TypedArray \| DataView` | 使用二进制缓冲区作为输入                               |
+| `Response`               | 使用响应体 `body` 作为输入                             |
+| `Request`                | 使用请求体 `body` 作为输入                             |
+| `ReadableStream`         | 使用可读流作为输入                                     |
+| `Blob`                   | 使用 Blob 作为输入                                     |
+| `number`                 | 从给定文件描述符的文件读取                             |
 
-The `"pipe"` option lets incrementally write to the subprocess's input stream from the parent process.
+`"pipe"` 选项允许从父进程向子进程的输入流进行增量写入。
 
 ```ts
 const proc = Bun.spawn(["cat"], {
-  stdin: "pipe", // return a FileSink for writing
+  stdin: "pipe", // 返回可写的 FileSink
 });
 
-// enqueue string data
+// 入队字符串数据
 proc.stdin.write("hello");
 
-// enqueue binary data
+// 入队二进制数据
 const enc = new TextEncoder();
 proc.stdin.write(enc.encode(" world!"));
 
-// send buffered data
+// 发送缓冲数据
 proc.stdin.flush();
 
-// close the input stream
+// 关闭输入流
 proc.stdin.end();
 ```
 
-Passing a `ReadableStream` to `stdin` lets you pipe data from a JavaScript `ReadableStream` directly to the subprocess's input:
+将一个 `ReadableStream` 传给 `stdin`，可以让你直接从 JavaScript 的 `ReadableStream` 向子进程输入流传输数据：
 
 ```ts
 const stream = new ReadableStream({
@@ -93,9 +93,9 @@ const output = await proc.stdout.text();
 console.log(output); // "Hello from ReadableStream!"
 ```
 
-## Output streams
+## 输出流
 
-You can read results from the subprocess via the `stdout` and `stderr` properties. By default these are instances of `ReadableStream`.
+你可以通过 `stdout` 和 `stderr` 属性读取子进程的输出。默认情况下它们是 `ReadableStream` 的实例。
 
 ```ts
 const proc = Bun.spawn(["bun", "--version"]);
@@ -103,74 +103,74 @@ const text = await proc.stdout.text();
 console.log(text); // => "1.3.3\n"
 ```
 
-Configure the output stream by passing one of the following values to `stdout/stderr`:
+通过向 `stdout/stderr` 传入以下值之一来配置输出流：
 
-| Value        | Description                                                                                         |
-| ------------ | --------------------------------------------------------------------------------------------------- |
-| `"pipe"`     | **Default for `stdout`.** Pipe the output to a `ReadableStream` on the returned `Subprocess` object |
-| `"inherit"`  | **Default for `stderr`.** Inherit from the parent process                                           |
-| `"ignore"`   | Discard the output                                                                                  |
-| `Bun.file()` | Write to the specified file                                                                         |
-| `number`     | Write to the file with the given file descriptor                                                    |
+| 值           | 描述                                                                                       |
+| ------------ | ------------------------------------------------------------------------------------------ |
+| `"pipe"`     | **`stdout` 的默认值。** 将输出导入返回的 `Subprocess` 对象的 `ReadableStream`               |
+| `"inherit"`  | **`stderr` 的默认值。** 继承自父进程                                                      |
+| `"ignore"`   | 丢弃输出                                                                                  |
+| `Bun.file()` | 写入指定文件                                                                              |
+| `number`     | 写入指定文件描述符的文件                                                                  |
 
-## Exit handling
+## 退出处理
 
-Use the `onExit` callback to listen for the process exiting or being killed.
+使用 `onExit` 回调监听进程退出或被杀死。
 
 ```ts index.ts icon="/icons/typescript.svg"
 const proc = Bun.spawn(["bun", "--version"], {
   onExit(proc, exitCode, signalCode, error) {
-    // exit handler
+    // 退出处理器
   },
 });
 ```
 
-For convenience, the `exited` property is a `Promise` that resolves when the process exits.
+为方便起见，`exited` 属性是一个在进程退出时解析的 `Promise`。
 
 ```ts index.ts icon="/icons/typescript.svg"
 const proc = Bun.spawn(["bun", "--version"]);
 
-await proc.exited; // resolves when process exit
-proc.killed; // boolean — was the process killed?
-proc.exitCode; // null | number
+await proc.exited; // 进程退出时解析
+proc.killed; // 布尔值 — 进程是否被杀死？
+proc.exitCode; // null | 数字
 proc.signalCode; // null | "SIGABRT" | "SIGALRM" | ...
 ```
 
-To kill a process:
+杀死进程：
 
 ```ts index.ts icon="/icons/typescript.svg"
 const proc = Bun.spawn(["bun", "--version"]);
 proc.kill();
 proc.killed; // true
 
-proc.kill(15); // specify a signal code
-proc.kill("SIGTERM"); // specify a signal name
+proc.kill(15); // 指定信号码
+proc.kill("SIGTERM"); // 指定信号名
 ```
 
-The parent `bun` process will not terminate until all child processes have exited. Use `proc.unref()` to detach the child process from the parent.
+父进程 `bun` 在所有子进程退出前不会终止。使用 `proc.unref()` 可以将子进程与父进程分离。
 
 ```ts index.ts icon="/icons/typescript.svg"
 const proc = Bun.spawn(["bun", "--version"]);
 proc.unref();
 ```
 
-## Resource usage
+## 资源使用
 
-You can get information about the process's resource usage after it has exited:
+进程退出后，你可以获取该进程的资源使用信息：
 
 ```ts index.ts icon="/icons/typescript.svg"
 const proc = Bun.spawn(["bun", "--version"]);
 await proc.exited;
 
 const usage = proc.resourceUsage();
-console.log(`Max memory used: ${usage.maxRSS} bytes`);
-console.log(`CPU time (user): ${usage.cpuTime.user} µs`);
-console.log(`CPU time (system): ${usage.cpuTime.system} µs`);
+console.log(`最大内存使用量: ${usage.maxRSS} 字节`);
+console.log(`CPU 时间（用户态）: ${usage.cpuTime.user} 微秒`);
+console.log(`CPU 时间（内核态）: ${usage.cpuTime.system} 微秒`);
 ```
 
-## Using AbortSignal
+## 使用 AbortSignal
 
-You can abort a subprocess using an `AbortSignal`:
+你可以使用 `AbortSignal` 中止子进程：
 
 ```ts index.ts icon="/icons/typescript.svg"
 const controller = new AbortController();
@@ -181,113 +181,113 @@ const proc = Bun.spawn({
   signal,
 });
 
-// Later, to abort the process:
+// 后续中止进程：
 controller.abort();
 ```
 
-## Using timeout and killSignal
+## 使用 timeout 和 killSignal
 
-You can set a timeout for a subprocess to automatically terminate after a specific duration:
+你可以为子进程设置超时时间，超时后自动终止进程：
 
 ```ts index.ts icon="/icons/typescript.svg"
-// Kill the process after 5 seconds
+// 5秒后杀死进程
 const proc = Bun.spawn({
   cmd: ["sleep", "10"],
-  timeout: 5000, // 5 seconds in milliseconds
+  timeout: 5000, // 5秒，单位毫秒
 });
 
-await proc.exited; // Will resolve after 5 seconds
+await proc.exited; // 5秒后解析
 ```
 
-By default, timed-out processes are killed with the `SIGTERM` signal. You can specify a different signal with the `killSignal` option:
+默认情况下，超时进程会使用 `SIGTERM` 信号被杀死。你可以通过 `killSignal` 选项指定不同信号：
 
 ```ts index.ts icon="/icons/typescript.svg"
-// Kill the process with SIGKILL after 5 seconds
+// 5秒后使用 SIGKILL 杀死进程
 const proc = Bun.spawn({
   cmd: ["sleep", "10"],
   timeout: 5000,
-  killSignal: "SIGKILL", // Can be string name or signal number
+  killSignal: "SIGKILL", // 可为信号名称或信号编号
 });
 ```
 
-The `killSignal` option also controls which signal is sent when an AbortSignal is aborted.
+`killSignal` 选项也控制在 `AbortSignal` 触发时发送的信号。
 
-## Using maxBuffer
+## 使用 maxBuffer
 
-For spawnSync, you can limit the maximum number of bytes of output before the process is killed:
+对于 spawnSync，你可以限制输出的最大字节数，超过则杀死进程：
 
 ```ts index.ts icon="/icons/typescript.svg"
-// Kill 'yes' after it emits over 100 bytes of output
+// ‘yes’ 进程输出超过100字节后被杀死
 const result = Bun.spawnSync({
-  cmd: ["yes"], // or ["bun", "exec", "yes"] on Windows
+  cmd: ["yes"], // Windows 下使用 ["bun", "exec", "yes"]
   maxBuffer: 100,
 });
-// process exits
+// 进程退出
 ```
 
-## Inter-process communication (IPC)
+## 进程间通信 (IPC)
 
-Bun supports direct inter-process communication channel between two `bun` processes. To receive messages from a spawned Bun subprocess, specify an `ipc` handler.
+Bun 支持在两个 `bun` 进程间建立直接的进程间通信通道。要从被创建的 Bun 子进程接收消息，请指定 `ipc` 处理器。
 
 ```ts parent.ts icon="/icons/typescript.svg"
 const child = Bun.spawn(["bun", "child.ts"], {
   ipc(message) {
     /**
-     * The message received from the sub process
+     * 从子进程收到的消息
      **/
   },
 });
 ```
 
-The parent process can send messages to the subprocess using the `.send()` method on the returned `Subprocess` instance. A reference to the sending subprocess is also available as the second argument in the `ipc` handler.
+父进程可通过返回的 `Subprocess` 对象上的 `.send()` 方法向子进程发送消息。子进程在 `ipc` 处理器第二个参数中获得发送者引用。
 
 ```ts parent.ts icon="/icons/typescript.svg"
 const childProc = Bun.spawn(["bun", "child.ts"], {
   ipc(message, childProc) {
     /**
-     * The message received from the sub process
+     * 从子进程收到的消息
      **/
     childProc.send("Respond to child");
   },
 });
 
-childProc.send("I am your father"); // The parent can send messages to the child as well
+childProc.send("I am your father"); // 父进程也可向子进程发送消息
 ```
 
-Meanwhile the child process can send messages to its parent using with `process.send()` and receive messages with `process.on("message")`. This is the same API used for `child_process.fork()` in Node.js.
+子进程可用 `process.send()` 向父进程发送消息，用 `process.on("message")` 接收消息。这与 Node.js 中 `child_process.fork()` 使用的 API 相同。
 
 ```ts child.ts
 process.send("Hello from child as string");
 process.send({ message: "Hello from child as object" });
 
 process.on("message", message => {
-  // print message from parent
+  // 打印来自父进程的消息
   console.log(message);
 });
 ```
 
 ```ts child.ts
-// send a string
+// 发送字符串消息
 process.send("Hello from child as string");
 
-// send an object
+// 发送对象消息
 process.send({ message: "Hello from child as object" });
 ```
 
-The `serialization` option controls the underlying communication format between the two processes:
+`serialization` 选项控制两进程间通信的序列化格式：
 
-- `advanced`: (default) Messages are serialized using the JSC `serialize` API, which supports cloning [everything `structuredClone` supports](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm). This does not support transferring ownership of objects.
-- `json`: Messages are serialized using `JSON.stringify` and `JSON.parse`, which does not support as many object types as `advanced` does.
+- `advanced`：（默认）消息使用 JSC 的 `serialize` API 序列化，支持克隆[所有 `structuredClone` 支持的类型](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm) ，但不支持对象所有权转移。
+- `json`：消息使用 `JSON.stringify` 和 `JSON.parse` 序列化，支持对象类型比 `advanced` 少。
 
-To disconnect the IPC channel from the parent process, call:
+断开与父进程的 IPC 通道可调用：
 
 ```ts
 childProc.disconnect();
 ```
 
-### IPC between Bun & Node.js
+### Bun 与 Node.js 之间的 IPC
 
-To use IPC between a `bun` process and a Node.js process, set `serialization: "json"` in `Bun.spawn`. This is because Node.js and Bun use different JavaScript engines with different object serialization formats.
+要在 `bun` 和 Node.js 进程间使用 IPC，请在 `Bun.spawn` 设置 `serialization: "json"`。这是因为 Node.js 和 Bun 使用不同的 JS 引擎及不同的对象序列化格式。
 
 ```js bun-node-ipc.js icon="file-code"
 if (typeof Bun !== "undefined") {
@@ -315,9 +315,9 @@ if (typeof Bun !== "undefined") {
 
 ---
 
-## Terminal (PTY) support
+## 终端（PTY）支持
 
-For interactive terminal applications, you can spawn a subprocess with a pseudo-terminal (PTY) attached using the `terminal` option. This makes the subprocess think it's running in a real terminal, enabling features like colored output, cursor movement, and interactive prompts.
+对于交互式终端应用，可以使用 `terminal` 选项为子进程附加伪终端（PTY）。这让子进程认为自己运行在真实终端中，启用彩色输出、光标移动和交互式提示等功能。
 
 ```ts
 const proc = Bun.spawn(["bash"], {
@@ -325,65 +325,65 @@ const proc = Bun.spawn(["bash"], {
     cols: 80,
     rows: 24,
     data(terminal, data) {
-      // Called when data is received from the terminal
+      // 终端接收数据时被调用
       process.stdout.write(data);
     },
   },
 });
 
-// Write to the terminal
+// 向终端写数据
 proc.terminal.write("echo hello\n");
 
-// Wait for the process to exit
+// 等待进程退出
 await proc.exited;
 
-// Close the terminal
+// 关闭终端
 proc.terminal.close();
 ```
 
-When the `terminal` option is provided:
+提供 `terminal` 选项时：
 
-- The subprocess sees `process.stdout.isTTY` as `true`
-- `stdin`, `stdout`, and `stderr` are all connected to the terminal
-- `proc.stdin`, `proc.stdout`, and `proc.stderr` return `null` — use the terminal instead
-- Access the terminal via `proc.terminal`
+- 子进程中 `process.stdout.isTTY` 为 `true`
+- `stdin`、`stdout` 和 `stderr` 都绑定到终端
+- `proc.stdin`、`proc.stdout` 和 `proc.stderr` 返回 `null` —— 使用终端对象代替
+- 可通过 `proc.terminal` 访问终端
 
-### Terminal options
+### 终端选项
 
-| Option  | Description                                                                                                                                                        | Default            |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ |
-| `cols`  | Number of columns                                                                                                                                                  | `80`               |
-| `rows`  | Number of rows                                                                                                                                                     | `24`               |
-| `name`  | Terminal type for PTY configuration (set `TERM` env var separately via `env` option)                                                                               | `"xterm-256color"` |
-| `data`  | Callback when data is received `(terminal, data) => void`                                                                                                          | —                  |
-| `exit`  | Callback when PTY stream closes (EOF or error). `exitCode` is PTY lifecycle status (0=EOF, 1=error), not subprocess exit code. Use `proc.exited` for process exit. | —                  |
-| `drain` | Callback when ready for more data `(terminal) => void`                                                                                                             | —                  |
+| 选项     | 描述                                                                                                            | 默认值              |
+| -------- | ---------------------------------------------------------------------------------------------------------------- | ------------------- |
+| `cols`   | 列数                                                                                                            | `80`                |
+| `rows`   | 行数                                                                                                            | `24`                |
+| `name`   | PTY 配置的终端类型（通过 `env` 选项单独设置 `TERM` 环境变量）                                                   | `"xterm-256color"`  |
+| `data`   | 接收数据时回调 `(terminal, data) => void`                                                                      | —                   |
+| `exit`   | PTY 流关闭时回调（EOF 或错误）。`exitCode` 是 PTY 生命周期状态（0为EOF，1为错误），而非子进程退出码。使用 `proc.exited` 监听进程退出。 | —                   |
+| `drain`  | 可写流准备好接收更多数据时回调 `(terminal) => void`                                                             | —                   |
 
-### Terminal methods
+### 终端方法
 
-The `Terminal` object returned by `proc.terminal` has the following methods:
+`proc.terminal` 返回的 `Terminal` 对象具有以下方法：
 
 ```ts
-// Write data to the terminal
+// 向终端写入数据
 proc.terminal.write("echo hello\n");
 
-// Resize the terminal
+// 调整终端大小
 proc.terminal.resize(120, 40);
 
-// Set raw mode (disable line buffering and echo)
+// 设置原生模式（禁用行缓冲与回显）
 proc.terminal.setRawMode(true);
 
-// Keep event loop alive while terminal is open
+// 保持事件循环活动直到终端关闭
 proc.terminal.ref();
 proc.terminal.unref();
 
-// Close the terminal
+// 关闭终端
 proc.terminal.close();
 ```
 
-### Reusable Terminal
+### 可复用终端
 
-You can create a terminal independently and reuse it across multiple subprocesses:
+你可以独立创建一个终端对象并在多个子进程间重用：
 
 ```ts
 await using terminal = new Bun.Terminal({
@@ -394,37 +394,37 @@ await using terminal = new Bun.Terminal({
   },
 });
 
-// Spawn first process
+// 创建第一个进程
 const proc1 = Bun.spawn(["echo", "first"], { terminal });
 await proc1.exited;
 
-// Reuse terminal for another process
+// 复用终端启动另一个进程
 const proc2 = Bun.spawn(["echo", "second"], { terminal });
 await proc2.exited;
 
-// Terminal is closed automatically by `await using`
+// 终端会被 `await using` 自动关闭
 ```
 
-When passing an existing `Terminal` object:
+传入已有的 `Terminal` 对象时：
 
-- The terminal can be reused across multiple spawns
-- You control when to close the terminal
-- The `exit` callback fires when you call `terminal.close()`, not when each subprocess exits
-- Use `proc.exited` to detect individual subprocess exits
+- 终端可跨多个进程复用
+- 你负责何时关闭终端
+- `exit` 回调在调用 `terminal.close()` 时触发，而非每个子进程退出时
+- 使用 `proc.exited` 侦测每个子进程退出
 
-This is useful for running multiple commands in sequence through the same terminal session.
+这适合在同一终端会话中顺序运行多个命令。
 
-<Note>Terminal support is only available on POSIX systems (Linux, macOS). It is not available on Windows.</Note>
+<Note>终端支持仅限 POSIX 系统（Linux、macOS）。Windows 不支持此功能。</Note>
 
 ---
 
-## Blocking API (`Bun.spawnSync()`)
+## 阻塞式 API (`Bun.spawnSync()`)
 
-Bun provides a synchronous equivalent of `Bun.spawn` called `Bun.spawnSync`. This is a blocking API that supports the same inputs and parameters as `Bun.spawn`. It returns a `SyncSubprocess` object, which differs from `Subprocess` in a few ways.
+Bun 提供了 `Bun.spawn` 的同步版本 `Bun.spawnSync`。这是一个阻塞 API，支持与 `Bun.spawn` 相同的输入和参数。它返回一个 `SyncSubprocess` 对象，与 `Subprocess` 有几点不同：
 
-1. It contains a `success` property that indicates whether the process exited with a zero exit code.
-2. The `stdout` and `stderr` properties are instances of `Buffer` instead of `ReadableStream`.
-3. There is no `stdin` property. Use `Bun.spawn` to incrementally write to the subprocess's input stream.
+1. 含有表示进程是否以零退出码退出的 `success` 属性。
+2. `stdout` 和 `stderr` 是 `Buffer` 实例，而非 `ReadableStream`。
+3. 没有 `stdin` 属性。若需增量写入输入流，请使用 `Bun.spawn`。
 
 ```ts
 const proc = Bun.spawnSync(["echo", "hello"]);
@@ -433,18 +433,18 @@ console.log(proc.stdout.toString());
 // => "hello\n"
 ```
 
-As a rule of thumb, the asynchronous `Bun.spawn` API is better for HTTP servers and apps, and `Bun.spawnSync` is better for building command-line tools.
+原则上，异步的 `Bun.spawn` 适合 HTTP 服务器和应用，`Bun.spawnSync` 更适合构建命令行工具。
 
 ---
 
-## Benchmarks
+## 性能基准
 
 <Note>
-  ⚡️ Under the hood, `Bun.spawn` and `Bun.spawnSync` use
-  [`posix_spawn(3)`](https://man7.org/linux/man-pages/man3/posix_spawn.3.html).
+  ⚡️ 底层，`Bun.spawn` 和 `Bun.spawnSync` 使用
+  [`posix_spawn(3)`](https://man7.org/linux/man-pages/man3/posix_spawn.3.html) 系统调用。
 </Note>
 
-Bun's `spawnSync` spawns processes 60% faster than the Node.js `child_process` module.
+Bun 的 `spawnSync` 比 Node.js 的 `child_process` 模块快 60%。
 
 ```bash terminal icon="terminal"
 bun spawn.mjs
@@ -474,9 +474,9 @@ spawnSync echo hi    1.47 ms/iter     (1.14 ms … 2.64 ms)   1.57 ms   2.37 ms 
 
 ---
 
-## Reference
+## 参考
 
-A reference of the Spawn API and types are shown below. The real types have complex generics to strongly type the `Subprocess` streams with the options passed to `Bun.spawn` and `Bun.spawnSync`. For full details, find these types as defined [bun.d.ts](https://github.com/oven-sh/bun/blob/main/packages/bun-types/bun.d.ts).
+下面是 Spawn API 及类型的参考。真实的类型中包含复杂泛型以根据 `Bun.spawn` 和 `Bun.spawnSync` 传入的选项严密类型化 `Subprocess` 流。完整细节参见 [bun.d.ts](https://github.com/oven-sh/bun/blob/main/packages/bun-types/bun.d.ts) 中的定义。
 
 ```ts See Typescript Definitions expandable
 interface Bun {
@@ -510,15 +510,15 @@ namespace SpawnOptions {
     timeout?: number;
     killSignal?: string | number;
     maxBuffer?: number;
-    terminal?: TerminalOptions; // PTY support (POSIX only)
+    terminal?: TerminalOptions; // 仅限 POSIX 的 PTY 支持
   }
 
   type Readable =
     | "pipe"
     | "inherit"
     | "ignore"
-    | null // equivalent to "ignore"
-    | undefined // to use default
+    | null // 等价于 "ignore"
+    | undefined // 使用默认值
     | BunFile
     | ArrayBufferView
     | number;
@@ -527,8 +527,8 @@ namespace SpawnOptions {
     | "pipe"
     | "inherit"
     | "ignore"
-    | null // equivalent to "ignore"
-    | undefined // to use default
+    | null // 等价于 "ignore"
+    | undefined // 使用默认值
     | BunFile
     | ArrayBufferView
     | number
@@ -575,7 +575,7 @@ interface TerminalOptions {
   rows?: number;
   name?: string;
   data?: (terminal: Terminal, data: Uint8Array<ArrayBuffer>) => void;
-  /** Called when PTY stream closes (EOF or error). exitCode is PTY lifecycle status (0=EOF, 1=error), not subprocess exit code. */
+  /** PTY 流关闭时调用（EOF 或错误）。exitCode 是 PTY 生命周期状态（0=EOF，1=错误），非子进程退出码。 */
   exit?: (terminal: Terminal, exitCode: number, signal: string | null) => void;
   drain?: (terminal: Terminal) => void;
 }

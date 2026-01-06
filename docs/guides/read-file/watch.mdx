@@ -1,60 +1,60 @@
 ---
-title: Watch a directory for changes
-sidebarTitle: Watch directory
+title: 监视目录变化
+sidebarTitle: 监视目录
 mode: center
 ---
 
-Bun implements the `node:fs` module, including the `fs.watch` function for listening for file system changes.
+Bun 实现了 `node:fs` 模块，包括用于监听文件系统变化的 `fs.watch` 函数。
 
-This code block listens for changes to files in the current directory. By default this operation is _shallow_, meaning that changes to files in subdirectories will not be detected.
+以下代码块监听当前目录中文件的变化。默认情况下，此操作是**浅层**的，意味着对子目录中文件的变化将不会被检测到。
 
 ```ts
 import { watch } from "fs";
 
 const watcher = watch(import.meta.dir, (event, filename) => {
-  console.log(`Detected ${event} in ${filename}`);
+  console.log(`检测到 ${filename} 的 ${event} 事件`);
 });
 ```
 
 ---
 
-To listen to changes in subdirectories, pass the `recursive: true` option to `fs.watch`.
+要监听子目录中的变化，请向 `fs.watch` 传递 `recursive: true` 选项。
 
 ```ts
 import { watch } from "fs";
 
 const watcher = watch(import.meta.dir, { recursive: true }, (event, relativePath) => {
-  console.log(`Detected ${event} in ${relativePath}`);
+  console.log(`检测到 ${relativePath} 的 ${event} 事件`);
 });
 ```
 
 ---
 
-Using the `node:fs/promises` module, you can listen for changes using `for await...of` instead of a callback.
+使用 `node:fs/promises` 模块，可以使用 `for await...of` 来监听变化，而非使用回调函数。
 
 ```ts
 import { watch } from "fs/promises";
 
 const watcher = watch(import.meta.dir);
 for await (const event of watcher) {
-  console.log(`Detected ${event.eventType} in ${event.filename}`);
+  console.log(`检测到 ${event.filename} 的 ${event.eventType} 事件`);
 }
 ```
 
 ---
 
-To stop listening for changes, call `watcher.close()`. It's common to do this when the process receives a `SIGINT` signal, such as when the user presses Ctrl-C.
+要停止监听变化，调用 `watcher.close()`。通常在进程收到 `SIGINT` 信号时执行此操作，比如用户按下 Ctrl-C 时候。
 
 ```ts
 import { watch } from "fs";
 
 const watcher = watch(import.meta.dir, (event, filename) => {
-  console.log(`Detected ${event} in ${filename}`);
+  console.log(`检测到 ${filename} 的 ${event} 事件`);
 });
 
 process.on("SIGINT", () => {
-  // close watcher when Ctrl-C is pressed
-  console.log("Closing watcher...");
+  // 在按下 Ctrl-C 时关闭监听器
+  console.log("正在关闭监听器...");
   watcher.close();
 
   process.exit(0);
@@ -63,4 +63,4 @@ process.on("SIGINT", () => {
 
 ---
 
-Refer to [API > Binary data > Typed arrays](/runtime/binary-data#typedarray) for more information on working with `Uint8Array` and other binary data formats in Bun.
+有关在 Bun 中处理 `Uint8Array` 和其他二进制数据格式的更多信息，请参阅 [API > 二进制数据 > 类型化数组](/runtime/binary-data#typedarray)。

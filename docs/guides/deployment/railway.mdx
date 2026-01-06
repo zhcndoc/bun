@@ -1,15 +1,15 @@
 ---
-title: Deploy a Bun application on Railway
-description: Deploy Bun applications to Railway with this step-by-step guide covering CLI and dashboard methods, optional PostgreSQL setup, and automatic SSL configuration.
-sidebarTitle: Deploy on Railway
+title: 在 Railway 上部署 Bun 应用
+description: 通过本分步指南使用 CLI 和仪表盘方法部署 Bun 应用，涵盖可选的 PostgreSQL 设置和自动 SSL 配置。
+sidebarTitle: 在 Railway 上部署
 mode: center
 ---
 
-Railway is an infrastructure platform where you can provision infrastructure, develop with that infrastructure locally, and then deploy to the cloud. It enables instant deployments from GitHub with zero configuration, automatic SSL, and built-in database provisioning.
+Railway 是一个基础设施平台，您可以在这里配置基础设施，在本地使用该基础设施进行开发，然后部署到云端。它支持从 GitHub 通过零配置实现即时部署，自动 SSL 以及内置数据库配置。
 
-This guide walks through deploying a Bun application with a PostgreSQL database (optional), which is exactly what the template below provides.
+本指南演示如何部署带有 PostgreSQL 数据库（可选）的 Bun 应用，这正是下面模板所提供的内容。
 
-You can either follow this guide step-by-step or simply deploy the pre-configured template with one click:
+您可以按照本指南逐步操作，也可以只需一键部署预配置好的模板：
 
 <a
   href="https://railway.com/deploy/bun-react-postgres?referralCode=Bun&utm_medium=integration&utm_source=template&utm_campaign=bun"
@@ -20,118 +20,118 @@ You can either follow this guide step-by-step or simply deploy the pre-configure
 
 ---
 
-**Prerequisites**:
+**先决条件**：
 
-- A Bun application ready for deployment
-- A [Railway account](https://railway.app/)
-- Railway CLI (for CLI deployment method)
-- A GitHub account (for Dashboard deployment method)
+- 准备好的 Bun 应用
+- 一个 [Railway 账号](https://railway.app/)
+- Railway CLI（用于 CLI 部署方法）
+- 一个 GitHub 账号（用于仪表盘部署方法）
 
 ---
 
-## Method 1: Deploy via CLI
+## 方法一：通过 CLI 部署
 
 <Steps>
-<Step title="Step 1">
-Ensure sure you have the Railway CLI installed.
+<Step title="步骤 1">
+确保已安装 Railway CLI。
 
 ```bash terminal icon="terminal"
 bun install -g @railway/cli
 ```
 
 </Step>
-<Step title="Step 2">
-Log into your Railway account.
+<Step title="步骤 2">
+登录您的 Railway 账号。
 
 ```bash terminal icon="terminal"
 railway login
 ```
 
 </Step>
-<Step title="Step 3">
-After successfully authenticating, initialize a new project.
+<Step title="步骤 3">
+认证成功后，初始化一个新项目。
 
 ```bash terminal icon="terminal"
 railway init
 ```
 
 </Step>
-<Step title="Step 4">
-After initializing the project, add a new database and service.
+<Step title="步骤 4">
+初始化项目后，添加新的数据库和服务。
 
-<Note>Step 4 is only necessary if your application uses a database. If you don't need PostgreSQL, skip to Step 5.</Note>
+<Note>如果您的应用不使用数据库，跳过步骤 4，直接进行步骤 5。</Note>
 
 ```bash terminal icon="terminal"
-# Add PostgreSQL database. Make sure to add this first!
+# 添加 PostgreSQL 数据库。请确保先添加此项！
 railway add --database postgres
 
-# Add your application service.
+# 添加您的应用服务
 railway add --service bun-react-db --variables DATABASE_URL=\${{Postgres.DATABASE_URL}}
 ```
 
 </Step>
-<Step title="Step 5">
-After the services have been created and connected, deploy the application to Railway. By default, services are only accessible within Railway's private network. To make your app publicly accessible, you need to generate a public domain.
+<Step title="步骤 5">
+服务创建并连接完成后，将应用部署到 Railway。默认情况下，服务仅在 Railway 的私有网络内可访问。若要让您的应用公开访问，需要生成公共域名。
 
 ```bash terminal icon="terminal"
-# Deploy your application
+# 部署您的应用
 railway up
 
-# Generate public domain
+# 生成公共域名
 railway domain
 ```
 
 </Step>
 </Steps>
 
-Your app is now live! Railway auto-deploys on every GitHub push.
+您的应用现已上线！Railway 会在每次 GitHub 推送时自动部署。
 
 ---
 
-## Method 2: Deploy via Dashboard
+## 方法二：通过仪表盘部署
 
 <Steps>
-<Step title="Step 1">
-Create a new project
+<Step title="步骤 1">
+创建新项目
 
-1. Go to [Railway Dashboard](http://railway.com/dashboard?utm_medium=integration&utm_source=docs&utm_campaign=bun)
-2. Click **"+ New"** → **"GitHub repo"**
-3. Choose your repository
-
-</Step>
-<Step title="Step 2">
-Add a PostgreSQL database, and connect this database to the service
-
-<Note>Step 2 is only necessary if your application uses a database. If you don't need PostgreSQL, skip to Step 3.</Note>
-
-1. Click **"+ New"** → **"Database"** → **"Add PostgreSQL"**
-2. After the database has been created, select your service (not the database)
-3. Go to **"Variables"** tab
-4. Click **"+ New Variable"** → **"Add Reference"**
-5. Select `DATABASE_URL` from postgres
+1. 打开 [Railway 仪表盘](http://railway.com/dashboard?utm_medium=integration&utm_source=docs&utm_campaign=bun)
+2. 点击 **"+ 新建"** → **"GitHub 仓库"**
+3. 选择您的代码仓库
 
 </Step>
-<Step title="Step 3">
-Generate a public domain
+<Step title="步骤 2">
+添加 PostgreSQL 数据库，并将该数据库连接到服务
 
-1. Select your service
-2. Go to **"Settings"** tab
-3. Under **"Networking"**, click **"Generate Domain"**
+<Note>如果应用不使用数据库，此步骤可跳过，直接进行步骤 3。</Note>
+
+1. 点击 **"+ 新建"** → **"数据库"** → **"添加 PostgreSQL"**
+2. 数据库创建完成后，选择您的服务（不是数据库）
+3. 转到 **"变量"** 标签页
+4. 点击 **"+ 创建新变量"** → **"添加引用"**
+5. 从 postgres 中选择 `DATABASE_URL`
+
+</Step>
+<Step title="步骤 3">
+生成公共域名
+
+1. 选择您的服务
+2. 转到 **"设置"** 标签页
+3. 在 **"网络"** 区块，点击 **"生成域名"**
 
 </Step>
 </Steps>
 
-Your app is now live! Railway auto-deploys on every GitHub push.
+您的应用现已上线！Railway 会在每次 GitHub 推送时自动部署。
 
 ---
 
-## Configuration (Optional)
+## 配置（可选）
 
-By default, Railway uses [Nixpacks](https://docs.railway.com/guides/build-configuration#nixpacks-options) to automatically detect and build your Bun application with zero configuration.
+默认情况下，Railway 使用 [Nixpacks](https://docs.railway.com/guides/build-configuration#nixpacks-options) 自动检测并零配置构建您的 Bun 应用。
 
-However, using the [Railpack](https://docs.railway.com/guides/build-configuration#railpack) application builder provides better Bun support, and will always support the latest version of Bun. The pre-configured templates use Railpack by default.
+但使用 [Railpack](https://docs.railway.com/guides/build-configuration#railpack) 应用构建器能提供更好的 Bun 支持，并始终支持最新版本的 Bun。预配置模板默认使用 Railpack。
 
-To enable Railpack in a custom project, add the following to your `railway.json`:
+要在自定义项目中启用 Railpack，请在您的 `railway.json` 文件中添加以下内容：
 
 ```json railway.json icon="file-json"
 {
@@ -142,4 +142,4 @@ To enable Railpack in a custom project, add the following to your `railway.json`
 }
 ```
 
-For more build configuration settings, check out the [Railway documentation](https://docs.railway.com/guides/build-configuration).
+更多构建配置细节，请参考 [Railway 文档](https://docs.railway.com/guides/build-configuration)。

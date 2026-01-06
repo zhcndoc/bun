@@ -1,61 +1,61 @@
 ---
-title: Binary Data
-description: Working with binary data in JavaScript
+title: 二进制数据
+description: 在 JavaScript 中处理二进制数据
 ---
 
-This page is intended as an introduction to working with binary data in JavaScript. Bun implements a number of data types and utilities for working with binary data, most of which are Web-standard. Any Bun-specific APIs will be noted as such.
+本页面旨在介绍在 JavaScript 中处理二进制数据。Bun 实现了多种用于处理二进制数据的数据类型和工具，其中大部分是 Web 标准的。任何 Bun 特有的 API 都会特别注明。
 
-Below is a quick "cheat sheet" that doubles as a table of contents. Click an item in the left column to jump to that section.
+下面是一张快速“备忘单”，也作为目录使用。点击左栏的条目即可跳转到相应章节。
 
-| Class                       | Description                                                                                                                                                                                             |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`TypedArray`](#typedarray) | A family of classes that provide an `Array`-like interface for interacting with binary data. Includes `Uint8Array`, `Uint16Array`, `Int8Array`, and more.                                               |
-| [`Buffer`](#buffer)         | A subclass of `Uint8Array` that implements a wide range of convenience methods. Unlike the other elements in this table, this is a Node.js API (which Bun implements). It can't be used in the browser. |
-| [`DataView`](#dataview)     | A class that provides a `get/set` API for writing some number of bytes to an `ArrayBuffer` at a particular byte offset. Often used reading or writing binary protocols.                                 |
-| [`Blob`](#blob)             | A readonly blob of binary data usually representing a file. Has a MIME `type`, a `size`, and methods for converting to `ArrayBuffer`, `ReadableStream`, and string.                                     |
-| [`File`](#file)             | A subclass of `Blob` that represents a file. Has a `name` and `lastModified` timestamp. There is experimental support in Node.js v20.                                                                   |
-| [`BunFile`](#bunfile)       | _Bun only_. A subclass of `Blob` that represents a lazily-loaded file on disk. Created with `Bun.file(path)`.                                                                                           |
+| 类                          | 描述                                                                                                                                                                                                   |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`TypedArray`](#typedarray) | 一组类提供类似数组的接口，用于交互处理二进制数据。包括 `Uint8Array`、`Uint16Array`、`Int8Array` 等。                                                                                                    |
+| [`Buffer`](#buffer)         | `Uint8Array` 的子类，实现了多种便捷方法。与本表中的其他元素不同，这是一个 Node.js API（Bun 也实现了它）。在浏览器中不能使用。                                                                            |
+| [`DataView`](#dataview)     | 提供 `get/set` 接口，可在特定字节偏移量处读写 `ArrayBuffer` 中的若干字节。常用于读写二进制协议。                                                                                                           |
+| [`Blob`](#blob)             | 通常表示文件的只读二进制数据块。具有 MIME 类型 `type`、大小 `size`，以及转换为 `ArrayBuffer`、`ReadableStream` 和字符串的方法。                                                                            |
+| [`File`](#file)             | `Blob` 的子类，表示文件。具有 `name` 和 `lastModified` 时间戳。Node.js 20 中支持实验性实现。                                                                                                             |
+| [`BunFile`](#bunfile)       | _仅在 Bun 中_。`Blob` 的子类，表示懒加载的磁盘文件。通过 `Bun.file(path)` 创建。                                                                                                                      |
 
 ---
 
-## `ArrayBuffer` and views
+## `ArrayBuffer` 和视图
 
-Until 2009, there was no language-native way to store and manipulate binary data in JavaScript. ECMAScript v5 introduced a range of new mechanisms for this. The most fundamental building block is `ArrayBuffer`, a simple data structure that represents a sequence of bytes in memory.
+直到 2009 年，JavaScript 中没有原生语言机制来存储和操作二进制数据。ECMAScript v5 引入了一系列新的机制，最基础的构建块是 `ArrayBuffer`，它是一个简单的数据结构，表示内存中字节序列。
 
 ```ts
-// this buffer can store 8 bytes
+// 此缓冲区可存储 8 字节
 const buf = new ArrayBuffer(8);
 ```
 
-Despite the name, it isn't an array and supports none of the array methods and operators one might expect. In fact, there is no way to directly read or write values from an `ArrayBuffer`. There's very little you can do with one except check its size and create "slices" from it.
+尽管名字中有“数组”，但它并不是一个数组，并且不支持任何你可能期望的数组方法和操作符。事实上，无法直接从 `ArrayBuffer` 读取或写入值。你几乎只能检查它的大小或从中创建“切片”。
 
 ```ts
 const buf = new ArrayBuffer(8);
 buf.byteLength; // => 8
 
-const slice = buf.slice(0, 4); // returns new ArrayBuffer
+const slice = buf.slice(0, 4); // 返回新的 ArrayBuffer
 slice.byteLength; // => 4
 ```
 
-To do anything interesting we need a construct known as a "view". A view is a class that _wraps_ an `ArrayBuffer` instance and lets you read and manipulate the underlying data. There are two types of views: _typed arrays_ and `DataView`.
+要进行有趣的操作，需要所谓的“视图”——一个类，用于 _包装_ 一个 `ArrayBuffer` 实例，让你可以读取和操作其底层数据。有两种视图：_类型化数组_ 和 `DataView`。
 
 ### `DataView`
 
-The `DataView` class is a lower-level interface for reading and manipulating the data in an `ArrayBuffer`.
+`DataView` 类是一个底层接口，用来读取和操作 `ArrayBuffer` 中的数据。
 
-Below we create a new `DataView` and set the first byte to 3.
+下面创建一个新的 `DataView`，并将第一个字节设置为 `3`。
 
 ```ts
 const buf = new ArrayBuffer(4);
 // [0b00000000, 0b00000000, 0b00000000, 0b00000000]
 
 const dv = new DataView(buf);
-dv.setUint8(0, 3); // write value 3 at byte offset 0
+dv.setUint8(0, 3); // 在字节偏移量 0 写入值 3
 dv.getUint8(0); // => 3
 // [0b00000011, 0b00000000, 0b00000000, 0b00000000]
 ```
 
-Now let's write a `Uint16` at byte offset `1`. This requires two bytes. We're using the value `513`, which is `2 * 256 + 1`; in bytes, that's `00000010 00000001`.
+现在，我们在字节偏移量 `1` 处写入一个 `Uint16`。这需要两个字节。我们使用值 `513`，它是 `2 * 256 + 1`；对应的字节是 `00000010 00000001`。
 
 ```ts
 dv.setUint16(1, 513);
@@ -64,159 +64,154 @@ dv.setUint16(1, 513);
 console.log(dv.getUint16(1)); // => 513
 ```
 
-We've now assigned a value to the first three bytes in our underlying `ArrayBuffer`. Even though the second and third bytes were created using `setUint16()`, we can still read each of its component bytes using `getUint8()`.
+至此，我们已经对底层 `ArrayBuffer` 的前三个字节赋值。即使第二和第三字节是通过 `setUint16()` 创建的，我们仍然可以使用 `getUint8()` 分别读取它们。
 
 ```ts
 console.log(dv.getUint8(1)); // => 2
 console.log(dv.getUint8(2)); // => 1
 ```
 
-Attempting to write a value that requires more space than is available in the underlying `ArrayBuffer` will cause an error. Below we attempt to write a `Float64` (which requires 8 bytes) at byte offset `0`, but there are only four total bytes in the buffer.
+若尝试写入超过底层 `ArrayBuffer` 可用空间的数据，将抛出错误。以下代码尝试在偏移 `0` 处写入一个 `Float64`（需要 8 字节），而缓冲区只有 4 个字节。
 
 ```ts
 dv.setFloat64(0, 3.1415);
-// ^ RangeError: Out of bounds access
+// ^ RangeError: 越界访问
 ```
 
-The following methods are available on `DataView`:
+`DataView` 支持以下方法：
 
-| Getters                                                                                                                    | Setters                                                                                                                    |
+| 读取方法                                                                                                                  | 写入方法                                                                                                                  |
 | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| [`getBigInt64()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getBigInt64)   | [`setBigInt64()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setBigInt64)   |
-| [`getBigUint64()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getBigUint64) | [`setBigUint64()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setBigUint64) |
-| [`getFloat32()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getFloat32)     | [`setFloat32()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setFloat32)     |
-| [`getFloat64()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getFloat64)     | [`setFloat64()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setFloat64)     |
-| [`getInt16()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getInt16)         | [`setInt16()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setInt16)         |
-| [`getInt32()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getInt32)         | [`setInt32()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setInt32)         |
-| [`getInt8()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getInt8)           | [`setInt8()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setInt8)           |
-| [`getUint16()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getUint16)       | [`setUint16()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setUint16)       |
-| [`getUint32()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getUint32)       | [`setUint32()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setUint32)       |
-| [`getUint8()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getUint8)         | [`setUint8()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setUint8)         |
+| [`getBigInt64()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getBigInt64)    | [`setBigInt64()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setBigInt64)    |
+| [`getBigUint64()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getBigUint64)  | [`setBigUint64()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setBigUint64)  |
+| [`getFloat32()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getFloat32)      | [`setFloat32()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setFloat32)      |
+| [`getFloat64()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getFloat64)      | [`setFloat64()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setFloat64)      |
+| [`getInt16()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getInt16)          | [`setInt16()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setInt16)          |
+| [`getInt32()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getInt32)          | [`setInt32()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setInt32)          |
+| [`getInt8()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getInt8)            | [`setInt8()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setInt8)            |
+| [`getUint16()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getUint16)        | [`setUint16()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setUint16)        |
+| [`getUint32()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getUint32)        | [`setUint32()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setUint32)        |
+| [`getUint8()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getUint8)          | [`setUint8()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setUint8)          |
 
 ### `TypedArray`
 
-Typed arrays are a family of classes that provide an `Array`-like interface for interacting with data in an `ArrayBuffer`. Whereas a `DataView` lets you write numbers of varying size at a particular offset, a `TypedArray` interprets the underlying bytes as an array of numbers, each of a fixed size.
+类型化数组是一组类，提供类似数组的接口，用于访问 `ArrayBuffer` 中的数据。与 `DataView` 可以在某个偏移量写入不同大小的数字不同，`TypedArray` 将底层字节解释为固定大小数字的数组。
 
 <Note>
-  It's common to refer to this family of classes collectively by their shared superclass `TypedArray`. This class as
-  _internal_ to JavaScript; you can't directly create instances of it, and `TypedArray` is not defined in the global
-  scope. Think of it as an `interface` or an abstract class.
+  通常会将这组类按它们的父类 `TypedArray` 集合称呼。这个类是 JavaScript 的 _内部_ 类；你无法直接创建它的实例，`TypedArray` 也不是全局定义的。可以将其看作接口或抽象类。
 </Note>
 
 ```ts
 const buffer = new ArrayBuffer(3);
 const arr = new Uint8Array(buffer);
 
-// contents are initialized to zero
+// 内容初始化为零
 console.log(arr); // Uint8Array(3) [0, 0, 0]
 
-// assign values like an array
+// 像数组一样赋值
 arr[0] = 0;
 arr[1] = 10;
 arr[2] = 255;
-arr[3] = 255; // no-op, out of bounds
+arr[3] = 255; // 操作无效，越界
 ```
 
-While an `ArrayBuffer` is a generic sequence of bytes, these typed array classes interpret the bytes as an array of numbers of a given byte size.
-The top row contains the raw bytes, and the later rows contain how these bytes will be interpreted when _viewed_ using different typed array classes.
+虽然 `ArrayBuffer` 是字节序列，这些类型化数组类会按固定字节大小将字节解释为数字数组。
 
-The following classes are typed arrays, along with a description of how they interpret the bytes in an `ArrayBuffer`:
+下表列出了类型化数组类，以及它们如何解读 `ArrayBuffer` 的字节。
 
-Here's the first table formatted as a markdown table:
+| 类                                                                                                                       | 描述                                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array)               | 每 1 字节被解释为无符号 8 位整数。范围是 0 到 255。                                                                                                              |
+| [`Uint16Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint16Array)             | 每 2 字节被解释为无符号 16 位整数。范围是 0 到 65535。                                                                                                           |
+| [`Uint32Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint32Array)             | 每 4 字节被解释为无符号 32 位整数。范围是 0 到 4294967295。                                                                                                       |
+| [`Int8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int8Array)                 | 每 1 字节被解释为有符号 8 位整数。范围是 -128 到 127。                                                                                                           |
+| [`Int16Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int16Array)               | 每 2 字节被解释为有符号 16 位整数。范围是 -32768 到 32767。                                                                                                      |
+| [`Int32Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int32Array)               | 每 4 字节被解释为有符号 32 位整数。范围是 -2147483648 到 2147483647。                                                                                            |
+| [`Float16Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float16Array)           | 每 2 字节被解释为 16 位浮点数。范围约为 -6.104e5 到 6.55e4。                                                                                                  |
+| [`Float32Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array)           | 每 4 字节被解释为 32 位浮点数。范围约为 -3.4e38 到 3.4e38。                                                                                                   |
+| [`Float64Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array)           | 每 8 字节被解释为 64 位浮点数。范围约为 -1.7e308 到 1.7e308。                                                                                                 |
+| [`BigInt64Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt64Array)         | 每 8 字节被解释为有符号 `BigInt`。范围 -9223372036854775808 到 9223372036854775807（但 `BigInt` 实际上能表示更大数）。                                       |
+| [`BigUint64Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigUint64Array)       | 每 8 字节被解释为无符号 `BigInt`。范围 0 到 18446744073709551615（但 `BigInt` 实际上能表示更大数）。                                                            |
+| [`Uint8ClampedArray`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8ClampedArray) | 与 `Uint8Array` 相同，但赋值时会自动“钳制”元素值至 0-255 区间。                                                                                              |
 
-| Class                                                                                                                     | Description                                                                                                                                                                |
-| ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array)               | Every one (1) byte is interpreted as an unsigned 8-bit integer. Range 0 to 255.                                                                                            |
-| [`Uint16Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint16Array)             | Every two (2) bytes are interpreted as an unsigned 16-bit integer. Range 0 to 65535.                                                                                       |
-| [`Uint32Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint32Array)             | Every four (4) bytes are interpreted as an unsigned 32-bit integer. Range 0 to 4294967295.                                                                                 |
-| [`Int8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int8Array)                 | Every one (1) byte is interpreted as a signed 8-bit integer. Range -128 to 127.                                                                                            |
-| [`Int16Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int16Array)               | Every two (2) bytes are interpreted as a signed 16-bit integer. Range -32768 to 32767.                                                                                     |
-| [`Int32Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int32Array)               | Every four (4) bytes are interpreted as a signed 32-bit integer. Range -2147483648 to 2147483647.                                                                          |
-| [`Float16Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float16Array)           | Every two (2) bytes are interpreted as a 16-bit floating point number. Range -6.104e5 to 6.55e4.                                                                           |
-| [`Float32Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array)           | Every four (4) bytes are interpreted as a 32-bit floating point number. Range -3.4e38 to 3.4e38.                                                                           |
-| [`Float64Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array)           | Every eight (8) bytes are interpreted as a 64-bit floating point number. Range -1.7e308 to 1.7e308.                                                                        |
-| [`BigInt64Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt64Array)         | Every eight (8) bytes are interpreted as a signed `BigInt`. Range -9223372036854775808 to 9223372036854775807 (though `BigInt` is capable of representing larger numbers). |
-| [`BigUint64Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigUint64Array)       | Every eight (8) bytes are interpreted as an unsigned `BigInt`. Range 0 to 18446744073709551615 (though `BigInt` is capable of representing larger numbers).                |
-| [`Uint8ClampedArray`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8ClampedArray) | Same as `Uint8Array`, but automatically "clamps" to the range 0-255 when assigning a value to an element.                                                                  |
+下面的表展示了用不同类型化数组类查看 `ArrayBuffer` 字节时的字节解释方式：
 
-The table below demonstrates how the bytes in an `ArrayBuffer` are interpreted when viewed using different typed array classes.
+|                  | 字节 0                | 字节 1    | 字节 2                | 字节 3    | 字节 4                | 字节 5    | 字节 6                | 字节 7    |
+| ---------------- | --------------------- | --------- | --------------------- | --------- | --------------------- | --------- | --------------------- | --------- |
+| `ArrayBuffer`    | `00000000`            | `00000001`| `00000010`            | `00000011`| `00000100`            | `00000101`| `00000110`            | `00000111`|
+| `Uint8Array`     | 0                     | 1         | 2                     | 3         | 4                     | 5         | 6                     | 7         |
+| `Uint16Array`    | 256 (`1*256 + 0`)     |           | 770 (`3*256 + 2`)     |           | 1284 (`5*256 + 4`)    |           | 1798 (`7*256 + 6`)    |           |
+| `Uint32Array`    | 50462976              |           |                       |           | 117835012             |           |                       |           |
+| `BigUint64Array` | 506097522914230528n   |           |                       |           |                       |           |                       |           |
 
-|                  | Byte 0              | Byte 1     | Byte 2              | Byte 3     | Byte 4               | Byte 5     | Byte 6               | Byte 7     |
-| ---------------- | ------------------- | ---------- | ------------------- | ---------- | -------------------- | ---------- | -------------------- | ---------- |
-| `ArrayBuffer`    | `00000000`          | `00000001` | `00000010`          | `00000011` | `00000100`           | `00000101` | `00000110`           | `00000111` |
-| `Uint8Array`     | 0                   | 1          | 2                   | 3          | 4                    | 5          | 6                    | 7          |
-| `Uint16Array`    | 256 (`1 * 256 + 0`) |            | 770 (`3 * 256 + 2`) |            | 1284 (`5 * 256 + 4`) |            | 1798 (`7 * 256 + 6`) |            |
-| `Uint32Array`    | 50462976            |            |                     |            | 117835012            |            |                      |            |
-| `BigUint64Array` | 506097522914230528n |            |                     |            |                      |            |                      |            |
-
-To create a typed array from a pre-defined `ArrayBuffer`:
+从已有的 `ArrayBuffer` 创建类型化数组：
 
 ```ts
-// create typed array from ArrayBuffer
+// 从 ArrayBuffer 创建类型数组
 const buf = new ArrayBuffer(10);
 const arr = new Uint8Array(buf);
 
 arr[0] = 30;
 arr[1] = 60;
 
-// all elements are initialized to zero
+// 所有元素初始化为 0
 console.log(arr); // => Uint8Array(10) [ 30, 60, 0, 0, 0, 0, 0, 0, 0, 0 ];
 ```
 
-If we tried to instantiate a `Uint32Array` from this same `ArrayBuffer`, we'd get an error.
+如果尝试用相同 `ArrayBuffer` 创建 `Uint32Array`，将报错。
 
 ```ts
 const buf = new ArrayBuffer(10);
 const arr = new Uint32Array(buf);
-//          ^  RangeError: ArrayBuffer length minus the byteOffset
-//             is not a multiple of the element size
+//          ^  RangeError: ArrayBuffer 长度减去字节偏移量
+//             不是元素大小的倍数
 ```
 
-A `Uint32` value requires four bytes (16 bits). Because the `ArrayBuffer` is 10 bytes long, there's no way to cleanly divide its contents into 4-byte chunks.
+`Uint32` 值需要 4 个字节（32 位）。因为 `ArrayBuffer` 长 10 字节，无法整除为 4 字节块。
 
-To fix this, we can create a typed array over a particular "slice" of an `ArrayBuffer`. The `Uint16Array` below only "views" the _first_ 8 bytes of the underlying `ArrayBuffer`. To achieve these, we specify a `byteOffset` of `0` and a `length` of `2`, which indicates the number of `Uint32` numbers we want our array to hold.
+解决方法是对 `ArrayBuffer` 的特定“切片”创建类型化数组。下面的 `Uint16Array` 只“视图”底层 `ArrayBuffer` 的 _前_ 8 字节。我们指定字节偏移量为 `0`，长度为 `2`，表示数组包含两个 `Uint32` 元素。
 
 ```ts
-// create typed array from ArrayBuffer slice
+// 从 ArrayBuffer 切片创建类型化数组
 const buf = new ArrayBuffer(10);
 const arr = new Uint32Array(buf, 0, 2);
 
 /*
-  buf    _ _ _ _ _ _ _ _ _ _    10 bytes
-  arr   [_______,_______]       2 4-byte elements
+  buf    _ _ _ _ _ _ _ _ _ _    10 字节
+  arr   [_______,_______]       2 个 4 字节元素
 */
 
 arr.byteOffset; // 0
 arr.length; // 2
 ```
 
-You don't need to explicitly create an `ArrayBuffer` instance; you can instead directly specify a length in the typed array constructor:
+你无需显式创建 `ArrayBuffer`，可以直接指定长度创建类型化数组：
 
 ```ts
 const arr2 = new Uint8Array(5);
 
-// all elements are initialized to zero
+// 所有元素初始化为 0
 // => Uint8Array(5) [0, 0, 0, 0, 0]
 ```
 
-Typed arrays can also be instantiated directly from an array of numbers, or another typed array:
+类型化数组也可以直接从数字数组或另一个类型化数组创建：
 
 ```ts
-// from an array of numbers
+// 从数字数组
 const arr1 = new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7]);
 arr1[0]; // => 0;
 arr1[7]; // => 7;
 
-// from another typed array
+// 从另一个类型化数组
 const arr2 = new Uint8Array(arr);
 ```
 
-Broadly speaking, typed arrays provide the same methods as regular arrays, with a few exceptions. For example, `push` and `pop` are not available on typed arrays, because they would require resizing the underlying `ArrayBuffer`.
+总体上，类型化数组与常规数组的方法相似，但部分方法不可用，比如 `push` 和 `pop`（因为需要调整底层 `ArrayBuffer` 大小）。
 
 ```ts
 const arr = new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7]);
 
-// supports common array methods
+// 支持通用数组方法
 arr.filter(n => n > 128); // Uint8Array(1) [255]
 arr.map(n => n * 2); // Uint8Array(8) [0, 2, 4, 6, 8, 10, 12, 14]
 arr.reduce((acc, n) => acc + n, 0); // 28
@@ -227,23 +222,23 @@ arr.includes(5); // true
 arr.indexOf(5); // 5
 ```
 
-Refer to the [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray) for more information on the properties and methods of typed arrays.
+更详细的属性和方法，请参考 [MDN 文档](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray)。
 
 ### `Uint8Array`
 
-It's worth specifically highlighting `Uint8Array`, as it represents a classic "byte array"—a sequence of 8-bit unsigned integers between 0 and 255. This is the most common typed array you'll encounter in JavaScript.
+特别需要强调的是 `Uint8Array`，它表示经典的“字节数组”——一组范围在 0 到 255 之间的无符号 8 位整数。这是 JavaScript 中最常见的类型化数组。
 
-In Bun, and someday in other JavaScript engines, it has methods available for converting between byte arrays and serialized representations of those arrays as base64 or hex strings.
+在 Bun 中（未来可能其他 JavaScript 引擎也会），它带有在字节数组和经过序列化的 base64 或十六进制字符串之间转换的方法。
 
 ```ts
 new Uint8Array([1, 2, 3, 4, 5]).toBase64(); // "AQIDBA=="
 Uint8Array.fromBase64("AQIDBA=="); // Uint8Array(4) [1, 2, 3, 4, 5]
 
-new Uint8Array([255, 254, 253, 252, 251]).toHex(); // "fffefdfcfb=="
+new Uint8Array([255, 254, 253, 252, 251]).toHex(); // "fffefdfcfb"
 Uint8Array.fromHex("fffefdfcfb"); // Uint8Array(5) [255, 254, 253, 252, 251]
 ```
 
-It is the return value of [`TextEncoder#encode`](https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder), and the input type of [`TextDecoder#decode`](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder), two utility classes designed to translate strings and various binary encodings, most notably `"utf-8"`.
+它是 [`TextEncoder#encode`](https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder) 的返回类型，也是 [`TextDecoder#decode`](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder) 的输入类型，这两个工具类设计用于字符串和各种二进制编码相互转换，尤其是 `"utf-8"`。
 
 ```ts
 const encoder = new TextEncoder();
@@ -257,27 +252,27 @@ const text = decoder.decode(bytes);
 
 ### `Buffer`
 
-Bun implements `Buffer`, a Node.js API for working with binary data that pre-dates the introduction of typed arrays in the JavaScript spec. It has since been re-implemented as a subclass of `Uint8Array`. It provides a wide range of methods, including several Array-like and `DataView`-like methods.
+Bun 实现了 Node.js 的 `Buffer`，这是一个在 JavaScript 标准中引入类型化数组之前用于操作二进制数据的 API。现在它已重新实现为 `Uint8Array` 子类，提供多种方法，包括数组方法和类似 `DataView` 的方法。
 
 ```ts
 const buf = Buffer.from("hello world");
 // => Buffer(11) [ 104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100 ]
 
 buf.length; // => 11
-buf[0]; // => 104, ascii for 'h'
-buf.writeUInt8(72, 0); // => ascii for 'H'
+buf[0]; // => 104，字符 'h' 的 ASCII 码
+buf.writeUInt8(72, 0); // 写入字符 'H' 的 ASCII 码
 
 console.log(buf.toString());
 // => Hello world
 ```
 
-For complete documentation, refer to the [Node.js documentation](https://nodejs.org/api/buffer.html).
+完整文档请参见 [Node.js 文档](https://nodejs.org/api/buffer.html)。
 
 ## `Blob`
 
-`Blob` is a Web API commonly used for representing files. `Blob` was initially implemented in browsers (unlike `ArrayBuffer` which is part of JavaScript itself), but it is now supported in Node and Bun.
+`Blob` 是 Web API，常用于表示文件。`Blob` 最初仅在浏览器实现（与 `ArrayBuffer` 不同，后者是 JavaScript 的一部分），但现已支持 Node 和 Bun。
 
-It isn't common to directly create `Blob` instances. More often, you'll receive instances of `Blob` from an external source (like an `<input type="file">` element in the browser) or library. That said, it is possible to create a `Blob` from one or more string or binary "blob parts".
+通常不会直接创建 `Blob` 实例，更多情况下会从外部来源（例如浏览器中的 `<input type="file">` 元素）或库接收 `Blob` 实例。但也可以通过一个或多个字符串或二进制“blob part”创建 `Blob`。
 
 ```ts
 const blob = new Blob(["<html>Hello</html>"], {
@@ -288,29 +283,29 @@ blob.type; // => text/html
 blob.size; // => 19
 ```
 
-These parts can be `string`, `ArrayBuffer`, `TypedArray`, `DataView`, or other `Blob` instances. The blob parts are concatenated together in the order they are provided.
+这些部分可以是 `string`，`ArrayBuffer`，`TypedArray`，`DataView`，或其他 `Blob` 实例。blob 部分按给定顺序拼接。
 
 ```ts
 const blob = new Blob([
   "<html>",
   new Blob(["<body>"]),
-  new Uint8Array([104, 101, 108, 108, 111]), // "hello" in binary
+  new Uint8Array([104, 101, 108, 108, 111]), // 二进制表示的 "hello"
   "</body></html>",
 ]);
 ```
 
-The contents of a `Blob` can be asynchronously read in various formats.
+`Blob` 的内容可以异步读取为多种格式。
 
 ```ts
 await blob.text(); // => <html><body>hello</body></html>
-await blob.bytes(); // => Uint8Array (copies contents)
-await blob.arrayBuffer(); // => ArrayBuffer (copies contents)
+await blob.bytes(); // => Uint8Array (复制内容)
+await blob.arrayBuffer(); // => ArrayBuffer (复制内容)
 await blob.stream(); // => ReadableStream
 ```
 
 ### `BunFile`
 
-`BunFile` is a subclass of `Blob` used to represent a lazily-loaded file on disk. Like `File`, it adds a `name` and `lastModified` property. Unlike `File`, it does not require the file to be loaded into memory.
+`BunFile` 是 `Blob` 的子类，用于表示懒加载的磁盘文件。与 `File` 类似，它附加了 `name` 和 `lastModified` 属性。但与 `File` 不同，它不需要将文件加载到内存。
 
 ```ts
 const file = Bun.file("index.txt");
@@ -319,12 +314,12 @@ const file = Bun.file("index.txt");
 
 ### `File`
 
-<Warning>Browser only. Experimental support in Node.js 20.</Warning>
+<Warning>仅浏览器支持。Node.js 20 中实验性支持。</Warning>
 
-[`File`](https://developer.mozilla.org/en-US/docs/Web/API/File) is a subclass of `Blob` that adds a `name` and `lastModified` property. It's commonly used in the browser to represent files uploaded via a `<input type="file">` element. Node.js and Bun implement `File`.
+[`File`](https://developer.mozilla.org/en-US/docs/Web/API/File) 是 `Blob` 的子类，添加了 `name` 和 `lastModified` 属性。浏览器中常用于表示通过 `<input type="file">` 上传的文件。Node.js 和 Bun 也实现了 `File`。
 
 ```ts
-// on browser!
+// 浏览器环境
 // <input type="file" id="file" />
 
 const files = document.getElementById("file").files;
@@ -337,25 +332,24 @@ const file = new File(["<html>Hello</html>"], "index.html", {
 });
 ```
 
-Refer to the [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/API/Blob) for complete docs information.
+完整文档请查看 [MDN 文档](https://developer.mozilla.org/en-US/docs/Web/API/Blob)。
 
 ---
 
-## Streams
+## 流
 
-Streams are an important abstraction for working with binary data without loading it all into memory at once. They are commonly used for reading and writing files, sending and receiving network requests, and processing large amounts of data.
+流是一个重要抽象，用于处理二进制数据而无需一次性全部加载到内存。常用于读写文件、发送及接收网络请求、处理大规模数据。
 
-Bun implements the Web APIs [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) and [`WritableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream).
+Bun 实现了 Web API 中的 [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) 和 [`WritableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream)。
 
 <Note>
-  Bun also implements the `node:stream` module, including
+  Bun 还实现了 `node:stream` 模块，包括
   [`Readable`](https://nodejs.org/api/stream.html#stream_readable_streams),
-  [`Writable`](https://nodejs.org/api/stream.html#stream_writable_streams), and
-  [`Duplex`](https://nodejs.org/api/stream.html#stream_duplex_and_transform_streams). For complete documentation, refer
-  to the Node.js docs.
+  [`Writable`](https://nodejs.org/api/stream.html#stream_writable_streams) 和
+  [`Duplex`](https://nodejs.org/api/stream.html#stream_duplex_and_transform_streams)。完整文档请参见 Node.js 文档。
 </Note>
 
-To create a simple readable stream:
+创建一个简单的可读流：
 
 ```ts
 const stream = new ReadableStream({
@@ -367,7 +361,7 @@ const stream = new ReadableStream({
 });
 ```
 
-The contents of this stream can be read chunk-by-chunk with `for await` syntax.
+可以用 `for await` 语法逐块读取流内容。
 
 ```ts
 for await (const chunk of stream) {
@@ -378,63 +372,63 @@ for await (const chunk of stream) {
 // => "world"
 ```
 
-For a more complete discussion of streams in Bun, see [API > Streams](/runtime/streams).
+关于 Bun 中流的更多内容，请参阅 [API > Streams](/runtime/streams)。
 
 ---
 
-## Conversion
+## 格式转换
 
-Converting from one binary format to another is a common task. This section is intended as a reference.
+把一种二进制格式转换成另一种格式是常见任务，本节作为参考。
 
-### From `ArrayBuffer`
+### 从 `ArrayBuffer`
 
-Since `ArrayBuffer` stores the data that underlies other binary structures like `TypedArray`, the snippets below are not _converting_ from `ArrayBuffer` to another format. Instead, they are _creating_ a new instance using the data stored underlying data.
+由于 `ArrayBuffer` 存储了类型化数组等二进制结构的底层数据，以下代码不是 _转换_ `ArrayBuffer`，而是用底层数据 _创建_ 新实例。
 
-#### To `TypedArray`
+#### 转为 `TypedArray`
 
 ```ts
 new Uint8Array(buf);
 ```
 
-#### To `DataView`
+#### 转为 `DataView`
 
 ```ts
 new DataView(buf);
 ```
 
-#### To `Buffer`
+#### 转为 `Buffer`
 
 ```ts
-// create Buffer over entire ArrayBuffer
+// 创建覆盖整个 ArrayBuffer 的 Buffer
 Buffer.from(buf);
 
-// create Buffer over a slice of the ArrayBuffer
+// 创建覆盖 ArrayBuffer 某个切片的 Buffer
 Buffer.from(buf, 0, 10);
 ```
 
-#### To `string`
+#### 转为字符串
 
-As UTF-8:
+按 UTF-8 编码：
 
 ```ts
 new TextDecoder().decode(buf);
 ```
 
-#### To `number[]`
+#### 转为数字数组 (`number[]`)
 
 ```ts
 Array.from(new Uint8Array(buf));
 ```
 
-#### To `Blob`
+#### 转为 `Blob`
 
 ```ts
 new Blob([buf], { type: "text/plain" });
 ```
 
-#### To `ReadableStream`
+#### 转为 `ReadableStream`
 
-The following snippet creates a `ReadableStream` and enqueues the entire `ArrayBuffer` as a single chunk.
+以下示例创建一个 `ReadableStream`，并将整个 `ArrayBuffer` 作为一个 chunk 入队。
 
 ```ts
 new ReadableStream({
@@ -445,8 +439,8 @@ new ReadableStream({
 });
 ```
 
-<Accordion title="With chunking">
-To stream the `ArrayBuffer` in chunks, use a `Uint8Array` view and enqueue each chunk.
+<Accordion title="分块读取">
+要分块流式传输 `ArrayBuffer`，使用 `Uint8Array` 视图并逐块入队。
 
 ```ts
 const view = new Uint8Array(buf);
@@ -464,52 +458,52 @@ new ReadableStream({
 
 </Accordion>
 
-### From `TypedArray`
+### 从 `TypedArray`
 
-#### To `ArrayBuffer`
+#### 转为 `ArrayBuffer`
 
-This retrieves the underlying `ArrayBuffer`. Note that a `TypedArray` can be a view of a _slice_ of the underlying buffer, so the sizes may differ.
+获取底层 `ArrayBuffer`。注意，类型化数组可能是底层缓冲区的 _部分_ 视图，因此大小可能不同。
 
 ```ts
 arr.buffer;
 ```
 
-#### To `DataView`
+#### 转为 `DataView`
 
-To creates a `DataView` over the same byte range as the TypedArray.
+创建覆盖相同字节范围的 `DataView`。
 
 ```ts
 new DataView(arr.buffer, arr.byteOffset, arr.byteLength);
 ```
 
-#### To `Buffer`
+#### 转为 `Buffer`
 
 ```ts
 Buffer.from(arr);
 ```
 
-#### To `string`
+#### 转为字符串
 
-As UTF-8:
+按 UTF-8 编码：
 
 ```ts
 new TextDecoder().decode(arr);
 ```
 
-#### To `number[]`
+#### 转为数字数组 (`number[]`)
 
 ```ts
 Array.from(arr);
 ```
 
-#### To `Blob`
+#### 转为 `Blob`
 
 ```ts
-// only if arr is a view of its entire backing TypedArray
+// 仅当 arr 是其整个底层缓冲区视图时有效
 new Blob([arr.buffer], { type: "text/plain" });
 ```
 
-#### To `ReadableStream`
+#### 转为 `ReadableStream`
 
 ```ts
 new ReadableStream({
@@ -520,9 +514,9 @@ new ReadableStream({
 });
 ```
 
-<Accordion title="With chunking">
+<Accordion title="分块读取">
 
-To stream the `ArrayBuffer` in chunks, split the `TypedArray` into chunks and enqueue each one individually.
+分块流式传输 `ArrayBuffer`，将类型化数组划分为多块，分别入队。
 
 ```ts
 new ReadableStream({
@@ -537,52 +531,52 @@ new ReadableStream({
 
 </Accordion>
 
-### From `DataView`
+### 从 `DataView`
 
-#### To `ArrayBuffer`
+#### 转为 `ArrayBuffer`
 
 ```ts
 view.buffer;
 ```
 
-#### To `TypedArray`
+#### 转为 `TypedArray`
 
-Only works if the `byteLength` of the `DataView` is a multiple of the `BYTES_PER_ELEMENT` of the `TypedArray` subclass.
+仅当 `DataView` 的 `byteLength` 是类型化数组元素字节大小的倍数时有效。
 
 ```ts
 new Uint8Array(view.buffer, view.byteOffset, view.byteLength);
 new Uint16Array(view.buffer, view.byteOffset, view.byteLength / 2);
 new Uint32Array(view.buffer, view.byteOffset, view.byteLength / 4);
-// etc...
+// 等等...
 ```
 
-#### To `Buffer`
+#### 转为 `Buffer`
 
 ```ts
 Buffer.from(view.buffer, view.byteOffset, view.byteLength);
 ```
 
-#### To `string`
+#### 转为字符串
 
-As UTF-8:
+按 UTF-8 编码：
 
 ```ts
 new TextDecoder().decode(view);
 ```
 
-#### To `number[]`
+#### 转为数字数组 (`number[]`)
 
 ```ts
 Array.from(view);
 ```
 
-#### To `Blob`
+#### 转为 `Blob`
 
 ```ts
 new Blob([view.buffer], { type: "text/plain" });
 ```
 
-#### To `ReadableStream`
+#### 转为 `ReadableStream`
 
 ```ts
 new ReadableStream({
@@ -593,8 +587,8 @@ new ReadableStream({
 });
 ```
 
-<Accordion title="With chunking">
-To stream the `ArrayBuffer` in chunks, split the `DataView` into chunks and enqueue each one individually.
+<Accordion title="分块读取">
+分块流式传输 `ArrayBuffer`，将 `DataView` 划分为多块，逐块入队。
 
 ```ts
 new ReadableStream({
@@ -609,59 +603,59 @@ new ReadableStream({
 
 </Accordion>
 
-### From `Buffer`
+### 从 `Buffer`
 
-#### To `ArrayBuffer`
+#### 转为 `ArrayBuffer`
 
 ```ts
 buf.buffer;
 ```
 
-#### To `TypedArray`
+#### 转为 `TypedArray`
 
 ```ts
 new Uint8Array(buf);
 ```
 
-#### To `DataView`
+#### 转为 `DataView`
 
 ```ts
 new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
 ```
 
-#### To `string`
+#### 转为字符串
 
-As UTF-8:
+按 UTF-8：
 
 ```ts
 buf.toString();
 ```
 
-As base64:
+按 base64：
 
 ```ts
 buf.toString("base64");
 ```
 
-As hex:
+按十六进制：
 
 ```ts
 buf.toString("hex");
 ```
 
-#### To `number[]`
+#### 转为数字数组 (`number[]`)
 
 ```ts
 Array.from(buf);
 ```
 
-#### To `Blob`
+#### 转为 `Blob`
 
 ```ts
 new Blob([buf], { type: "text/plain" });
 ```
 
-#### To `ReadableStream`
+#### 转为 `ReadableStream`
 
 ```ts
 new ReadableStream({
@@ -672,8 +666,8 @@ new ReadableStream({
 });
 ```
 
-<Accordion title="With chunking">
-To stream the `ArrayBuffer` in chunks, split the `Buffer` into chunks and enqueue each one individually.
+<Accordion title="分块读取">
+分块流式传输 `ArrayBuffer`，将 `Buffer` 划分多块，逐块入队。
 
 ```ts
 new ReadableStream({
@@ -688,57 +682,57 @@ new ReadableStream({
 
 </Accordion>
 
-### From `Blob`
+### 从 `Blob`
 
-#### To `ArrayBuffer`
+#### 转为 `ArrayBuffer`
 
-The `Blob` class provides a convenience method for this purpose.
+`Blob` 提供了便捷方法。
 
 ```ts
 await blob.arrayBuffer();
 ```
 
-#### To `TypedArray`
+#### 转为 `TypedArray`
 
 ```ts
 await blob.bytes();
 ```
 
-#### To `DataView`
+#### 转为 `DataView`
 
 ```ts
 new DataView(await blob.arrayBuffer());
 ```
 
-#### To `Buffer`
+#### 转为 `Buffer`
 
 ```ts
 Buffer.from(await blob.arrayBuffer());
 ```
 
-#### To `string`
+#### 转为字符串
 
-As UTF-8:
+按 UTF-8：
 
 ```ts
 await blob.text();
 ```
 
-#### To `number[]`
+#### 转为数字数组 (`number[]`)
 
 ```ts
 Array.from(await blob.bytes());
 ```
 
-#### To `ReadableStream`
+#### 转为 `ReadableStream`
 
 ```ts
 blob.stream();
 ```
 
-### From `ReadableStream`
+### 从 `ReadableStream`
 
-It's common to use [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) as a convenient intermediate representation to make it easier to convert `ReadableStream` to other formats.
+常用 [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) 作为中间体，方便将 `ReadableStream` 转为其他格式。
 
 ```ts
 stream; // ReadableStream
@@ -746,100 +740,100 @@ stream; // ReadableStream
 const buffer = new Response(stream).arrayBuffer();
 ```
 
-However this approach is verbose and adds overhead that slows down overall performance unnecessarily. Bun implements a set of optimized convenience functions for converting `ReadableStream` various binary formats.
+但此方法冗长且增加不必要性能开销。Bun 提供一组优化后的便捷函数，用于将 `ReadableStream` 转换成多种二进制格式。
 
-#### To `ArrayBuffer`
+#### 转为 `ArrayBuffer`
 
 ```ts
-// with Response
+// 使用 Response
 new Response(stream).arrayBuffer();
 
-// with Bun function
+// 使用 Bun 函数
 Bun.readableStreamToArrayBuffer(stream);
 ```
 
-#### To `Uint8Array`
+#### 转为 `Uint8Array`
 
 ```ts
-// with Response
+// 使用 Response
 new Response(stream).bytes();
 
-// with Bun function
+// 使用 Bun 函数
 Bun.readableStreamToBytes(stream);
 ```
 
-#### To `TypedArray`
+#### 转为 `TypedArray`
 
 ```ts
-// with Response
+// 使用 Response
 const buf = await new Response(stream).arrayBuffer();
 new Int8Array(buf);
 
-// with Bun function
+// 使用 Bun 函数
 new Int8Array(Bun.readableStreamToArrayBuffer(stream));
 ```
 
-#### To `DataView`
+#### 转为 `DataView`
 
 ```ts
-// with Response
+// 使用 Response
 const buf = await new Response(stream).arrayBuffer();
 new DataView(buf);
 
-// with Bun function
+// 使用 Bun 函数
 new DataView(Bun.readableStreamToArrayBuffer(stream));
 ```
 
-#### To `Buffer`
+#### 转为 `Buffer`
 
 ```ts
-// with Response
+// 使用 Response
 const buf = await new Response(stream).arrayBuffer();
 Buffer.from(buf);
 
-// with Bun function
+// 使用 Bun 函数
 Buffer.from(Bun.readableStreamToArrayBuffer(stream));
 ```
 
-#### To `string`
+#### 转为字符串
 
-As UTF-8:
+按 UTF-8：
 
 ```ts
-// with Response
+// 使用 Response
 await new Response(stream).text();
 
-// with Bun function
+// 使用 Bun 函数
 await Bun.readableStreamToText(stream);
 ```
 
-#### To `number[]`
+#### 转为数字数组 (`number[]`)
 
 ```ts
-// with Response
+// 使用 Response
 const arr = await new Response(stream).bytes();
 Array.from(arr);
 
-// with Bun function
+// 使用 Bun 函数
 Array.from(new Uint8Array(Bun.readableStreamToArrayBuffer(stream)));
 ```
 
-Bun provides a utility for resolving a `ReadableStream` to an array of its chunks. Each chunk may be a string, typed array, or `ArrayBuffer`.
+Bun 提供了用于解析 `ReadableStream` 为其块数组的工具。每个块可能是字符串、类型化数组或 `ArrayBuffer`。
 
 ```ts
-// with Bun function
+// 使用 Bun 函数
 Bun.readableStreamToArray(stream);
 ```
 
-#### To `Blob`
+#### 转为 `Blob`
 
 ```ts
 new Response(stream).blob();
 ```
 
-#### To `ReadableStream`
+#### 转为 `ReadableStream`
 
-To split a `ReadableStream` into two streams that can be consumed independently:
+要将一个 `ReadableStream` 分割为两个可独立消费的流：
 
 ```ts
 const [a, b] = stream.tee();

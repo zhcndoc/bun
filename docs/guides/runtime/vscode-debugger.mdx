@@ -1,47 +1,47 @@
 ---
-title: Debugging Bun with the VS Code extension
-sidebarTitle: VS Code debugger
+title: 使用 VS Code 扩展调试 Bun
+sidebarTitle: VS Code 调试器
 mode: center
 ---
 
 <Note>
-  VSCode extension support is currently buggy. We recommend the [Web Debugger](/guides/runtime/web-debugger) for now.
+  VSCode 扩展当前存在一些问题。我们暂时推荐使用 [Web 调试器](/guides/runtime/web-debugger)。
 </Note>
 
-Bun speaks the [WebKit Inspector Protocol](https://github.com/oven-sh/bun/blob/main/packages/bun-inspector-protocol/src/protocol/jsc/index.d.ts) so you can debug your code with an interactive debugger.
+Bun 支持 [WebKit Inspector Protocol](https://github.com/oven-sh/bun/blob/main/packages/bun-inspector-protocol/src/protocol/jsc/index.d.ts)，所以你可以使用交互式调试器来调试代码。
 
 ---
 
-To install the extension, visit the [Bun for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=oven.bun-vscode) page on the VS Code marketplace website, then click Install.
+要安装该扩展，请访问 VS Code 市场网站上的 [Bun for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=oven.bun-vscode) 页面，然后点击安装。
 
 <Frame>![VS Code extension](https://github.com/oven-sh/bun/assets/3084745/7c8c80e6-d49e-457a-a45e-45ebed946d56)</Frame>
 
 ---
 
-Alternatively, search `bun-vscode` in the Extensions tab of VS Code.
+或者，在 VS Code 的扩展标签页中搜索 `bun-vscode`。
 
 <Frame>![VS Code extension](https://github.com/oven-sh/bun/assets/3084745/664b4c40-944c-4076-a4c2-f812aebd3dc9)</Frame>
 
 ---
 
-Make sure you are installing the extension published by the verified Oven organization.
+确保你安装的是由已验证的 Oven 组织发布的扩展。
 
 <Frame>![VS Code extension](https://github.com/oven-sh/bun/assets/3084745/73e6b09f-9ff1-4d85-b725-c5eb7215b6ae)</Frame>
 
 ---
 
-Once installed, two new Bun-specific commands will appear in the Command Palette. To open the palette, click View > Command Palette, or type `Ctrl+Shift+P` (Windows, Linux) or `Cmd+Shift+P` on (Mac).
+安装完成后，命令面板中将出现两个新的 Bun 专用命令。要打开命令面板，请点击“视图” > “命令面板”，或按 `Ctrl+Shift+P`（Windows、Linux）或 `Cmd+Shift+P`（Mac）。
 
 ---
 
-The `Bun: Run File` command will execute your code and print the output to the Debug Console in VS Code. Breakpoints will be ignored; this is similar to executing the file with `bun <file>` from the command line.
+`Bun: Run File` 命令会执行你的代码，并将输出打印到 VS Code 的调试控制台。断点会被忽略；这类似于从命令行使用 `bun <file>` 执行文件。
 
 <Frame>![VS Code extension](https://github.com/oven-sh/bun/assets/3084745/1b2c7fd9-fbb9-486a-84d0-eb7ec135ded3)</Frame>
 
 ---
 
-The `Bun: Debug File` command will execute your code and print the output to the Debug Console in VS Code. You can set breakpoints in your code by clicking to the left of a line number; a red dot should appear.
+`Bun: Debug File` 命令会执行你的代码，并将输出打印到 VS Code 的调试控制台。你可以通过点击行号左侧设置断点，断点处会出现一个红点。
 
-When you run the file with `Bun: Debug File`, execution will pause at the breakpoint. You can inspect the variables in scope and step through the code line-by-line using the VS Code controls.
+当你使用 `Bun: Debug File` 运行文件时，执行将在断点处暂停。你可以查看当前作用域的变量，并使用 VS Code 的控制按钮逐行调试代码。
 
 <Frame>![VS Code extension](https://github.com/oven-sh/bun/assets/3084745/c579a36c-eb21-4a58-bc9c-74612aad82af)</Frame>

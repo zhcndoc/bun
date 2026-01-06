@@ -1,36 +1,35 @@
 ---
-title: "Lockfile"
-description: "Bun's lockfile format and configuration"
+title: "锁文件"
+description: "Bun 的锁文件格式和配置"
 ---
 
-Running `bun install` will create a lockfile called `bun.lock`.
+运行 `bun install` 将创建一个名为 `bun.lock` 的锁文件。
 
-#### Should it be committed to git?
+#### 应该提交到 git 吗？
 
-Yes
+是的
 
-#### Generate a lockfile without installing?
+#### 是否可以生成锁文件但不安装？
 
-To generate a lockfile without installing to `node_modules` you can use the `--lockfile-only` flag. The lockfile will always be saved to disk, even if it is up-to-date with the `package.json`(s) for your project.
+要生成锁文件而不安装到 `node_modules`，可以使用 `--lockfile-only` 标志。锁文件始终会保存到磁盘，即使它与项目的 `package.json` 文件已经是最新的。
 
 ```bash terminal icon="terminal"
 bun install --lockfile-only
 ```
 
 <Note>
-  Using `--lockfile-only` will still populate the global install cache with registry metadata and git/tarball
-  dependencies.
+  使用 `--lockfile-only` 仍然会将注册表元数据以及 git/tarball 依赖项填充到全局安装缓存中。
 </Note>
 
-#### Can I opt out?
+#### 可以选择不生成锁文件吗？
 
-To install without creating a lockfile:
+要安装依赖但不创建锁文件：
 
 ```bash terminal icon="terminal"
 bun install --no-save
 ```
 
-To install a Yarn lockfile _in addition_ to `bun.lock`.
+安装 Yarn 锁文件，_同时_ 创建 `bun.lock`。
 
 <CodeGroup>
 
@@ -40,25 +39,25 @@ bun install --yarn
 
 ```toml bunfig.toml icon="settings"
 [install.lockfile]
-# whether to save a non-Bun lockfile alongside bun.lock
-# only "yarn" is supported
+# 是否在 bun.lock 旁保存非 Bun 的锁文件
+# 目前仅支持 "yarn"
 print = "yarn"
 ```
 
 </CodeGroup>
 
-#### Text-based lockfile
+#### 基于文本的锁文件
 
-Bun v1.2 changed the default lockfile format to the text-based `bun.lock`. Existing binary `bun.lockb` lockfiles can be migrated to the new format by running `bun install --save-text-lockfile --frozen-lockfile --lockfile-only` and deleting `bun.lockb`.
+Bun v1.2 将默认锁文件格式更改为基于文本的 `bun.lock`。现有的二进制格式 `bun.lockb` 可以通过运行命令 `bun install --save-text-lockfile --frozen-lockfile --lockfile-only` 并删除 `bun.lockb` 来迁移到新格式。
 
-More information about the new lockfile format can be found on [our blogpost](https://bun.com/blog/bun-lock-text-lockfile).
+关于新锁文件格式的更多信息，请参阅我们的 [博客文章](https://bun.com/blog/bun-lock-text-lockfile)。
 
-#### Automatic lockfile migration
+#### 自动锁文件迁移
 
-When running `bun install` in a project without a `bun.lock`, Bun automatically migrates existing lockfiles:
+在没有 `bun.lock` 的项目中运行 `bun install` 时，Bun 会自动迁移现有的锁文件：
 
 - `yarn.lock` (v1)
 - `package-lock.json` (npm)
 - `pnpm-lock.yaml` (pnpm)
 
-The original lockfile is preserved and can be removed manually after verification.
+原始锁文件会被保留，验证无误后可以手动删除。

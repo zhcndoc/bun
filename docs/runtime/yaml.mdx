@@ -1,27 +1,27 @@
 ---
 title: YAML
-description: Use Bun's built-in support for YAML files through both runtime APIs and bundler integration
+description: 通过 Bun 的运行时 API 和打包器集成使用内置的 YAML 文件支持
 ---
 
-In Bun, YAML is a first-class citizen alongside JSON and TOML. You can:
+在 Bun 中，YAML 与 JSON 和 TOML 同等重要。你可以：
 
-- Parse YAML strings with `Bun.YAML.parse`
-- `import` & `require` YAML files as modules at runtime (including hot reloading & watch mode support)
-- `import` & `require` YAML files in frontend apps via bun's bundler
-
----
-
-## Conformance
-
-Bun's YAML parser currently passes over 90% of the official YAML test suite. While we're actively working on reaching 100% conformance, the current implementation covers the vast majority of real-world use cases. The parser is written in Zig for optimal performance and is continuously being improved.
+- 使用 `Bun.YAML.parse` 解析 YAML 字符串
+- 在运行时以模块形式 `import` 和 `require` YAML 文件（包括热重载和监听模式支持）
+- 通过 Bun 的打包器在前端应用中 `import` 和 `require` YAML 文件
 
 ---
 
-## Runtime API
+## 兼容性
+
+Bun 的 YAML 解析器目前通过了官方 YAML 测试套件超过 90% 的测试。我们正积极努力达到 100% 兼容，但现有实现已覆盖绝大多数实际使用场景。解析器使用 Zig 编写以获得最佳性能，并持续改进中。
+
+---
+
+## 运行时 API
 
 ### `Bun.YAML.parse()`
 
-Parse a YAML string into a JavaScript object.
+将 YAML 字符串解析为 JavaScript 对象。
 
 ```ts
 import { YAML } from "bun";
@@ -45,9 +45,9 @@ console.log(data);
 // }
 ```
 
-#### Multi-document YAML
+#### 多文档 YAML
 
-When parsing YAML with multiple documents (separated by `---`), `Bun.YAML.parse()` returns an array:
+解析由多个文档（用 `---` 分隔）构成的 YAML 时，`Bun.YAML.parse()` 返回一个数组：
 
 ```ts
 const multiDoc = `
@@ -68,21 +68,21 @@ console.log(docs);
 // ]
 ```
 
-#### Supported YAML Features
+#### 支持的 YAML 特性
 
-Bun's YAML parser supports the full YAML 1.2 specification, including:
+Bun 的 YAML 解析器支持完整的 YAML 1.2 规范，包括：
 
-- **Scalars**: strings, numbers, booleans, null values
-- **Collections**: sequences (arrays) and mappings (objects)
-- **Anchors and Aliases**: reusable nodes with `&` and `*`
-- **Tags**: type hints like `!!str`, `!!int`, `!!float`, `!!bool`, `!!null`
-- **Multi-line strings**: literal (`|`) and folded (`>`) scalars
-- **Comments**: using `#`
-- **Directives**: `%YAML` and `%TAG`
+- **标量**：字符串、数字、布尔值、null 值
+- **集合**：序列（数组）和映射（对象）
+- **锚点与别名**：使用 `&` 和 `*` 的可复用节点
+- **标签**：类型提示，如 `!!str`、`!!int`、`!!float`、`!!bool`、`!!null`
+- **多行字符串**：文字块 (`|`) 和折叠块 (`>`) 标量
+- **注释**：使用 `#`
+- **指令**：`%YAML` 和 `%TAG`
 
 ```ts
 const yaml = `
-# Employee record
+# 员工记录
 employee: &emp
   name: Jane Smith
   department: Engineering
@@ -91,43 +91,43 @@ employee: &emp
     - TypeScript
     - React
 
-manager: *emp  # Reference to employee
+manager: *emp  # 引用员工
 
-config: !!str 123  # Explicit string type
+config: !!str 123  # 显式字符串类型
 
 description: |
-  This is a multi-line
-  literal string that preserves
-  line breaks and spacing.
+  这是一个多行
+  文字字符串，保留
+  换行和空格。
 
 summary: >
-  This is a folded string
-  that joins lines with spaces
-  unless there are blank lines.
+  这是一个折叠字符串，
+  用空格连接行，
+  除非有空白行。
 `;
 
 const data = Bun.YAML.parse(yaml);
 ```
 
-#### Error Handling
+#### 错误处理
 
-`Bun.YAML.parse()` throws a `SyntaxError` if the YAML is invalid:
+如果 YAML 无效，`Bun.YAML.parse()` 会抛出 `SyntaxError`：
 
 ```ts
 try {
   Bun.YAML.parse("invalid: yaml: content:");
 } catch (error) {
-  console.error("Failed to parse YAML:", error.message);
+  console.error("解析 YAML 失败:", error.message);
 }
 ```
 
 ---
 
-## Module Import
+## 模块导入
 
-### ES Modules
+### ES 模块
 
-You can import YAML files directly as ES modules. The YAML content is parsed and made available as both default and named exports:
+你可以直接将 YAML 文件导入为 ES 模块。YAML 内容会被解析，既作为默认导出，也提供命名导出：
 
 ```yaml config.yaml
 database:
@@ -145,7 +145,7 @@ features:
   analytics: false
 ```
 
-#### Default Import
+#### 默认导入
 
 ```ts app.ts icon="/icons/typescript.svg"
 import config from "./config.yaml";
@@ -154,9 +154,9 @@ console.log(config.database.host); // "localhost"
 console.log(config.redis.port); // 6379
 ```
 
-#### Named Imports
+#### 命名导入
 
-You can destructure top-level YAML properties as named imports:
+你可以将顶层 YAML 属性解构为命名导入：
 
 ```ts app.ts icon="/icons/typescript.svg"
 import { database, redis, features } from "./config.yaml";
@@ -166,15 +166,15 @@ console.log(redis.port); // 6379
 console.log(features.auth); // true
 ```
 
-Or combine both:
+或者两者结合：
 
 ```ts app.ts icon="/icons/typescript.svg"
 import config, { database, features } from "./config.yaml";
 
-// Use the full config object
+// 使用完整配置对象
 console.log(config);
 
-// Or use specific parts
+// 或使用特定部分
 if (features.rateLimit) {
   setupRateLimiting(database);
 }
@@ -182,24 +182,24 @@ if (features.rateLimit) {
 
 ### CommonJS
 
-YAML files can also be required in CommonJS:
+YAML 文件也可以在 CommonJS 环境中通过 require 加载：
 
 ```ts app.ts icon="/icons/typescript.svg"
 const config = require("./config.yaml");
 console.log(config.database.name); // "myapp"
 
-// Destructuring also works
+// 解构同样有效
 const { database, redis } = require("./config.yaml");
 console.log(database.port); // 5432
 ```
 
 ---
 
-## Hot Reloading with YAML
+## YAML 热重载
 
-One of the most powerful features of Bun's YAML support is hot reloading. When you run your application with `bun --hot`, changes to YAML files are automatically detected and reloaded without closing connections
+Bun 支持的 YAML 最强大特性之一是热重载。当你使用 `bun --hot` 运行应用时，对 YAML 文件的修改会被自动检测并进行热刷新，无需关闭连接。
 
-### Configuration Hot Reloading
+### 配置热重载示例
 
 ```yaml config.yaml
 server:
@@ -214,13 +214,13 @@ features:
 ```ts server.ts icon="/icons/typescript.svg"
 import { server, features } from "./config.yaml";
 
-console.log(`Starting server on ${server.host}:${server.port}`);
+console.log(`启动服务器，地址为 ${server.host}:${server.port}`);
 
 if (features.debug) {
-  console.log("Debug mode enabled");
+  console.log("调试模式已启用");
 }
 
-// Your server code here
+// 服务器代码
 Bun.serve({
   port: server.port,
   hostname: server.host,
@@ -233,26 +233,26 @@ Bun.serve({
 });
 ```
 
-Run with hot reloading:
+使用热重载运行：
 
 ```bash terminal icon="terminal"
 bun --hot server.ts
 ```
 
-Now when you modify `config.yaml`, the changes are immediately reflected in your running application. This is perfect for:
+现在，修改 `config.yaml` 会立即在运行的应用中生效。非常适合：
 
-- Adjusting configuration during development
-- Testing different settings without restarts
-- Live debugging with configuration changes
-- Feature flag toggling
+- 开发过程中的配置调整
+- 不重启测试不同设置
+- 配置变更时实时调试
+- 启用或关闭功能开关
 
 ---
 
-## Configuration Management
+## 配置管理
 
-### Environment-Based Configuration
+### 基于环境的配置
 
-YAML excels at managing configuration across different environments:
+YAML 非常适合管理多环境配置：
 
 ```yaml config.yaml
 defaults: &defaults
@@ -299,7 +299,7 @@ import configs from "./config.yaml";
 const env = process.env.NODE_ENV || "development";
 const config = configs[env];
 
-// Environment variables in YAML values can be interpolated
+// YAML 值中的环境变量插值函数
 function interpolateEnvVars(obj: any): any {
   if (typeof obj === "string") {
     return obj.replace(/\${(\w+)}/g, (_, key) => process.env[key] || "");
@@ -315,7 +315,7 @@ function interpolateEnvVars(obj: any): any {
 export default interpolateEnvVars(config);
 ```
 
-### Feature Flags Configuration
+### 功能标志配置
 
 ```yaml features.yaml
 features:
@@ -347,7 +347,7 @@ export function isFeatureEnabled(featureName: string, userEmail?: string): boole
     return false;
   }
 
-  // Check rollout percentage
+  // 检查发布比例
   if (feature.rolloutPercentage < 100) {
     const hash = hashCode(userEmail || "anonymous");
     if (hash % 100 >= feature.rolloutPercentage) {
@@ -355,7 +355,7 @@ export function isFeatureEnabled(featureName: string, userEmail?: string): boole
     }
   }
 
-  // Check allowed users
+  // 检查允许用户列表
   if (feature.allowedUsers && userEmail) {
     return feature.allowedUsers.includes(userEmail);
   }
@@ -363,7 +363,7 @@ export function isFeatureEnabled(featureName: string, userEmail?: string): boole
   return true;
 }
 
-// Use with hot reloading to toggle features in real-time
+// 与热重载配合，实现实时切换功能
 if (isFeatureEnabled("newDashboard", user.email)) {
   renderNewDashboard();
 } else {
@@ -371,7 +371,7 @@ if (isFeatureEnabled("newDashboard", user.email)) {
 }
 ```
 
-### Database Configuration
+### 数据库配置
 
 ```yaml database.yaml icon="yaml"
 connections:
@@ -413,7 +413,7 @@ seeds:
 import { connections, migrations } from "./database.yaml";
 import { createConnection } from "./database-driver";
 
-// Parse environment variables with defaults
+// 解析带默认值的环境变量
 function parseConfig(config: any) {
   return JSON.parse(
     JSON.stringify(config).replace(
@@ -429,35 +429,36 @@ export const db = await createConnection(dbConfig.primary);
 export const cache = await createConnection(dbConfig.cache);
 export const analytics = await createConnection(dbConfig.analytics);
 
-// Auto-run migrations if configured
+// 如果配置自动执行迁移
 if (parseConfig(migrations).autoRun === "true") {
   await runMigrations(db, migrations.directory);
 }
 ```
 
-### Bundler Integration
+### 打包器集成
 
-When you import YAML files in your application and bundle it with Bun, the YAML is parsed at build time and included as a JavaScript module:
+当你导入 YAML 文件并用 Bun 打包时，YAML 会在构建时被解析并作为 JavaScript 模块包含：
 
 ```bash terminal icon="terminal"
 bun build app.ts --outdir=dist
 ```
 
-This means:
+这意味着：
 
-- Zero runtime YAML parsing overhead in production
-- Smaller bundle sizes
-- Tree-shaking support for unused configuration (named imports)
+- 生产环境零运行时 YAML 解析开销
+- 更小的包体积
+- 支持未用配置的摇树优化（命名导入）
 
-### Dynamic Imports
+### 动态导入
 
-YAML files can be dynamically imported, useful for loading configuration on demand:
+YAML 文件可以动态导入，适合按需加载配置：
 
-```ts Load configuration based on environment
+```ts
+// 根据环境加载配置
 const env = process.env.NODE_ENV || "development";
 const config = await import(`./configs/${env}.yaml`);
 
-// Load user-specific settings
+// 加载用户特定设置
 async function loadUserSettings(userId: string) {
   try {
     const settings = await import(`./users/${userId}/settings.yaml`);

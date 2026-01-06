@@ -1,13 +1,13 @@
 ---
-title: "Code coverage"
-description: "Learn how to use Bun's built-in code coverage reporting to track test coverage and find untested areas in your codebase"
+title: "代码覆盖率"
+description: "了解如何使用 Bun 内置的代码覆盖率报告来跟踪测试覆盖情况并发现代码库中未测试的区域"
 ---
 
-Bun's test runner now supports built-in code coverage reporting. This makes it easy to see how much of the codebase is covered by tests, and find areas that are not currently well-tested.
+Bun 的测试运行器现在支持内置的代码覆盖率报告。这使得查看代码库中有多少被测试覆盖，以及找出当前测试不足的区域变得非常简单。
 
-## Enabling Coverage
+## 启用覆盖率
 
-`bun:test` supports seeing which lines of code are covered by tests. To use this feature, pass `--coverage` to the CLI. It will print out a coverage report to the console:
+`bun:test` 支持查看哪些代码行被测试覆盖。要使用此功能，向 CLI 传递 `--coverage`。它会将覆盖率报告打印到控制台：
 
 ```bash terminal icon="terminal"
 bun test --coverage
@@ -31,67 +31,67 @@ All files    |   38.89 |   42.11 |
 -------------|---------|---------|-------------------
 ```
 
-### Enable by Default
+### 默认启用
 
-To always enable coverage reporting by default, add the following line to your `bunfig.toml`:
+要默认启用覆盖率报告，请在你的 `bunfig.toml` 中添加以下行：
 
 ```toml title="bunfig.toml"
 [test]
-# Always enable coverage
+# 始终启用覆盖率
 coverage = true
 ```
 
-By default coverage reports will include test files and exclude sourcemaps. This is usually what you want, but it can be configured otherwise in `bunfig.toml`.
+默认情况下，覆盖率报告会包含测试文件并排除源码映射（sourcemaps）。这通常是你想要的，但可以在 `bunfig.toml` 中进行其他配置。
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
-coverageSkipTestFiles = true  # default false
+coverageSkipTestFiles = true  # 默认 false
 ```
 
-## Coverage Thresholds
+## 覆盖率阈值
 
-It is possible to specify a coverage threshold in `bunfig.toml`. If your test suite does not meet or exceed this threshold, `bun test` will exit with a non-zero exit code to indicate the failure.
+可以在 `bunfig.toml` 中指定覆盖率阈值。如果测试套件没有达到或超过此阈值，`bun test` 将以非零退出码退出，表明测试失败。
 
-### Simple Threshold
+### 简单阈值
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
-# To require 90% line-level and function-level coverage
+# 要求 90% 的行级和函数级覆盖率
 coverageThreshold = 0.9
 ```
 
-### Detailed Thresholds
+### 详细阈值
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
-# To set different thresholds for lines and functions
+# 为行和函数设置不同的阈值
 coverageThreshold = { lines = 0.9, functions = 0.9, statements = 0.9 }
 ```
 
-Setting any of these thresholds enables `fail_on_low_coverage`, causing the test run to fail if coverage is below the threshold.
+设置任何阈值都会启用 `fail_on_low_coverage`，如果覆盖率低于阈值，测试运行将失败。
 
-## Coverage Reporters
+## 覆盖率报告器
 
-By default, coverage reports will be printed to the console.
+默认情况下，覆盖率报告会打印到控制台。
 
-For persistent code coverage reports in CI environments and for other tools, you can pass a `--coverage-reporter=lcov` CLI option or `coverageReporter` option in `bunfig.toml`.
+对于 CI 环境中的持久化代码覆盖率报告和其他工具，你可以通过 CLI 传递 `--coverage-reporter=lcov` 选项，或者在 `bunfig.toml` 中设置 `coverageReporter` 选项。
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
-coverageReporter = ["text", "lcov"]  # default ["text"]
-coverageDir = "path/to/somewhere"    # default "coverage"
+coverageReporter = ["text", "lcov"]  # 默认 ["text"]
+coverageDir = "path/to/somewhere"    # 默认 "coverage"
 ```
 
-### Available Reporters
+### 可用的报告器
 
-| Reporter | Description                                          |
-| -------- | ---------------------------------------------------- |
-| `text`   | Prints a text summary of the coverage to the console |
-| `lcov`   | Save coverage in lcov format                         |
+| 报告器     | 说明                                     |
+| ---------- | ---------------------------------------- |
+| `text`     | 在控制台打印覆盖率文本摘要                |
+| `lcov`     | 以 lcov 格式保存覆盖率                    |
 
-### LCOV Coverage Reporter
+### LCOV 覆盖率报告器
 
-To generate an lcov report, you can use the lcov reporter. This will generate an `lcov.info` file in the coverage directory.
+要生成 lcov 报告，可以使用 lcov 报告器。这会在覆盖率目录生成一个 `lcov.info` 文件。
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -99,21 +99,21 @@ coverageReporter = "lcov"
 ```
 
 ```bash terminal icon="terminal"
-# Or via CLI
+# 或通过 CLI
 bun test --coverage --coverage-reporter=lcov
 ```
 
-The LCOV format is widely supported by various tools and services:
+LCOV 格式被各种工具和服务广泛支持：
 
-- **Code editors**: VS Code extensions can show coverage inline
-- **CI/CD services**: GitHub Actions, GitLab CI, CircleCI
-- **Coverage services**: Codecov, Coveralls
-- **IDEs**: WebStorm, IntelliJ IDEA
+- **代码编辑器**：VS Code 扩展可以内联显示覆盖率
+- **CI/CD 服务**：GitHub Actions、GitLab CI、CircleCI
+- **覆盖率服务**：Codecov、Coveralls
+- **集成开发环境（IDE）**：WebStorm、IntelliJ IDEA
 
-#### Using LCOV with GitHub Actions
+#### 在 GitHub Actions 中使用 LCOV
 
 ```yaml title=".github/workflows/test.yml" icon="file-code"
-name: Test with Coverage
+name: 带覆盖率的测试
 on: [push, pull_request]
 
 jobs:
@@ -124,35 +124,35 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install
       - run: bun test --coverage --coverage-reporter=lcov
-      - name: Upload coverage to Codecov
+      - name: 上传覆盖率到 Codecov
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage/lcov.info
 ```
 
-## Excluding Files from Coverage
+## 从覆盖率中排除文件
 
-### Skip Test Files
+### 跳过测试文件
 
-By default, test files themselves are included in coverage reports. You can exclude them with:
+默认情况下，测试文件本身包含在覆盖率报告中。你可以用以下方式排除它们：
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
-coverageSkipTestFiles = true  # default false
+coverageSkipTestFiles = true  # 默认 false
 ```
 
-This will exclude files matching test patterns (e.g., `*.test.ts`, `*.spec.js`) from the coverage report.
+这会将匹配测试模式的文件（例如 `*.test.ts`、`*.spec.js`）从覆盖率报告中排除。
 
-### Ignore Specific Paths and Patterns
+### 忽略特定路径和模式
 
-You can exclude specific files or file patterns from coverage reports using `coveragePathIgnorePatterns`:
+你可以使用 `coveragePathIgnorePatterns` 从覆盖率报告中排除特定文件或文件模式：
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
-# Single pattern
+# 单个模式
 coveragePathIgnorePatterns = "**/*.spec.ts"
 
-# Multiple patterns
+# 多个模式
 coveragePathIgnorePatterns = [
   "**/*.spec.ts",
   "**/*.test.ts",
@@ -161,94 +161,93 @@ coveragePathIgnorePatterns = [
 ]
 ```
 
-This option accepts glob patterns and works similarly to Jest's `collectCoverageFrom` ignore patterns. Files matching any of these patterns will be excluded from coverage calculation and reporting in both text and LCOV outputs.
+此选项接受 glob 模式，类似于 Jest 的 `collectCoverageFrom` 忽略模式。符合任一模式的文件都会被从覆盖率计算和报告中排除，包括文本和 LCOV 输出。
 
-#### Common Use Cases
+#### 常见用例
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
 coveragePathIgnorePatterns = [
-  # Exclude utility files
+  # 排除工具文件
   "src/utils/**",
 
-  # Exclude configuration files
+  # 排除配置文件
   "*.config.js",
   "webpack.config.ts",
   "vite.config.ts",
 
-  # Exclude specific test patterns
+  # 排除特定测试模式
   "**/*.spec.ts",
   "**/*.e2e.ts",
 
-  # Exclude build artifacts
+  # 排除构建产物
   "dist/**",
   "build/**",
 
-  # Exclude generated files
+  # 排除生成文件
   "src/generated/**",
   "**/*.generated.ts",
 
-  # Exclude vendor/third-party code
+  # 排除第三方/供应商代码
   "vendor/**",
   "third-party/**"
 ]
 ```
 
-## Sourcemaps
+## 源码映射（Sourcemaps）
 
-Internally, Bun transpiles all files by default, so Bun automatically generates an internal source map that maps lines of your original source code onto Bun's internal representation. If for any reason you want to disable this, set `test.coverageIgnoreSourcemaps` to `true`; this will rarely be desirable outside of advanced use cases.
+内部情况下，Bun 默认转译所有文件，因此 Bun 会自动生成一个内部源码映射，将你原始源码的行映射到 Bun 的内部表示。如果你想禁用此行为，可以设置 `test.coverageIgnoreSourcemaps` 为 `true`；除非高级用例，否则很少需要这么做。
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
-coverageIgnoreSourcemaps = true  # default false
+coverageIgnoreSourcemaps = true  # 默认 false
 ```
 
 <Warning>
-  When using this option, you probably want to stick a `// @bun` comment at the top of the source file to opt out of the
-  transpilation process.
+  使用此选项时，你可能需要在源码文件顶部加上 `// @bun` 注释，以避免被转译。
 </Warning>
 
-## Coverage Defaults
+## 覆盖率默认行为
 
-By default, coverage reports:
+默认情况下，覆盖率报告：
 
-- **Exclude** `node_modules` directories
-- **Exclude** files loaded via non-JS/TS loaders (e.g., `.css`, `.txt`) unless a custom JS loader is specified
-- **Include** test files themselves (can be disabled with `coverageSkipTestFiles = true`)
-- Can exclude additional files with `coveragePathIgnorePatterns`
+- **排除** `node_modules` 目录
+- **排除** 通过非 JS/TS 加载器加载的文件（例如 `.css`、`.txt`），除非指定了自定义 JS 加载器
+- **包含** 测试文件本身（可通过 `coverageSkipTestFiles = true` 禁用）
+- 可以通过 `coveragePathIgnorePatterns` 进一步排除文件
 
-## Advanced Configuration
+## 高级配置
 
-### Custom Coverage Directory
+### 自定义覆盖率目录
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
-coverageDir = "coverage-reports"  # default "coverage"
+coverageDir = "coverage-reports"  # 默认 "coverage"
 ```
 
-### Multiple Reporters
+### 多个报告器
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
 coverageReporter = ["text", "lcov"]
 ```
 
-### Coverage with Specific Test Patterns
+### 针对特定测试模式启用覆盖率
 
 ```bash terminal icon="terminal"
-# Run coverage only on specific test files
+# 仅对特定测试文件运行覆盖率
 bun test --coverage src/components/*.test.ts
 
-# Run coverage with name pattern
+# 针对名称模式运行覆盖率
 bun test --coverage --test-name-pattern="API"
 ```
 
-## CI/CD Integration
+## CI/CD 集成
 
-### GitHub Actions Example
+### GitHub Actions 示例
 
 ```yaml title=".github/workflows/coverage.yml" icon="file-code"
-name: Coverage Report
+name: 覆盖率报告
 on: [push, pull_request]
 
 jobs:
@@ -261,20 +260,20 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Install dependencies
+      - name: 安装依赖
         run: bun install
 
-      - name: Run tests with coverage
+      - name: 运行带覆盖率的测试
         run: bun test --coverage --coverage-reporter=lcov
 
-      - name: Upload to Codecov
+      - name: 上传到 Codecov
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage/lcov.info
           fail_ci_if_error: true
 ```
 
-### GitLab CI Example
+### GitLab CI 示例
 
 ```yaml title=".gitlab-ci.yml"
 test:coverage:
@@ -290,9 +289,9 @@ test:coverage:
         path: coverage/lcov.info
 ```
 
-## Interpreting Coverage Reports
+## 解析覆盖率报告
 
-### Text Output Explanation
+### 文本输出说明
 
 ```
 -------------|---------|---------|-------------------
@@ -306,99 +305,99 @@ All files    |   85.71 |   90.48 |
 -------------|---------|---------|-------------------
 ```
 
-- **% Funcs**: Percentage of functions that were called during tests
-- **% Lines**: Percentage of executable lines that were run during tests
-- **Uncovered Line #s**: Specific line numbers that were not executed
+- **% Funcs**：测试执行过程中调用的函数百分比
+- **% Lines**：测试覆盖的可执行代码行百分比
+- **未覆盖的行号**：未执行的具体代码行号
 
-### What to Aim For
+### 目标标准
 
-- **80%+ overall coverage**: Generally considered good
-- **90%+ critical paths**: Important business logic should be well-tested
-- **100% utility functions**: Pure functions and utilities are easy to test completely
-- **Lower coverage for UI components**: Often acceptable as they may require integration tests
+- **80% 及以上整体覆盖率**：通常认为表现良好
+- **关键路径 90% 及以上**：关键业务逻辑应充分测试
+- **工具函数 100%**：纯函数和工具函数易于完全覆盖
+- **UI 组件覆盖率较低**：通常可以接受，因多数需要集成测试
 
-## Best Practices
+## 最佳实践
 
-### Focus on Quality, Not Just Quantity
+### 注重质量而非数量
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
-// Good: Test actual functionality
-test("calculateTax should handle different tax rates", () => {
+// 好：测试实际功能
+test("calculateTax 应正确处理不同税率", () => {
   expect(calculateTax(100, 0.08)).toBe(8);
   expect(calculateTax(100, 0.1)).toBe(10);
   expect(calculateTax(0, 0.08)).toBe(0);
 });
 
-// Avoid: Just hitting lines for coverage
-test("calculateTax exists", () => {
-  calculateTax(100, 0.08); // No assertions!
+// 不推荐：仅覆盖行数
+test("calculateTax 存在", () => {
+  calculateTax(100, 0.08); // 没有断言！
 });
 ```
 
-### Test Edge Cases
+### 测试边界情况
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
-test("user input validation", () => {
-  // Test normal case
+test("用户输入验证", () => {
+  // 测试正常情况
   expect(validateEmail("user@example.com")).toBe(true);
 
-  // Test edge cases that improve coverage meaningfully
+  // 测试边界情况以有效提高覆盖率
   expect(validateEmail("")).toBe(false);
   expect(validateEmail("invalid")).toBe(false);
   expect(validateEmail(null)).toBe(false);
 });
 ```
 
-### Use Coverage to Find Missing Tests
+### 利用覆盖率发现缺失测试
 
 ```bash terminal icon="terminal"
-# Run coverage to identify untested code
+# 运行覆盖率，找出未测试代码
 bun test --coverage
 
-# Look at specific files that need attention
+# 关注需要重点关注的文件
 bun test --coverage src/critical-module.ts
 ```
 
-### Combine with Other Quality Metrics
+### 结合其它质量指标
 
-Coverage is just one metric. Also consider:
+覆盖率只是一个指标。还应考虑：
 
-- **Code review quality**
-- **Integration test coverage**
-- **Error handling tests**
-- **Performance tests**
-- **Type safety**
+- 代码审查质量
+- 集成测试覆盖率
+- 错误处理测试
+- 性能测试
+- 类型安全
 
-## Troubleshooting
+## 常见问题排查
 
-### Coverage Not Showing for Some Files
+### 某些文件没显示覆盖率
 
-If files aren't appearing in coverage reports, they might not be imported by your tests. Coverage only tracks files that are actually loaded.
+如果某些文件未出现在覆盖率报告中，可能是测试时未导入这些文件。覆盖率只跟踪实际加载的文件。
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
-// Make sure to import the modules you want to test
+// 确保导入你想测试的模块
 import { myFunction } from "../src/my-module";
 
-test("my function works", () => {
+test("我的函数正常工作", () => {
   expect(myFunction()).toBeDefined();
 });
 ```
 
-### False Coverage Reports
+### 覆盖率报告不准确
 
-If you see coverage reports that don't match your expectations:
+如果看到的覆盖率报告不符合预期：
 
-1. Check if source maps are working correctly
-2. Verify file patterns in `coveragePathIgnorePatterns`
-3. Ensure test files are actually importing the code to test
+1. 检查源码映射是否正常工作
+2. 检查 `coveragePathIgnorePatterns` 是否配置正确
+3. 确保测试文件真正导入了要测试的代码
 
-### Performance Issues with Large Codebases
+### 大型代码库性能问题
 
-For large projects, coverage collection can slow down tests:
+对于大型项目，收集覆盖率可能会导致测试变慢：
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
-# Exclude large directories you don't need coverage for
+# 排除不需要覆盖率的大型目录
 coveragePathIgnorePatterns = [
   "node_modules/**",
   "vendor/**",
@@ -406,4 +405,4 @@ coveragePathIgnorePatterns = [
 ]
 ```
 
-Consider running coverage only on CI or specific branches rather than every test run during development.
+建议仅在 CI 或特定分支运行覆盖率，而非每次本地开发都运行。

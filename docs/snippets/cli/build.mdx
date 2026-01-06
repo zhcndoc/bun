@@ -1,196 +1,195 @@
-## CLI Usage
+## CLI 用法
 
 ```bash
-bun build <entry points>
+bun build <入口点>
 ```
 
-### General Configuration
+### 通用配置
 
 <ParamField path="--production" type="boolean">
-  Set <code>NODE_ENV=production</code> and enable minification
+  设置 <code>NODE_ENV=production</code> 并启用压缩
 </ParamField>
 
 <ParamField path="--bytecode" type="boolean">
-  Use a bytecode cache when compiling
+  编译时使用字节码缓存
 </ParamField>
 
 <ParamField path="--target" type="string" default="browser">
-  Intended execution environment for the bundle. One of <code>browser</code>, <code>bun</code>, or <code>node</code>
+  打包的预期执行环境。可选 <code>browser</code>、<code>bun</code> 或 <code>node</code>
 </ParamField>
 
 <ParamField path="--conditions" type="string">
-  Pass custom resolution conditions
+  传递自定义解析条件
 </ParamField>
 
 <ParamField path="--env" type="string" default="disable">
-  Inline environment variables into the bundle as <code>process.env.${name}</code>. To inline variables matching a
-  prefix, use a glob like <code>FOO_PUBLIC_*</code>
+  将环境变量内联到包中，形式为 <code>process.env.${name}</code>。要内联匹配某个前缀的变量，可以使用类似 <code>FOO_PUBLIC_*</code> 的通配符
 </ParamField>
 
-### Output & File Handling
+### 输出与文件处理
 
 <ParamField path="--outdir" type="string" default="dist">
-  Output directory (used when building multiple entry points)
+  输出目录（用于构建多个入口点时）
 </ParamField>
 
 <ParamField path="--outfile" type="string">
-  Write output to a specific file
+  输出到指定文件
 </ParamField>
 
 <ParamField path="--sourcemap" type="string" default="none">
-  Generate source maps. One of <code>linked</code>, <code>inline</code>, <code>external</code>, or <code>none</code>
+  生成源码映射。可选 <code>linked</code>、<code>inline</code>、<code>external</code> 或 <code>none</code>
 </ParamField>
 
 <ParamField path="--banner" type="string">
-  Add a banner to the output (e.g. <code>"use client"</code> for React Server Components)
+  在输出文件前添加标头（例如 React 服务器组件的 <code>"use client"</code>）
 </ParamField>
 
 <ParamField path="--footer" type="string">
-  Add a footer to the output (e.g. <code>// built with bun!</code>)
+  在输出文件尾部添加注释（例如 <code>// built with bun!</code>）
 </ParamField>
 
 <ParamField path="--format" type="string" default="esm">
-  Module format of the output bundle. One of <code>esm</code>, <code>cjs</code>, or <code>iife</code>
+  输出包的模块格式。可选 <code>esm</code>、<code>cjs</code> 或 <code>iife</code>
 </ParamField>
 
-### File Naming
+### 文件命名
 
 <ParamField path="--entry-naming" type="string" default="[dir]/[name].[ext]">
-  Customize entry point filenames
+  自定义入口点的文件名格式
 </ParamField>
 
 <ParamField path="--chunk-naming" type="string" default="[name]-[hash].[ext]">
-  Customize chunk filenames
+  自定义代码块文件名格式
 </ParamField>
 
 <ParamField path="--asset-naming" type="string" default="[name]-[hash].[ext]">
-  Customize asset filenames
+  自定义资源文件名格式
 </ParamField>
 
-### Bundling Options
+### 打包选项
 
 <ParamField path="--root" type="string">
-  Root directory used when bundling multiple entry points
+  打包多个入口点时使用的根目录
 </ParamField>
 
 <ParamField path="--splitting" type="boolean">
-  Enable code splitting for shared modules
+  启用共享模块的代码分割
 </ParamField>
 
 <ParamField path="--public-path" type="string">
-  Prefix to be added to import paths in bundled code
+  添加到打包代码中导入路径的前缀
 </ParamField>
 
 <ParamField path="--external" type="string">
-  Exclude modules from the bundle (supports wildcards). Alias: <code>-e</code>
+  从包中排除模块（支持通配符）。别名：<code>-e</code>
 </ParamField>
 
 <ParamField path="--packages" type="string" default="bundle">
-  How to treat dependencies: <code>external</code> or <code>bundle</code>
+  依赖处理方式：<code>external</code> 或 <code>bundle</code>
 </ParamField>
 
 <ParamField path="--no-bundle" type="boolean">
-  Transpile only — do not bundle
+  只进行转译，不打包
 </ParamField>
 
 <ParamField path="--css-chunking" type="boolean">
-  Chunk CSS files together to reduce duplication (only when multiple entry points import CSS)
+  合并 CSS 文件以减少重复（仅当多个入口点引入 CSS时生效）
 </ParamField>
 
-### Minification & Optimization
+### 压缩与优化
 
 <ParamField path="--emit-dce-annotations" type="boolean" default="true">
-  Re-emit Dead Code Elimination annotations. Disabled when <code>--minify-whitespace</code> is used
+  重新输出死代码消除注释。在使用 <code>--minify-whitespace</code> 时禁用
 </ParamField>
 
 <ParamField path="--minify" type="boolean">
-  Enable all minification options
+  启用所有压缩选项
 </ParamField>
 
 <ParamField path="--minify-syntax" type="boolean">
-  Minify syntax and inline constants
+  压缩语法并内联常量
 </ParamField>
 
 <ParamField path="--minify-whitespace" type="boolean">
-  Minify whitespace
+  压缩空白字符
 </ParamField>
 
 <ParamField path="--minify-identifiers" type="boolean">
-  Minify variable and function identifiers
+  压缩变量和函数标识符
 </ParamField>
 
 <ParamField path="--keep-names" type="boolean">
-  Preserve original function and class names when minifying
+  压缩时保留原始的函数和类名称
 </ParamField>
 
-### Development Features
+### 开发功能
 
 <ParamField path="--watch" type="boolean">
-  Rebuild automatically when files change
+  文件变化时自动重建
 </ParamField>
 
 <ParamField path="--no-clear-screen" type="boolean">
-  Don’t clear the terminal when rebuilding with <code>--watch</code>
+  使用 <code>--watch</code> 时不清屏
 </ParamField>
 
 <ParamField path="--react-fast-refresh" type="boolean">
-  Enable React Fast Refresh transform (for development testing)
+  启用 React 快速刷新转换（用于开发测试）
 </ParamField>
 
-### Standalone Executables
+### 独立可执行文件
 
 <ParamField path="--compile" type="boolean">
-  Generate a standalone Bun executable containing the bundle. Implies <code>--production</code>
+  生成包含包的独立 Bun 可执行文件。隐含使用 <code>--production</code>
 </ParamField>
 
 <ParamField path="--compile-exec-argv" type="string">
-  Prepend arguments to the standalone executable’s <code>execArgv</code>
+  向独立可执行文件的 <code>execArgv</code> 前置参数
 </ParamField>
 
-### Windows Executable Details
+### Windows 可执行文件详情
 
 <ParamField path="--windows-hide-console" type="boolean">
-  Prevent a console window from opening when running a compiled Windows executable
+  运行编译后的 Windows 可执行文件时防止打开控制台窗口
 </ParamField>
 
 <ParamField path="--windows-icon" type="string">
-  Set an icon for the Windows executable
+  设置 Windows 可执行文件图标
 </ParamField>
 
 <ParamField path="--windows-title" type="string">
-  Set the Windows executable product name
+  设置 Windows 可执行文件产品名称
 </ParamField>
 
 <ParamField path="--windows-publisher" type="string">
-  Set the Windows executable company name
+  设置 Windows 可执行文件公司名称
 </ParamField>
 
 <ParamField path="--windows-version" type="string">
-  Set the Windows executable version (e.g. <code>1.2.3.4</code>)
+  设置 Windows 可执行文件版本（例如 <code>1.2.3.4</code>）
 </ParamField>
 
 <ParamField path="--windows-description" type="string">
-  Set the Windows executable description
+  设置 Windows 可执行文件描述
 </ParamField>
 
 <ParamField path="--windows-copyright" type="string">
-  Set the Windows executable copyright notice
+  设置 Windows 可执行文件版权声明
 </ParamField>
 
-### Experimental & App Building
+### 实验性功能及应用构建
 
 <ParamField path="--app" type="boolean">
-  <b>(EXPERIMENTAL)</b> Build a web app for production using Bun Bake
+  <b>（实验性）</b> 使用 Bun Bake 构建生产环境的 Web 应用
 </ParamField>
 
 <ParamField path="--server-components" type="boolean">
-  <b>(EXPERIMENTAL)</b> Enable React Server Components
+  <b>（实验性）</b> 启用 React 服务器组件
 </ParamField>
 
 <ParamField path="--debug-dump-server-files" type="boolean">
-  When <code>--app</code> is set, dump all server files to disk even for static builds
+  当设置了 <code>--app</code> 时，即使是静态构建也将所有服务器文件导出到磁盘
 </ParamField>
 
 <ParamField path="--debug-no-minify" type="boolean">
-  When <code>--app</code> is set, disable all minification
+  当设置了 <code>--app</code> 时，禁用所有压缩
 </ParamField>

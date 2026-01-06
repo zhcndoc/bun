@@ -1,10 +1,10 @@
 ---
-title: Set a code coverage threshold with the Bun test runner
-sidebarTitle: Coverage threshold
+title: 使用 Bun 测试运行器设置代码覆盖率阈值
+sidebarTitle: 覆盖率阈值
 mode: center
 ---
 
-Bun's test runner supports built-in code coverage reporting via the `--coverage` flag.
+Bun 的测试运行器通过 `--coverage` 标志支持内置的代码覆盖率报告。
 
 ```sh terminal icon="terminal"
 bun test --coverage
@@ -16,52 +16,52 @@ test.test.ts:
 ✓ math > multiply [0.03ms]
 ✓ random [0.13ms]
 -------------|---------|---------|-------------------
-File         | % Funcs | % Lines | Uncovered Line #s
+文件         | 函数覆盖率 | 代码行覆盖率 | 未覆盖的行号
 -------------|---------|---------|-------------------
-All files    |   66.67 |   77.78 |
+所有文件     |   66.67 |   77.78 |
  math.ts     |   50.00 |   66.67 |
  random.ts   |   50.00 |   66.67 |
 -------------|---------|---------|-------------------
 
- 3 pass
- 0 fail
- 3 expect() calls
+ 3 通过
+ 0 失败
+ 3 次 expect() 调用
 ```
 
 ---
 
-To set a minimum coverage threshold, add the following line to your `bunfig.toml`. This requires that 90% of your codebase is covered by tests.
+要设置最小覆盖率阈值，请将以下内容添加到你的 `bunfig.toml`。这要求你的代码库有 90% 的测试覆盖率。
 
 ```toml bunfig.toml icon="settings"
 [test]
-# to require 90% line-level and function-level coverage
+# 要求 90% 的代码行和函数覆盖率
 coverageThreshold = 0.9
 ```
 
 ---
 
-If your test suite does not meet this threshold, `bun test` will exit with a non-zero exit code to signal a failure.
+如果你的测试套件未达到此阈值，`bun test` 将以非零退出码退出，表示测试失败。
 
 ```sh terminal icon="terminal"
 bun test --coverage
 ```
 
 ```txt
-<test output>
+<测试输出>
 $ echo $?
-1 # this is the exit code of the previous command
+1 # 这是前一个命令的退出码
 ```
 
 ---
 
-Different thresholds can be set for line-level and function-level coverage.
+可以分别为代码行覆盖率和函数覆盖率设置不同阈值。
 
 ```toml bunfig.toml icon="settings"
 [test]
-# to set different thresholds for lines and functions
+# 为代码行和函数设置不同的阈值
 coverageThreshold = { lines = 0.5, functions = 0.7 }
 ```
 
 ---
 
-See [Docs > Test runner > Coverage](/test/code-coverage) for complete documentation on code coverage reporting in Bun.
+完整的 Bun 代码覆盖率报告文档，请参见 [文档 > 测试运行器 > 覆盖率](/test/code-coverage)。

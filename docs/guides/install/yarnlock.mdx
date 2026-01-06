@@ -1,18 +1,17 @@
 ---
-title: Generate a yarn-compatible lockfile
-sidebarTitle: Generate a yarn-compatible lockfile
+title: 生成兼容 yarn 的锁文件
+sidebarTitle: 生成兼容 yarn 的锁文件
 mode: center
 ---
 
 <Note>
-  Bun v1.1.39 introduced `bun.lock`, a JSONC formatted lockfile. `bun.lock` is human-readable and git-diffable without
-  configuration, at no cost to performance. In 1.2.0+ it is the default format used for new projects. [**Learn
-  more.**](/pm/lockfile#text-based-lockfile)
+  Bun v1.1.39 引入了 `bun.lock`，一种 JSONC 格式的锁文件。`bun.lock` 易于阅读且在无需任何配置的情况下可通过 git 进行差异比较，
+  同时不会影响性能。在 1.2.0 及更高版本中，它是新项目默认使用的格式。[**了解更多。**](/pm/lockfile#text-based-lockfile)
 </Note>
 
 ---
 
-Use the `--yarn` flag to generate a Yarn-compatible `yarn.lock` file (in addition to `bun.lock{b}`).
+使用 `--yarn` 参数可生成一个兼容 Yarn 的 `yarn.lock` 文件（同时生成 `bun.lock{b}`）。
 
 ```sh terminal icon="terminal"
 bun install --yarn
@@ -20,7 +19,7 @@ bun install --yarn
 
 ---
 
-To set this as the default behavior, add the following to your `bunfig.toml` file.
+要将此设置为默认行为，请在你的 `bunfig.toml` 文件中添加如下内容。
 
 ```toml bunfig.toml icon="settings"
 [install.lockfile]
@@ -29,7 +28,7 @@ print = "yarn"
 
 ---
 
-To print a Yarn lockfile to your console without writing it to disk, "run" your `bun.lockb` with `bun`.
+若想将 Yarn 锁文件打印到控制台而不写入磁盘，可以使用 `bun` “运行”你的 `bun.lockb`。
 
 ```sh terminal icon="terminal"
 bun bun.lockb
@@ -48,4 +47,4 @@ abab@^2.0.6:
 
 ---
 
-See [Docs > Package manager](/pm/cli/install) for complete documentation of Bun's package manager.
+完整的 Bun 包管理器文档请参见 [文档 > 包管理器](/pm/cli/install)。
