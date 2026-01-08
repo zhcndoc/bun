@@ -1,10 +1,10 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "aspen",
-  "name": "Bun",
+  "name": "Bun 中文文档",
   "seo": {
     "metatags": {
-      "canonical": "https://bun.com/docs"
+      "canonical": "https://bun.zhcndoc.com"
     }
   },
   "colors": {
@@ -36,10 +36,9 @@
   "navbar": {
     "links": [
       {
-        "label": "Install Bun",
-        "href": "https://www.bun.com/docs/installation",
-        "icon": "download",
-        "primary": true
+        "label": "安装 Bun",
+        "href": "/installation",
+        "icon": "download"
       }
     ]
   },
@@ -57,11 +56,11 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Runtime",
+        "tab": "运行时",
         "icon": "cog",
         "groups": [
           {
-            "group": "Get Started",
+            "group": "开始使用",
             "icon": "terminal",
             "pages": [
               "/index",
@@ -73,12 +72,12 @@
             ]
           },
           {
-            "group": "Core Runtime",
+            "group": "核心运行时",
             "icon": "cog",
             "pages": ["/runtime/index", "/runtime/watch-mode", "/runtime/debugger", "/runtime/bunfig"]
           },
           {
-            "group": "File & Module System",
+            "group": "文件与模块系统",
             "icon": "file",
             "pages": [
               "/runtime/file-types",
@@ -90,7 +89,7 @@
             ]
           },
           {
-            "group": "HTTP server",
+            "group": "HTTP 服务器",
             "icon": "server",
             "pages": [
               "/runtime/http/server",
@@ -102,7 +101,7 @@
             ]
           },
           {
-            "group": "Networking",
+            "group": "网络通信",
             "icon": "globe",
             "expanded": true,
             "pages": [
@@ -114,7 +113,7 @@
             ]
           },
           {
-            "group": "Data & Storage",
+            "group": "数据与存储",
             "icon": "database",
             "pages": [
               "/runtime/cookies",
@@ -128,22 +127,22 @@
             ]
           },
           {
-            "group": "Concurrency",
+            "group": "并发",
             "icon": "split",
             "pages": ["/runtime/workers"]
           },
           {
-            "group": "Process & System",
+            "group": "进程与系统",
             "icon": "computer",
             "pages": ["/runtime/environment-variables", "/runtime/shell", "/runtime/child-process"]
           },
           {
-            "group": "Interop & Tooling",
+            "group": "交互与工具链",
             "icon": "puzzle",
             "pages": ["/runtime/node-api", "/runtime/ffi", "/runtime/c-compiler", "/runtime/transpiler"]
           },
           {
-            "group": "Utilities",
+            "group": "实用工具",
             "icon": "wrench",
             "pages": [
               "/runtime/secrets",
@@ -158,12 +157,12 @@
             ]
           },
           {
-            "group": "Standards & Compatibility",
+            "group": "标准与兼容性",
             "icon": "badge-check",
             "pages": ["/runtime/globals", "/runtime/bun-apis", "/runtime/web-apis", "/runtime/nodejs-compat"]
           },
           {
-            "group": "Contributing",
+            "group": "贡献",
             "icon": "heart",
             "pages": [
               "/project/roadmap",
@@ -177,26 +176,26 @@
         ]
       },
       {
-        "tab": "Package Manager",
+        "tab": "包管理器",
         "icon": "box",
         "groups": [
           {
-            "group": "Core Commands",
+            "group": "核心命令",
             "icon": "terminal",
             "pages": ["/pm/cli/install", "/pm/cli/add", "/pm/cli/remove", "/pm/cli/update", "/pm/bunx"]
           },
           {
-            "group": "Publishing & Analysis",
+            "group": "发布与分析",
             "icon": "upload",
             "pages": ["/pm/cli/publish", "/pm/cli/outdated", "/pm/cli/why", "/pm/cli/audit", "/pm/cli/info"]
           },
           {
-            "group": "Workspace Management",
+            "group": "工作区管理",
             "icon": "folders",
             "pages": ["/pm/workspaces", "/pm/catalogs", "/pm/cli/link", "/pm/cli/pm"]
           },
           {
-            "group": "Advanced Configuration",
+            "group": "高级配置",
             "icon": "settings",
             "pages": [
               "/pm/cli/patch",
@@ -214,72 +213,72 @@
         ]
       },
       {
-        "tab": "Bundler",
+        "tab": "打包器",
         "icon": "combine",
         "groups": [
           {
-            "group": "Core",
+            "group": "核心",
             "icon": "package",
             "pages": ["/bundler/index"]
           },
           {
-            "group": "Development Server",
+            "group": "开发服务器",
             "icon": "monitor",
             "pages": ["/bundler/fullstack", "/bundler/hot-reloading"]
           },
           {
-            "group": "Asset Processing",
+            "group": "资源处理",
             "icon": "image",
             "pages": ["/bundler/html-static", "/bundler/css", "/bundler/loaders"]
           },
           {
-            "group": "Single File Executable",
+            "group": "可执行文件",
             "icon": "binary",
             "pages": ["/bundler/executables"]
           },
           {
-            "group": "Extensions",
+            "group": "扩展",
             "icon": "plug",
             "pages": ["/bundler/plugins", "/bundler/macros"]
           },
           {
-            "group": "Optimization",
+            "group": "优化",
             "icon": "zap",
             "pages": ["/bundler/bytecode", "/bundler/minifier"]
           },
           {
-            "group": "Migration",
+            "group": "迁移",
             "icon": "arrow-right",
             "pages": ["/bundler/esbuild"]
           }
         ]
       },
       {
-        "tab": "Test Runner",
+        "tab": "测试运行器",
         "icon": "flask-conical",
         "groups": [
           {
-            "group": "Getting Started",
+            "group": "入门",
             "icon": "circle-play",
             "pages": ["/test/index", "/test/writing-tests", "/test/configuration"]
           },
           {
-            "group": "Test Execution",
+            "group": "测试执行",
             "icon": "zap",
             "pages": ["/test/runtime-behavior", "/test/discovery"]
           },
           {
-            "group": "Test Features",
+            "group": "测试特性",
             "icon": "sparkles",
             "pages": ["/test/lifecycle", "/test/mocks", "/test/snapshots", "/test/dates-times"]
           },
           {
-            "group": "Specialized Testing",
+            "group": "专门测试",
             "icon": "microscope",
             "pages": ["/test/dom"]
           },
           {
-            "group": "Reporting",
+            "group": "报告",
             "icon": "file-text",
             "pages": ["/test/code-coverage", "/test/reporters"]
           }
@@ -287,16 +286,16 @@
       },
 
       {
-        "tab": "Guides",
+        "tab": "指南",
         "icon": "map",
         "groups": [
           {
-            "group": "Overview",
+            "group": "概述",
             "icon": "globe",
             "pages": ["/guides/index"]
           },
           {
-            "group": "Deployment",
+            "group": "部署",
             "icon": "rocket",
             "pages": [
               "/guides/deployment/vercel",
@@ -308,7 +307,7 @@
             ]
           },
           {
-            "group": "Runtime & Debugging",
+            "group": "运行时与调试",
             "icon": "bug",
             "pages": [
               "/guides/runtime/typescript",
@@ -323,7 +322,7 @@
             ]
           },
           {
-            "group": "Utilities",
+            "group": "实用工具",
             "icon": "wrench",
             "pages": [
               "/guides/util/upgrade",
@@ -348,7 +347,7 @@
             ]
           },
           {
-            "group": "Ecosystem & Frameworks",
+            "group": "生态系统与框架",
             "icon": "puzzle",
             "pages": [
               "/guides/ecosystem/astro",
@@ -382,7 +381,7 @@
             ]
           },
           {
-            "group": "HTTP & Networking",
+            "group": "HTTP 与网络",
             "icon": "globe",
             "pages": [
               "/guides/http/server",
@@ -410,7 +409,7 @@
             ]
           },
           {
-            "group": "Processes & System",
+            "group": "进程与系统",
             "icon": "cpu",
             "pages": [
               "/guides/process/spawn",
@@ -429,7 +428,7 @@
             ]
           },
           {
-            "group": "Package Manager",
+            "group": "包管理器",
             "icon": "package",
             "pages": [
               "/guides/install/add",
@@ -452,7 +451,7 @@
             ]
           },
           {
-            "group": "Test Runner",
+            "group": "测试运行器",
             "icon": "flask-conical",
             "pages": [
               "/guides/test/run-tests",
@@ -477,7 +476,7 @@
             ]
           },
           {
-            "group": "Runtime & Debugging",
+            "group": "运行时与调试",
             "icon": "bug",
             "pages": [
               "/guides/runtime/vscode-debugger",
@@ -490,7 +489,7 @@
             ]
           },
           {
-            "group": "Module System",
+            "group": "模块系统",
             "icon": "box",
             "pages": [
               "/guides/runtime/import-json",
@@ -505,7 +504,7 @@
             ]
           },
           {
-            "group": "File System",
+            "group": "文件系统",
             "icon": "folder",
             "pages": [
               "/guides/read-file/string",
@@ -532,7 +531,7 @@
             ]
           },
           {
-            "group": "Utilities",
+            "group": "实用工具",
             "icon": "wrench",
             "pages": [
               "/guides/util/hash-a-password",
@@ -549,12 +548,12 @@
             ]
           },
           {
-            "group": "HTML Processing",
+            "group": "HTML 处理",
             "icon": "file-code",
             "pages": ["/guides/html-rewriter/extract-links", "/guides/html-rewriter/extract-social-meta"]
           },
           {
-            "group": "Binary Data",
+            "group": "二进制数据",
             "icon": "binary",
             "pages": [
               "/guides/binary/arraybuffer-to-string",
@@ -602,17 +601,17 @@
         ]
       },
       {
-        "tab": "Reference",
+        "tab": "参考",
         "icon": "book",
         "href": "https://bun.com/reference"
       },
       {
-        "tab": "Blog",
+        "tab": "博客",
         "icon": "newspaper",
         "href": "https://bun.com/blog"
       },
       {
-        "tab": "Feedback",
+        "tab": "反馈",
         "icon": "lightbulb",
         "pages": ["/feedback"]
       }
