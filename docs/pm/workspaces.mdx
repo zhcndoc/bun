@@ -1,5 +1,5 @@
 ---
-title: "工作区 (Workspaces)"
+title: "工作区"
 description: "开发包含多个独立包的复杂多包仓库（monorepo）"
 ---
 
@@ -14,18 +14,18 @@ Bun 支持在 `package.json` 中使用 [`workspaces`](https://docs.npmjs.com/cli
 ├── package.json
 ├── tsconfig.json
 └── packages
-    ├── pkg-a
-    │   ├── index.ts
-    │   ├── package.json
-    │   └── tsconfig.json
-    ├── pkg-b
-    │   ├── index.ts
-    │   ├── package.json
-    │   └── tsconfig.json
-    └── pkg-c
-        ├── index.ts
-        ├── package.json
-        └── tsconfig.json
+    ├── pkg-a
+    │   ├── index.ts
+    │   ├── package.json
+    │   └── tsconfig.json
+    ├── pkg-b
+    │   ├── index.ts
+    │   ├── package.json
+    │   └── tsconfig.json
+    └── pkg-c
+        ├── index.ts
+        ├── package.json
+        └── tsconfig.json
 ```
 
 在根目录的 `package.json` 中，使用 `"workspaces"` 键来表示哪些子目录应被视为 monorepo 内的包/工作区。通常将所有工作区放置在名为 `packages` 的目录下。

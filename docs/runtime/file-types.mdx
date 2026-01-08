@@ -267,7 +267,7 @@ import db from "./my.db" with { type: "sqlite" };
 import db from "./my.db" with { type: "sqlite", embed: "true" };
 ```
 
-使用[独立可执行文件](/bundler/executables)时，数据库会被嵌入到单文件可执行文件中。
+使用[独立可执行文件](/bundler/executables)时，数据库会被嵌入到独立可执行文件中。
 
 否则，嵌入数据库会被复制到 `outdir`，并使用哈希后的文件名。
 
