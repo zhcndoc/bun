@@ -1,57 +1,57 @@
 ---
 title: WebView
-description: Control a headless browser from Bun for automation, testing, and scraping — zero dependencies on macOS, Chrome DevTools Protocol everywhere else
+description: 通过 Bun 控制无头浏览器，用于自动化、测试和抓取 — 在 macOS 上零依赖；其余平台到处都是 Chrome DevTools Protocol
 ---
 
-`Bun.WebView` is a headless browser built into the runtime. Use it to load pages, run JavaScript inside them, simulate real user input, and capture screenshots — without Puppeteer, Playwright, or a separate browser download.
+`Bun.WebView` 是内置在运行时中的无头浏览器。使用它来加载页面、在其中运行 JavaScript、模拟真实用户输入，并截取屏幕截图 — 不需要 Puppeteer、Playwright，也不需要单独下载浏览器。
 
-<Warning>This API is experimental and may change in future releases.</Warning>
+<Warning>此 API 为实验性质，可能会在后续版本中发生变化。</Warning>
 
 ```ts
 await using view = new Bun.WebView();
 
 await view.navigate("https://example.com");
-await view.click("a[href]"); // waits for the link to be clickable
+await view.click("a[href]"); // 等待链接变为可点击
 const title = await view.evaluate("document.title");
 
 await Bun.write("page.png", await view.screenshot());
 ```
 
-On macOS, `Bun.WebView` uses the system's `WKWebView` — nothing to install. On Linux and Windows it drives an installed Chrome, Chromium, Edge, or Brave over the Chrome DevTools Protocol.
+在 macOS 上，`Bun.WebView` 使用系统的 `WKWebView` — 无需安装任何东西。在 Linux 和 Windows 上，它通过 Chrome DevTools Protocol 驱动已安装的 Chrome、Chromium、Edge 或 Brave。
 
-Each view runs its page in a separate renderer process. All input methods (`click`, `type`, `press`, `scroll`) dispatch **native** browser events, so the page sees `isTrusted: true` — the same as a real user.
+每个视图都会在单独的渲染器进程中运行其页面。所有输入方法（`click`、`type`、`press`、`scroll`）都会分发**原生**浏览器事件，因此页面会看到 `isTrusted: true` — 与真实用户一致。
 
 ---
 
-## Creating a view
+## 创建视图
 
 ```ts
 const view = new Bun.WebView({
-  width: 1280, // viewport width in CSS pixels (1-16384, default 800)
-  height: 720, // viewport height in CSS pixels (1-16384, default 600)
-  url: "https://bun.com", // optional: start navigating immediately
+  width: 1280, // 视口宽度（CSS 像素，1-16384，默认 800）
+  height: 720, // 视口高度（CSS 像素，1-16384，默认 600）
+  url: "https://bun.com", // 可选：立即开始导航
 });
 ```
 
-The constructor is synchronous — it returns immediately and spawns the browser subprocess in the background. The first operation you `await` (a `navigate()`, `evaluate()`, etc.) will wait for the browser to be ready.
+构造函数是同步的 — 它会立即返回，并在后台启动浏览器子进程。你第一次 `await` 的操作（`navigate()`、`evaluate()` 等）会等待浏览器准备就绪。
 
-If you pass `url`, the view begins navigating before the constructor returns. This is equivalent to calling `view.navigate(url)` on the next line.
+如果你传入 `url`，那么在构造函数返回之前视图就会开始导航。等价于在下一行调用 `view.navigate(url)`。
 
-### Automatic cleanup with `using`
+### 使用 `using` 的自动清理
 
-`Bun.WebView` implements `Symbol.dispose` and `Symbol.asyncDispose`, so you can use `using` or `await using` to close the view automatically when it goes out of scope:
+`Bun.WebView` 实现了 `Symbol.dispose` 和 `Symbol.asyncDispose`，因此你可以使用 `using` 或 `await using`，当视图超出作用域时自动关闭：
 
 ```ts
 {
   await using view = new Bun.WebView();
   await view.navigate("https://example.com");
   // ...
-} // view.close() called automatically here
+} // 这里会自动调用 view.close()
 ```
 
-### Persistent storage
+### 持久化存储
 
-By default, each view uses **ephemeral** in-memory storage — cookies, `localStorage`, IndexedDB, and cache are discarded when the view closes. To persist state across runs, pass a directory:
+默认情况下，每个视图使用**短暂的**内存存储 — cookies、`localStorage`、IndexedDB 和缓存都会在视图关闭时丢弃。要在多次运行之间持久化状态，请传入目录：
 
 ```ts
 const view = new Bun.WebView({
@@ -59,73 +59,73 @@ const view = new Bun.WebView({
 });
 ```
 
-Views that share the same `directory` share cookies and storage. Pass `dataStore: "ephemeral"` (the default) to opt back into in-memory storage explicitly.
+共享同一个 `directory` 的视图会共享 cookies 和存储。传入 `dataStore: "ephemeral"`（默认值）以显式回到内存存储。
 
 <Note>
-  With the Chrome backend, `dataStore.directory` maps to `--user-data-dir` and applies to the **entire Chrome process**,
-  not per-view. Since Chrome is spawned once per Bun process, the first view's directory wins for all subsequent views.
+  使用 Chrome 后端时，`dataStore.directory` 会映射到 `--user-data-dir`，并作用于**整个 Chrome 进程**，
+  而不是每个视图。由于 Chrome 会在每个 Bun 进程中只启动一次，因此第一个视图的目录会赢，影响后续所有视图。
 </Note>
 
 <Note>
-  With the WebKit backend, persistent storage requires macOS 15.2+. On older macOS versions, use `dataStore:
-  "ephemeral"` (the default).
+  使用 WebKit 后端时，持久化存储需要 macOS 15.2+。在旧版本的 macOS 上，请使用 `dataStore:
+  "ephemeral"`（默认值）。
 </Note>
 
 ---
 
-## Backends
+## 后端
 
-`Bun.WebView` supports two rendering engines. The default depends on your platform:
+`Bun.WebView` 支持两种渲染引擎。默认取决于你的平台：
 
-| Backend    | Engine    | Platforms     | Requirements                                                                         |
-| ---------- | --------- | ------------- | ------------------------------------------------------------------------------------ |
-| `"webkit"` | WKWebView | macOS only    | None — uses the system `WebKit.framework`                                            |
-| `"chrome"` | Blink     | macOS / Linux | Chrome, Chromium, Edge, or Brave installed (or Playwright's `chrome-headless-shell`) |
+| 后端          | 引擎    | 平台                | 需求                                                                 |
+| ------------- | -------- | ------------------- | -------------------------------------------------------------------- |
+| `"webkit"`    | WKWebView | 仅 macOS            | 无 — 使用系统 `WebKit.framework`                                  |
+| `"chrome"`    | Blink     | macOS / Linux      | 已安装 Chrome、Chromium、Edge 或 Brave（或 Playwright 的 `chrome-headless-shell`） |
 
-On macOS the default is `"webkit"`; elsewhere it's `"chrome"`. Requesting `backend: "webkit"` on a non-macOS platform throws.
+在 macOS 上默认是 `"webkit"`；其他平台上是 `"chrome"`。在非 macOS 平台请求 `backend: "webkit"` 会抛出异常。
 
 ```ts
-// Force Chrome on macOS
+// 在 macOS 上强制使用 Chrome
 const view = new Bun.WebView({ backend: "chrome" });
 ```
 
-### How the WebKit backend works
+### WebKit 后端如何工作
 
-Bun spawns a lightweight host subprocess (the `bun` binary itself, re-executed in a special mode) that owns the `WKWebView` on its main thread. Your Bun process talks to it over a Unix socket using a compact binary protocol. The host process is spawned once and shared by every `"webkit"` view in your program.
+Bun 会生成一个轻量的宿主子进程（`bun` 可执行文件本身，会以特殊模式重新执行），它在主线程上拥有 `WKWebView`。你的 Bun 进程通过 Unix socket 使用紧凑的二进制协议与它通信。宿主进程只会生成一次，并被程序中所有 `"webkit"` 视图共享。
 
-### How the Chrome backend works
+### Chrome 后端如何工作
 
-Bun either **connects** to an already-running Chrome over a WebSocket, or **spawns** a headless Chrome subprocess and talks to it over a pipe (`--remote-debugging-pipe`). Either way, communication uses the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/).
+Bun 要么 **连接** 到一个已经运行的 Chrome（通过 WebSocket），要么 **生成** 一个无头 Chrome 子进程，并通过管道与它通信（`--remote-debugging-pipe`）。无论哪种方式，通信都使用 [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/)。
 
-Chrome is spawned (or connected) once per Bun process. Each `new Bun.WebView({ backend: "chrome" })` creates a new tab via `Target.createTarget` in that single Chrome instance.
+Chrome 会在每个 Bun 进程中生成（或连接）一次。每个 `new Bun.WebView({ backend: "chrome" })` 会在这一个 Chrome 实例中通过 `Target.createTarget` 创建一个新的标签页。
 
-#### Finding the Chrome executable
+#### 查找 Chrome 可执行文件
 
-When Bun needs to spawn Chrome, it searches in this order:
+当 Bun 需要生成 Chrome 时，它会按以下顺序搜索：
 
-1. The `path` you passed in `backend: { type: "chrome", path: "..." }`
-2. The `BUN_CHROME_PATH` environment variable
-3. `$PATH` (`google-chrome-stable`, `google-chrome`, `chromium-browser`, `chromium`, `brave-browser`, `microsoft-edge`, `chrome`)
-4. Standard install locations (`/Applications/Google Chrome.app`, `~/Applications/...`, `/usr/bin/...`, `/snap/bin/...`, etc.)
-5. Playwright's cache (`~/Library/Caches/ms-playwright` or `~/.cache/ms-playwright`) for `chrome-headless-shell`
+1. 你传入的 `backend: { type: "chrome", path: "..." }` 中的 `path`
+2. `BUN_CHROME_PATH` 环境变量
+3. `$PATH`（`google-chrome-stable`, `google-chrome`, `chromium-browser`, `chromium`, `brave-browser`, `microsoft-edge`, `chrome`）
+4. 标准安装位置（`/Applications/Google Chrome.app`, `~/Applications/...`, `/usr/bin/...`, `/snap/bin/...` 等）
+5. Playwright 缓存（`~/Library/Caches/ms-playwright` 或 `~/.cache/ms-playwright`）中的 `chrome-headless-shell`
 
-If none is found, the constructor throws.
+如果找不到，会在构造函数中抛出。
 
-#### Connecting to an already-running Chrome {#existing-chrome}
+#### 连接到已在运行的 Chrome {#existing-chrome}
 
-By default, before spawning, Bun checks whether a Chrome-family browser is **already running** with remote debugging enabled by reading the `DevToolsActivePort` file from standard profile directories. If found, Bun connects to that browser over WebSocket instead of spawning a new one — your views open as tabs in your existing browser.
+默认情况下，在生成之前，Bun 会通过从标准 profile 目录读取 `DevToolsActivePort` 文件来检查某个 Chrome 家族浏览器是否已经在运行并启用了远程调试。如果找到，Bun 会通过 WebSocket 连接到该浏览器，而不是再生成一个 — 你的视图会作为标签页打开在现有浏览器中。
 
-To enable remote debugging in a running Chrome, visit `chrome://inspect/#remote-debugging` and flip the toggle, or launch Chrome with `--remote-debugging-port=9222`. Chrome will prompt for permission on each new connection when using the `chrome://inspect` toggle.
+要在运行中的 Chrome 中启用远程调试，访问 `chrome://inspect/#remote-debugging` 并切换开关，或使用 `--remote-debugging-port=9222` 启动 Chrome。每次使用 `chrome://inspect` 开关连接到新的会话时，Chrome 都会在请求权限时提示。
 
-To control this behavior explicitly, use the object form of `backend`:
+要显式控制这一行为，请使用 `backend` 的对象形式：
 
 ```ts
-// Always spawn a fresh headless Chrome; never auto-connect
+// 总是生成一个新的无头 Chrome；永远不自动连接
 new Bun.WebView({
   backend: { type: "chrome", url: false },
 });
 
-// Connect to a specific DevTools WebSocket URL
+// 连接到特定的 DevTools WebSocket URL
 new Bun.WebView({
   backend: {
     type: "chrome",
@@ -134,16 +134,16 @@ new Bun.WebView({
 });
 ```
 
-If auto-detect finds a stale `DevToolsActivePort` file (Chrome crashed or restarted), the WebSocket connect fails and Bun transparently falls back to spawning its own Chrome. An explicit `url: "ws://..."` does **not** fall back — a failed connection throws.
+如果自动探测发现过期的 `DevToolsActivePort` 文件（Chrome 崩溃或重启），WebSocket 连接将失败，并且 Bun 会透明地回退到生成自己的 Chrome。显式指定 `url: "ws://..."` **不会**回退 — 连接失败会直接抛出异常。
 
 <Note>
-  Passing `path` or `argv` implies spawn mode and skips auto-detect. `url: "ws://..."` cannot be combined with `path` or
-  `argv`.
+  传入 `path` 或 `argv` 会隐含进入生成模式并跳过自动探测。`url: "ws://..."` 不能与 `path` 或
+  `argv` 组合使用。
 </Note>
 
-#### Launch flags
+#### 启动参数
 
-When spawning, Bun passes a minimal flag set:
+生成时，Bun 会传入一组最小的参数：
 
 ```
 --user-data-dir=<temp> --remote-debugging-pipe --headless --no-first-run
@@ -153,7 +153,7 @@ When spawning, Bun passes a minimal flag set:
 --disable-ipc-flooding-protection --no-startup-window
 ```
 
-Append your own with `argv` — Chrome resolves duplicate switches last-wins, so you can override any default:
+用 `argv` 把你自己的参数追加进去 — Chrome 处理重复开关时采用“最后生效”，因此你可以覆盖任意默认值：
 
 ```ts
 new Bun.WebView({
@@ -164,9 +164,9 @@ new Bun.WebView({
 });
 ```
 
-#### Subprocess output
+#### 子进程输出
 
-Browser subprocess stdout/stderr are silenced by default. Chrome in particular is noisy on stderr (font-config warnings, GCM registration, updater checks). To see it — useful when Chrome crashes silently — route it through:
+默认情况下会静默浏览器子进程的 stdout/stderr。特别是 Chrome 的 stderr 很“吵”（字体配置警告、GCM 注册、更新检查）。如果你想看到它（在 Chrome 静默崩溃时尤其有用），请这样转发：
 
 ```ts
 new Bun.WebView({
@@ -174,11 +174,11 @@ new Bun.WebView({
 });
 ```
 
-The `"webkit"` backend accepts the same `stdout`/`stderr` options.
+`"webkit"` 后端也接受相同的 `stdout`/`stderr` 选项。
 
 ---
 
-## Navigation
+## 导航
 
 ```ts
 await view.navigate("https://example.com");
@@ -186,25 +186,25 @@ await view.navigate("data:text/html,<h1>hello</h1>");
 await view.navigate("file:///path/to/index.html");
 ```
 
-`navigate()` resolves when the main frame's `load` event fires. After it resolves, `view.url` and `view.title` reflect the new page, and `view.loading` is `false`.
+当主框架的 `load` 事件触发时，`navigate()` 才会解析完成。解析完成后，`view.url` 和 `view.title` 会反映新页面，且 `view.loading` 为 `false`。
 
-If the navigation fails (DNS failure, connection refused, invalid URL), the promise rejects with an `Error` describing the failure.
+如果导航失败（DNS 失败、连接被拒绝、URL 无效），该 promise 会以描述失败原因的 `Error` 形式拒绝。
 
-Only one navigation may be in flight per view at a time. Calling `navigate()` while another is pending throws `ERR_INVALID_STATE` synchronously.
+每个视图在任一时刻只能进行一个正在进行的导航。若在另一个 `navigate()` 仍待处理时再次调用 `navigate()`，会同步抛出 `ERR_INVALID_STATE`。
 
-### History
+### 历史记录
 
 ```ts
-await view.goBack(); // like the browser's back button
-await view.goForward(); // like the browser's forward button
-await view.reload(); // reload the current page
+await view.goBack(); // 类似浏览器的返回按钮
+await view.goForward(); // 类似浏览器的前进按钮
+await view.reload(); // 重新加载当前页面
 ```
 
-Calling `goBack()` at the beginning of history (or `goForward()` at the end) resolves `undefined` without navigating — it doesn't reject.
+在历史记录的起点（或终点）调用 `goBack()`（或 `goForward()`）会直接解析为 `undefined`，不进行导航 — 不会拒绝。
 
-### Navigation callbacks
+### 导航回调
 
-Set `onNavigated` and `onNavigationFailed` to observe every navigation, including ones triggered by the page itself (link clicks, `location.href = ...`, redirects) and by `reload()`/`goBack()`/`goForward()`:
+设置 `onNavigated` 和 `onNavigationFailed` 来观察每一次导航，包括页面自身触发的导航（点击链接、`location.href = ...`、重定向）以及由 `reload()`/`goBack()`/`goForward()` 触发的导航：
 
 ```ts
 view.onNavigated = (url, title) => {
@@ -216,13 +216,13 @@ view.onNavigationFailed = error => {
 };
 ```
 
-These fire **before** the corresponding `navigate()` promise settles, so by the time `await view.navigate(...)` returns, your callback has already run. Set to `null` to remove.
+这些回调会在对应的 `navigate()` promise 完成（settle）之前触发，因此当你 `await view.navigate(...)` 返回时，你的回调已经运行过了。设置为 `null` 可移除。
 
 ---
 
-## Evaluating JavaScript
+## 计算 JavaScript
 
-Run an expression in the page's main frame and get its result back as a native JavaScript value:
+在页面的主框架中运行一个表达式，并把结果作为原生 JavaScript 值返回：
 
 ```ts
 const title = await view.evaluate("document.title");
@@ -230,129 +230,129 @@ const items = await view.evaluate("[...document.querySelectorAll('li')].map(li =
 const user = await view.evaluate("({ name: 'bun', ok: true })");
 ```
 
-The script is wrapped as `await (<your script>)`, so:
+脚本会被包装为 `await (<your script>)`，因此：
 
-- It must be an **expression**, not a statement sequence. For multiple statements, wrap in an IIFE: `evaluate("(() => { let x = foo(); return x + 1 })()")`.
-- If it evaluates to a `Promise`, the promise is awaited and its resolved value is returned.
+- 它必须是一个**表达式**，而不是语句序列。要包含多条语句请用 IIFE 包裹：`evaluate("(() => { let x = foo(); return x + 1 })()")`。
+- 如果它计算为一个 `Promise`，会等待该 promise 并返回其解析值。
 
-The result round-trips through `JSON.stringify` in the page and `JSON.parse` in Bun. Arrays and plain objects come back as real structures; `undefined`, functions, and symbols resolve to `undefined`; circular references reject.
+结果会在页面侧通过 `JSON.stringify`，在 Bun 侧通过 `JSON.parse` 来往返传递。数组和普通对象会以真实结构返回；`undefined`、函数和 symbol 会解析为 `undefined`；循环引用会导致拒绝。
 
 ```ts
 await view.evaluate("42"); // 42
 await view.evaluate("[1, 2, 3]"); // [1, 2, 3]
 await view.evaluate("undefined"); // undefined
-await view.evaluate("() => 1"); // undefined (functions don't serialize)
-await view.evaluate("fetch('/api').then(r => r.json())"); // awaited
+await view.evaluate("() => 1"); // undefined（函数不会序列化）
+await view.evaluate("fetch('/api').then(r => r.json())"); // 已等待
 ```
 
-If the script throws (or returns a rejected promise), `evaluate()` rejects with an `Error` whose message comes from the page-side exception.
+如果脚本抛出异常（或返回被拒绝的 promise），`evaluate()` 会拒绝，并把消息作为页面侧异常信息的一部分返回一个 `Error`。
 
-Only one `evaluate()` may be in flight per view at a time; a second concurrent call throws `ERR_INVALID_STATE`.
+每个视图在任一时刻只能进行一个正在进行的 `evaluate()`；第二个并发调用会同步抛出 `ERR_INVALID_STATE`。
 
 ---
 
-## Screenshots
+## 截图
 
-Capture the current viewport as an image:
+把当前视口捕获成图片：
 
 ```ts
 const png = await view.screenshot();
 await Bun.write("page.png", png);
 ```
 
-### Image format
+### 图片格式
 
 ```ts
-await view.screenshot({ format: "png" }); // lossless (default)
-await view.screenshot({ format: "jpeg", quality: 90 }); // lossy, quality 0-100 (default 80)
-await view.screenshot({ format: "webp", quality: 75 }); // Chrome backend only
+await view.screenshot({ format: "png" }); // 无损（默认）
+await view.screenshot({ format: "jpeg", quality: 90 }); // 有损，quality 0-100（默认 80）
+await view.screenshot({ format: "webp", quality: 75 }); // 仅 Chrome 后端
 ```
 
-`quality` is ignored for PNG. `"webp"` is only available with `backend: "chrome"` — the WebKit backend throws.
+PNG 会忽略 `quality`。`"webp"` 只在 `backend: "chrome"` 时可用 — WebKit 后端会抛出异常。
 
-### Return type
+### 返回类型
 
-The `encoding` option controls how the image bytes are handed back:
+`encoding` 选项控制图片字节如何返回给你：
 
-| `encoding`           | Returns                          | Notes                                                                                                    |
-| -------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `"blob"` _(default)_ | `Blob`                           | MIME type set automatically. Zero-copy mmap-backed on WebKit. Works with `Bun.write()`, `new Response()` |
-| `"buffer"`           | `Buffer`                         | Node `Buffer`. Zero-copy mmap-backed on WebKit                                                           |
-| `"base64"`           | `string`                         | Base64-encoded. Zero-decode on Chrome (CDP returns base64 natively)                                      |
-| `"shmem"`            | `{ name: string, size: number }` | POSIX shared-memory segment name. Caller owns `shm_unlink`. Not supported on Windows                     |
+| `encoding`           | 返回内容                       | 说明                                                                                                    |
+| -------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `"blob"` _(默认)_    | `Blob`                          | MIME 类型自动设置。WebKit 上基于 mmap 的零拷贝。可与 `Bun.write()`、`new Response()` 一起使用 |
+| `"buffer"`          | `Buffer`                        | Node `Buffer`。WebKit 上基于 mmap 的零拷贝                                                            |
+| `"base64"`          | `string`                        | Base64 编码。Chrome 上无需解码（CDP 原生返回 base64）                                              |
+| `"shmem"`           | `{ name: string, size: number }` | POSIX 共享内存段名称。调用方负责 `shm_unlink`。Windows 不支持                                   |
 
 ```ts
 const buf = await view.screenshot({ encoding: "buffer" });
-console.log(buf[0] === 0x89); // PNG magic byte
+console.log(buf[0] === 0x89); // PNG 魔术字节
 
 const b64 = await view.screenshot({ encoding: "base64" });
 console.log(`<img src="data:image/png;base64,${b64}">`);
 ```
 
-#### Shared memory for terminal graphics
+#### 终端图形的共享内存
 
-`encoding: "shmem"` is designed for Kitty's [terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) `t=s` transmission mode — Bun writes the image to a POSIX shared-memory segment and returns its name; the terminal reads it directly and unlinks it when done. No copying through the pipe.
+`encoding: "shmem"` 专为 Kitty 的 [终端图形协议](https://sw.kovidgoyal.net/kitty/graphics-protocol/) `t=s` 传输模式设计 — Bun 会把图片写入一个 POSIX 共享内存段并返回其名称；终端直接读取，并在完成后取消链接（unlinks）。无需通过管道复制。
 
 ```ts
 const { name, size } = await view.screenshot({ encoding: "shmem" });
 process.stdout.write(`\x1b_Gf=100,t=s,a=T,S=${size};${btoa(name)}\x1b\\`);
-// Kitty reads the PNG from shared memory and unlinks the segment
+// Kitty 从共享内存读取 PNG 并取消链接该段
 ```
 
-On WebKit, the shm name looks like `/bun-webview-<pid>-<seq>`; on Chrome, `/bun-chrome-<pid>-<seq>`. If you request `"shmem"` and don't hand the name to something that will `shm_unlink` it, the segment leaks until your process exits.
+在 WebKit 上，shm 名称看起来像 `/bun-webview-<pid>-<seq>`；在 Chrome 上是 `/bun-chrome-<pid>-<seq>`。如果你请求 `"shmem"`，但没有把名称交给某个会执行 `shm_unlink` 的逻辑，那么共享内存段会在你的进程退出前一直泄漏。
 
 ---
 
-## Input simulation
+## 输入模拟
 
-All input methods dispatch **native** browser events. The page receives `pointerdown`/`mousedown`/`keydown`/`wheel` events with `isTrusted: true`, CSS `:active` and `:hover` states apply, and default actions (form submission, link navigation, text selection) fire exactly as if a user performed them.
+所有输入方法都会分发**原生**浏览器事件。页面会收到 `pointerdown`/`mousedown`/`keydown`/`wheel` 事件，且带有 `isTrusted: true`；CSS `:active` 与 `:hover` 状态会生效，并且默认行为（表单提交、链接导航、文本选择）会像真实用户操作那样准确触发。
 
-### Clicking
+### 点击
 
-Click at viewport coordinates:
+在视口坐标处点击：
 
 ```ts
 await view.click(150, 200);
 await view.click(150, 200, { button: "right" });
-await view.click(150, 200, { clickCount: 2 }); // double-click
+await view.click(150, 200, { clickCount: 2 }); // 双击
 await view.click(150, 200, { modifiers: ["Shift", "Meta"] });
 ```
 
-The promise resolves **after** the page has processed the full `mousedown` → `mouseup` → `click` sequence, including any JavaScript handlers. No polling needed — a subsequent `evaluate()` will see the result.
+该 promise 会在页面处理完整的 `mousedown` → `mouseup` → `click` 序列之后才解析完成，包括任何 JavaScript 处理器。无需轮询 — 随后的 `evaluate()` 会看到结果。
 
-#### Clicking by selector
+#### 通过选择器点击
 
-Pass a CSS selector instead of coordinates and Bun will wait for the element to become **actionable**, then click its center:
+传入 CSS 选择器而不是坐标，Bun 会等待该元素变为**可操作（actionable）**，然后点击它的中心：
 
 ```ts
 await view.click("#submit");
 await view.click("button.primary", { timeout: 5000 });
 ```
 
-An element is actionable when it:
+当元素满足以下条件时，它才是可操作的：
 
-- exists in the DOM
-- has a non-zero bounding box
-- is inside the viewport
-- has been **stable** (bounding box unchanged) for two consecutive animation frames
-- is the topmost element at its center point (not covered by an overlay)
+- 存在于 DOM 中
+- 拥有非零的边界框
+- 位于视口内
+- 已保持**稳定**（在连续两帧动画中边界框未改变）
+- 在其中心点处是最上层元素（没有被覆盖物遮挡）
 
-The check runs page-side at `requestAnimationFrame` rate. If the element never becomes actionable within `timeout` milliseconds (default `30000`), the promise rejects with an error like `timeout waiting for '#submit' to be actionable`.
+该检查会在页面侧以 `requestAnimationFrame` 的频率运行。如果该元素在 `timeout` 毫秒内始终未变为可操作（默认 `30000`），promise 会以类似 `timeout waiting for '#submit' to be actionable` 的错误拒绝。
 
-The selector is passed as data, not interpolated into a script, so selectors containing quotes or JavaScript syntax are safe.
+选择器作为数据传递，而不是插值进脚本，因此包含引号或 JavaScript 语法的选择器是安全的。
 
-### Typing text
+### 输入文本
 
-Insert text into the currently focused element:
+把文本插入到当前聚焦的元素中：
 
 ```ts
-await view.click("input#email"); // focus it first
+await view.click("input#email"); // 先聚焦
 await view.type("hello@example.com");
 ```
 
-`type()` uses the browser's `InsertText` editing command (the same path as paste), not per-character keystrokes. It fires `beforeinput`/`input` events with `isTrusted: true`, but **no `keydown`/`keyup` events**. There's no IME processing and no smart-quote substitution — the text lands exactly as given.
+`type()` 使用浏览器的 `InsertText` 编辑命令（与粘贴使用同一路径），而不是逐字符的按键模拟。它会触发带 `isTrusted: true` 的 `beforeinput`/`input` 事件，但**不会**触发 `keydown`/`keyup` 事件。不会进行 IME 处理，也不会进行智能引号替换 — 文本会被按原样精确写入。
 
-### Pressing keys
+### 按下按键
 
 ```ts
 await view.press("Enter");
@@ -361,52 +361,52 @@ await view.press("ArrowDown");
 await view.press("a", { modifiers: ["Meta"] }); // Cmd+A / Ctrl+A
 ```
 
-Named virtual keys: `Enter`, `Tab`, `Space`, `Backspace`, `Delete`, `Escape`, `ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`, `Home`, `End`, `PageUp`, `PageDown`.
+命名的虚拟按键：`Enter`、`Tab`、`Space`、`Backspace`、`Delete`、`Escape`、`ArrowLeft`、`ArrowRight`、`ArrowUp`、`ArrowDown`、`Home`、`End`、`PageUp`、`PageDown`。
 
-Any single character (e.g. `"a"`) combined with `modifiers` sends a keyboard chord.
+任意单字符（例如 `"a"`）结合 `modifiers` 会发送一个按键组合键（chord）。
 
-On the WebKit backend, most named keys (without modifiers) map to editing commands (`DeleteBackward`, `MoveLeft`, `InsertNewline`, etc.) and resolve after the page has applied them. `Escape`, `Space`, and any key with modifiers fall back to raw `keydown`/`keyup` events — these fire a `keydown` the page can observe, but there's no completion barrier, so follow with an `evaluate()` if you need to observe the effect.
+在 WebKit 后端，大多数命名按键（不带修饰键）会映射到编辑命令（`DeleteBackward`、`MoveLeft`、`InsertNewline` 等），并在页面应用之后解析完成。`Escape`、`Space`，以及任何带修饰键的按键会回退到原始的 `keydown`/`keyup` 事件 — 这些事件会触发一个页面可观察到的 `keydown`，但没有“完成屏障”，所以如果你需要观察其效果，请在后面跟一个 `evaluate()`。
 
-Modifier names: `"Shift"`, `"Control"` (or `"Ctrl"`), `"Alt"` (or `"Option"`), `"Meta"` (or `"Cmd"` / `"Command"`).
+修饰键名称：`"Shift"`、`"Control"`（或 `"Ctrl"`）、`"Alt"`（或 `"Option"`）、`"Meta"`（或 `"Cmd"` / `"Command"`）。
 
-### Scrolling
+### 滚动
 
-Scroll by a pixel delta — fires a native `wheel` event at the viewport center:
-
-```ts
-await view.scroll(0, 500); // scroll down 500px
-await view.scroll(-100, 0); // scroll left 100px
-```
-
-Positive `dy` scrolls down (content moves up), matching `window.scrollBy`. If a scrollable element sits under the viewport center, it receives the wheel event instead of the document.
-
-Scroll an element into view by selector:
+按像素增量滚动 — 在视口中心触发一个原生 `wheel` 事件：
 
 ```ts
-await view.scrollTo("#footer"); // center it (default)
-await view.scrollTo("#hero", { block: "start" }); // align its top to the viewport top
-await view.scrollTo(".card", { block: "nearest" }); // minimal scroll
+await view.scroll(0, 500); // 向下滚动 500px
+await view.scroll(-100, 0); // 向左滚动 100px
 ```
 
-`scrollTo()` waits (at `requestAnimationFrame` rate) for the element to exist, then calls `element.scrollIntoView({ block, behavior: "instant" })`. It scrolls every scrollable ancestor, not just the document. The default `timeout` is `30000` ms.
+正的 `dy` 会向下滚动（内容向上移动），与 `window.scrollBy` 一致。如果视口中心下方有可滚动元素，它会接收到 wheel 事件，而不是整个文档。
 
-### Resizing
+通过选择器把元素滚入视野：
+
+```ts
+await view.scrollTo("#footer"); // 居中显示（默认）
+await view.scrollTo("#hero", { block: "start" }); // 让元素顶部对齐视口顶部
+await view.scrollTo(".card", { block: "nearest" }); // 最小滚动
+```
+
+`scrollTo()` 会以 `requestAnimationFrame` 的频率等待元素存在，然后调用 `element.scrollIntoView({ block, behavior: "instant" })`。它会滚动所有可滚动祖先，而不仅仅是文档。默认 `timeout` 为 `30000` ms。
+
+### 调整大小
 
 ```ts
 await view.resize(1920, 1080);
 ```
 
-Width and height must each be between `1` and `16384`.
+宽度和高度分别必须在 `1` 到 `16384` 之间。
 
 ---
 
-## Console capture
+## 控制台捕获
 
-Forward `console.*` calls from the page to your Bun process by passing the `console` option to the constructor.
+通过在构造函数中传入 `console` 选项，把页面侧的 `console.*` 调用转发到你的 Bun 进程。
 
-### Mirror to Bun's console
+### 镜像到 Bun 的控制台
 
-Pass `globalThis.console` (the actual object, by reference) and page-side `console.log("hi")` prints `hi` to your stdout with Bun's formatter; `console.error` goes to stderr. This path dispatches directly through Bun's console implementation with no per-call JavaScript overhead.
+传入 `globalThis.console`（实际对象，按引用）后，页面侧 `console.log("hi")` 会以 Bun 的格式化器把 `hi` 输出到你的 stdout；`console.error` 输出到 stderr。此路径会直接通过 Bun 的控制台实现分发，不会为每次调用引入额外的 JavaScript 开销。
 
 ```ts
 const view = new Bun.WebView({
@@ -414,42 +414,41 @@ const view = new Bun.WebView({
 });
 ```
 
-### Custom handler
+### 自定义处理器
 
-Pass a function to receive each call yourself:
+传入一个函数来接收每次调用：
 
 ```ts
 const view = new Bun.WebView({
   console: (type, ...args) => {
-    // type is "log" | "warn" | "error" | "info" | "debug" | ...
+    // type 是 "log" | "warn" | "error" | "info" | "debug" | ...
     if (type === "error") reportError(args);
   },
 });
 ```
 
-Primitive arguments (strings, numbers, booleans, `null`, `undefined`) unwrap to their raw values. Object arguments arrive as a serialized descriptor:
+原始参数（字符串、数字、布尔值、`null`、`undefined`）会解包为它们的原始值。对象参数会以序列化描述符的形式到达：
 
-- **Chrome backend**: the raw CDP [`RemoteObject`](https://chromedevtools.github.io/devtools-protocol/tot/Runtime/#type-RemoteObject) — an object with `type`, `className`, `description`, and (when available) a `preview.properties` array.
-- **WebKit backend**: the `JSON.stringify` round-trip of the object. Functions, circular references, and other non-serializable values fall back to their `String(...)` coercion.
+- **Chrome 后端**：原始的 CDP [`RemoteObject`](https://chromedevtools.github.io/devtools-protocol/tot/Runtime/#type-RemoteObject) — 一个包含 `type`、`className`、`description`，以及（在可用时）`preview.properties` 数组的对象。
+- **WebKit 后端**：对象经过 `JSON.stringify` 往返后的结果。函数、循环引用以及其他不可序列化值会回退为 `String(...)` 的强制转换。
 
-If you don't pass `console`, page-side console output is dropped.
+如果你不传 `console`，页面侧的控制台输出会被丢弃。
 
 <Note>
-  Ordering guarantee: a `console.log(...)` inside a script you pass to `evaluate()` will deliver to your handler
-  **before** that `evaluate()` resolves. Both travel over the same IPC connection.
+  顺序保证：在你传给 `evaluate()` 的脚本内部执行的 `console.log(...)` 会在该 `evaluate()` promise 解析完成之前交付给你的处理器。两者会通过同一条 IPC 连接传输。
 </Note>
 
 ---
 
-## Raw Chrome DevTools Protocol {#cdp}
+## 原始 Chrome DevTools Protocol {#cdp}
 
-When using `backend: "chrome"`, you can drop down to raw [CDP](https://chromedevtools.github.io/devtools-protocol/) commands for anything the high-level API doesn't cover.
+当使用 `backend: "chrome"` 时，如果高层 API 没有覆盖你想要的能力，你可以直接切换到原始的 [CDP](https://chromedevtools.github.io/devtools-protocol/) 命令。
 
-### Sending commands
+### 发送命令
 
 ```ts
 const view = new Bun.WebView({ backend: "chrome" });
-await view.navigate("https://example.com"); // required: sets up the CDP session
+await view.navigate("https://example.com"); // 必需：设置 CDP 会话
 
 await view.cdp("Emulation.setUserAgentOverride", {
   userAgent: "MyBot/1.0",
@@ -463,19 +462,19 @@ const { nodeId } = await view.cdp("DOM.querySelector", {
 await view.cdp("DOM.focus", { nodeId });
 ```
 
-`cdp(method, params?)` returns the `result` object from the CDP response. If Chrome returns an error (unknown method, bad params), the promise rejects with its `error.message`.
+`cdp(method, params?)` 会返回 CDP 响应中的 `result` 对象。如果 Chrome 返回错误（未知方法、参数错误），该 promise 会以 `error.message` 拒绝。
 
-Commands are scoped to this view's session (they target this tab). You must `await navigate(...)` at least once before calling `cdp()` — the first navigation establishes the session. Calling `cdp()` before that throws `ERR_INVALID_STATE`.
+命令会被限定在此视图的会话范围内（目标是此标签页）。在调用 `cdp()` 之前至少要 `await navigate(...)` 一次 — 第一次导航会建立会话。若在那之前调用 `cdp()` 会抛出 `ERR_INVALID_STATE`。
 
-`params` must be a JSON-serializable object; omit it for commands that take no parameters. One `cdp()` call may be in flight at a time per view.
+`params` 必须是可 JSON 序列化的对象；对于不带参数的命令可省略。每个视图同一时刻最多只能有一个 `cdp()` 调用正在进行。
 
-### Subscribing to events
+### 订阅事件
 
-`Bun.WebView` extends `EventTarget`. With the Chrome backend, CDP events are dispatched as DOM events whose `type` is the CDP method name and whose `data` is the parsed `params` object:
+`Bun.WebView` 继承自 `EventTarget`。在 Chrome 后端下，CDP 事件会作为 DOM 事件分发：`type` 为 CDP 方法名，`data` 为解析后的 `params` 对象：
 
 ```ts
 await view.navigate("about:blank");
-await view.cdp("Network.enable"); // Chrome only emits events for enabled domains
+await view.cdp("Network.enable"); // 仅 Chrome：只有启用了域才会发出事件
 
 view.addEventListener("Network.responseReceived", event => {
   console.log(event.data.response.status, event.data.response.url);
@@ -484,148 +483,148 @@ view.addEventListener("Network.responseReceived", event => {
 await view.navigate("https://example.com");
 ```
 
-Events for which no listener is registered are dropped before the JSON `params` are even parsed, so enabling a chatty domain (like `Network`) is cheap if you only listen for one or two event types.
+如果没有为某个事件注册监听器，它会在 JSON `params` 解析之前就被丢弃，因此如果你只监听一两种事件类型，开启“啰嗦”的域（例如 `Network`）也不会太贵。
 
-On the WebKit backend, `cdp()` throws `ERR_METHOD_NOT_IMPLEMENTED` — there is no DevTools Protocol bridge. The `EventTarget` interface still works for your own `dispatchEvent()` calls.
+在 WebKit 后端上，`cdp()` 会抛出 `ERR_METHOD_NOT_IMPLEMENTED` — 没有 DevTools Protocol 的桥接。`EventTarget` 接口仍然可用于你自己对 `dispatchEvent()` 的调用。
 
 ---
 
-## Lifecycle
+## 生命周期
 
-### Closing a view
+### 关闭视图
 
 ```ts
 view.close();
 ```
 
-Closing is synchronous and idempotent. It destroys the page's renderer process, rejects any pending promises on the view with `Error("WebView closed")`, and makes every subsequent method call throw `ERR_INVALID_STATE`.
+关闭是同步且可重复调用（幂等）的。它会销毁页面的渲染器进程，并用 `Error("WebView closed")` 拒绝视图上所有待处理的 promise，同时让之后对该视图的所有方法调用都会抛出 `ERR_INVALID_STATE`。
 
-`view[Symbol.dispose]` and `view[Symbol.asyncDispose]` both point to `close()`, so `using` / `await using` work.
+`view[Symbol.dispose]` 和 `view[Symbol.asyncDispose]` 都指向 `close()`，所以 `using` / `await using` 可以正常工作。
 
-### Killing all browsers
+### 杀死所有浏览器
 
 ```ts
 Bun.WebView.closeAll();
 ```
 
-Force-kills (`SIGKILL`) both the Chrome subprocess and the WebKit host subprocess. Pending promises on every view reject on the next event-loop tick. Subsequent `new Bun.WebView()` calls respawn as needed.
+强制终止（`SIGKILL`）所有浏览器子进程（包括 Chrome 子进程和 WebKit 宿主子进程）。每个视图上的待处理 promise 会在下一次事件循环 tick 时拒绝。之后的 `new Bun.WebView()` 调用会在需要时重新生成。
 
-Bun calls this automatically at process exit, so browser subprocesses never outlive your script.
+Bun 会在进程退出时自动调用它，因此浏览器子进程不会在你的脚本之外存活。
 
-### Event-loop behavior
+### 事件循环行为
 
-The browser subprocess does **not** keep Bun's event loop alive on its own. An open `WebView` keeps the process alive only while it has a pending operation (an unsettled `navigate()`, `evaluate()`, etc.). Once you `close()` the last view — or the last pending operation settles — Bun exits naturally.
+浏览器子进程不会自行保持 Bun 的事件循环存活。只要存在打开的 `WebView` 且它还有未完成的操作（例如未 settle 的 `navigate()`、`evaluate()` 等），进程就会保持运行。你关闭最后一个视图 — 或最后一个待处理操作完成（settle）之后 — Bun 会自然退出。
 
-### Subprocess death
+### 子进程死亡
 
-If the browser subprocess dies unexpectedly (crash, OOM-kill, `SIGKILL`), every pending promise on every view rejects with an error describing how it died (`"Chrome killed by signal 9"`, `"WebView host process died"`, etc.), and further operations on those views throw.
-
----
-
-## Concurrency model
-
-Each view has a small number of independent operation "slots". One operation of each kind may be in flight at a time:
-
-- one `navigate()` (shared with `reload()`/`goBack()`/`goForward()` on the Chrome backend)
-- one `evaluate()`
-- one `screenshot()`
-- one `cdp()` (Chrome only)
-- one "simple" operation — `click()`, `type()`, `press()`, `scroll()`, `scrollTo()`, `resize()` (and `reload()`/`goBack()`/`goForward()` on the WebKit backend) share this slot
-
-Starting a second operation while its slot is occupied throws `ERR_INVALID_STATE` synchronously — it does **not** queue. In practice, just `await` each call.
-
-Operations on **different views** are fully independent and run in parallel — each view has its own renderer process.
+如果浏览器子进程意外死亡（崩溃、OOM-kill、`SIGKILL`），则所有视图上的待处理 promise 都会以描述死亡原因的错误拒绝（例如 `"Chrome killed by signal 9"`、`"WebView host process died"` 等），并且对这些视图的后续操作会抛出异常。
 
 ---
 
-## Reference
+## 并发模型
+
+每个视图都有少量用于并发的独立“操作槽位”。同一种操作在任一时刻最多只有一个在飞行（in flight）：
+
+- 一个 `navigate()`（在 Chrome 后端与 `reload()`/`goBack()`/`goForward()` 共享）
+- 一个 `evaluate()`
+- 一个 `screenshot()`
+- 一个 `cdp()`（仅 Chrome）
+- 一个“简单”操作 — `click()`、`type()`、`press()`、`scroll()`、`scrollTo()`、`resize()`（以及 WebKit 后端的 `reload()`/`goBack()`/`goForward()`）共享此槽位
+
+当某个槽位已被占用时，在启动第二个该类型操作会同步抛出 `ERR_INVALID_STATE` — 不会排队。在实际使用中，直接对每次调用 `await` 即可。
+
+不同视图之间的操作完全独立，并会并行运行 — 每个视图都有自己的渲染器进程。
+
+---
+
+## 参考
 
 ### `new Bun.WebView(options?)`
 
-| Option      | Type                                            | Default                                   | Description                                                                                    |
-| ----------- | ----------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `width`     | `number`                                        | `800`                                     | Viewport width in CSS pixels. Range 1-16384.                                                   |
-| `height`    | `number`                                        | `600`                                     | Viewport height in CSS pixels. Range 1-16384.                                                  |
-| `url`       | `string`                                        | —                                         | Begin navigating to this URL immediately.                                                      |
-| `headless`  | `boolean`                                       | `true`                                    | Only `true` is implemented; `false` throws.                                                    |
-| `backend`   | `"webkit"` \| `"chrome"` \| [object](#backends) | `"webkit"` on macOS, `"chrome"` elsewhere | Rendering engine.                                                                              |
-| `console`   | `typeof console` \| `(type, ...args) => void`   | —                                         | Capture page-side `console.*` calls. See [Console capture](#console-capture).                  |
-| `dataStore` | `"ephemeral"` \| `{ directory: string }`        | `"ephemeral"`                             | Storage for cookies / localStorage / IndexedDB. See [Persistent storage](#persistent-storage). |
+| 选项        | 类型                                            | 默认值                                   | 描述                                                                                    |
+| ----------- | ----------------------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------- |
+| `width`     | `number`                                        | `800`                                     | 视口宽度（CSS 像素）。范围 1-16384。                                                   |
+| `height`    | `number`                                        | `600`                                     | 视口高度（CSS 像素）。范围 1-16384。                                                   |
+| `url`       | `string`                                        | —                                         | 立即开始导航到该 URL。                                                             |
+| `headless`  | `boolean`                                       | `true`                                    | 仅实现 `true`；`false` 会抛出异常。                                                   |
+| `backend`   | `"webkit"` \| `"chrome"` \| [object](#backends) | macOS 为 `"webkit"`，其他为 `"chrome"` | 渲染引擎。                                                                              |
+| `console`   | `typeof console` \| `(type, ...args) => void`   | —                                         | 捕获页面侧的 `console.*` 调用。见 [控制台捕获](#console-capture)。               |
+| `dataStore` | `"ephemeral"` \| `{ directory: string }`        | `"ephemeral"`                             | cookies / localStorage / IndexedDB 的存储。见 [持久化存储](#persistent-storage)。 |
 
-#### `backend` object form
+#### `backend` 对象形式
 
-| Option   | Type                      | Description                                                                                                                                            |
-| -------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `type`   | `"chrome"` \| `"webkit"`  | **Required.** Which engine to use.                                                                                                                     |
-| `path`   | `string`                  | (`chrome` only) Path to the Chrome/Chromium executable. Forces spawn mode.                                                                             |
-| `argv`   | `string[]`                | (`chrome` only) Extra launch flags, appended after the defaults. Forces spawn mode.                                                                    |
-| `url`    | `string` \| `false`       | (`chrome` only) `ws://` URL of an existing Chrome's DevTools endpoint, or `false` to skip auto-detect and always spawn. See [above](#existing-chrome). |
-| `stdout` | `"inherit"` \| `"ignore"` | Route the subprocess's stdout to Bun's. Default `"ignore"`.                                                                                            |
-| `stderr` | `"inherit"` \| `"ignore"` | Route the subprocess's stderr to Bun's. Default `"ignore"`.                                                                                            |
+| 选项     | 类型                      | 描述                                                                                                                                            |
+| -------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `type`   | `"chrome"` \| `"webkit"`  | **必填。** 使用哪个引擎。                                                                                                                     |
+| `path`   | `string`                  | （`chrome` only）Chrome/Chromium 可执行文件的路径。强制进入生成模式。                                                                             |
+| `argv`   | `string[]`                | （`chrome` only）额外的启动参数，会在默认参数之后追加。强制进入生成模式。                                                                    |
+| `url`    | `string` \| `false`       | （`chrome` only）现有 Chrome 的 DevTools 端点 `ws://` URL；或传 `false` 跳过自动探测并始终生成。见 [上文](#existing-chrome)。 |
+| `stdout` | `"inherit"` \| `"ignore"` | 把子进程的 stdout 转发到 Bun。默认 `"ignore"`。                                                                                              |
+| `stderr` | `"inherit"` \| `"ignore"` | 把子进程的 stderr 转发到 Bun。默认 `"ignore"`。                                                                                              |
 
-### Instance properties
+### 实例属性
 
-| Property             | Type                                             | Description                                                                                 |
-| -------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `url`                | `string` _(readonly)_                            | The current URL. Updated when a navigation completes. Empty string before first navigation. |
-| `title`              | `string` _(readonly)_                            | The page's `<title>`. Updated when a navigation completes.                                  |
-| `loading`            | `boolean` _(readonly)_                           | `true` while a navigation is in flight.                                                     |
-| `onNavigated`        | `((url: string, title: string) => void) \| null` | Fires after each successful navigation, before the `navigate()` promise resolves.           |
-| `onNavigationFailed` | `((error: Error) => void) \| null`               | Fires after each failed navigation, before the `navigate()` promise rejects.                |
+| 属性               | 类型                                   | 描述                                                                 |
+| ------------------ | -------------------------------------- | --------------------------------------------------------------------- |
+| `url`              | `string` _(readonly)_                  | 当前 URL。导航完成后更新。首次导航前为空字符串。                       |
+| `title`            | `string` _(readonly)_                  | 页面 `<title>`。导航完成后更新。                                      |
+| `loading`          | `boolean` _(readonly)_                | 当正在进行导航时为 `true`。                                           |
+| `onNavigated`     | `((url: string, title: string) => void) \| null` | 每次成功导航后触发：在 `navigate()` promise 解析前触发。      |
+| `onNavigationFailed` | `((error: Error) => void) \| null` | 每次失败导航后触发：在 `navigate()` promise 拒绝前触发。      |
 
-### Instance methods
+### 实例方法
 
-| Method                         | Returns                                             | Description                                                                                                     |
-| ------------------------------ | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `navigate(url)`                | `Promise<void>`                                     | Load a URL. Resolves on the main frame's `load` event.                                                          |
-| `evaluate(script)`             | `Promise<unknown>`                                  | Run a JS expression in the page and return its JSON-serialized result.                                          |
-| `screenshot(options?)`         | `Promise<Blob \| Buffer \| string \| {name, size}>` | Capture the viewport. See [Screenshots](#screenshots).                                                          |
-| `click(x, y, options?)`        | `Promise<void>`                                     | Native click at viewport coordinates.                                                                           |
-| `click(selector, options?)`    | `Promise<void>`                                     | Wait for the element to be actionable, then click its center.                                                   |
-| `type(text)`                   | `Promise<void>`                                     | Insert text into the focused element via the `InsertText` editing command.                                      |
-| `press(key, options?)`         | `Promise<void>`                                     | Press a named virtual key or single-character chord.                                                            |
-| `scroll(dx, dy)`               | `Promise<void>`                                     | Fire a native `wheel` event at the viewport center. `dx`/`dy` must be finite.                                   |
-| `scrollTo(selector, options?)` | `Promise<void>`                                     | Wait for the element to exist, then `scrollIntoView`.                                                           |
-| `resize(width, height)`        | `Promise<void>`                                     | Change the viewport size. Each dimension 1-16384.                                                               |
-| `goBack()`                     | `Promise<void>`                                     | Navigate back in session history. No-op at the start.                                                           |
-| `goForward()`                  | `Promise<void>`                                     | Navigate forward in session history. No-op at the end.                                                          |
-| `reload()`                     | `Promise<void>`                                     | Reload the current page.                                                                                        |
-| `cdp(method, params?)`         | `Promise<unknown>`                                  | (Chrome only) Send a raw CDP command scoped to this tab. See [Raw CDP](#cdp).                                   |
-| `addEventListener(type, fn)`   | `void`                                              | Inherited from `EventTarget`. With Chrome, `type` may be a CDP event name; `event.data` is the parsed `params`. |
-| `close()`                      | `void`                                              | Destroy the page. Rejects pending promises. Idempotent.                                                         |
+| 方法                         | 返回值                                             | 描述                                                                                                     |
+| ---------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `navigate(url)`             | `Promise<void>`                                     | 加载一个 URL。会在主框架的 `load` 事件触发时解析完成。                                                 |
+| `evaluate(script)`          | `Promise<unknown>`                                  | 在页面中运行一个 JS 表达式，并返回其 JSON 序列化后的结果。                                           |
+| `screenshot(options?)`      | `Promise<Blob \| Buffer \| string \| {name, size}>` | 截取视口。见 [截图](#screenshots)。                                                                    |
+| `click(x, y, options?)`     | `Promise<void>`                                     | 在视口坐标处进行原生点击。                                                                           |
+| `click(selector, options?)` | `Promise<void>`                                     | 等待元素变为可操作，然后点击其中心。                                                               |
+| `type(text)`                | `Promise<void>`                                     | 通过 `InsertText` 编辑命令向聚焦元素插入文本。                                                     |
+| `press(key, options?)`      | `Promise<void>`                                     | 按下一个命名虚拟按键或单字符组合键。                                                                |
+| `scroll(dx, dy)`            | `Promise<void>`                                     | 在视口中心触发一个原生 `wheel` 事件。`dx`/`dy` 必须是有限值。                                   |
+| `scrollTo(selector, options?)` | `Promise<void>`                                 | 等待元素存在，然后调用 `scrollIntoView`。                                                           |
+| `resize(width, height)`     | `Promise<void>`                                     | 修改视口尺寸。每个维度 1-16384。                                                                   |
+| `goBack()`                  | `Promise<void>`                                     | 在会话历史中向后导航。在起点为无操作（no-op）。                                                   |
+| `goForward()`               | `Promise<void>`                                     | 在会话历史中向前导航。在终点为无操作（no-op）。                                                   |
+| `reload()`                  | `Promise<void>`                                     | 重新加载当前页面。                                                                                 |
+| `cdp(method, params?)`      | `Promise<unknown>`                                  | （仅 Chrome）向该标签页发送一个作用域限定的原始 CDP 命令。见 [原始 CDP](#cdp)。                         |
+| `addEventListener(type, fn)` | `void`                                              | 从 `EventTarget` 继承而来。对于 Chrome，`type` 可能是一个 CDP 事件名；`event.data` 是解析后的 `params`。 |
+| `close()`                   | `void`                                              | 销毁页面。拒绝所有待处理 promise。幂等。                                                         |
 
-#### `click()` options
+#### `click()` 选项
 
-| Option       | Type                                          | Default  | Description                                                          |
-| ------------ | --------------------------------------------- | -------- | -------------------------------------------------------------------- |
-| `button`     | `"left"` \| `"right"` \| `"middle"`           | `"left"` | Mouse button.                                                        |
-| `modifiers`  | `("Shift" \| "Control" \| "Alt" \| "Meta")[]` | `[]`     | Modifier keys held during the click.                                 |
-| `clickCount` | `1` \| `2` \| `3`                             | `1`      | Click count for double/triple-click.                                 |
-| `timeout`    | `number`                                      | `30000`  | (Selector overload only) Max milliseconds to wait for actionability. |
+| 选项       | 类型                                          | 默认值  | 描述                                             |
+| ----------- | --------------------------------------------- | -------- | ------------------------------------------------ |
+| `button`     | `"left"` \| `"right"` \| `"middle"`           | `"left"` | 鼠标按键。                                       |
+| `modifiers`  | `("Shift" \| "Control" \| "Alt" \| "Meta")[]` | `[]`     | 点击时按住的修饰键。                            |
+| `clickCount` | `1` \| `2` \| `3`                             | `1`      | 双击/三击的点击次数。                           |
+| `timeout`    | `number`                                      | `30000`  | （仅选择器重载）等待可操作性的最长毫秒数。    |
 
-#### `press()` options
+#### `press()` 选项
 
-| Option      | Type                                          | Default | Description                             |
-| ----------- | --------------------------------------------- | ------- | --------------------------------------- |
-| `modifiers` | `("Shift" \| "Control" \| "Alt" \| "Meta")[]` | `[]`    | Modifier keys held during the keypress. |
+| 选项      | 类型                                          | 默认值 | 描述                 |
+| --------- | --------------------------------------------- | ------- | -------------------- |
+| `modifiers` | `("Shift" \| "Control" \| "Alt" \| "Meta")[]` | `[]`    | 按下按键时按住的修饰键。 |
 
-#### `scrollTo()` options
+#### `scrollTo()` 选项
 
-| Option    | Type                                              | Default    | Description                                        |
-| --------- | ------------------------------------------------- | ---------- | -------------------------------------------------- |
-| `block`   | `"start"` \| `"center"` \| `"end"` \| `"nearest"` | `"center"` | Vertical alignment after scrolling.                |
-| `timeout` | `number`                                          | `30000`    | Max milliseconds to wait for the element to exist. |
+| 选项      | 类型                                              | 默认值    | 描述                                       |
+| --------- | ------------------------------------------------- | ---------- | ------------------------------------------ |
+| `block`   | `"start"` \| `"center"` \| `"end"` \| `"nearest"` | `"center"` | 滚动后的垂直对齐方式。                   |
+| `timeout` | `number`                                          | `30000`    | 等待元素存在的最长毫秒数。             |
 
-#### `screenshot()` options
+#### `screenshot()` 选项
 
-| Option     | Type                                              | Default  | Description                                               |
-| ---------- | ------------------------------------------------- | -------- | --------------------------------------------------------- |
-| `format`   | `"png"` \| `"jpeg"` \| `"webp"`                   | `"png"`  | Image format. `"webp"` requires the Chrome backend.       |
-| `quality`  | `number`                                          | `80`     | 0-100. JPEG/WebP only; ignored for PNG.                   |
-| `encoding` | `"blob"` \| `"buffer"` \| `"base64"` \| `"shmem"` | `"blob"` | Return-type encoding. `"shmem"` not supported on Windows. |
+| 选项       | 类型                                              | 默认值  | 描述                                               |
+| ---------- | ------------------------------------------------- | -------- | -------------------------------------------------- |
+| `format`   | `"png"` \| `"jpeg"` \| `"webp"`                   | `"png"`  | 图片格式。`"webp"` 需要 Chrome 后端。             |
+| `quality`  | `number`                                          | `80`     | 0-100。仅 JPEG/WebP；PNG 会忽略。                |
+| `encoding` | `"blob"` \| `"buffer"` \| `"base64"` \| `"shmem"` | `"blob"` | 返回类型编码。Windows 不支持 `"shmem"`。         |
 
-### Static methods
+### 静态方法
 
-| Method               | Description                                                                                                 |
-| -------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `WebView.closeAll()` | `SIGKILL` every browser subprocess. Pending promises reject on the next tick. Called automatically at exit. |
+| 方法                     | 描述                                                                                                 |
+| ------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `WebView.closeAll()`     | `SIGKILL` 每个浏览器子进程。下一 tick 上拒绝所有待处理 promise。退出时自动调用。              |

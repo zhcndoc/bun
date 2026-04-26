@@ -1,35 +1,35 @@
 ---
-title: Use TanStack Start with Bun
-sidebarTitle: TanStack Start with Bun
+title: 使用 Bun 启动 TanStack Start
+sidebarTitle: 使用 Bun 启动 TanStack Start
 mode: center
 ---
 
-[TanStack Start](https://tanstack.com/start/latest) is a full-stack framework powered by TanStack Router. It supports full-document SSR, streaming, server functions, bundling and more, powered by TanStack Router and [Vite](https://vite.dev/).
+[TanStack Start](https://tanstack.com/start/latest) 是一个由 TanStack Router 驱动的全栈框架。它支持完整文档的服务器端渲染（SSR）、流式传输、服务器函数、打包等功能，底层依赖 TanStack Router 和 [Vite](https://vite.dev/)。
 
 ---
 
 <Steps>
-  <Step title="Create a new TanStack Start app">
-    Use the interactive CLI to create a new TanStack Start app.
+  <Step title="创建一个新的 TanStack Start 应用">
+    使用交互式 CLI 创建一个新的 TanStack Start 应用。
 
     ```sh terminal icon="terminal"
     bunx @tanstack/cli create my-tanstack-app
     ```
 
   </Step>
-  <Step title="Start the dev server">
-    Change to the project directory and run the dev server with Bun.
+  <Step title="启动开发服务器">
+    切换到项目目录并使用 Bun 启动开发服务器。
 
     ```sh terminal icon="terminal"
     cd my-tanstack-app
     bun --bun run dev
     ```
 
-    This starts the Vite dev server with Bun.
+    这将启动由 Bun 运行的 Vite 开发服务器。
 
   </Step>
-  <Step title="Update scripts in package.json">
-   Modify the scripts field in your `package.json` by prefixing the Vite CLI commands with `bun --bun`. This ensures that Bun executes the Vite CLI for common tasks like `dev`, `build`, and `preview`.
+  <Step title="更新 package.json 中的脚本">
+   修改 `package.json` 中的 scripts 字段，在 Vite CLI 命令前添加 `bun --bun` 前缀，以确保 Bun 执行 Vite CLI 来处理常见任务，如 `dev`、`build` 和 `preview`。
 
     ```json package.json icon="file-json"
     {
@@ -46,33 +46,33 @@ mode: center
 
 ---
 
-## Hosting
+## 部署托管
 
-To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a custom Bun server for production deployments.
+要托管你的 TanStack Start 应用，可以使用 [Nitro](https://nitro.build/) 或自定义 Bun 服务器进行生产环境部署。
 
 <Tabs>
   <Tab title="Nitro">
     <Steps>
-      <Step title="Add Nitro to your project">
-        Add [Nitro](https://nitro.build/) to your project. This tool allows you to deploy your TanStack Start app to different platforms.
+      <Step title="将 Nitro 添加到你的项目中">
+        添加 [Nitro](https://nitro.build/) 到你的项目。此工具允许你将 TanStack Start 应用部署到不同的平台。
 
         ```sh terminal icon="terminal"
         bun add nitro
         ```
 
       </Step>
-      <Step title={<span>Update your <code>vite.config.ts</code> file</span>}>
-        Update your `vite.config.ts` file to include the necessary plugins for TanStack Start with Bun.
+      <Step title={<span>更新你的 <code>vite.config.ts</code> 文件</span>}>
+        更新你的 `vite.config.ts` 文件，加入 TanStack Start 和 Bun 需要的插件。
 
         ```ts vite.config.ts icon="/icons/typescript.svg"
-        // other imports...
+        // 其他导入...
         import { nitro } from "nitro/vite"; // [!code ++]
 
         const config = defineConfig({
           plugins: [
             tanstackStart(),
             nitro({ preset: "bun" }), // [!code ++]
-            // other plugins...
+            // 其他插件...
           ],
         });
 
@@ -80,37 +80,37 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
         ```
 
         <Note>
-          The `bun` preset is optional, but it configures the build output specifically for Bun's runtime.
+          `bun` 预设是可选的，但它会针对 Bun 运行时特别配置构建输出。
         </Note>
 
       </Step>
-      <Step title="Update the start command">
-        Make sure `build` and `start` scripts are present in your `package.json` file:
+      <Step title="更新启动命令">
+        确保你的 `package.json` 文件中包含 `build` 和 `start` 脚本：
 
         ```json package.json icon="file-json"
           {
             "scripts": {
               "build": "bun --bun vite build", // [!code ++]
-              // The .output files are created by Nitro when you run `bun run build`.
-              // Not necessary when deploying to Vercel.
+              // 当你运行 `bun run build` 时，Nitro 会创建 .output 文件夹。
+              // 部署到 Vercel 时不需要此配置。
               "start": "bun run .output/server/index.mjs" // [!code ++]
             }
           }
         ```
 
         <Note>
-          You do **not** need the custom `start` script when deploying to Vercel.
+          部署到 Vercel 时，**不需要** 自定义的 `start` 脚本。
         </Note>
 
       </Step>
-      <Step title="Deploy your app">
-        Check out one of our guides to deploy your app to a hosting provider.
+      <Step title="部署你的应用">
+        查看我们的部署指南，将你的应用部署到托管服务商。
 
         <Note>
-          When deploying to Vercel, you can either add the `"bunVersion": "1.x"` to your `vercel.json` file, or add it to the `nitro` config in your `vite.config.ts` file:
+          部署到 Vercel 时，可以在 `vercel.json` 文件中添加 `"bunVersion": "1.x"`，或者在 `vite.config.ts` 中的 `nitro` 配置里添加：
 
           <Warning>
-            Do **not** use the `bun` Nitro preset when deploying to Vercel.
+            部署到 Vercel 时**不要**使用 `bun` 的 Nitro 预设。
           </Warning>
 
           ```ts vite.config.ts icon="/icons/typescript.svg"
@@ -133,89 +133,88 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
     </Steps>
 
   </Tab>
-  <Tab title="Custom Server">
+  <Tab title="自定义服务器">
     <Note>
-      This custom server implementation is based on [TanStack's Bun template](https://github.com/TanStack/router/blob/main/examples/react/start-bun/server.ts). It provides fine-grained control over static asset serving, including configurable memory management that preloads small files into memory for fast serving while serving larger files on-demand. This approach is useful when you need precise control over resource usage and asset loading behavior in production deployments.
+      此自定义服务器实现基于 [TanStack 的 Bun 模板](https://github.com/TanStack/router/blob/main/examples/react/start-bun/server.ts)。它提供了对静态资源服务的细粒度控制，包括支持内存管理的配置，可以将小文件预加载到内存中以实现快速响应，较大的文件则按需从磁盘提供。此方案在生产环境中需要精准控制资源使用和资源加载行为时非常有用。
     </Note>
 
     <Steps>
-      <Step title="Create the production server">
-        Create a `server.ts` file in your project root with the following custom server implementation:
+      <Step title="创建生产服务器">
+        在项目根目录创建一个 `server.ts` 文件，内容如下，包含了自定义服务器的完整实现：
 
         ```ts server.ts icon="/icons/typescript.svg" expandable
         /**
-        * TanStack Start Production Server with Bun
+        * TanStack Start 生产服务器（基于 Bun）
         *
-        * A high-performance production server for TanStack Start applications that
-        * implements intelligent static asset loading with configurable memory management.
+        * 一个高性能的 TanStack Start 生产服务器，实现了智能的静态资源加载策略，支持内存管理配置。
         *
-        * Features:
-        * - Hybrid loading strategy (preload small files, serve large files on-demand)
-        * - Configurable file filtering with include/exclude patterns
-        * - Memory-efficient response generation
-        * - Production-ready caching headers
+        * 功能:
+        * - 混合加载策略（预加载小文件，按需提供大文件）
+        * - 可配置的文件包含/排除规则
+        * - 内存高效响应生成
+        * - 生产环境缓存头配置
         *
-        * Environment Variables:
+        * 环境变量说明:
         *
         * PORT (number)
-        *   - Server port number
-        *   - Default: 3000
+        *   - 服务器监听端口
+        *   - 默认: 3000
         *
         * ASSET_PRELOAD_MAX_SIZE (number)
-        *   - Maximum file size in bytes to preload into memory
-        *   - Files larger than this will be served on-demand from disk
-        *   - Default: 5242880 (5MB)
-        *   - Example: ASSET_PRELOAD_MAX_SIZE=5242880 (5MB)
+        *   - 预加载到内存的最大文件大小（字节）
+        *   - 超出此大小的文件将按需从磁盘读取
+        *   - 默认: 5242880 (5MB)
+        *   - 例如: ASSET_PRELOAD_MAX_SIZE=5242880 (5MB)
         *
         * ASSET_PRELOAD_INCLUDE_PATTERNS (string)
-        *   - Comma-separated list of glob patterns for files to include
-        *   - If specified, only matching files are eligible for preloading
-        *   - Patterns are matched against filenames only, not full paths
-        *   - Example: ASSET_PRELOAD_INCLUDE_PATTERNS="*.js,*.css,*.woff2"
+        *   - 逗号分隔的 glob 模式列表，指定包含的文件
+        *   - 如果设置，只有匹配的文件才会被预加载
+        *   - 匹配文件名而非完整路径
+        *   - 例如: ASSET_PRELOAD_INCLUDE_PATTERNS="*.js,*.css,*.woff2"
         *
         * ASSET_PRELOAD_EXCLUDE_PATTERNS (string)
-        *   - Comma-separated list of glob patterns for files to exclude
-        *   - Applied after include patterns
-        *   - Patterns are matched against filenames only, not full paths
-        *   - Example: ASSET_PRELOAD_EXCLUDE_PATTERNS="*.map,*.txt"
+        *   - 逗号分隔的 glob 模式列表，指定排除的文件
+        *   - 在包含规则之后应用
+        *   - 匹配文件名而非完整路径
+        *   - 例如: ASSET_PRELOAD_EXCLUDE_PATTERNS="*.map,*.txt"
         *
         * ASSET_PRELOAD_VERBOSE_LOGGING (boolean)
-        *   - Enable detailed logging of loaded and skipped files
-        *   - Default: false
-        *   - Set to "true" to enable verbose output
+        *   - 启用详细文件加载日志
+        *   - 默认: false
+        *   - 设置为 "true" 可开启详细输出
         *
         * ASSET_PRELOAD_ENABLE_ETAG (boolean)
-        *   - Enable ETag generation for preloaded assets
-        *   - Default: true
-        *   - Set to "false" to disable ETag support
+        *   - 启用 ETag 支持
+        *   - 默认: true
+        *   - 设置为 "false" 禁用 ETag
         *
         * ASSET_PRELOAD_ENABLE_GZIP (boolean)
-        *   - Enable Gzip compression for eligible assets
-        *   - Default: true
-        *   - Set to "false" to disable Gzip compression
+        *   - 启用 Gzip 压缩
+        *   - 默认: true
+        *   - 设置为 "false" 禁用 Gzip
         *
         * ASSET_PRELOAD_GZIP_MIN_SIZE (number)
-        *   - Minimum file size in bytes required for Gzip compression
-        *   - Files smaller than this will not be compressed
-        *   - Default: 1024 (1KB)
+        *   - Gzip 压缩的最小文件大小（字节）
+        *   - 小于此大小不压缩
+        *   - 默认: 1024 (1KB)
         *
         * ASSET_PRELOAD_GZIP_MIME_TYPES (string)
-        *   - Comma-separated list of MIME types eligible for Gzip compression
-        *   - Supports partial matching for types ending with "/"
-        *   - Default: text/,application/javascript,application/json,application/xml,image/svg+xml
+        *   - 支持 Gzip 压缩的 MIME 类型，逗号分隔
+        *   - 支持以 "/" 结尾的部分匹配
+        *   - 默认: text/,application/javascript,application/json,application/xml,image/svg+xml
         *
-        * Usage:
+        * 启动方式:
         *   bun run server.ts
         */
 
         import path from 'node:path'
 
-        // Configuration
+        // 配置部分
         const SERVER_PORT = Number(process.env.PORT ?? 3000)
         const CLIENT_DIRECTORY = './dist/client'
         const SERVER_ENTRY_POINT = './dist/server/server.js'
 
-        // Logging utilities for professional output
+        // 专业日志工具
         const log = {
           info: (message: string) => {
             console.log(`[INFO] ${message}`)
@@ -234,32 +233,32 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
           },
         }
 
-        // Preloading configuration from environment variables
+        // 预加载相关配置（从环境变量读取）
         const MAX_PRELOAD_BYTES = Number(
-          process.env.ASSET_PRELOAD_MAX_SIZE ?? 5 * 1024 * 1024, // 5MB default
+          process.env.ASSET_PRELOAD_MAX_SIZE ?? 5 * 1024 * 1024, // 默认 5MB
         )
 
-        // Parse comma-separated include patterns (no defaults)
+        // 解析包含规则, 无默认
         const INCLUDE_PATTERNS = (process.env.ASSET_PRELOAD_INCLUDE_PATTERNS ?? '')
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean)
           .map((pattern: string) => convertGlobToRegExp(pattern))
 
-        // Parse comma-separated exclude patterns (no defaults)
+        // 解析排除规则, 无默认
         const EXCLUDE_PATTERNS = (process.env.ASSET_PRELOAD_EXCLUDE_PATTERNS ?? '')
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean)
           .map((pattern: string) => convertGlobToRegExp(pattern))
 
-        // Verbose logging flag
+        // 是否开启详细日志
         const VERBOSE = process.env.ASSET_PRELOAD_VERBOSE_LOGGING === 'true'
 
-        // Optional ETag feature
+        // 是否启用 ETag
         const ENABLE_ETAG = (process.env.ASSET_PRELOAD_ENABLE_ETAG ?? 'true') === 'true'
 
-        // Optional Gzip feature
+        // 是否启用 gzip
         const ENABLE_GZIP = (process.env.ASSET_PRELOAD_ENABLE_GZIP ?? 'true') === 'true'
         const GZIP_MIN_BYTES = Number(process.env.ASSET_PRELOAD_GZIP_MIN_SIZE ?? 1024) // 1KB
         const GZIP_TYPES = (
@@ -271,11 +270,11 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
           .filter(Boolean)
 
         /**
-        * Convert a simple glob pattern to a regular expression
-        * Supports * wildcard for matching any characters
+        * 将简单的 glob 模式转换为正则表达式
+        * 支持 * 通配符匹配任意字符
         */
         function convertGlobToRegExp(globPattern: string): RegExp {
-          // Escape regex special chars except *, then replace * with .*
+          // 转义正则特殊字符，除了 *, 然后将 * 替换为 .*
           const escapedPattern = globPattern
             .replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&')
             .replace(/\*/g, '.*')
@@ -283,7 +282,7 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
         }
 
         /**
-        * Compute ETag for a given data buffer
+        * 计算给定数据的 ETag 值
         */
         function computeEtag(data: Uint8Array): string {
           const hash = Bun.hash(data)
@@ -291,7 +290,7 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
         }
 
         /**
-        * Metadata for preloaded static assets
+        * 预加载静态资源的元数据接口
         */
         interface AssetMetadata {
           route: string
@@ -300,7 +299,7 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
         }
 
         /**
-        * In-memory asset with ETag and Gzip support
+        * 支持 ETag 和 Gzip 的内存资源接口
         */
         interface InMemoryAsset {
           raw: Uint8Array
@@ -312,7 +311,7 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
         }
 
         /**
-        * Result of static asset preloading process
+        * 预加载结果接口
         */
         interface PreloadResult {
           routes: Record<string, (req: Request) => Response | Promise<Response>>
@@ -321,19 +320,19 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
         }
 
         /**
-        * Check if a file is eligible for preloading based on configured patterns
+        * 判断文件是否符合预加载条件
         */
         function isFileEligibleForPreloading(relativePath: string): boolean {
           const fileName = relativePath.split(/[/\\]/).pop() ?? relativePath
 
-          // If include patterns are specified, file must match at least one
+          // 如果指定了包含规则，文件必须匹配至少一个
           if (INCLUDE_PATTERNS.length > 0) {
             if (!INCLUDE_PATTERNS.some((pattern) => pattern.test(fileName))) {
               return false
             }
           }
 
-          // If exclude patterns are specified, file must not match any
+          // 如果指定了排除规则，文件不得匹配任何一个
           if (EXCLUDE_PATTERNS.some((pattern) => pattern.test(fileName))) {
             return false
           }
@@ -342,7 +341,7 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
         }
 
         /**
-        * Check if a MIME type is compressible
+        * 判断 MIME 类型是否支持压缩
         */
         function isMimeTypeCompressible(mimeType: string): boolean {
           return GZIP_TYPES.some((type) =>
@@ -351,7 +350,7 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
         }
 
         /**
-        * Conditionally compress data based on size and MIME type
+        * 根据大小和 MIME 类型决定是否压缩数据
         */
         function compressDataIfAppropriate(
           data: Uint8Array,
@@ -368,7 +367,7 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
         }
 
         /**
-        * Create response handler function with ETag and Gzip support
+        * 创建支持 ETag 和 Gzip 的响应处理函数
         */
         function createResponseHandler(
           asset: InMemoryAsset,
@@ -410,7 +409,7 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
         }
 
         /**
-        * Create composite glob pattern from include patterns
+        * 创建复合 glob 模式，用于扫描文件
         */
         function createCompositeGlobPattern(): Bun.Glob {
           const raw = (process.env.ASSET_PRELOAD_INCLUDE_PATTERNS ?? '')
@@ -423,8 +422,8 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
         }
 
         /**
-        * Initialize static routes with intelligent preloading strategy
-        * Small files are loaded into memory, large files are served on-demand
+        * 初始化静态路由，智能选择预加载策略
+        * 小文件加载入内存，较大文件按需加载
         */
         async function initializeStaticRoutes(
           clientDirectory: string,
@@ -434,19 +433,19 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
           const loaded: AssetMetadata[] = []
           const skipped: AssetMetadata[] = []
 
-          log.info(`Loading static assets from ${clientDirectory}...`)
+          log.info(`从 ${clientDirectory} 加载静态资源...`)
           if (VERBOSE) {
             console.log(
-              `Max preload size: ${(MAX_PRELOAD_BYTES / 1024 / 1024).toFixed(2)} MB`,
+              `最大预加载文件大小：${(MAX_PRELOAD_BYTES / 1024 / 1024).toFixed(2)} MB`,
             )
             if (INCLUDE_PATTERNS.length > 0) {
               console.log(
-                `Include patterns: ${process.env.ASSET_PRELOAD_INCLUDE_PATTERNS ?? ''}`,
+                `包含模式：${process.env.ASSET_PRELOAD_INCLUDE_PATTERNS ?? ''}`,
               )
             }
             if (EXCLUDE_PATTERNS.length > 0) {
               console.log(
-                `Exclude patterns: ${process.env.ASSET_PRELOAD_EXCLUDE_PATTERNS ?? ''}`,
+                `排除模式：${process.env.ASSET_PRELOAD_EXCLUDE_PATTERNS ?? ''}`,
               )
             }
           }
@@ -460,10 +459,10 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
               const route = `/${relativePath.split(path.sep).join(path.posix.sep)}`
 
               try {
-                // Get file metadata
+                // 获取文件元数据
                 const file = Bun.file(filepath)
 
-                // Skip if file doesn't exist or is empty
+                // 文件不存在或为空跳过
                 if (!(await file.exists()) || file.size === 0) {
                   continue
                 }
@@ -474,12 +473,12 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
                   type: file.type || 'application/octet-stream',
                 }
 
-                // Determine if file should be preloaded
+                // 判断文件是否符合预加载条件
                 const matchesPattern = isFileEligibleForPreloading(relativePath)
                 const withinSizeLimit = file.size <= MAX_PRELOAD_BYTES
 
                 if (matchesPattern && withinSizeLimit) {
-                  // Preload small files into memory with ETag and Gzip support
+                  // 小文件预加载到内存，支持 ETag 和 Gzip
                   const bytes = new Uint8Array(await file.arrayBuffer())
                   const gz = compressDataIfAppropriate(bytes, metadata.type)
                   const etag = ENABLE_ETAG ? computeEtag(bytes) : undefined
@@ -496,7 +495,7 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
                   loaded.push({ ...metadata, size: bytes.byteLength })
                   totalPreloadedBytes += bytes.byteLength
                 } else {
-                  // Serve large or filtered files on-demand
+                  // 大文件或过滤的文件按需加载
                   routes[route] = () => {
                     const fileOnDemand = Bun.file(filepath)
                     return new Response(fileOnDemand, {
@@ -511,24 +510,24 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
                 }
               } catch (error: unknown) {
                 if (error instanceof Error && error.name !== 'EISDIR') {
-                  log.error(`Failed to load ${filepath}: ${error.message}`)
+                  log.error(`加载文件失败 ${filepath}: ${error.message}`)
                 }
               }
             }
 
-            // Show detailed file overview only when verbose mode is enabled
+            // 只有开启详细日志时显示详细文件列表
             if (VERBOSE && (loaded.length > 0 || skipped.length > 0)) {
               const allFiles = [...loaded, ...skipped].sort((a, b) =>
                 a.route.localeCompare(b.route),
               )
 
-              // Calculate max path length for alignment
+              // 计算最大路径长度，方便对齐
               const maxPathLength = Math.min(
                 Math.max(...allFiles.map((f) => f.route.length)),
                 60,
               )
 
-              // Format file size with KB and actual gzip size
+              // 格式化文件大小，包含实际 gzip 大小
               const formatFileSize = (bytes: number, gzBytes?: number) => {
                 const kb = bytes / 1024
                 const sizeStr = kb < 100 ? kb.toFixed(2) : kb.toFixed(1)
@@ -542,7 +541,7 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
                   }
                 }
 
-                // Rough gzip estimation (typically 30-70% compression) if no actual gzip data
+                // 粗略的 gzip 估算（通常 30%-70% 压缩）
                 const gzipKb = kb * 0.35
                 return {
                   size: sizeStr,
@@ -551,9 +550,9 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
               }
 
               if (loaded.length > 0) {
-                console.log('\n📁 Preloaded into memory:')
+                console.log('\n📁 预加载到内存中的文件:')
                 console.log(
-                  'Path                                          │    Size │ Gzip Size',
+                  '路径                                          │    大小 │ Gzip 大小',
                 )
                 loaded
                   .sort((a, b) => a.route.localeCompare(b.route))
@@ -567,9 +566,9 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
               }
 
               if (skipped.length > 0) {
-                console.log('\n💾 Served on-demand:')
+                console.log('\n💾 按需提供的文件:')
                 console.log(
-                  'Path                                          │    Size │ Gzip Size',
+                  '路径                                          │    大小 │ Gzip 大小',
                 )
                 skipped
                   .sort((a, b) => a.route.localeCompare(b.route))
@@ -583,25 +582,25 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
               }
             }
 
-            // Show detailed verbose info if enabled
+            // 详细信息输出（如果启用详细日志）
             if (VERBOSE) {
               if (loaded.length > 0 || skipped.length > 0) {
                 const allFiles = [...loaded, ...skipped].sort((a, b) =>
                   a.route.localeCompare(b.route),
                 )
-                console.log('\n📊 Detailed file information:')
+                console.log('\n📊 详细文件信息:')
                 console.log(
-                  'Status       │ Path                            │ MIME Type                    │ Reason',
+                  '状态         │ 路径                           │ MIME 类型                      │ 原因      ',
                 )
                 allFiles.forEach((file) => {
                   const isPreloaded = loaded.includes(file)
-                  const status = isPreloaded ? 'MEMORY' : 'ON-DEMAND'
+                  const status = isPreloaded ? '内存' : '按需'
                   const reason =
                     !isPreloaded && file.size > MAX_PRELOAD_BYTES
-                      ? 'too large'
+                      ? '过大'
                       : !isPreloaded
-                        ? 'filtered'
-                        : 'preloaded'
+                        ? '过滤'
+                        : '预加载'
                   const route =
                     file.route.length > 30
                       ? file.route.substring(0, 27) + '...'
@@ -611,30 +610,30 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
                   )
                 })
               } else {
-                console.log('\n📊 No files found to display')
+                console.log('\n📊 无文件信息可显示')
               }
             }
 
-            // Log summary after the file list
-            console.log() // Empty line for separation
+            // 文件列表输出完毕后打印总结
+            console.log() // 空行间隔
             if (loaded.length > 0) {
               log.success(
-                `Preloaded ${String(loaded.length)} files (${(totalPreloadedBytes / 1024 / 1024).toFixed(2)} MB) into memory`,
+                `已成功预加载 ${String(loaded.length)} 个文件，合计 ${(totalPreloadedBytes / 1024 / 1024).toFixed(2)} MB 到内存`,
               )
             } else {
-              log.info('No files preloaded into memory')
+              log.info('无文件预加载到内存')
             }
 
             if (skipped.length > 0) {
               const tooLarge = skipped.filter((f) => f.size > MAX_PRELOAD_BYTES).length
               const filtered = skipped.length - tooLarge
               log.info(
-                `${String(skipped.length)} files will be served on-demand (${String(tooLarge)} too large, ${String(filtered)} filtered)`,
+                `${String(skipped.length)} 个文件按需加载（${String(tooLarge)} 个过大，${String(filtered)} 个被过滤）`,
               )
             }
           } catch (error) {
             log.error(
-              `Failed to load static files from ${clientDirectory}: ${String(error)}`,
+              `加载静态文件失败 ${clientDirectory}: ${String(error)}`,
             )
           }
 
@@ -642,68 +641,68 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
         }
 
         /**
-        * Initialize the server
+        * 初始化服务器主函数
         */
         async function initializeServer() {
-          log.header('Starting Production Server')
+          log.header('启动生产服务器')
 
-          // Load TanStack Start server handler
+          // 加载 TanStack Start 服务器处理器
           let handler: { fetch: (request: Request) => Response | Promise<Response> }
           try {
             const serverModule = (await import(SERVER_ENTRY_POINT)) as {
               default: { fetch: (request: Request) => Response | Promise<Response> }
             }
             handler = serverModule.default
-            log.success('TanStack Start application handler initialized')
+            log.success('TanStack Start 应用处理器初始化成功')
           } catch (error) {
-            log.error(`Failed to load server handler: ${String(error)}`)
+            log.error(`加载服务器处理器失败: ${String(error)}`)
             process.exit(1)
           }
 
-          // Build static routes with intelligent preloading
+          // 构建支持智能预加载的静态路由
           const { routes } = await initializeStaticRoutes(CLIENT_DIRECTORY)
 
-          // Create Bun server
+          // 创建 Bun 服务器
           const server = Bun.serve({
             port: SERVER_PORT,
 
             routes: {
-              // Serve static assets (preloaded or on-demand)
+              // 提供静态资源 (预加载或按需)
               ...routes,
 
-              // Fallback to TanStack Start handler for all other routes
+              // 所有其他请求交由 TanStack Start 处理器
               '/*': (req: Request) => {
                 try {
                   return handler.fetch(req)
                 } catch (error) {
-                  log.error(`Server handler error: ${String(error)}`)
-                  return new Response('Internal Server Error', { status: 500 })
+                  log.error(`服务器处理错误: ${String(error)}`)
+                  return new Response('服务器内部错误', { status: 500 })
                 }
               },
             },
 
-            // Global error handler
+            // 全局错误处理
             error(error) {
               log.error(
-                `Uncaught server error: ${error instanceof Error ? error.message : String(error)}`,
+                `服务器未捕获错误: ${error instanceof Error ? error.message : String(error)}`,
               )
-              return new Response('Internal Server Error', { status: 500 })
+              return new Response('服务器内部错误', { status: 500 })
             },
           })
 
-          log.success(`Server listening on http://localhost:${String(server.port)}`)
+          log.success(`服务器已启动，监听地址：http://localhost:${String(server.port)}`)
         }
 
-        // Initialize the server
+        // 启动服务器
         initializeServer().catch((error: unknown) => {
-          log.error(`Failed to start server: ${String(error)}`)
+          log.error(`启动服务器失败: ${String(error)}`)
           process.exit(1)
         })
         ```
 
       </Step>
-      <Step title="Update package.json scripts">
-        Add a `start` script to run the custom server:
+      <Step title="更新 package.json 脚本">
+        添加 `start` 脚本以运行自定义服务器：
 
         ```json package.json icon="file-json"
         {
@@ -715,15 +714,15 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
         ```
 
       </Step>
-      <Step title="Build and run">
-        Build your application and start the server:
+      <Step title="构建并运行">
+        构建应用并启动服务器：
 
         ```sh terminal icon="terminal"
         bun run build
         bun run start
         ```
 
-        The server will start on port 3000 by default (configurable via `PORT` environment variable).
+        服务器默认监听 3000 端口，可通过 `PORT` 环境变量配置。
 
       </Step>
     </Steps>
@@ -733,59 +732,59 @@ To host your TanStack Start app, you can use [Nitro](https://nitro.build/) or a 
 
 <Columns cols={3}>
   <Card title="Vercel" href="/guides/deployment/vercel" icon="/icons/ecosystem/vercel.svg">
-    Deploy on Vercel
+    在 Vercel 上部署
   </Card>
   <Card title="Render" href="/guides/deployment/render" icon="/icons/ecosystem/render.svg">
-    Deploy on Render
+    在 Render 上部署
   </Card>
   <Card title="Railway" href="/guides/deployment/railway" icon="/icons/ecosystem/railway.svg">
-    Deploy on Railway
+    在 Railway 上部署
   </Card>
   <Card title="DigitalOcean" href="/guides/deployment/digital-ocean" icon="/icons/ecosystem/digitalocean.svg">
-    Deploy on DigitalOcean
+    在 DigitalOcean 上部署
   </Card>
   <Card title="AWS Lambda" href="/guides/deployment/aws-lambda" icon="/icons/ecosystem/aws.svg">
-    Deploy on AWS Lambda
+    在 AWS Lambda 上部署
   </Card>
   <Card title="Google Cloud Run" href="/guides/deployment/google-cloud-run" icon="/icons/ecosystem/gcp.svg">
-    Deploy on Google Cloud Run
+    在 Google Cloud Run 上部署
   </Card>
 </Columns>
 
 ---
 
-## Templates
+## 模板
 
 <Columns cols={2}>
   <Card
-    title="Todo App with Tanstack + Bun"
+    title="使用 Tanstack + Bun 的待办应用"
     img="/images/templates/bun-tanstack-todo.png"
     href="https://github.com/bun-templates/bun-tanstack-todo"
     arrow="true"
-    cta="Go to template"
+    cta="查看模板"
   >
-    A Todo application built with Bun, TanStack Start, and PostgreSQL.
+    一个使用 Bun、TanStack Start 和 PostgreSQL 构建的待办事项应用。
   </Card>
   <Card
-    title="Bun + TanStack Start Application"
+    title="Bun + TanStack Start 应用"
     img="/images/templates/bun-tanstack-basic.png"
     href="https://github.com/bun-templates/bun-tanstack-basic"
     arrow="true"
-    cta="Go to template"
+    cta="查看模板"
   >
-    A TanStack Start template using Bun with SSR and file-based routing.
+    一个使用 Bun 的 SSR 和基于文件路由的 TanStack Start 模板。
   </Card>
   <Card
-    title="Basic Bun + Tanstack Starter"
+    title="基础 Bun + Tanstack 启动器"
     img="/images/templates/bun-tanstack-start.png"
     href="https://github.com/bun-templates/bun-tanstack-start"
     arrow="true"
-    cta="Go to template"
+    cta="查看模板"
   >
-    The basic TanStack starter using the Bun runtime and Bun's file APIs.
+    基础的 TanStack 启动模板，使用 Bun 运行时和 Bun 的文件 APIs。
   </Card>
 </Columns>
 
 ---
 
-[→ See TanStack Start's official documentation](https://tanstack.com/start/latest/docs/framework/react/guide/hosting) for more information on hosting.
+[→ 查看 TanStack Start 官方文档](https://tanstack.com/start/latest/docs/framework/react/guide/hosting) 获取更多关于部署托管的信息。

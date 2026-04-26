@@ -1,15 +1,15 @@
 ---
-title: CSRF Protection
-description: Generate and verify CSRF tokens with Bun's built-in API
+title: CSRF 防护
+description: 使用 Bun 的内置 API 生成和验证 CSRF 令牌
 ---
 
-Bun provides a built-in API for generating and verifying [CSRF (Cross-Site Request Forgery)](https://owasp.org/www-community/attacks/csrf) tokens through `Bun.CSRF`. Tokens are signed with HMAC and include expiration timestamps to limit the token validity window.
+Bun 通过 `Bun.CSRF` 提供了一个内置 API，用于生成和验证 [CSRF（跨站请求伪造）](https://owasp.org/www-community/attacks/csrf)令牌。令牌使用 HMAC 签名，并包含过期时间戳以限制令牌的有效期窗口。
 
 ```ts title="csrf.ts" icon="/icons/typescript.svg"
-// Generate a token
+// 生成令牌
 const token = Bun.CSRF.generate("my-secret");
 
-// Verify it
+// 验证令牌
 const isValid = Bun.CSRF.verify(token, { secret: "my-secret" });
 console.log(isValid); // true
 ```
@@ -18,33 +18,33 @@ console.log(isValid); // true
 
 ## `Bun.CSRF.generate()`
 
-Generate a CSRF token. The token contains a cryptographic nonce, a timestamp, and an HMAC signature, encoded as a string.
+生成 CSRF 令牌。令牌包含加密随机数（nonce）、时间戳和 HMAC 签名，编码为字符串。
 
 ```ts title="generate.ts" icon="/icons/typescript.svg"
 const token = Bun.CSRF.generate("my-secret-key");
 ```
 
-**Parameters:**
+**参数：**
 
-- `secret` (string, optional) — The secret key used to sign the token. If not provided, Bun generates a random in-memory default secret (unique per thread).
-- `options` (object, optional):
+- `secret`（string，可选）— 用于签署令牌的密钥。如果未提供，Bun 会生成一个随机的内存中默认密钥（每个线程唯一）。
+- `options`（object，可选）：
 
-| Option      | Type     | Default       | Description                                                                                            |
+| 选项        | 类型     | 默认值        | 描述                                                                                            |
 | ----------- | -------- | ------------- | ------------------------------------------------------------------------------------------------------ |
-| `expiresIn` | `number` | `86400000`    | Milliseconds until the token expires. Defaults to 24 hours.                                            |
-| `encoding`  | `string` | `"base64url"` | Token encoding format: `"base64"`, `"base64url"`, or `"hex"`.                                          |
-| `algorithm` | `string` | `"sha256"`    | HMAC algorithm: `"sha256"`, `"sha384"`, `"sha512"`, `"sha512-256"`, `"blake2b256"`, or `"blake2b512"`. |
+| `expiresIn` | `number` | `86400000`    | 令牌过期的毫秒数。默认为 24 小时。                                            |
+| `encoding`  | `string` | `"base64url"` | 令牌编码格式：`"base64"`、`"base64url"` 或 `"hex"`。                                          |
+| `algorithm` | `string` | `"sha256"`    | HMAC 算法：`"sha256"`、`"sha384"`、`"sha512"`、`"sha512-256"`、`"blake2b256"` 或 `"blake2b512"`。 |
 
-**Returns:** `string` — the encoded token.
+**返回：** `string` — 编码后的令牌。
 
 ```ts title="generate-options.ts" icon="/icons/typescript.svg"
-// Token that expires in 1 hour, encoded as hex
+// 1 小时后过期的令牌，使用十六进制编码
 const token = Bun.CSRF.generate("my-secret", {
   expiresIn: 60 * 60 * 1000,
   encoding: "hex",
 });
 
-// Using a different algorithm
+// 使用不同的算法
 const token2 = Bun.CSRF.generate("my-secret", {
   algorithm: "sha512",
 });
@@ -54,45 +54,45 @@ const token2 = Bun.CSRF.generate("my-secret", {
 
 ## `Bun.CSRF.verify()`
 
-Verify a CSRF token. Returns `true` if the token is valid and has not expired, `false` otherwise.
+验证 CSRF 令牌。如果令牌有效且未过期，返回 `true`，否则返回 `false`。
 
 ```ts title="verify.ts" icon="/icons/typescript.svg"
 const isValid = Bun.CSRF.verify(token, { secret: "my-secret-key" });
 ```
 
-**Parameters:**
+**参数：**
 
-- `token` (string, required) — The token to verify.
-- `options` (object, optional):
+- `token`（string，必需）— 要验证的令牌。
+- `options`（object，可选）：
 
-| Option      | Type     | Default       | Description                                                                                          |
+| 选项        | 类型     | 默认值        | 描述                                                                                          |
 | ----------- | -------- | ------------- | ---------------------------------------------------------------------------------------------------- |
-| `secret`    | `string` | (auto)        | The secret used to sign the token. If not provided, uses the same in-memory default as `generate()`. |
-| `maxAge`    | `number` | `86400000`    | Maximum token age in milliseconds, independent of the token's own `expiresIn`.                       |
-| `encoding`  | `string` | `"base64url"` | Must match the encoding used during `generate()`.                                                    |
-| `algorithm` | `string` | `"sha256"`    | Must match the algorithm used during `generate()`.                                                   |
+| `secret`    | `string` | (auto)        | 用于签署令牌的密钥。如果未提供，则使用与 `generate()` 相同的内存中默认值。 |
+| `maxAge`    | `number` | `86400000`    | 令牌的最大存活时间（毫秒），独立于令牌自身的 `expiresIn`。                       |
+| `encoding`  | `string` | `"base64url"` | 必须与 `generate()` 期间使用的编码匹配。                                                    |
+| `algorithm` | `string` | `"sha256"`    | 必须与 `generate()` 期间使用的算法匹配。                                                   |
 
-**Returns:** `boolean`
+**返回：** `boolean`
 
 ```ts title="verify-options.ts" icon="/icons/typescript.svg"
-// Verify a hex-encoded token
+// 验证十六进制编码的令牌
 const isValid = Bun.CSRF.verify(hexToken, {
   secret: "my-secret",
   encoding: "hex",
 });
 
-// Enforce a shorter max age than what the token was generated with
+// 强制执行比生成令牌时更短的最大存活时间
 const isValid2 = Bun.CSRF.verify(token, {
   secret: "my-secret",
-  maxAge: 60 * 1000, // reject tokens older than 1 minute
+  maxAge: 60 * 1000, // 拒绝超过 1 分钟的令牌
 });
 ```
 
 ---
 
-## Using with `Bun.serve()`
+## 在 `Bun.serve()` 中使用
 
-A typical pattern is to generate a token when rendering a form, embed it in a hidden field, and verify it when the form is submitted.
+典型模式是在渲染表单时生成令牌，将其嵌入隐藏字段中，并在提交表单时进行验证。
 
 ```ts title="server.ts" icon="/icons/typescript.svg"
 const SECRET = process.env.CSRF_SECRET || "my-secret";
@@ -106,7 +106,7 @@ const server = Bun.serve({
         `<form method="POST" action="/submit">
           <input type="hidden" name="_csrf" value="${token}" />
           <input type="text" name="message" />
-          <button type="submit">Send</button>
+          <button type="submit">发送</button>
         </form>`,
         { headers: { "Content-Type": "text/html" } },
       );
@@ -118,31 +118,31 @@ const server = Bun.serve({
         const csrfToken = formData.get("_csrf");
 
         if (typeof csrfToken !== "string" || !Bun.CSRF.verify(csrfToken, { secret: SECRET })) {
-          return new Response("Invalid CSRF token", { status: 403 });
+          return new Response("无效的 CSRF 令牌", { status: 403 });
         }
 
-        return new Response("OK");
+        return new Response("成功");
       },
     },
   },
 });
 
-console.log(`Listening on ${server.url}`);
+console.log(`监听于 ${server.url}`);
 ```
 
 ---
 
-## Default secret
+## 默认密钥
 
-If you omit the `secret` parameter in both `generate()` and `verify()`, Bun uses a random secret generated once per thread. This is convenient for single-thread applications but won't work across multiple servers, workers, or after a restart.
+如果在 `generate()` 和 `verify()` 中都省略 `secret` 参数，Bun 会使用每个线程生成一次的随机密钥。这对于单线程应用很方便，但在多台服务器、多个 Worker 之间或重启后无法工作。
 
 ```ts title="default-secret.ts" icon="/icons/typescript.svg"
-// Both calls use the same per-thread default secret within this runtime context.
+// 这两个调用在此运行时上下文中使用相同的每线程默认密钥。
 const token = Bun.CSRF.generate();
 const isValid = Bun.CSRF.verify(token); // true
 ```
 
-For production use, always provide an explicit secret shared across your infrastructure.
+对于生产环境，请始终提供跨基础设施共享的显式密钥。
 
 ---
 

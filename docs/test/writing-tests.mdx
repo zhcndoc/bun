@@ -1,11 +1,11 @@
 ---
-title: "Writing tests"
-description: "Learn how to write tests using Bun's Jest-compatible API with support for async tests, timeouts, and various test modifiers"
+title: "编写测试"
+description: "学习如何使用 Bun 内置的 Jest 兼容 API 编写测试，支持异步测试、超时和各种测试修饰符"
 ---
 
-Define tests with a Jest-like API imported from the built-in `bun:test` module. Long term, Bun aims for complete Jest compatibility; at the moment, a limited set of expect matchers are supported.
+使用从内置模块 `bun:test` 导入的类似 Jest 的 API 来定义测试。长期来看，Bun 目标是实现完全的 Jest 兼容性；目前支持的 expect 匹配器集合有限。
 
-## Basic Usage
+## 基本用法
 
 To define a test:
 
@@ -17,14 +17,14 @@ test("2 + 2", () => {
 });
 ```
 
-### Grouping Tests
+### 测试分组
 
-Tests can be grouped into suites with `describe`.
+使用 `describe` 将测试分组到测试套件中。
 
 ```ts title="math.test.ts" icon="/icons/typescript.svg"
 import { expect, test, describe } from "bun:test";
 
-describe("arithmetic", () => {
+describe("算术", () => {
   test("2 + 2", () => {
     expect(2 + 2).toBe(4);
   });
@@ -35,9 +35,9 @@ describe("arithmetic", () => {
 });
 ```
 
-### Async Tests
+### 异步测试
 
-Tests can be async.
+测试可以是异步的。
 
 ```ts title="math.test.ts" icon="/icons/typescript.svg"
 import { expect, test } from "bun:test";
@@ -48,7 +48,7 @@ test("2 * 2", async () => {
 });
 ```
 
-Alternatively, use the `done` callback to signal completion. If you include the `done` callback as a parameter in your test definition, you must call it or the test will hang.
+或者使用 `done` 回调来标识测试完成。如果在测试定义中包含了 `done` 回调参数，必须调用它，否则测试将挂起。
 
 ```ts title="math.test.ts" icon="/icons/typescript.svg"
 import { expect, test } from "bun:test";
@@ -61,9 +61,9 @@ test("2 * 2", done => {
 });
 ```
 
-## Timeouts
+## 超时
 
-Optionally specify a per-test timeout in milliseconds by passing a number as the third argument to `test`.
+可通过给 `test` 传入第三个参数数字来指定单个测试的超时时间（毫秒）。
 
 ```ts title="math.test.ts" icon="/icons/typescript.svg"
 import { test } from "bun:test";
@@ -71,82 +71,82 @@ import { test } from "bun:test";
 test("wat", async () => {
   const data = await slowOperation();
   expect(data).toBe(42);
-}, 500); // test must run in <500ms
+}, 500); // 测试必须在 <500ms 内完成
 ```
 
-In `bun:test`, test timeouts throw an uncatchable exception to force the test to stop running and fail. We also kill any child processes that were spawned in the test to avoid leaving behind zombie processes lurking in the background.
+在 `bun:test` 中，测试超时会抛出不可捕获的异常，强制测试停止并判定失败。与此同时，测试中生成的任何子进程也会被杀死，以避免后台留下僵尸进程。
 
-The default timeout for each test is 5000ms (5 seconds) if not overridden by this timeout option or `jest.setDefaultTimeout()`.
+如果未被此超时选项或 `jest.setDefaultTimeout()` 覆盖，每个测试的默认超时是 5000ms（5 秒）。
 
-## Retries and Repeats
+## 重试和重复执行
 
 ### test.retry
 
-Use the `retry` option to automatically retry a test if it fails. The test passes if it succeeds within the specified number of attempts. This is useful for flaky tests that may fail intermittently.
+使用 `retry` 选项可在测试失败时自动重试。只要在指定的尝试次数内成功，测试即通过。适合不稳定、偶尔失败的测试。
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
 import { test } from "bun:test";
 
 test(
-  "flaky network request",
+  "不稳定的网络请求",
   async () => {
     const response = await fetch("https://example.com/api");
     expect(response.ok).toBe(true);
   },
-  { retry: 3 }, // Retry up to 3 times if the test fails
+  { retry: 3 }, // 失败时最多重试3次
 );
 ```
 
 ### test.repeats
 
-Use the `repeats` option to run a test multiple times regardless of pass/fail status. The test fails if any iteration fails. This is useful for detecting flaky tests or stress testing. Note that `repeats: N` runs the test N+1 times total (1 initial run + N repeats).
+使用 `repeats` 选项可无视测试结果，重复运行测试多次。只要有任一轮失败，即判定测试失败。适合检测不稳定测试或压力测试。注意，`repeats: N` 实际运行次数为 N+1（1次初始 + N次重复）。
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
 import { test } from "bun:test";
 
 test(
-  "ensure test is stable",
+  "确保测试稳定",
   () => {
     expect(Math.random()).toBeLessThan(1);
   },
-  { repeats: 20 }, // Runs 21 times total (1 initial + 20 repeats)
+  { repeats: 20 }, // 总计运行21次（1次初始 + 20次重复）
 );
 ```
 
-<Note>You cannot use both `retry` and `repeats` on the same test.</Note>
+<Note>同一个测试不能同时使用 `retry` 和 `repeats`。</Note>
 
-### 🧟 Zombie Process Killer
+### 🧟 僵尸进程清理器
 
-When a test times out and processes spawned in the test via `Bun.spawn`, `Bun.spawnSync`, or `node:child_process` are not killed, they will be automatically killed and a message will be logged to the console. This prevents zombie processes from lingering in the background after timed-out tests.
+当测试超时且通过 `Bun.spawn`、`Bun.spawnSync` 或 `node:child_process` 生成的进程未被杀死时，Bun 会自动杀死它们并在控制台打印消息。防止超时测试后僵尸进程残留后台。
 
-## Test Modifiers
+## 测试修饰符
 
 ### test.skip
 
-Skip individual tests with `test.skip`. These tests will not be run.
+使用 `test.skip` 跳过单个测试。跳过的测试不会被执行。
 
 ```ts title="math.test.ts" icon="/icons/typescript.svg"
 import { expect, test } from "bun:test";
 
 test.skip("wat", () => {
-  // TODO: fix this
+  // TODO: 修复此处
   expect(0.1 + 0.2).toEqual(0.3);
 });
 ```
 
 ### test.todo
 
-Mark a test as a todo with `test.todo`. These tests will not be run.
+使用 `test.todo` 标记测试为待办状态，这些测试不会被执行。
 
 ```ts title="math.test.ts" icon="/icons/typescript.svg"
 import { expect, test } from "bun:test";
 
-test.todo("fix this", () => {
+test.todo("修复此处", () => {
   myTestFunction();
 });
 ```
 
-To run todo tests and find any which are passing, use `bun test --todo`.
+要执行 todo 测试并找出哪些测试已通过，可使用 `bun test --todo`。
 
 ```bash terminal icon="terminal"
 bun test --todo
@@ -154,45 +154,45 @@ bun test --todo
 
 ```
 my.test.ts:
-✗ unimplemented feature
-  ^ this test is marked as todo but passes. Remove `.todo` or check that test is correct.
+✗ 未实现功能
+  ^ 该测试被标记为 todo，且通过。请移除 `.todo` 或确认测试是否正确。
 
- 0 pass
- 1 fail
- 1 expect() calls
+ 0 通过
+ 1 失败
+ 1 次 expect() 调用
 ```
 
-With this flag, failing todo tests will not cause an error, but todo tests which pass will be marked as failing so you can remove the todo mark or fix the test.
+启用此参数时，失败的 todo 测试不会导致错误，但通过的 todo 测试将被标记为失败，方便你移除 todo 标记或修复测试。
 
 ### test.only
 
-To run a particular test or suite of tests use `test.only()` or `describe.only()`.
+运行特定测试或测试套件，使用 `test.only()` 或 `describe.only()`。
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
 import { test, describe } from "bun:test";
 
-test("test #1", () => {
-  // does not run
+test("测试 #1", () => {
+  // 不运行
 });
 
-test.only("test #2", () => {
-  // runs
+test.only("测试 #2", () => {
+  // 运行
 });
 
-describe.only("only", () => {
-  test("test #3", () => {
-    // runs
+describe.only("仅此", () => {
+  test("测试 #3", () => {
+    // 运行
   });
 });
 ```
 
-The following command will only execute tests #2 and #3.
+以下命令只会执行测试 #2 和 #3。
 
 ```bash terminal icon="terminal"
 bun test --only
 ```
 
-The following command will only execute tests #1, #2 and #3.
+以下命令会执行测试 #1、#2 和 #3。
 
 ```bash terminal icon="terminal"
 bun test
@@ -200,103 +200,103 @@ bun test
 
 ### test.if
 
-To run a test conditionally, use `test.if()`. The test will run if the condition is truthy. This is particularly useful for tests that should only run on specific architectures or operating systems.
+使用 `test.if()` 有条件地运行测试。当条件为真时运行。适用于仅在特定架构或操作系统上运行的测试。
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
-test.if(Math.random() > 0.5)("runs half the time", () => {
+test.if(Math.random() > 0.5)("有一半概率运行", () => {
   // ...
 });
 
 const macOS = process.platform === "darwin";
-test.if(macOS)("runs on macOS", () => {
-  // runs if macOS
+test.if(macOS)("仅在 macOS 运行", () => {
+  // 仅在 macOS 运行
 });
 ```
 
 ### test.skipIf
 
-To instead skip a test based on some condition, use `test.skipIf()` or `describe.skipIf()`.
+条件跳过测试，使用 `test.skipIf()` 或 `describe.skipIf()`。
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
 const macOS = process.platform === "darwin";
 
-test.skipIf(macOS)("runs on non-macOS", () => {
-  // runs if *not* macOS
+test.skipIf(macOS)("仅在非 macOS 运行", () => {
+  // 在非 macOS 运行
 });
 ```
 
 ### test.todoIf
 
-If instead you want to mark the test as TODO, use `test.todoIf()` or `describe.todoIf()`. Carefully choosing `skipIf` or `todoIf` can show a difference between, for example, intent of "invalid for this target" and "planned but not implemented yet."
+条件标记测试为 TODO，使用 `test.todoIf()` 或 `describe.todoIf()`。切换 `skipIf` 或 `todoIf` 可区分“该目标无效”和“计划但未实现”的意图。
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
 const macOS = process.platform === "darwin";
 
-// TODO: we've only implemented this for Linux so far.
-test.todoIf(macOS)("runs on posix", () => {
-  // runs if *not* macOS
+// TODO: 目前只在 Linux 上实现。
+test.todoIf(macOS)("运行在 posix 系统上", () => {
+  // 在非 macOS 运行
 });
 ```
 
 ### test.failing
 
-Use `test.failing()` when you know a test is currently failing but you want to track it and be notified when it starts passing. This inverts the test result:
+当你知道测试当前会失败，但想跟踪它并在它开始通过时获取通知，使用 `test.failing()`。该修饰符对测试结果取反：
 
-- A failing test marked with `.failing()` will pass
-- A passing test marked with `.failing()` will fail (with a message indicating it's now passing and should be fixed)
+- 标有 `.failing()` 的失败测试会被视为通过
+- 标有 `.failing()` 的通过测试会失败（并提示该测试现在通过，应修复）
 
 ```ts math.test.ts icon="/icons/typescript.svg"
-// This will pass because the test is failing as expected
-test.failing("math is broken", () => {
-  expect(0.1 + 0.2).toBe(0.3); // fails due to floating point precision
+// 因测试故意失败，这里会通过
+test.failing("数学有问题", () => {
+  expect(0.1 + 0.2).toBe(0.3); // 由于浮点精度失败
 });
 
-// This will fail with a message that the test is now passing
-test.failing("fixed bug", () => {
-  expect(1 + 1).toBe(2); // passes, but we expected it to fail
+// 测试通过，但期望失败，因此测试失败并提示修复
+test.failing("修复了 bug", () => {
+  expect(1 + 1).toBe(2); // 通过，但我们预期失败
 });
 ```
 
-This is useful for tracking known bugs that you plan to fix later, or for implementing test-driven development.
+适合跟踪你计划以后修复的已知错误，或用于测试驱动开发。
 
-## Conditional Tests for Describe Blocks
+## 条件测试用于 describe 块
 
-The conditional modifiers `.if()`, `.skipIf()`, and `.todoIf()` can also be applied to describe blocks, affecting all tests within the suite:
+条件修饰符 `.if()`、`.skipIf()` 和 `.todoIf()` 也可以用于 describe 块，影响套件内的所有测试：
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
 const isMacOS = process.platform === "darwin";
 
-// Only runs the entire suite on macOS
-describe.if(isMacOS)("macOS-specific features", () => {
-  test("feature A", () => {
-    // only runs on macOS
+// 仅在 macOS 上运行整个套件
+describe.if(isMacOS)("macOS 特有功能", () => {
+  test("特性 A", () => {
+    // 仅在 macOS 运行
   });
 
-  test("feature B", () => {
-    // only runs on macOS
-  });
-});
-
-// Skips the entire suite on Windows
-describe.skipIf(process.platform === "win32")("Unix features", () => {
-  test("feature C", () => {
-    // skipped on Windows
+  test("特性 B", () => {
+    // 仅在 macOS 运行
   });
 });
 
-// Marks the entire suite as TODO on Linux
-describe.todoIf(process.platform === "linux")("Upcoming Linux support", () => {
-  test("feature D", () => {
-    // marked as TODO on Linux
+// 在 Windows 上跳过整个套件
+describe.skipIf(process.platform === "win32")("Unix 功能", () => {
+  test("特性 C", () => {
+    // Windows 上跳过
+  });
+});
+
+// 在 Linux 上将整个套件标记为 TODO
+describe.todoIf(process.platform === "linux")("即将支持 Linux", () => {
+  test("特性 D", () => {
+    // Linux 上标记为 TODO
   });
 });
 ```
 
-## Parametrized Tests
+## 参数化测试
 
-### `test.each` and `describe.each`
+### `test.each` 和 `describe.each`
 
-To run the same test with multiple sets of data, use `test.each`. This creates a parametrized test that runs once for each test case provided.
+使用 `test.each` 可针对多个数据集运行相同测试。每个测试用例都会运行一次。
 
 ```ts title="math.test.ts" icon="/icons/typescript.svg"
 const cases = [
@@ -304,38 +304,38 @@ const cases = [
   [3, 4, 7],
 ];
 
-test.each(cases)("%p + %p should be %p", (a, b, expected) => {
+test.each(cases)("%p + %p 应该是 %p", (a, b, expected) => {
   expect(a + b).toBe(expected);
 });
 ```
 
-You can also use `describe.each` to create a parametrized suite that runs once for each test case:
+也可以用 `describe.each` 创建针对每个测试用例运行一次的参数化套件：
 
 ```ts title="sum.test.ts" icon="/icons/typescript.svg"
 describe.each([
   [1, 2, 3],
   [3, 4, 7],
 ])("add(%i, %i)", (a, b, expected) => {
-  test(`returns ${expected}`, () => {
+  test(`返回 ${expected}`, () => {
     expect(a + b).toBe(expected);
   });
 
-  test(`sum is greater than each value`, () => {
+  test(`结果大于每个值`, () => {
     expect(a + b).toBeGreaterThan(a);
     expect(a + b).toBeGreaterThan(b);
   });
 });
 ```
 
-### Argument Passing
+### 参数传递
 
-How arguments are passed to your test function depends on the structure of your test cases:
+如何将参数传递给测试函数，依赖于测试用例的结构：
 
-- If a table row is an array (like `[1, 2, 3]`), each element is passed as an individual argument
-- If a row is not an array (like an object), it's passed as a single argument
+- 如果表格行是数组（例如 `[1, 2, 3]`），则每个元素作为单独参数传入
+- 如果行不是数组（如对象），则作为单个参数传入
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
-// Array items passed as individual arguments
+// 数组项作为单独参数传入
 test.each([
   [1, 2, 3],
   [4, 5, 9],
@@ -343,7 +343,7 @@ test.each([
   expect(a + b).toBe(expected);
 });
 
-// Object items passed as a single argument
+// 对象项作为单个参数传入
 test.each([
   { a: 1, b: 2, expected: 3 },
   { a: 4, b: 5, expected: 9 },
@@ -352,111 +352,111 @@ test.each([
 });
 ```
 
-### Format Specifiers
+### 格式化占位符
 
 The following options are available for formatting the test title:
 
-| Specifier | Description             |
-| --------- | ----------------------- |
-| `%p`      | pretty-format           |
-| `%s`      | String                  |
-| `%d`      | Number                  |
-| `%i`      | Integer                 |
-| `%f`      | Floating point          |
-| `%j`      | JSON                    |
-| `%o`      | Object                  |
-| `%#`      | Index of the test case  |
-| `%%`      | Single percent sign (%) |
+| 占位符  | 描述                   |
+| ------- | ---------------------- |
+| `%p`    | pretty-format 美化输出 |
+| `%s`    | 字符串                 |
+| `%d`    | 数字                   |
+| `%i`    | 整数                   |
+| `%f`    | 浮点数                 |
+| `%j`    | JSON                   |
+| `%o`    | 对象                   |
+| `%#`    | 测试用例索引           |
+| `%%`    | 单个百分号 (%)         |
 
-#### Examples
+#### 示例
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
-// Basic specifiers
+// 基本占位符
 test.each([
   ["hello", 123],
   ["world", 456],
-])("string: %s, number: %i", (str, num) => {
-  // "string: hello, number: 123"
-  // "string: world, number: 456"
+])("字符串: %s, 数字: %i", (str, num) => {
+  // "字符串: hello, 数字: 123"
+  // "字符串: world, 数字: 456"
 });
 
-// %p for pretty-format output
+// %p 用于 pretty-format 输出
 test.each([
   [{ name: "Alice" }, { a: 1, b: 2 }],
   [{ name: "Bob" }, { x: 5, y: 10 }],
-])("user %p with data %p", (user, data) => {
-  // "user { name: 'Alice' } with data { a: 1, b: 2 }"
-  // "user { name: 'Bob' } with data { x: 5, y: 10 }"
+])("用户 %p，数据 %p", (user, data) => {
+  // "用户 { name: 'Alice' }，数据 { a: 1, b: 2 }"
+  // "用户 { name: 'Bob' }，数据 { x: 5, y: 10 }"
 });
 
-// %# for index
-test.each(["apple", "banana"])("fruit #%# is %s", fruit => {
-  // "fruit #0 is apple"
-  // "fruit #1 is banana"
+// %# 用于索引
+test.each(["apple", "banana"])("水果 #%# 是 %s", fruit => {
+  // "水果 #0 是 apple"
+  // "水果 #1 是 banana"
 });
 ```
 
-## Assertion Counting
+## 断言计数
 
-Bun supports verifying that a specific number of assertions were called during a test:
+Bun 支持验证测试期间调用的断言数量：
 
 ### expect.hasAssertions()
 
-Use `expect.hasAssertions()` to verify that at least one assertion is called during a test:
+使用 `expect.hasAssertions()` 验证测试中至少调用过一次断言：
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
-test("async work calls assertions", async () => {
-  expect.hasAssertions(); // Will fail if no assertions are called
+test("异步工作调用断言", async () => {
+  expect.hasAssertions(); // 如果没有断言调用，测试失败
 
   const data = await fetchData();
   expect(data).toBeDefined();
 });
 ```
 
-This is especially useful for async tests to ensure your assertions actually run.
+这对于异步测试尤其有用，确保你的断言真正执行了。
 
 ### expect.assertions(count)
 
-Use `expect.assertions(count)` to verify that a specific number of assertions are called during a test:
+使用 `expect.assertions(count)` 验证测试中调用了指定数量的断言：
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
-test("exactly two assertions", () => {
-  expect.assertions(2); // Will fail if not exactly 2 assertions are called
+test("恰好两个断言", () => {
+  expect.assertions(2); // 如果断言不是精确2个则失败
 
   expect(1 + 1).toBe(2);
   expect("hello").toContain("ell");
 });
 ```
 
-This helps ensure all your assertions run, especially in complex async code with multiple code paths.
+尤其适合复杂异步代码中确保所有断言都执行。
 
-## Type Testing
+## 类型测试
 
-Bun includes `expectTypeOf` for testing TypeScript types, compatible with Vitest.
+Bun 包含用于测试 TypeScript 类型的 `expectTypeOf`，兼容 Vitest。
 
 ### expectTypeOf
 
 <Warning>
-  These functions are no-ops at runtime - you need to run TypeScript separately to verify the type checks.
+  这些函数在运行时不执行任何操作 —— 你需要单独运行 TypeScript 来验证类型检查。
 </Warning>
 
-The `expectTypeOf` function provides type-level assertions that are checked by TypeScript's type checker. To test your types:
+`expectTypeOf` 函数提供类型级别的断言，由 TypeScript 的类型检查器检查。测试类型的方法：
 
-1. Write your type assertions using `expectTypeOf`
-2. Run `bunx tsc --noEmit` to check that your types are correct
+1. 使用 `expectTypeOf` 编写类型断言
+2. 运行 `bunx tsc --noEmit` 检查类型是否正确
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
 import { expectTypeOf } from "bun:test";
 
-// Basic type assertions
+// 基本类型断言
 expectTypeOf<string>().toEqualTypeOf<string>();
 expectTypeOf(123).toBeNumber();
 expectTypeOf("hello").toBeString();
 
-// Object type matching
+// 对象类型匹配
 expectTypeOf({ a: 1, b: "hello" }).toMatchObjectType<{ a: number }>();
 
-// Function types
+// 函数类型
 function greet(name: string): string {
   return `Hello ${name}`;
 }
@@ -465,193 +465,193 @@ expectTypeOf(greet).toBeFunction();
 expectTypeOf(greet).parameters.toEqualTypeOf<[string]>();
 expectTypeOf(greet).returns.toEqualTypeOf<string>();
 
-// Array types
+// 数组类型
 expectTypeOf([1, 2, 3]).items.toBeNumber();
 
-// Promise types
+// Promise 类型
 expectTypeOf(Promise.resolve(42)).resolves.toBeNumber();
 ```
 
-For full documentation on expectTypeOf matchers, see the [API Reference](https://bun.com/reference/bun/test/expectTypeOf).
+完整的 `expectTypeOf` 匹配器文档请参考 [API 参考](https://bun.com/reference/bun/test/expectTypeOf)。
 
-## Matchers
+## 匹配器
 
-Bun implements the following matchers. Full Jest compatibility is on the roadmap; [track progress here](https://github.com/oven-sh/bun/issues/1825).
+Bun 已实现以下匹配器。完全兼容 Jest 正在规划中；[进度跟踪](https://github.com/oven-sh/bun/issues/1825)。
 
-### Basic Matchers
+### 基本匹配器
 
-| Status | Matcher            |
-| ------ | ------------------ |
-| ✅     | `.not`             |
-| ✅     | `.toBe()`          |
-| ✅     | `.toEqual()`       |
-| ✅     | `.toBeNull()`      |
-| ✅     | `.toBeUndefined()` |
-| ✅     | `.toBeNaN()`       |
-| ✅     | `.toBeDefined()`   |
-| ✅     | `.toBeFalsy()`     |
-| ✅     | `.toBeTruthy()`    |
-| ✅     | `.toStrictEqual()` |
+| 状态 | 匹配器              |
+| ---- | ------------------- |
+| ✅   | `.not`              |
+| ✅   | `.toBe()`           |
+| ✅   | `.toEqual()`        |
+| ✅   | `.toBeNull()`       |
+| ✅   | `.toBeUndefined()`  |
+| ✅   | `.toBeNaN()`        |
+| ✅   | `.toBeDefined()`    |
+| ✅   | `.toBeFalsy()`      |
+| ✅   | `.toBeTruthy()`     |
+| ✅   | `.toStrictEqual()`  |
 
-### String and Array Matchers
+### 字符串和数组匹配器
 
-| Status | Matcher               |
-| ------ | --------------------- |
-| ✅     | `.toContain()`        |
-| ✅     | `.toHaveLength()`     |
-| ✅     | `.toMatch()`          |
-| ✅     | `.toContainEqual()`   |
-| ✅     | `.stringContaining()` |
-| ✅     | `.stringMatching()`   |
-| ✅     | `.arrayContaining()`  |
+| 状态 | 匹配器                  |
+| ---- | ----------------------- |
+| ✅   | `.toContain()`           |
+| ✅   | `.toHaveLength()`        |
+| ✅   | `.toMatch()`             |
+| ✅   | `.toContainEqual()`      |
+| ✅   | `.stringContaining()`    |
+| ✅   | `.stringMatching()`      |
+| ✅   | `.arrayContaining()`     |
 
-### Object Matchers
+### 对象匹配器
 
-| Status | Matcher                 |
-| ------ | ----------------------- |
-| ✅     | `.toHaveProperty()`     |
-| ✅     | `.toMatchObject()`      |
-| ✅     | `.toContainAllKeys()`   |
-| ✅     | `.toContainValue()`     |
-| ✅     | `.toContainValues()`    |
-| ✅     | `.toContainAllValues()` |
-| ✅     | `.toContainAnyValues()` |
-| ✅     | `.objectContaining()`   |
+| 状态 | 匹配器                   |
+| ---- | ------------------------ |
+| ✅   | `.toHaveProperty()`      |
+| ✅   | `.toMatchObject()`       |
+| ✅   | `.toContainAllKeys()`    |
+| ✅   | `.toContainValue()`      |
+| ✅   | `.toContainValues()`     |
+| ✅   | `.toContainAllValues()`  |
+| ✅   | `.toContainAnyValues()`  |
+| ✅   | `.objectContaining()`    |
 
-### Number Matchers
+### 数字匹配器
 
-| Status | Matcher                     |
-| ------ | --------------------------- |
-| ✅     | `.toBeCloseTo()`            |
-| ✅     | `.closeTo()`                |
-| ✅     | `.toBeGreaterThan()`        |
-| ✅     | `.toBeGreaterThanOrEqual()` |
-| ✅     | `.toBeLessThan()`           |
-| ✅     | `.toBeLessThanOrEqual()`    |
+| 状态 | 匹配器                    |
+| ---- | ------------------------- |
+| ✅   | `.toBeCloseTo()`           |
+| ✅   | `.closeTo()`               |
+| ✅   | `.toBeGreaterThan()`       |
+| ✅   | `.toBeGreaterThanOrEqual()`|
+| ✅   | `.toBeLessThan()`          |
+| ✅   | `.toBeLessThanOrEqual()`   |
 
-### Function and Class Matchers
+### 函数和类匹配器
 
-| Status | Matcher             |
-| ------ | ------------------- |
-| ✅     | `.toThrow()`        |
-| ✅     | `.toBeInstanceOf()` |
+| 状态 | 匹配器              |
+| ---- | ------------------- |
+| ✅   | `.toThrow()`        |
+| ✅   | `.toBeInstanceOf()` |
 
-### Promise Matchers
+### Promise 匹配器
 
-| Status | Matcher       |
-| ------ | ------------- |
-| ✅     | `.resolves()` |
-| ✅     | `.rejects()`  |
+| 状态 | 匹配器          |
+| ---- | -------------- |
+| ✅   | `.resolves()`   |
+| ✅   | `.rejects()`    |
 
-### Mock Function Matchers
+### 模拟函数匹配器
 
-| Status | Matcher                       |
-| ------ | ----------------------------- |
-| ✅     | `.toHaveBeenCalled()`         |
-| ✅     | `.toHaveBeenCalledTimes()`    |
-| ✅     | `.toHaveBeenCalledWith()`     |
-| ✅     | `.toHaveBeenLastCalledWith()` |
-| ✅     | `.toHaveBeenNthCalledWith()`  |
-| ✅     | `.toHaveReturned()`           |
-| ✅     | `.toHaveReturnedTimes()`      |
-| ✅     | `.toHaveReturnedWith()`       |
-| ✅     | `.toHaveLastReturnedWith()`   |
-| ✅     | `.toHaveNthReturnedWith()`    |
+| 状态 | 匹配器                       |
+| ---- | ----------------------------|
+| ✅   | `.toHaveBeenCalled()`        |
+| ✅   | `.toHaveBeenCalledTimes()`   |
+| ✅   | `.toHaveBeenCalledWith()`    |
+| ✅   | `.toHaveBeenLastCalledWith()`|
+| ✅   | `.toHaveBeenNthCalledWith()` |
+| ✅   | `.toHaveReturned()`          |
+| ✅   | `.toHaveReturnedTimes()`     |
+| ✅   | `.toHaveReturnedWith()`      |
+| ✅   | `.toHaveLastReturnedWith()`  |
+| ✅   | `.toHaveNthReturnedWith()`   |
 
-### Snapshot Matchers
+### 快照匹配器
 
-| Status | Matcher                                 |
-| ------ | --------------------------------------- |
-| ✅     | `.toMatchSnapshot()`                    |
-| ✅     | `.toMatchInlineSnapshot()`              |
-| ✅     | `.toThrowErrorMatchingSnapshot()`       |
-| ✅     | `.toThrowErrorMatchingInlineSnapshot()` |
+| 状态 | 匹配器                              |
+| ---- | ---------------------------------- |
+| ✅   | `.toMatchSnapshot()`               |
+| ✅   | `.toMatchInlineSnapshot()`         |
+| ✅   | `.toThrowErrorMatchingSnapshot()`  |
+| ✅   | `.toThrowErrorMatchingInlineSnapshot()` |
 
-### Utility Matchers
+### 工具匹配器
 
-| Status | Matcher            |
-| ------ | ------------------ |
-| ✅     | `.extend`          |
-| ✅     | `.anything()`      |
-| ✅     | `.any()`           |
-| ✅     | `.assertions()`    |
-| ✅     | `.hasAssertions()` |
+| 状态 | 匹配器            |
+| ---- | ----------------- |
+| ✅   | `.extend`         |
+| ✅   | `.anything()`     |
+| ✅   | `.any()`          |
+| ✅   | `.assertions()`   |
+| ✅   | `.hasAssertions()`|
 
-### Not Yet Implemented
+### 未实现
 
-| Status | Matcher                    |
-| ------ | -------------------------- |
-| ❌     | `.addSnapshotSerializer()` |
+| 状态 | 匹配器                     |
+| ---- | -------------------------- |
+| ❌   | `.addSnapshotSerializer()` |
 
-## Best Practices
+## 最佳实践
 
-### Use Descriptive Test Names
+### 使用描述性的测试名称
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
-// Good
-test("should calculate total price including tax for multiple items", () => {
-  // test implementation
+// 好的示例
+test("应计算多个商品含税总价", () => {
+  // 测试实现
 });
 
-// Avoid
-test("price calculation", () => {
-  // test implementation
-});
-```
-
-### Group Related Tests
-
-```ts title="auth.test.ts" icon="/icons/typescript.svg"
-describe("User authentication", () => {
-  describe("with valid credentials", () => {
-    test("should return user data", () => {
-      // test implementation
-    });
-
-    test("should set authentication token", () => {
-      // test implementation
-    });
-  });
-
-  describe("with invalid credentials", () => {
-    test("should throw authentication error", () => {
-      // test implementation
-    });
-  });
+// 避免
+test("价格计算", () => {
+  // 测试实现
 });
 ```
 
-### Use Appropriate Matchers
+### 分组相关测试
 
 ```ts title="auth.test.ts" icon="/icons/typescript.svg"
-// Good: Use specific matchers
+describe("用户认证", () => {
+  describe("有效凭证时", () => {
+    test("应返回用户数据", () => {
+      // 测试实现
+    });
+
+    test("应设置认证令牌", () => {
+      // 测试实现
+    });
+  });
+
+  describe("无效凭证时", () => {
+    test("应抛出认证错误", () => {
+      // 测试实现
+    });
+  });
+});
+```
+
+### 使用合适的匹配器
+
+```ts title="auth.test.ts" icon="/icons/typescript.svg"
+// 好的示例：使用具体匹配器
 expect(users).toHaveLength(3);
 expect(user.email).toContain("@");
 expect(response.status).toBeGreaterThanOrEqual(200);
 
-// Avoid: Using toBe for everything
+// 避免：将逻辑表达式用 toBe 包裹
 expect(users.length === 3).toBe(true);
 expect(user.email.includes("@")).toBe(true);
 expect(response.status >= 200).toBe(true);
 ```
 
-### Test Error Conditions
+### 测试错误情况
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
-test("should throw error for invalid input", () => {
+test("无效输入应抛出错误", () => {
   expect(() => {
     validateEmail("not-an-email");
   }).toThrow("Invalid email format");
 });
 
-test("should handle async errors", async () => {
+test("应处理异步错误", async () => {
   await expect(async () => {
     await fetchUser("invalid-id");
   }).rejects.toThrow("User not found");
 });
 ```
 
-### Use Setup and Teardown
+### 使用初始化和清理
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
 import { beforeEach, afterEach, test } from "bun:test";
@@ -666,7 +666,7 @@ afterEach(() => {
   cleanupTestUser(testUser);
 });
 
-test("should update user profile", () => {
-  // Use testUser in test
+test("应更新用户资料", () => {
+  // 在测试中使用 testUser
 });
 ```

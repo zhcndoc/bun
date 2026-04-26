@@ -1,13 +1,13 @@
 ---
-title: Transpiler
-description: Use Bun's transpiler to transpile JavaScript and TypeScript code
+title: 转译器
+description: 使用 Bun 的转译器来转译 JavaScript 和 TypeScript 代码
 ---
 
-Bun exposes its internal transpiler via the `Bun.Transpiler` class. To create an instance of Bun's transpiler:
+Bun 通过 `Bun.Transpiler` 类暴露其内部转译器。要创建一个 Bun 转译器的实例：
 
 ```ts
 const transpiler = new Bun.Transpiler({
-  loader: "tsx", // "js | "jsx" | "ts" | "tsx"
+  loader: "tsx", // "js" | "jsx" | "ts" | "tsx"
 });
 ```
 
@@ -15,7 +15,7 @@ const transpiler = new Bun.Transpiler({
 
 ## `.transformSync()`
 
-Transpile code synchronously with the `.transformSync()` method. Modules are not resolved and the code is not executed. The result is a string of vanilla JavaScript code.
+使用 `.transformSync()` 方法同步转译代码。模块不会被解析，代码也不会被执行。结果是一个纯净的 JavaScript 代码字符串。
 
 <CodeGroup>
 ```ts transpile.ts icon="/icons/typescript.svg" 
@@ -52,17 +52,17 @@ export default jsx(
 
 </CodeGroup>
 
-To override the default loader specified in the `new Bun.Transpiler()` constructor, pass a second argument to `.transformSync()`.
+要覆盖 `new Bun.Transpiler()` 构造函数中指定的默认加载器，可以给 `.transformSync()` 传入第二个参数。
 
 ```ts
 transpiler.transformSync("<div>hi!</div>", "tsx");
 ```
 
-<Accordion title="Nitty gritty">
+<Accordion title="细节说明">
 
-When `.transformSync` is called, the transpiler is run in the same thread as the currently executed code.
+当调用 `.transformSync` 时，转译器会在当前执行代码的相同线程中运行。
 
-If a macro is used, it will be run in the same thread as the transpiler, but in a separate event loop from the rest of your application. Currently, globals between macros and regular code are shared, which means it is possible (but not recommended) to share states between macros and regular code. Attempting to use AST nodes outside of a macro is undefined behavior.
+如果使用了宏，它将在与转译器相同的线程中运行，但在一个独立的事件循环中，与应用程序的其余部分分开。当前，宏与普通代码之间共享全局变量，这意味着可以（但不推荐）在宏和普通代码间共享状态。试图在宏外部使用 AST 节点是未定义行为。
 
 </Accordion>
 
@@ -70,7 +70,7 @@ If a macro is used, it will be run in the same thread as the transpiler, but in 
 
 ## `.transform()`
 
-The `transform()` method is an async version of `.transformSync()` that returns a `Promise<string>`.
+`transform()` 方法是 `.transformSync()` 的异步版本，返回一个 `Promise<string>`。
 
 ```js
 const transpiler = new Bun.Transpiler({ loader: "jsx" });
@@ -78,23 +78,23 @@ const result = await transpiler.transform("<div>hi!</div>");
 console.log(result);
 ```
 
-Unless you're transpiling _many_ large files, you should probably use `Bun.Transpiler.transformSync`. The cost of the threadpool will often take longer than actually transpiling code.
+除非你要转译大量大文件，否则通常建议使用 `Bun.Transpiler.transformSync`。使用线程池的开销往往比实际转译代码花费的时间更久。
 
 ```ts
 await transpiler.transform("<div>hi!</div>", "tsx");
 ```
 
-<Accordion title="Nitty gritty">
+<Accordion title="细节说明">
 
-The `.transform()` method runs the transpiler in Bun's worker threadpool, so if you run it 100 times, it will run it across `Math.floor($cpu_count * 0.8)` threads, without blocking the main JavaScript thread.
+`.transform()` 方法会在 Bun 的工作线程池中运行转译器，因此如果调用 100 次，会在 `Math.floor($cpu_count * 0.8)` 个线程间并行运行，不会阻塞主 JavaScript 线程。
 
-If your code uses a macro, it will potentially spawn a new copy of Bun's JavaScript runtime environment in that new thread.
+如果代码使用了宏，可能会在该新线程中启动 Bun JavaScript 运行时环境的新实例。
 
 </Accordion>
 
 ## `.scan()`
 
-The `Transpiler` instance can also scan some source code and return a list of its imports and exports, plus additional metadata about each one. [Type-only](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-8.html#type-only-imports-and-export) imports and exports are ignored.
+`Transpiler` 实例还可以扫描某段源代码，返回其导入和导出列表及每个项的附加元数据。[仅类型](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-8.html#type-only-imports-and-export) 的导入和导出会被忽略。
 
 <CodeGroup>
 
@@ -137,20 +137,20 @@ const result = transpiler.scan(code);
 
 </CodeGroup>
 
-Each import in the `imports` array has a `path` and `kind`. Bun categories imports into the following kinds:
+`imports` 数组中的每个导入项都有 `path` 和 `kind`。Bun 将导入分类如下：
 
-- `import-statement`: `import React from 'react'`
-- `require-call`: `const val = require('./cjs.js')`
-- `require-resolve`: `require.resolve('./cjs.js')`
-- `dynamic-import`: `import('./loader')`
-- `import-rule`: `@import 'foo.css'`
-- `url-token`: `url('./foo.png')`
+- `import-statement`：`import React from 'react'`
+- `require-call`：`const val = require('./cjs.js')`
+- `require-resolve`：`require.resolve('./cjs.js')`
+- `dynamic-import`：`import('./loader')`
+- `import-rule`：`@import 'foo.css'`
+- `url-token`：`url('./foo.png')`
 
 ---
 
 ## `.scanImports()`
 
-For performance-sensitive code, you can use the `.scanImports()` method to get a list of imports. It's faster than `.scan()` (especially for large files) but marginally less accurate due to some performance optimizations.
+对于性能敏感的代码，可以使用 `.scanImports()` 方法获取导入列表。由于一些性能优化，它比 `.scan()` 更快（尤其是大型文件），但准确度略低。
 
 <CodeGroup>
 
@@ -192,55 +192,55 @@ const result = transpiler.scanImports(code);
 
 ---
 
-## Reference
+## 参考
 
 ```ts See Typescript Definitions expandable
 type Loader = "jsx" | "js" | "ts" | "tsx";
 
 interface TranspilerOptions {
-  // Replace key with value. Value must be a JSON string.
+  // 替换键为值，值必须是 JSON 字符串。
   // { "process.env.NODE_ENV": "\"production\"" }
   define?: Record<string, string>,
 
-  // Default loader for this transpiler
+  // 此转译器的默认加载器
   loader?: Loader,
 
-  // Default platform to target
-  // This affects how import and/or require is used
+  // 默认目标平台
+  // 影响 import 和/或 require 的使用方式
   target?: "browser" | "bun" | "node",
 
-  // Specify a tsconfig.json file as stringified JSON or an object
-  // Use this to set a custom JSX factory, fragment, or import source
-  // For example, if you want to use Preact instead of React. Or if you want to use Emotion.
+  // 指定 tsconfig.json 文件，字符串化的 JSON 或对象
+  // 用于设置自定义的 JSX 工厂、片段或导入源
+  // 例如，使用 Preact 替代 React，或使用 Emotion
   tsconfig?: string | TSConfig,
 
-  // Replace imports with macros
+  // 用宏替换导入
   macro?: MacroMap,
 
-  // Specify a set of exports to eliminate
-  // Or rename certain exports
+  // 指定一组需剔除的导出项
+  // 或重命名某些导出
   exports?: {
       eliminate?: string[];
       replace?: Record<string, string>;
   },
 
-  // Whether to remove unused imports from transpiled file
-  // Default: false
+  // 是否从转译文件中移除未使用的导入
+  // 默认: false
   trimUnusedImports?: boolean,
 
-  // Whether to enable a set of JSX optimizations
+  // 是否启用一系列 JSX 优化
   // jsxOptimizationInline ...,
 
-  // Experimental whitespace minification
+  // 实验性空白符压缩
   minifyWhitespace?: boolean,
 
-  // Whether to inline constant values
-  // Typically improves performance and decreases bundle size
-  // Default: true
+  // 是否内联常量值
+  // 通常提升性能并减少包大小
+  // 默认: true
   inline?: boolean,
 }
 
-// Map import paths to macros
+// 映射导入路径到宏
 interface MacroMap {
   // {
   //   "react-relay": {
@@ -265,21 +265,21 @@ class Bun.Transpiler {
 type Import = {
   path: string,
   kind:
-  // import foo from 'bar'; in JavaScript
+  // JavaScript 中的 import foo from 'bar';
   | "import-statement"
-  // require("foo") in JavaScript
+  // JavaScript 中的 require("foo")
   | "require-call"
-  // require.resolve("foo") in JavaScript
+  // JavaScript 中的 require.resolve("foo")
   | "require-resolve"
-  // Dynamic import() in JavaScript
+  // JavaScript 中的动态 import()
   | "dynamic-import"
-  // @import() in CSS
+  // CSS 中的 @import()
   | "import-rule"
-  // url() in CSS
+  // CSS 中的 url()
   | "url-token"
-  // The import was injected by Bun
+  // 导入是由 Bun 注入的
   | "internal"
-  // Entry point (not common)
+  // 入口点（不常见）
   | "entry-point-build"
   | "entry-point-run"
 }

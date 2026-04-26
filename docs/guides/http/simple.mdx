@@ -1,12 +1,12 @@
 ---
-title: Write a simple HTTP server
-sidebarTitle: Simple HTTP Server with Bun
+title: 编写一个简单的 HTTP 服务器
+sidebarTitle: 使用 Bun 创建简单 HTTP 服务器
 mode: center
 ---
 
-This starts an HTTP server listening on port `3000`. It responds to all requests with a `Response` with status `200` and body `"Welcome to Bun!"`.
+这段代码启动了一个监听 `3000` 端口的 HTTP 服务器。它对所有请求都返回状态为 `200`、内容为 `"Welcome to Bun!"` 的 `Response`。
 
-See [`Bun.serve`](/runtime/http/server) for details.
+详情请参阅 [`Bun.serve`](/runtime/http/server)。
 
 ```ts server.ts icon="/icons/typescript.svg"
 const server = Bun.serve({

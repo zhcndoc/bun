@@ -1,10 +1,10 @@
 ---
-title: Compress and decompress data with DEFLATE
-sidebarTitle: DEFLATE compression
+title: 使用 DEFLATE 进行数据压缩和解压
+sidebarTitle: DEFLATE 压缩
 mode: center
 ---
 
-Use `Bun.deflateSync()` to compress a `Uint8Array` with DEFLATE.
+使用 `Bun.deflateSync()` 对 `Uint8Array` 进行 DEFLATE 压缩。
 
 ```ts
 const data = Buffer.from("Hello, world!");
@@ -17,4 +17,4 @@ const decompressed = Bun.inflateSync(compressed);
 
 ---
 
-See [Docs > API > Utils](/runtime/utils) for more useful utilities.
+更多实用工具，请参见 [文档 > API > 工具](/runtime/utils)。

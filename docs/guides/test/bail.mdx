@@ -1,10 +1,10 @@
 ---
-title: Bail early with the Bun test runner
-sidebarTitle: Bail early
+title: 使用 Bun 测试运行器提前中止
+sidebarTitle: 提前中止
 mode: center
 ---
 
-Use the `--bail` flag to bail on a test run after a single failure. This is useful for aborting as soon as possible in a continuous integration environment.
+使用 `--bail` 参数在遇到一次失败后中止测试运行。这在持续集成环境中尽早中止测试非常有用。
 
 ```sh terminal icon="terminal"
 bun test --bail
@@ -12,13 +12,13 @@ bun test --bail
 
 ---
 
-To bail after a certain threshold of failures, optionally specify a number after the flag.
+要在达到一定失败次数后中止，可以在参数后选择性地指定数字。
 
 ```sh terminal icon="terminal"
-# bail after 10 failures
+# 在失败达到 10 次后中止
 bun test --bail=10
 ```
 
 ---
 
-See [Docs > Test runner](/test) for complete documentation of `bun test`.
+完整的 `bun test` 文档，请参见 [文档 > 测试运行器](/test)。

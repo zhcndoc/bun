@@ -1,77 +1,77 @@
 ---
-title: Hot reloading
-description: Hot Module Replacement (HMR) for Bun's development server
+title: 热重载
+description: Bun 开发服务器的热模块替换（HMR）
 ---
 
-Hot Module Replacement (HMR) allows you to update modules in a running application without needing a full page reload. This preserves the application state and improves the development experience.
+热模块替换（HMR）允许你在正在运行的应用中更新模块，而无需完全刷新页面。这样可以保留应用状态，提升开发体验。
 
-<Note>HMR is enabled by default when using Bun's full-stack development server.</Note>
+<Note>在使用 Bun 全栈开发服务器时，HMR 默认启用。</Note>
 
-## `import.meta.hot` API Reference
+## `import.meta.hot` API 参考
 
-Bun implements a client-side HMR API modeled after [Vite's `import.meta.hot` API](https://vite.dev/guide/api-hmr). It can be checked for with `if (import.meta.hot)`, tree-shaking it in production.
+Bun 实现了一个客户端 HMR API，参考了 [Vite 的 `import.meta.hot` API](https://vite.dev/guide/api-hmr)。可以用 `if (import.meta.hot)` 来检测，生产环境中会被 tree-shaking 去除。
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 if (import.meta.hot) {
-  // HMR APIs are available.
+  // HMR API 可用。
 }
 ```
 
-However, this check is often not needed as Bun will dead-code-eliminate calls to all of the HMR APIs in production builds.
+不过，这种检测通常不需要，因为 Bun 会在生产构建时对所有 HMR API 调用进行死代码删除。
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
-// This entire function call will be removed in production!
+// 这个函数调用在生产环境会被完全移除！
 import.meta.hot.dispose(() => {
   console.log("dispose");
 });
 ```
 
 <Warning>
-For this to work, Bun forces these APIs to be called without indirection. That means the following do not work:
+为了让这正常工作，Bun 强制要求这些 API 必须直接调用，不能通过间接引用。也就是说，以下用法是无效的：
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
-// INVALID: Assigning `hot` to a variable
+// 无效：将 `hot` 赋值给变量
 const hot = import.meta.hot;
 hot.accept();
 
-// INVALID: Assigning `import.meta` to a variable
+// 无效：将 `import.meta` 赋值给变量
 const meta = import.meta;
 meta.hot.accept();
 console.log(meta.hot.data);
 
-// INVALID: Passing to a function
+// 无效：作为参数传递
 doSomething(import.meta.hot.dispose);
 
-// OK: The full phrase "import.meta.hot.<API>" must be called directly:
+// 有效：必须直接调用完整表达式 "import.meta.hot.<API>"：
 import.meta.hot.accept();
 
-// OK: `data` can be passed to functions:
+// 有效：`data` 可以作为参数传递：
 doSomething(import.meta.hot.data);
 ```
 
 </Warning>
 
 <Note>
-The HMR API is still a work in progress. Some features are missing. HMR can be disabled in `Bun.serve` by setting the development option to `{ hmr: false }`.
+HMR API 仍在开发中，一些功能尚未实现。在 `Bun.serve` 中可以通过设置 development 选项 `{ hmr: false }` 来禁用 HMR。
 </Note>
 
-## API Methods
+## API 方法
 
-| Method             | Status | Notes                                                                 |
-| ------------------ | ------ | --------------------------------------------------------------------- |
-| `hot.accept()`     | ✅     | Indicate that a hot update can be replaced gracefully.                |
-| `hot.data`         | ✅     | Persist data between module evaluations.                              |
-| `hot.dispose()`    | ✅     | Add a callback function to run when a module is about to be replaced. |
-| `hot.invalidate()` | ❌     |                                                                       |
-| `hot.on()`         | ✅     | Attach an event listener                                              |
-| `hot.off()`        | ✅     | Remove an event listener from `on`.                                   |
-| `hot.send()`       | ❌     |                                                                       |
-| `hot.prune()`      | 🚧     | NOTE: Callback is currently never called.                             |
-| `hot.decline()`    | ✅     | No-op to match Vite's `import.meta.hot`                               |
+| 方法                 | 状态  | 说明                                                                 |
+| -------------------- | ----- | -------------------------------------------------------------------- |
+| `hot.accept()`       | ✅    | 表示模块支持热更新可以安全替换。                                     |
+| `hot.data`           | ✅    | 在模块更新间保持数据状态。                                           |
+| `hot.dispose()`      | ✅    | 添加模块即将替换时执行的回调函数。                                   |
+| `hot.invalidate()`   | ❌    |                                                                      |
+| `hot.on()`           | ✅    | 绑定事件监听器。                                                     |
+| `hot.off()`          | ✅    | 移除通过 `on` 绑定的事件监听器。                                    |
+| `hot.send()`         | ❌    |                                                                      |
+| `hot.prune()`        | 🚧    | 注意：回调目前从未被调用。                                           |
+| `hot.decline()`      | ✅    | 无操作函数，匹配 Vite 的 `import.meta.hot`。                        |
 
 ## import.meta.hot.accept()
 
-The `accept()` method indicates that a module can be hot-replaced. When called without arguments, it indicates that this module can be replaced by re-evaluating the file. After a hot update, importers of this module will be automatically patched.
+`accept()` 方法指示模块可以进行热替换。当不传入参数调用时，表示该模块可以通过重新评估文件来替换。在热更新之后，对该模块的导入者将会被自动修补。
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 // index.ts
@@ -86,36 +86,35 @@ export function getNegativeCount() {
 }
 ```
 
-This creates a hot-reloading boundary for all of the files that `index.ts` imports. That means whenever `foo.ts` or any of its dependencies are saved, the update will bubble up to `index.ts` will re-evaluate. Files that import `index.ts` will then be patched to import the new version of `getNegativeCount()`. If only `index.ts` is updated, only the one file will be re-evaluated, and the counter in `foo.ts` is reused.
+这为 `index.ts` 引入的所有文件创建了一个热重载边界。也就是说，只要 `foo.ts` 或其任何依赖被保存修改，更新会冒泡到 `index.ts` 并重新执行。随后，导入 `index.ts` 的文件会被更新补丁，导入新的版本的 `getNegativeCount()`。如果只有 `index.ts` 被更新，只有该文件会重新执行，并且 `foo.ts` 里的计数器会重用。
 
-This may be used in combination with `import.meta.hot.data` to transfer state from the previous module to the new one.
+这可以与 `import.meta.hot.data` 结合使用，将状态从旧模块传递到新模块。
 
 <Info>
-  When no modules call `import.meta.hot.accept()` (and there isn't React Fast Refresh or a plugin calling it for you),
-  the page will reload when the file updates, and a console warning shows which files were invalidated. This warning is
-  safe to ignore if it makes more sense to rely on full page reloads.
+  当没有任何模块调用 `import.meta.hot.accept()`（也没有 React Fast Refresh 或插件调用它），
+  文件更新时页面会刷新，并且控制台会显示哪些文件被失效。若你更倾向于使用页面刷新，这个警告可忽略。
 </Info>
 
-### With callback
+### 带回调
 
-When provided one callback, `import.meta.hot.accept` will function how it does in Vite. Instead of patching the importers of this module, it will call the callback with the new module.
+如果传入一个回调，`import.meta.hot.accept` 将像 Vite 那样工作。它不会自动补丁导入者，而是把新模块作为参数调用回调。
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 export const count = 0;
 
 import.meta.hot.accept(newModule => {
   if (newModule) {
-    // newModule is undefined when SyntaxError happened
+    // 当出现语法错误时 newModule 会是 undefined
     console.log("updated: count is now ", newModule.count);
   }
 });
 ```
 
 <Tip>
-  Prefer using `import.meta.hot.accept()` without an argument as it usually makes your code easier to understand.
+  推荐使用无参数的 `import.meta.hot.accept()`，这通常让代码更易理解。
 </Tip>
 
-### Accepting other modules
+### 接受其它模块
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 import { count } from "./foo";
@@ -127,44 +126,43 @@ import.meta.hot.accept("./foo", () => {
 });
 ```
 
-Indicates that a dependency's module can be accepted. When the dependency is updated, the callback will be called with the new module.
+表示可以接受某个依赖模块的热替换。当该依赖更新时，回调将被调用并传入新模块。
 
-### With multiple dependencies
+### 多依赖
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 import.meta.hot.accept(["./foo", "./bar"], newModules => {
-  // newModules is an array where each item corresponds to the updated module
-  // or undefined if that module had a syntax error
+  // newModules 是数组，每项对应一个更新的模块
+  // 或者如果模块语法有错误则对应 undefined
 });
 ```
 
-Indicates that multiple dependencies' modules can be accepted. This variant accepts an array of dependencies, where the callback will receive the updated modules, and `undefined` for any that had errors.
+表示可以接受多个依赖模块。该重载版本接受依赖数组，回调收到的是对应的更新模块数组，对于有错误的模块是 `undefined`。
 
 ## import.meta.hot.data
 
-`import.meta.hot.data` maintains state between module instances during hot replacement, enabling data transfer from previous to new versions. When `import.meta.hot.data` is written into, Bun will also mark this module as capable of self-accepting (equivalent of calling `import.meta.hot.accept()`).
+`import.meta.hot.data` 用于在热替换期间在模块实例间持久化状态，从前一个模块传递数据到新模块。当写入 `import.meta.hot.data` 时，Bun 会同时标记该模块为自接受（相当于调用了 `import.meta.hot.accept()`）。
 
 ```tsx title="index.tsx" icon="/icons/typescript.svg"
 import { createRoot } from "react-dom/client";
 import { App } from "./app";
 
 const root = (import.meta.hot.data.root ??= createRoot(elem));
-root.render(<App />); // re-use an existing root
+root.render(<App />); // 复用已有 root
 ```
 
-In production, `data` is inlined to be `{}`, meaning it cannot be used as a state holder.
+在生产环境中，`data` 会被内联为 `{}`，因此不能用作状态持有。
 
 <Tip>
-  The above pattern is recommended for stateful modules because Bun knows it can minify `{}.prop ??= value` into `value`
-  in production.
+  上述模式推荐用于有状态模块，因为 Bun 知道能在生产环境将 `{}.prop ??= value` 优化为 `value`。
 </Tip>
 
 ## import.meta.hot.dispose()
 
-Attaches an on-dispose callback. This is called:
+绑定一个销毁回调。该回调在以下时机被调用：
 
-- Just before the module is replaced with another copy (before the next is loaded)
-- After the module is detached (removing all imports to this module, see `import.meta.hot.prune()`)
+- 模块即将被替换（即新模块加载前）
+- 模块被卸载（所有对该模块的导入被移除，见 `import.meta.hot.prune()`）
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 const sideEffect = setupSideEffect();
@@ -174,56 +172,55 @@ import.meta.hot.dispose(() => {
 });
 ```
 
-<Warning>This callback is not called on route navigation or when the browser tab closes.</Warning>
+<Warning>该回调不会在路由导航或浏览器标签关闭时调用。</Warning>
 
-Returning a promise will delay module replacement until the module is disposed. All dispose callbacks are called in parallel.
+返回 Promise 会延迟模块替换，直到 Promise 解决。所有 dispose 回调并行执行。
 
 ## import.meta.hot.prune()
 
-Attaches an on-prune callback. This is called when all imports to this module are removed, but the module was previously loaded.
+绑定一个清理回调。在所有导入这个模块的引用被移除之后调用，但该模块之前已经加载过。
 
-This can be used to clean up resources that were created when the module was loaded. Unlike `import.meta.hot.dispose()`, this pairs much better with `accept` and `data` to manage stateful resources. A full example managing a WebSocket:
+这可以用来清理模块加载时创建的资源。相比于 `import.meta.hot.dispose()`，这个方法更适合与 `accept` 和 `data` 配合管理有状态资源。以下是一个管理 WebSocket 的完整示例：
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 import { something } from "./something";
 
-// Initialize or re-use a WebSocket connection
+// 初始化或复用 WebSocket 连接
 export const ws = (import.meta.hot.data.ws ??= new WebSocket(location.origin));
 
-// If the module's import is removed, clean up the WebSocket connection.
+// 模块的所有导入被移除时，清理 WebSocket 连接
 import.meta.hot.prune(() => {
   ws.close();
 });
 ```
 
 <Info>
-  If `dispose` was used instead, the WebSocket would close and re-open on every hot update. Both versions of the code
-  will prevent page reloads when imported files are updated.
+  若使用 `dispose`，WebSocket 会在每次热更新时关闭并重新打开。两种写法都能避免导入文件更新时页面刷新。
 </Info>
 
-## import.meta.hot.on() and off()
+## import.meta.hot.on() 和 off()
 
-`on()` and `off()` are used to listen for events from the HMR runtime. Event names are prefixed with a prefix so that plugins do not conflict with each other.
+`on()` 和 `off()` 用于监听 HMR 运行时事件。事件名称带有前缀，避免插件间冲突。
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 import.meta.hot.on("bun:beforeUpdate", () => {
-  console.log("before a hot update");
+  console.log("热更新前");
 });
 ```
 
-When a file is replaced, all of its event listeners are automatically removed.
+当文件被替换时，所有相关事件监听器会自动移除。
 
-### Built-in events
+### 内置事件
 
-| Event                  | Emitted when                                                                                    |
-| ---------------------- | ----------------------------------------------------------------------------------------------- |
-| `bun:beforeUpdate`     | before a hot update is applied.                                                                 |
-| `bun:afterUpdate`      | after a hot update is applied.                                                                  |
-| `bun:beforeFullReload` | before a full page reload happens.                                                              |
-| `bun:beforePrune`      | before prune callbacks are called.                                                              |
-| `bun:invalidate`       | when a module is invalidated with `import.meta.hot.invalidate()`                                |
-| `bun:error`            | when a build or runtime error occurs                                                            |
-| `bun:ws:disconnect`    | when the HMR WebSocket connection is lost. This can indicate the development server is offline. |
-| `bun:ws:connect`       | when the HMR WebSocket connects or re-connects.                                                 |
+| 事件                     | 触发时机                                                         |
+| ------------------------ | ---------------------------------------------------------------- |
+| `bun:beforeUpdate`       | 在热更新应用之前                                                 |
+| `bun:afterUpdate`        | 在热更新应用之后                                                 |
+| `bun:beforeFullReload`   | 在页面完全刷新前                                                 |
+| `bun:beforePrune`        | 在调用 prune 回调前                                              |
+| `bun:invalidate`         | 当调用 `import.meta.hot.invalidate()` 使模块失效时             |
+| `bun:error`              | 当构建或运行时发生错误                                           |
+| `bun:ws:disconnect`      | HMR WebSocket 连接断开时，表示开发服务器可能离线                |
+| `bun:ws:connect`         | HMR WebSocket 连接或重新连接时                                  |
 
-<Note>For compatibility with Vite, the above events are also available via `vite:*` prefix instead of `bun:*`.</Note>
+<Note>为兼容 Vite，以上事件也可用带 `vite:*` 前缀替代 `bun:*`。</Note>

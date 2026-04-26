@@ -1,10 +1,10 @@
 ---
-title: Convert an ArrayBuffer to a Uint8Array
-sidebarTitle: "ArrayBuffer to Uint8Array"
+title: 将 ArrayBuffer 转换为 Uint8Array
+sidebarTitle: "ArrayBuffer 到 Uint8Array"
 mode: center
 ---
 
-A `Uint8Array` is a _typed array_, meaning it is a mechanism for viewing the data in an underlying `ArrayBuffer`.
+`Uint8Array` 是一种 _类型化数组_，意味着它是一种查看底层 `ArrayBuffer` 中数据的机制。
 
 ```ts
 const buffer = new ArrayBuffer(64);
@@ -13,7 +13,7 @@ const arr = new Uint8Array(buffer);
 
 ---
 
-Instances of other typed arrays can be created similarly.
+其他类型化数组的实例也可以类似创建。
 
 ```ts
 const buffer = new ArrayBuffer(64);
@@ -29,13 +29,13 @@ const arr7 = new BigUint64Array(buffer);
 
 ---
 
-To create a typed array that only views a portion of the underlying buffer, pass the offset and length to the constructor.
+若想创建一个仅查看底层缓冲区部分内容的类型化数组，可以向构造函数传入偏移量和长度。
 
 ```ts
 const buffer = new ArrayBuffer(64);
-const arr = new Uint8Array(buffer, 0, 16); // view first 16 bytes
+const arr = new Uint8Array(buffer, 0, 16); // 查看前 16 个字节
 ```
 
 ---
 
-See [Docs > API > Utils](/runtime/utils) for more useful utilities.
+更多实用工具请参见[文档 > API > 工具](/runtime/utils)。

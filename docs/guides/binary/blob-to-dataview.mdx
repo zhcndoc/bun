@@ -1,10 +1,10 @@
 ---
-title: Convert a Blob to a DataView
-sidebarTitle: "Blob to DataView"
+title: 将 Blob 转换为 DataView
+sidebarTitle: "Blob 转 DataView"
 mode: center
 ---
 
-The [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) class provides a number of methods for consuming its contents in different formats. This snippets reads the contents to an `ArrayBuffer`, then creates a `DataView` from the buffer.
+[`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) 类提供了多种方法，用于以不同格式读取其内容。此示例将内容读取为一个 `ArrayBuffer`，然后基于该缓冲区创建一个 `DataView`。
 
 ```ts
 const blob = new Blob(["hello world"]);
@@ -13,4 +13,4 @@ const arr = new DataView(await blob.arrayBuffer());
 
 ---
 
-See [Docs > API > Binary Data](/runtime/binary-data#conversion) for complete documentation on manipulating binary data with Bun.
+完整的二进制数据操作文档，请参见 [文档 > API > 二进制数据](/runtime/binary-data#conversion)。

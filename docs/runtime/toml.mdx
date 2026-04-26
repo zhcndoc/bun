@@ -1,21 +1,21 @@
 ---
 title: TOML
-description: Use Bun's built-in support for TOML files through both runtime APIs and bundler integration
+description: 通过运行时 API 和打包器集成，使用 Bun 对 TOML 文件的内置支持
 ---
 
-In Bun, TOML is a first-class citizen alongside JSON, JSON5, and YAML. You can:
+在 Bun 中，TOML 与 JSON、JSON5 和 YAML 同为一等公民。你可以：
 
-- Parse TOML strings with `Bun.TOML.parse`
-- `import` & `require` TOML files as modules at runtime (including hot reloading & watch mode support)
-- `import` & `require` TOML files in frontend apps via Bun's bundler
+- 使用 `Bun.TOML.parse` 解析 TOML 字符串
+- 在运行时通过 `import` 和 `require` 将 TOML 文件作为模块导入（支持热重载和监听模式）
+- 通过 Bun 的打包器在前端应用中 `import` 和 `require` TOML 文件
 
 ---
 
-## Runtime API
+## 运行时 API
 
 ### `Bun.TOML.parse()`
 
-Parse a TOML string into a JavaScript object.
+将 TOML 字符串解析为 JavaScript 对象。
 
 ```ts
 import { TOML } from "bun";
@@ -43,23 +43,23 @@ console.log(data);
 // }
 ```
 
-#### Supported TOML Features
+#### 支持的 TOML 特性
 
-Bun's TOML parser supports the [TOML v1.0 specification](https://toml.io/en/v1.0.0), including:
+Bun 的 TOML 解析器支持 [TOML v1.0 规范](https://toml.io/en/v1.0.0)，包括：
 
-- **Strings**: basic (`"..."`) and literal (`'...'`), including multi-line
-- **Integers**: decimal, hex (`0x`), octal (`0o`), and binary (`0b`)
-- **Floats**: including `inf` and `nan`
-- **Booleans**: `true` and `false`
-- **Arrays**: including mixed types and nested arrays
-- **Tables**: standard (`[table]`) and inline (`{ key = "value" }`)
-- **Array of tables**: `[[array]]`
-- **Dotted keys**: `a.b.c = "value"`
-- **Comments**: using `#`
+- **字符串**：基本字符串 (`"..."`) 和字面量字符串 (`'...'`)，包括多行字符串
+- **整数**：十进制、十六进制（`0x`）、八进制（`0o`）和二进制（`0b`）
+- **浮点数**：包括 `inf` 和 `nan`
+- **布尔值**：`true` 和 `false`
+- **数组**：支持混合类型及嵌套数组
+- **表**：标准表（`[table]`）和内联表（`{ key = "value" }`）
+- **表数组**：`[[array]]`
+- **点记法键**：`a.b.c = "value"`
+- **注释**：使用 `#`
 
 ```ts
 const data = Bun.TOML.parse(`
-# Application config
+# 应用配置
 title = "My App"
 
 [owner]
@@ -80,25 +80,25 @@ role = "backend"
 `);
 ```
 
-#### Error Handling
+#### 错误处理
 
-`Bun.TOML.parse()` throws if the TOML is invalid:
+如果 TOML 无效，`Bun.TOML.parse()` 会抛出异常：
 
 ```ts
 try {
   Bun.TOML.parse("invalid = = =");
 } catch (error) {
-  console.error("Failed to parse TOML:", error.message);
+  console.error("解析 TOML 失败:", error.message);
 }
 ```
 
 ---
 
-## Module Import
+## 模块导入
 
-### ES Modules
+### ES 模块
 
-You can import TOML files directly as ES modules. The TOML content is parsed and made available as both default and named exports:
+你可以直接将 TOML 文件作为 ES 模块导入。TOML 内容会被解析，并以默认导出和命名导出的形式提供：
 
 ```toml config.toml
 [database]
@@ -116,7 +116,7 @@ rateLimit = true
 analytics = false
 ```
 
-#### Default Import
+#### 默认导入
 
 ```ts app.ts icon="/icons/typescript.svg"
 import config from "./config.toml";
@@ -125,9 +125,9 @@ console.log(config.database.host); // "localhost"
 console.log(config.redis.port); // 6379
 ```
 
-#### Named Imports
+#### 命名导入
 
-You can destructure top-level TOML tables as named imports:
+你可以将顶层 TOML 表解构为命名导入：
 
 ```ts app.ts icon="/icons/typescript.svg"
 import { database, redis, features } from "./config.toml";
@@ -137,23 +137,23 @@ console.log(redis.port); // 6379
 console.log(features.auth); // true
 ```
 
-Or combine both:
+或者两者结合：
 
 ```ts app.ts icon="/icons/typescript.svg"
 import config, { database, features } from "./config.toml";
 
-// Use the full config object
+// 使用完整配置对象
 console.log(config);
 
-// Or use specific parts
+// 或者使用特定部分
 if (features.rateLimit) {
   setupRateLimiting(database);
 }
 ```
 
-#### Import Attributes
+#### 导入属性
 
-You can also use import attributes to load any file as TOML:
+你也可以使用导入属性将任意文件以 TOML 形式加载：
 
 ```ts app.ts icon="/icons/typescript.svg"
 import myConfig from "./my.config" with { type: "toml" };
@@ -161,22 +161,22 @@ import myConfig from "./my.config" with { type: "toml" };
 
 ### CommonJS
 
-TOML files can also be required in CommonJS:
+TOML 文件同样可以在 CommonJS 中被 require：
 
 ```ts app.ts icon="/icons/typescript.svg"
 const config = require("./config.toml");
 console.log(config.database.name); // "myapp"
 
-// Destructuring also works
+// 解构同样可用
 const { database, redis } = require("./config.toml");
 console.log(database.port); // 5432
 ```
 
 ---
 
-## Hot Reloading with TOML
+## TOML 热重载
 
-When you run your application with `bun --hot`, changes to TOML files are automatically detected and reloaded without restarting:
+当你使用 `bun --hot` 运行应用时，对 TOML 文件的修改会被自动检测并热重载，无需重启：
 
 ```toml config.toml
 [server]
@@ -191,7 +191,7 @@ verbose = false
 ```ts server.ts icon="/icons/typescript.svg"
 import { server, features } from "./config.toml";
 
-console.log(`Starting server on ${server.host}:${server.port}`);
+console.log(`启动服务器：${server.host}:${server.port}`);
 
 Bun.serve({
   port: server.port,
@@ -205,33 +205,33 @@ Bun.serve({
 });
 ```
 
-Run with hot reloading:
+使用热重载运行：
 
 ```bash terminal icon="terminal"
 bun --hot server.ts
 ```
 
-Now when you modify `config.toml`, the changes are immediately reflected in your running application.
+现在修改 `config.toml` 时，改动会立即反映到正在运行的应用中。
 
 ---
 
-## Bundler Integration
+## 打包器集成
 
-When you import TOML files and bundle with Bun, the TOML is parsed at build time and included as a JavaScript module:
+当你导入 TOML 文件并使用 Bun 打包时，TOML 会在构建时被解析，并作为 JavaScript 模块包含到打包产物中：
 
 ```bash terminal icon="terminal"
 bun build app.ts --outdir=dist
 ```
 
-This means:
+这意味着：
 
-- Zero runtime TOML parsing overhead in production
-- Smaller bundle sizes
-- Tree-shaking support for unused properties (named imports)
+- 生产环境零运行时 TOML 解析开销
+- 更小的打包体积
+- 对未使用属性（命名导入）的摇树优化支持
 
-### Dynamic Imports
+### 动态导入
 
-TOML files can be dynamically imported:
+TOML 文件支持动态导入：
 
 ```ts
 const config = await import("./config.toml");

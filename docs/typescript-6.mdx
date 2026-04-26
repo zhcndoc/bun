@@ -1,17 +1,17 @@
 ---
-title: TypeScript 6 and 7
-description: "How to configure Bun's type definitions for TypeScript 6.0 and 7.0, which no longer auto-discover @types packages. Fix 'Cannot find name Bun' and other missing type errors after upgrading TypeScript."
+title: TypeScript 6 和 7
+description: "如何为 TypeScript 6.0 和 7.0 配置 Bun 的类型定义，这些版本不再自动发现 @types 包。修复升级 TypeScript 后出现的 'Cannot find name Bun' 及其他缺失类型错误。"
 ---
 
-TypeScript 6.0 changed how type definitions are discovered. If you've upgraded TypeScript and your editor no longer recognizes `Bun`, `Request`, or other globals from `@types/bun`, here's how to fix it.
+TypeScript 6.0 改变了类型定义的发现方式。如果你升级了 TypeScript 后，编辑器不再识别 `Bun`、`Request` 或来自 `@types/bun` 的其他全局变量，以下是修复方法。
 
-## What changed
+## 变化内容
 
-Starting in TypeScript 6.0, the `types` field in `compilerOptions` defaults to an empty array instead of including all `@types/*` packages. You now need to explicitly list the type packages you use.
+从 TypeScript 6.0 开始，`compilerOptions` 中的 `types` 字段默认变为空数组，而不是包含所有的 `@types/*` 包。现在你需要显式列出你使用的类型包。
 
-## Add `"types": ["bun"]` to your tsconfig
+## 在 tsconfig 中添加 `"types": ["bun"]`
 
-In your `tsconfig.json`, add `"types": ["bun"]` to `compilerOptions`:
+在你的 `tsconfig.json` 中，向 `compilerOptions` 添加 `"types": ["bun"]`：
 
 ```jsonc tsconfig.json icon="file-json"
 {
@@ -21,7 +21,7 @@ In your `tsconfig.json`, add `"types": ["bun"]` to `compilerOptions`:
 }
 ```
 
-This tells TypeScript to load type definitions from `@types/bun`. If you use other `@types/*` packages, include them too:
+这告诉 TypeScript 从 `@types/bun` 加载类型定义。如果你使用其他 `@types/*` 包，也请一并包含：
 
 ```jsonc tsconfig.json icon="file-json"
 {
@@ -31,20 +31,20 @@ This tells TypeScript to load type definitions from `@types/bun`. If you use oth
 }
 ```
 
-You still need `@types/bun` installed — the `types` option tells TypeScript _which_ packages to include, but the package itself must exist in `node_modules`:
+你仍然需要安装 `@types/bun` —— `types` 选项告诉 TypeScript 要包含哪些包，但包本身必须存在于 `node_modules` 中：
 
 ```sh terminal icon="terminal"
 bun add -d @types/bun
 ```
 
-## Full recommended tsconfig.json
+## 完整的推荐 tsconfig.json
 
-Here's the full recommended `tsconfig.json` for a Bun project using TypeScript 6.0 or later:
+以下是针对使用 TypeScript 6.0 或更高版本的 Bun 项目的完整推荐 `tsconfig.json`：
 
 ```jsonc tsconfig.json icon="file-json"
 {
   "compilerOptions": {
-    // Environment setup & latest features
+    // 环境设置与最新特性
     "lib": ["ESNext"],
     "target": "ESNext",
     "module": "Preserve",
@@ -53,20 +53,20 @@ Here's the full recommended `tsconfig.json` for a Bun project using TypeScript 6
     "allowJs": true,
     "types": ["bun"],
 
-    // Bundler mode
+    // 打包器模式
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
 
-    // Best practices
+    // 最佳实践
     "strict": true,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
 
-    // Some stricter flags (disabled by default)
+    // 一些更严格的标志（默认禁用）
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false,
@@ -74,6 +74,6 @@ Here's the full recommended `tsconfig.json` for a Bun project using TypeScript 6
 }
 ```
 
-## Does this apply to TypeScript 7?
+## 这是否适用于 TypeScript 7？
 
-Yes. TypeScript 7 carries forward the same default. If you're upgrading directly from TypeScript 5 to 7, the same fix applies — add `"types": ["bun"]` to your `compilerOptions`.
+是的。TypeScript 7 延续了相同的默认行为。如果你直接从 TypeScript 5 升级到 7，同样的修复方法适用——向你的 `compilerOptions` 添加 `"types": ["bun"]`。

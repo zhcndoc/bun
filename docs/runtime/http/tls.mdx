@@ -1,9 +1,9 @@
 ---
 title: TLS
-description: Enable TLS in Bun.serve
+description: 在 Bun.serve 中启用 TLS
 ---
 
-Bun supports TLS out of the box, powered by [BoringSSL](https://boringssl.googlesource.com/boringssl). Enable TLS by passing in a value for `key` and `cert`; both are required to enable TLS.
+Bun 内置支持 TLS，由 [BoringSSL](https://boringssl.googlesource.com/boringssl) 提供支持。通过传入 `key` 和 `cert` 的值即可启用 TLS；两者均为必填。
 
 ```ts
 Bun.serve({
@@ -14,7 +14,7 @@ Bun.serve({
 });
 ```
 
-The `key` and `cert` fields expect the _contents_ of your TLS key and certificate, _not a path to it_. This can be a string, `BunFile`, `TypedArray`, or `Buffer`.
+`key` 和 `cert` 字段期望的是您的 TLS 密钥和证书的 _内容_，_而不是路径_。可以是字符串、`BunFile`、`TypedArray` 或 `Buffer`。
 
 ```ts
 Bun.serve({
@@ -22,14 +22,14 @@ Bun.serve({
     key: Bun.file("./key.pem"), // BunFile
     key: fs.readFileSync("./key.pem"), // Buffer
     key: fs.readFileSync("./key.pem", "utf8"), // string
-    key: [Bun.file("./key1.pem"), Bun.file("./key2.pem")], // array of above
+    key: [Bun.file("./key1.pem"), Bun.file("./key2.pem")], // 上述类型的数组
   },
 });
 ```
 
-### Passphrase
+### 密码短语
 
-If your private key is encrypted with a passphrase, provide a value for `passphrase` to decrypt it.
+如果您的私钥使用密码短语加密，请提供 `passphrase` 以解密。
 
 ```ts
 Bun.serve({
@@ -41,37 +41,37 @@ Bun.serve({
 });
 ```
 
-### CA Certificates
+### CA 证书
 
-Optionally, you can override the trusted CA certificates by passing a value for `ca`. By default, the server will trust the list of well-known CAs curated by Mozilla. When `ca` is specified, the Mozilla list is overwritten.
+可选地，您可以通过传入 `ca` 的值来自定义受信任的 CA 证书。默认情况下，服务器信任由 Mozilla 筛选的知名 CA 列表。当指定了 `ca` 后，Mozilla 列表将被覆盖。
 
 ```ts
 Bun.serve({
   tls: {
-    key: Bun.file("./key.pem"), // path to TLS key
-    cert: Bun.file("./cert.pem"), // path to TLS cert
-    ca: Bun.file("./ca.pem"), // path to root CA certificate  // [!code ++]
+    key: Bun.file("./key.pem"), // TLS 密钥路径
+    cert: Bun.file("./cert.pem"), // TLS 证书路径
+    ca: Bun.file("./ca.pem"), // 根 CA 证书路径  // [!code ++]
   },
 });
 ```
 
 ### Diffie-Hellman
 
-To override Diffie-Hellman parameters:
+要覆盖 Diffie-Hellman 参数：
 
 ```ts
 Bun.serve({
   tls: {
-    dhParamsFile: "/path/to/dhparams.pem", // path to Diffie Hellman parameters // [!code ++]
+    dhParamsFile: "/path/to/dhparams.pem", // Diffie-Hellman 参数路径 // [!code ++]
   },
 });
 ```
 
 ---
 
-## Server name indication (SNI)
+## 服务器名称指示（SNI）
 
-To configure the server name indication (SNI) for the server, set the `serverName` field in the `tls` object.
+要为服务器配置服务器名称指示（SNI），在 `tls` 对象中设置 `serverName` 字段。
 
 ```ts
 Bun.serve({
@@ -81,7 +81,7 @@ Bun.serve({
 });
 ```
 
-To allow multiple server names, pass an array of objects to `tls`, each with a `serverName` field.
+要允许多个服务器名称，传入一个包含多个对象的数组给 `tls`，每个对象包含一个 `serverName` 字段。
 
 ```ts
 Bun.serve({

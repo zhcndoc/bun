@@ -1,30 +1,30 @@
 ---
-title: "Global virtual store"
-description: "Install packages once. Every project links to the same copy."
+title: "全局虚拟存储"
+description: "只安装一次。每个项目都链接到同一份副本。"
 ---
 
-Every project on your machine depends on the same handful of heavy packages — `typescript`, `next`, `webpack`, `@babel/*`, `react-dom`. Without a shared store, every `node_modules` gets its own copy, and every fresh `bun install` writes them all out again.
+你机器上的每个项目都依赖那几项沉重的公共包 —— `typescript`、`next`、`webpack`、`@babel/*`、`react-dom`。如果没有共享存储，每个 `node_modules` 都会各自保存一份副本，而每次新的 `bun install` 又会把它们全部重新写一遍。
 
-The global virtual store changes that to **install once, link everywhere**. Package files live in one shared cache; each project's `node_modules` is a thin tree of symlinks into it. A second checkout, a new branch worktree, a CI workspace — they all point at the copy that's already on disk.
+全局虚拟存储将其变为**安装一次，到处链接**。包文件保存在一个共享缓存中；每个项目的 `node_modules` 都是一棵指向它的符号链接浅层树。第二次检出、新分支工作树、CI 工作区——它们都指向那份已经在磁盘上的副本。
 
-The result: warm installs are roughly **7× faster** (one symlink per package instead of copying every file), and `node_modules` shrinks from hundreds of megabytes per project to a few megabytes of links.
+结果是：热安装速度大约**快 7 倍**（每个包只需一个符号链接，而不是复制每个文件），而且 `node_modules` 会从每个项目的数百 MB 缩减到几 MB 的链接。
 
-## Enabling
+## 启用
 
-The global virtual store is **on by default** with the isolated linker on every platform. It is not used by the hoisted linker.
+在所有平台上，配合 isolated linker 时，全局虚拟存储**默认开启**。hoisted linker 不会使用它。
 
 ```bash terminal icon="terminal"
 bun install --linker isolated
 ```
 
-To make isolated the default for a project:
+要让 isolated 成为某个项目的默认设置：
 
 ```toml title="bunfig.toml" icon="settings"
 [install]
 linker = "isolated"
 ```
 
-To opt out and fall back to per-project package copies:
+要退出并回退到每个项目各自的包副本：
 
 ```toml title="bunfig.toml" icon="settings"
 [install]
@@ -36,24 +36,24 @@ globalStore = false
 BUN_INSTALL_GLOBAL_STORE=0 bun install --linker isolated
 ```
 
-## Why it's fast
+## 为什么它快
 
-The previous isolated linker called `clonefileat()` (macOS) or `link()`/`copyfile()` (other platforms) for every package on every install, even when the package cache was warm and `node_modules` was the only thing missing. Profiling a warm install of a 1,400-package fixture on macOS showed the main thread spending **95.4 % of its time inside `clonefileat`**:
+之前的 isolated linker 会在每次安装时，对每个包都调用 `clonefileat()`（macOS）或 `link()`/`copyfile()`（其他平台），即使包缓存已经是热的，而缺失的只有 `node_modules`。对一个 1,400 包的 fixture 在 macOS 上进行热安装的分析显示，主线程有 **95.4 % 的时间都花在 `clonefileat` 里**：
 
 ```
-Sort by top of stack (bun install --linker isolated, warm cache):
+按栈顶排序（bun install --linker isolated，热缓存）：
     clonefileat        891 / 934 samples
     __openat            15
     __read_nocancel     10
 ```
 
-`clonefileat` on APFS holds a volume-wide kernel lock, so spreading the work across more threads barely helps — eight threads only improved a 2,830-directory clone from 959 ms to 743 ms. The fix is to not call it at all on the warm path.
+APFS 上的 `clonefileat` 会持有一个全卷范围的内核锁，因此即使增加更多线程，收益也很小——8 个线程只把一个 2,830 目录的克隆从 959 ms 提升到 743 ms。修复方法就是在热路径上根本不调用它。
 
-With the global store, the warm path is one `access()` (does the global entry exist?) plus one `symlink()` (point the project at it) per package.
+有了全局存储，热路径对每个包只需要一次 `access()`（全局条目是否存在？）再加一次 `symlink()`（把项目指向它）。
 
-## Benchmarks
+## 基准测试
 
-Warm CI install — lockfile present, package cache warm, `node_modules` deleted between runs — on a 1,400-package React/webpack/Babel/jest fixture, Apple Silicon macOS, `hyperfine --warmup 3 --runs 10`:
+热态 CI 安装——锁文件存在、包缓存已热、每轮之间删除 `node_modules`——在一个 1,400 包的 React/webpack/Babel/jest fixture 上，Apple Silicon macOS，`hyperfine --warmup 3 --runs 10`：
 
 |                                          | wall time    | system time | `clonefileat` | total syscalls |
 | ---------------------------------------- | ------------ | ----------- | ------------- | -------------- |
@@ -61,96 +61,96 @@ Warm CI install — lockfile present, package cache warm, `node_modules` deleted
 | `--linker isolated`, `globalStore=false` | 840.9 ms     | 1,256 ms    | 1,387         | —              |
 | **`--linker isolated`, global store**    | **124.8 ms** | **94 ms**   | **0**         | **4,957**      |
 
-**6.6× faster** than the same linker without the global store, **6.6× faster** than hoisted.
+比没有全局存储的同一 linker **快 6.6 倍**，比 hoisted **快 6.6 倍**。
 
-### Disk
+### 磁盘
 
-`node_modules` sizes for the same fixture (`du -sh node_modules` on APFS; clonefile copies are copy-on-write, so the hoisted/per-project numbers are the _logical_ size — on filesystems without CoW that is also the physical size):
+同一 fixture 的 `node_modules` 大小（APFS 上运行 `du -sh node_modules`；clonefile 复制是写时复制，所以 hoisted/每项目的数字是 _逻辑_ 大小——在不支持 CoW 的文件系统上，这也就是物理大小）：
 
-|                                          | `node_modules` per project | shared on disk |
-| ---------------------------------------- | -------------------------- | -------------- |
+|                                          | 每个项目的 `node_modules` | 磁盘上的共享占用 |
+| ---------------------------------------- | -------------------------- | ---------------- |
 | `--linker hoisted`                       | 391 MB                     | —              |
 | `--linker isolated`, `globalStore=false` | 391 MB                     | —              |
-| **`--linker isolated`, global store**    | **~5 MB of symlinks**      | 391 MB once    |
+| **`--linker isolated`, global store**    | **约 5 MB 的符号链接**      | 391 MB 仅一份    |
 
-Clone the same project five times and the difference is ~2 GB of duplicated package files versus ~400 MB total. The break-even is one project; every additional checkout, branch worktree, or CI workspace after that is free.
+把同一个项目克隆五份，差别就是大约 2 GB 的重复包文件 versus 总计约 400 MB。盈亏平衡点是一个项目；从那之后，每增加一个检出、分支工作树或 CI 工作区都是免费的。
 
-### Real-world cold→warm
+### 真实世界 cold→warm
 
-Cold-to-warm timings on cloned real-world repositories (macOS arm64):
+克隆后的真实仓库在冷到热之间的耗时（macOS arm64）：
 
 | project                        | packages | cold   | warm       |
-| ------------------------------ | -------- | ------ | ---------- |
+| ------------------------------ | ------ | ------ | ---------- |
 | cal.com                        | ~3,580   | 37.4 s | **4.7 s**  |
 | remix                          | ~1,750   | 23.1 s | **2.0 s**  |
 | excalidraw                     | ~1,332   | 5.9 s  | **1.1 s**  |
 | hono                           | ~790     | 4.5 s  | **1.3 s**  |
 | `next build` (create-next-app) | ~382     | 1.0 s  | **0.35 s** |
 
-## Directory structure
+## 目录结构
 
-The on-disk layout adds one level of indirection compared to [isolated installs](/pm/isolated-installs#directory-structure):
+与 [isolated installs](/pm/isolated-installs#directory-structure) 相比，磁盘上的布局多加了一层间接层：
 
 ```bash tree layout icon="list-tree"
 ~/.bun/install/cache/
-├── react@18.3.1@@@1/                     # Package cache (unchanged)
+├── react@18.3.1@@@1/                     # 包缓存（不变）
 │   └── ...package files...
-└── links/                                # Global virtual store
+└── links/                                # 全局虚拟存储
     └── react@18.3.1-5664d3cd670b3205/    # <storepath>-<entry hash>
         └── node_modules/
-            ├── react/                    # Package files (created once)
+            ├── react/                    # 包文件（只创建一次）
             ├── loose-envify -> ../../loose-envify@1.4.0-ea24…/node_modules/loose-envify
             └── .bin/
                 └── ...
 
 project/node_modules/
 ├── .bun/
-│   ├── node_modules/                     # Hidden hoisted layer (per project)
+│   ├── node_modules/                     # 隐藏的 hoisted 层（每个项目）
 │   │   └── react -> ../react@18.3.1/node_modules/react
 │   └── react@18.3.1 -> ~/.bun/install/cache/links/react@18.3.1-5664d3cd670b3205
 └── react -> .bun/react@18.3.1/node_modules/react
 ```
 
-The 16-hex `entry_hash` suffix encodes the entry's **resolved dependency closure**: the package's own store path and tarball integrity, plus the hash of every dependency it links to. Two projects that resolve `react@18.3.1` to the same set of transitive versions share one global directory; a project that resolves a transitive dependency to a different version gets a separate global entry whose dep symlinks point at the right siblings. Packages that participate in a dependency cycle share one hash computed over the whole strongly-connected component, so the key is independent of which member a given project's dependency graph happened to reach first.
+16 位十六进制的 `entry_hash` 后缀编码的是该条目的**已解析依赖闭包**：包自身的 store path 和 tarball 完整性，再加上它所链接到的每个依赖的哈希。两个项目如果把 `react@18.3.1` 解析到同一组传递版本，就共享同一个全局目录；如果某个项目把某个传递依赖解析到不同版本，就会得到一个单独的全局条目，其依赖符号链接会指向正确的同级项。参与依赖循环的包会共享一个基于整个强连通分量计算出的哈希，因此这个 key 不依赖于某个项目的依赖图最先碰到的是哪个成员。
 
-## What stays project-local
+## 哪些内容保持项目本地
 
-An entry only lives in the global store when it can be safely shared. Entries fall back to a per-project `node_modules/.bun/<storepath>/` directory when:
+只有在条目能够安全共享时，它才会存在于全局存储中。以下情况会回退到每个项目各自的 `node_modules/.bun/<storepath>/` 目录：
 
-- the package has a **patch** applied via `bun patch` — the patched contents are project-specific;
-- the package is listed in **`trustedDependencies`** (or trusted via `bun add --trust`) — its lifecycle script may mutate the install directory, and a script running through the project symlink would mutate the shared copy;
-- the package, or **any** dependency it links to, is a `workspace:`, `file:`, or `link:` dependency — those resolve to project-local paths that other projects can't see.
+- 包通过 `bun patch` 应用了 **patch** —— 补丁后的内容是项目专属的；
+- 包列在 **`trustedDependencies`** 中（或通过 `bun add --trust` 被信任）—— 它的生命周期脚本可能会修改安装目录，而通过项目符号链接运行脚本会修改共享副本；
+- 该包，或它链接到的**任何**依赖，是 `workspace:`、`file:` 或 `link:` 依赖 —— 这些会解析到项目本地路径，其他项目看不到。
 
-Ineligibility propagates: if `your-app` depends on `internal-utils` which is a workspace package, `internal-utils` is project-local, and so is every entry that links to it. An entry that loses eligibility between installs (newly patched, newly trusted) is detached from the global store and rebuilt project-locally on the next install; the shared entry is left untouched.
+不符合条件会向上传播：如果 `your-app` 依赖于一个工作区包 `internal-utils`，那么 `internal-utils` 是项目本地的，所有链接到它的条目也都是项目本地的。在安装之间失去资格（新打补丁、新被信任）的条目会从全局存储中拆离，并在下一次安装时以项目本地方式重建；共享条目保持不变。
 
-## Peer dependencies
+## peer 依赖
 
-Resolved peer dependencies — required and optional — are folded into each global entry as dep symlinks and contribute to its hash. Bun synthesizes an implicit `"*"` optional peer for packages that list a name only in `peerDependenciesMeta` without a matching `peerDependencies` entry (matching pnpm and yarn), so a package like `webpack` that declares `webpack-cli` only in `peerDependenciesMeta` still gets a `webpack-cli` symlink in its global entry when one is installed in the project.
+已解析的 peer 依赖——必需和可选的——会作为依赖符号链接并入每个全局条目，并计入其哈希。Bun 会为那些只在 `peerDependenciesMeta` 中列出名称、却没有对应 `peerDependencies` 条目的包合成一个隐式的 `"*"` 可选 peer（与 pnpm 和 yarn 一致），因此像 `webpack` 这样只在 `peerDependenciesMeta` 中声明 `webpack-cli` 的包，在项目中安装了 `webpack-cli` 时，仍会在其全局条目里得到一个 `webpack-cli` 符号链接。
 
-## Tradeoffs
+## 取舍
 
-### Phantom-dependency fallback
+### 幽灵依赖回退
 
-When packages live under the project's `node_modules/.bun/`, Node's module resolution walks up through `node_modules/.bun/node_modules/` — the hidden hoisted layer — before reaching the project root. With the global store, packages realpath into `<cache>/links/`, so that layer is no longer on the resolution path from inside a package.
+当包位于项目的 `node_modules/.bun/` 下时，Node 的模块解析会沿着 `node_modules/.bun/node_modules/` —— 这个隐藏的 hoisted 层 —— 向上查找，然后才到项目根目录。有了全局存储后，包会 realpath 到 `<cache>/links/`，因此从包内部看，这一层就不再位于解析路径上。
 
-In practice this only affects **true phantom dependencies**: a package doing `require('helper')` for something it never declared in `dependencies`, `peerDependencies`, or `peerDependenciesMeta`. If you hit this, add the helper to the consuming package's dependencies (the right fix) or set `globalStore = false`.
+实际中这只会影响**真正的幽灵依赖**：某个包 `require('helper')`，但它从未在 `dependencies`、`peerDependencies` 或 `peerDependenciesMeta` 中声明过这个东西。如果遇到这种情况，把 helper 加到消费方包的依赖里（这是正确修复方式），或者设置 `globalStore = false`。
 
-Note that [`publicHoistPattern`](/runtime/bunfig#install-publichoistpattern) and [`hoistPattern`](/runtime/bunfig#install-hoistpattern) hoist into the project's `node_modules`, which packages inside the global store can't reach. They still work for resolving hoisted packages from your own source code.
+注意，[`publicHoistPattern`](/runtime/bunfig#install-publichoistpattern) 和 [`hoistPattern`](/runtime/bunfig#install-hoistpattern) 会提升到项目的 `node_modules`，而全局存储中的包无法访问那里。不过它们仍然可以用于从你自己的源代码中解析被提升的包。
 
-### `node_modules` is mostly symlinks
+### `node_modules` 大多是符号链接
 
-Tools that scan `node_modules` without following symlinks, or that compare file paths by string equality, may behave differently. This is the same caveat as any pnpm-style layout.
+不会跟随符号链接就扫描 `node_modules` 的工具，或者通过字符串相等比较文件路径的工具，可能会表现不同。这与任何 pnpm 风格布局的注意事项相同。
 
-### Disk usage
+### 磁盘使用
 
-Each unique `(package, version, resolved-dependency-set)` triple gets one directory in `<cache>/links/`. Across many projects that's a large net win — one copy on disk instead of one per checkout — but the store does grow over time as new versions and new peer-dependency combinations land. Run `bun pm cache rm` to clear the cache including the global store; the next install repopulates only what that project needs.
+每个唯一的 `(package, version, resolved-dependency-set)` 三元组都会在 `<cache>/links/` 中得到一个目录。跨多个项目来看，这是巨大的净收益——磁盘上只存一份，而不是每个检出一份——但随着新版本和新的 peer-dependency 组合不断出现，存储也会逐渐增长。运行 `bun pm cache rm` 可清除包括全局存储在内的缓存；下一次安装只会重新填充该项目所需的内容。
 
-### Concurrency
+### 并发
 
-Multiple `bun install` processes (parallel CI jobs, concurrent workspace builds) may race to populate the same global entry. Each process builds the entire entry — package files, dependency symlinks, bin links — under a private `<entry>.tmp-<random>/` staging directory and renames it into place as the final step. The loser of the rename sees `EEXIST` and discards its identical staging tree; a writer that crashes mid-build leaves only an unreferenced staging directory that the next install ignores. A published entry is therefore always complete; there is no separate completeness sentinel.
+多个 `bun install` 进程（并行 CI 作业、并发工作区构建）可能会竞争填充同一个全局条目。每个进程都会在私有的 `<entry>.tmp-<random>/` 暂存目录下构建整个条目——包文件、依赖符号链接、bin 链接——并在最后一步将其重命名到位。重命名失败的一方会看到 `EEXIST`，并丢弃自己相同的暂存树；在构建过程中崩溃的写入者只会留下一个无人引用的暂存目录，下一次安装会忽略它。因此，已发布的条目总是完整的；不存在单独的完整性哨兵。
 
-## Related documentation
+## 相关文档
 
-- [Package manager > Isolated installs](/pm/isolated-installs) — The linker the global store builds on
-- [Package manager > Global cache](/pm/global-cache) — Where downloaded packages are stored
-- [Runtime > bunfig](/runtime/bunfig#install-globalstore) — `bunfig.toml` reference
+- [包管理器 > 隔离安装](/pm/isolated-installs) — 全局存储所依赖的链接器
+- [包管理器 > 全局缓存](/pm/global-cache) — 已下载包的存储位置
+- [运行时 > bunfig](/runtime/bunfig#install-globalstore) — `bunfig.toml` 参考

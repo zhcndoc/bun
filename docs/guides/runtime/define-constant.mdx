@@ -1,19 +1,19 @@
 ---
-title: Define and replace static globals & constants
-sidebarTitle: Define constants
+title: 定义并替换静态全局变量和常量
+sidebarTitle: 定义常量
 mode: center
 ---
 
-The `--define` flag lets you declare statically-analyzable constants and globals. It replace all usages of an identifier or property in a JavaScript or TypeScript file with a constant value. This feature is supported at runtime and also in `bun build`. This is sort of similar to `#define` in C/C++, except for JavaScript.
+`--define` 标志允许你声明静态可分析的常量和全局变量。它会将 JavaScript 或 TypeScript 文件中所有对某个标识符或属性的使用替换为一个常量值。此功能在运行时和 `bun build` 中均受到支持。这有点类似于 C/C++ 中的 `#define`，只是针对 JavaScript 实现的。
 
 ```sh terminal icon="terminal"
-bun --define process.env.NODE_ENV="'production'" src/index.ts # Runtime
-bun build --define process.env.NODE_ENV="'production'" src/index.ts # Build
+bun --define process.env.NODE_ENV="'production'" src/index.ts # 运行时
+bun build --define process.env.NODE_ENV="'production'" src/index.ts # 构建时
 ```
 
 ---
 
-These statically-known values are used by Bun for dead code elimination and other optimizations.
+Bun 使用这些静态已知的值进行死代码消除和其他优化。
 
 ```ts
 if (process.env.NODE_ENV === "production") {
@@ -25,7 +25,7 @@ if (process.env.NODE_ENV === "production") {
 
 ---
 
-Before the code reaches the JavaScript engine, Bun replaces `process.env.NODE_ENV` with `"production"`.
+在代码到达 JavaScript 引擎之前，Bun 会将 `process.env.NODE_ENV` 替换为 `"production"`。
 
 {/* prettier-ignore */}
 ```ts
@@ -38,9 +38,9 @@ if ("production" === "production") { // [!code ++]
 
 ---
 
-It doesn't stop there. Bun's optimizing transpiler is smart enough to do some basic constant folding.
+这还不是终点。Bun 的优化转译器足够智能，可以进行一些基本的常量折叠。
 
-Since `"production" === "production"` is always `true`, Bun replaces the entire expression with the `true` value.
+由于 `"production" === "production"` 恒为 `true`，Bun 将整个表达式替换为 `true`。
 
 {/* prettier-ignore */}
 ```ts
@@ -53,7 +53,7 @@ if (true) { // [!code ++]
 
 ---
 
-And finally, Bun detects the `else` branch is not reachable, and eliminates it.
+最后，Bun 检测到 `else` 分支不可达，并将其删除。
 
 ```ts
 console.log("Production mode");
@@ -61,89 +61,89 @@ console.log("Production mode");
 
 ---
 
-## What types of values are supported?
+## 支持哪些类型的值？
 
-Values can be strings, identifiers, properties, or JSON.
+值可以是字符串、标识符、属性或 JSON。
 
-### Replace global identifiers
+### 替换全局标识符
 
-To make all usages of `window` be `undefined`, you can use the following command.
+如果想让所有对 `window` 的使用均为 `undefined`，可以使用以下命令。
 
 ```sh
 bun --define window="undefined" src/index.ts
 ```
 
-This can be useful when Server-Side Rendering (SSR) or when you want to make sure that the code doesn't depend on the `window` object.
+这在服务器端渲染（SSR）时非常有用，或者当你想确保代码不依赖 `window` 对象时。
 
 ```js
 if (typeof window !== "undefined") {
-  console.log("Client-side code");
+  console.log("客户端代码");
 } else {
-  console.log("Server-side code");
+  console.log("服务器端代码");
 }
 ```
 
-You can also set the value to be another identifier. For example, to make all usages of `global` be `globalThis`, you can use the following command.
+你也可以将值设置为另一个标识符。例如，要将所有对 `global` 的使用替换成 `globalThis`，可以使用以下命令。
 
 ```sh
 bun --define global="globalThis" src/index.ts
 ```
 
-`global` is a global object in Node.js, but not in web browsers. So, you can use this to fix some cases where the code assumes that `global` is available.
+`global` 是 Node.js 中的全局对象，但在浏览器中不是。因此，你可以用这个方法修正代码中假设 `global` 存在的情况。
 
-### Replace values with JSON
+### 使用 JSON 替换值
 
-`--define` can also be used to replace values with JSON objects and arrays.
+`--define` 也可以用来替换 JSON 对象和数组。
 
-To replace all usages of `AWS` with the JSON object `{"ACCESS_KEY":"abc","SECRET_KEY":"def"}`, you can use the following command.
+要将所有 `AWS` 替换为 JSON 对象 `{"ACCESS_KEY":"abc","SECRET_KEY":"def"}`，可以使用以下命令。
 
 ```sh
 # JSON
 bun --define AWS='{"ACCESS_KEY":"abc","SECRET_KEY":"def"}' src/index.ts
 ```
 
-Those will be transformed into the equivalent JavaScript code.
+这些会被转换成等价的 JavaScript 代码。
 
-From:
+从：
 
 ```ts
 console.log(AWS.ACCESS_KEY); // => "abc"
 ```
 
-To:
+变成：
 
 ```ts
 console.log("abc");
 ```
 
-### Replace values with other properties
+### 使用其他属性替换值
 
-You can also pass properties to the `--define` flag.
+你也可以传递属性给 `--define` 标志。
 
-For example, to replace all usages of `console.write` with `console.log`, you can use the following command
+例如，要将所有 `console.write` 替换成 `console.log`，可以使用以下命令：
 
 ```sh
 bun --define console.write=console.log src/index.ts
 ```
 
-That transforms the following input:
+这会将以下输入转换：
 
 ```ts
 console.write("Hello, world!");
 ```
 
-Into the following output:
+变成以下输出：
 
 ```ts
 console.log("Hello, world!");
 ```
 
-## How is this different than setting a variable?
+## 这和设置变量有什么不同？
 
-You can also set `process.env.NODE_ENV` to `"production"` in your code, but that won't help with dead code elimination. In JavaScript, property accesses can have side effects. Getters & setters can be functions, and even dynamically defined (due to prototype chains and Proxy). Even if you set `process.env.NODE_ENV` to `"production"`, on the next line, it is not safe for static analysis tools to assume that `process.env.NODE_ENV`is`"production"`.
+你也可以在代码中将 `process.env.NODE_ENV` 设置为 `"production"`，但这不会有助于死代码消除。在 JavaScript 中，属性访问可能会有副作用。getter 和 setter 可能是函数，甚至是动态定义的（基于原型链和 Proxy）。即便你将 `process.env.NODE_ENV` 设置为 `"production"`，静态分析工具也不能在下一行假设 `process.env.NODE_ENV` 就是 `"production"`。
 
-## How is this different than find-and-replace or string replacement?
+## 这和查找替换或字符串替换有什么不同？
 
-The `--define` flag operates on the AST (Abstract Syntax Tree) level, not on the text level. It happens during the transpilation process, which means it can be used in optimizations like dead code elimination.
+`--define` 标志是在 AST（抽象语法树）级别进行操作，而不是文本级别。它发生在转译过程中，意味着它可以用于诸如死代码消除之类的优化。
 
-String replacement tools tend to have escaping issues and replace unintended parts of the code.
+字符串替换工具往往有转义问题，并且可能替换到代码中不应替换的部分。

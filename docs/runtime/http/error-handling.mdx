@@ -1,9 +1,9 @@
 ---
-title: Error Handling
-description: Learn how to handle errors in Bun's development server
+title: 错误处理
+description: 学习如何在 Bun 的开发服务器中处理错误
 ---
 
-To activate development mode, set `development: true`.
+要启用开发模式，设置 `development: true`。
 
 ```ts title="server.ts" icon="/icons/typescript.svg"
 Bun.serve({
@@ -14,13 +14,13 @@ Bun.serve({
 });
 ```
 
-In development mode, Bun will surface errors in-browser with a built-in error page.
+在开发模式下，Bun 会通过内置的错误页面在浏览器中显示错误。
 
-<Frame>![Bun's built-in 500 page](/images/exception_page.png)</Frame>
+<Frame>![Bun 内置的 500 错误页面](/images/exception_page.png)</Frame>
 
-### `error` callback
+### `error` 回调
 
-To handle server-side errors, implement an `error` handler. This function should return a `Response` to serve to the client when an error occurs. This response will supersede Bun's default error page in `development` mode.
+要处理服务器端错误，请实现一个 `error` 处理函数。当发生错误时，该函数应返回一个 `Response` 供客户端使用。此响应会覆盖开发模式下 Bun 默认的错误页面。
 
 ```ts
 Bun.serve({
@@ -37,4 +37,4 @@ Bun.serve({
 });
 ```
 
-<Info>[Learn more about debugging in Bun](/runtime/debugger)</Info>
+<Info>[了解更多关于 Bun 调试的信息](/runtime/debugger)</Info>

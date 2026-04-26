@@ -1,10 +1,10 @@
 ---
-title: Listen for CTRL+C
-sidebarTitle: Listen for CTRL+C
+title: 监听 CTRL+C
+sidebarTitle: 监听 CTRL+C
 mode: center
 ---
 
-The `ctrl+c` shortcut sends an _interrupt signal_ to the running process. This signal can be intercepted by listening for the `SIGINT` event. If you want to close the process, you must explicitly call `process.exit()`.
+`ctrl+c` 快捷键会向正在运行的进程发送一个 _中断信号_。该信号可以通过监听 `SIGINT` 事件来捕获。如果你想关闭进程，必须显式调用 `process.exit()`。
 
 ```ts process.ts icon="/icons/typescript.svg"
 process.on("SIGINT", () => {
@@ -15,4 +15,4 @@ process.on("SIGINT", () => {
 
 ---
 
-See [Docs > API > Utils](/runtime/utils) for more useful utilities.
+更多实用工具请参见 [文档 > API > Utils](/runtime/utils)。

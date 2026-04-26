@@ -1,13 +1,13 @@
 ---
 title: Cron
-description: Schedule and parse cron jobs with Bun
+description: 使用 Bun 调度和解析 cron 任务
 ---
 
-Bun has built-in support for cron — parse expressions, run a callback on a schedule inside your process, or register OS-level jobs that survive restarts.
+Bun 内置了对 cron 的支持——解析表达式，在进程内部按计划运行回调，或注册能够跨重启存活的操作系统级任务。
 
-## Quickstart
+## 快速开始
 
-**Run a callback on a schedule in the current process:**
+**在当前进程中按计划运行回调：**
 
 ```ts
 Bun.cron("0 * * * *", async () => {
@@ -15,14 +15,14 @@ Bun.cron("0 * * * *", async () => {
 });
 ```
 
-**Parse a cron expression to find the next matching time:**
+**解析 cron 表达式以查找下一个匹配时间：**
 
 ```ts
-// Next weekday at 9:30 AM UTC
+// 下一个工作日上午 9:30 UTC
 const next = Bun.cron.parse("30 9 * * MON-FRI");
 ```
 
-**Register an OS-level cron job that runs a script on a schedule:**
+**注册一个操作系统级 cron 任务，在指定计划下运行脚本：**
 
 ```ts
 await Bun.cron("./worker.ts", "30 2 * * MON", "weekly-report");
@@ -32,27 +32,27 @@ await Bun.cron("./worker.ts", "30 2 * * MON", "weekly-report");
 
 ## `Bun.cron.parse()`
 
-Parse a cron expression and return the next matching `Date` in UTC.
+解析一个 cron 表达式，并返回 UTC 中下一个匹配的 `Date`。
 
 ```ts
 const next = Bun.cron.parse("*/15 * * * *");
-console.log(next); // => next quarter-hour boundary
+console.log(next); // => 下一个一刻钟边界
 ```
 
-### Parameters
+### 参数
 
-| Parameter      | Type             | Description                                              |
+| 参数           | 类型             | 描述                                              |
 | -------------- | ---------------- | -------------------------------------------------------- |
-| `expression`   | `string`         | A 5-field cron expression or predefined nickname         |
-| `relativeDate` | `Date \| number` | Starting point for the search (defaults to `Date.now()`) |
+| `expression`   | `string`         | 5 字段的 cron 表达式或预定义别名         |
+| `relativeDate` | `Date \| number` | 搜索的起始点（默认为 `Date.now()`） |
 
-### Returns
+### 返回值
 
-`Date | null` — the next matching time, or `null` if no match exists within 8 years (e.g. February 30th).
+`Date | null` — 下一个匹配时间；如果在 8 年内不存在匹配则返回 `null`（例如 2 月 30 日）。
 
-### Chaining calls
+### 链式调用
 
-Call `parse()` repeatedly to get a sequence of upcoming times:
+重复调用 `parse()` 以获取即将到来的时间序列：
 
 ```ts
 let cursor: Date | number = Date.now();
@@ -64,80 +64,80 @@ for (let i = 0; i < 3; i++) {
 
 ---
 
-## Cron expression syntax
+## Cron 表达式语法
 
-Standard 5-field format: `minute hour day-of-month month day-of-week`
+标准 5 字段格式：`minute hour day-of-month month day-of-week`
 
-| Field        | Values                  | Special characters |
+| 字段        | 取值                  | 特殊字符 |
 | ------------ | ----------------------- | ------------------ |
 | Minute       | `0`–`59`                | `*` `,` `-` `/`    |
 | Hour         | `0`–`23`                | `*` `,` `-` `/`    |
 | Day of month | `1`–`31`                | `*` `,` `-` `/`    |
-| Month        | `1`–`12` or `JAN`–`DEC` | `*` `,` `-` `/`    |
-| Day of week  | `0`–`7` or `SUN`–`SAT`  | `*` `,` `-` `/`    |
+| Month        | `1`–`12` 或 `JAN`–`DEC` | `*` `,` `-` `/`    |
+| Day of week  | `0`–`7` 或 `SUN`–`SAT`  | `*` `,` `-` `/`    |
 
-### Special characters
+### 特殊字符
 
-| Character | Description | Example                               |
+| 字符 | 说明 | 示例                               |
 | --------- | ----------- | ------------------------------------- |
-| `*`       | All values  | `* * * * *` — every minute            |
-| `,`       | List        | `1,15 * * * *` — minute 1 and 15      |
-| `-`       | Range       | `9-17 * * * *` — minutes 9 through 17 |
-| `/`       | Step        | `*/15 * * * *` — every 15 minutes     |
+| `*`       | 所有值  | `* * * * *` — 每分钟            |
+| `,`       | 列表        | `1,15 * * * *` — 第 1 和第 15 分钟      |
+| `-`       | 范围       | `9-17 * * * *` — 第 9 到 17 分钟 |
+| `/`       | 步长        | `*/15 * * * *` — 每 15 分钟     |
 
-### Named values
+### 命名值
 
-Month and weekday fields accept case-insensitive names:
+月份和星期字段接受不区分大小写的名称：
 
 ```ts
-// 3-letter abbreviations
-Bun.cron.parse("0 9 * * MON-FRI"); // weekdays
-Bun.cron.parse("0 0 1 JAN,JUN *"); // January and June
+// 3 字母缩写
+Bun.cron.parse("0 9 * * MON-FRI"); // 工作日
+Bun.cron.parse("0 0 1 JAN,JUN *"); // 一月和六月
 
-// Full names
+// 完整名称
 Bun.cron.parse("0 9 * * Monday-Friday");
 Bun.cron.parse("0 0 1 January *");
 ```
 
-Both `0` and `7` mean Sunday in the weekday field.
+在星期字段中，`0` 和 `7` 都表示星期日。
 
-### Predefined nicknames
+### 预定义别名
 
-| Nickname                | Equivalent  | Description               |
+| 别名                | 等效表达式  | 说明               |
 | ----------------------- | ----------- | ------------------------- |
-| `@yearly` / `@annually` | `0 0 1 1 *` | Once a year (January 1st) |
-| `@monthly`              | `0 0 1 * *` | Once a month (1st day)    |
-| `@weekly`               | `0 0 * * 0` | Once a week (Sunday)      |
-| `@daily` / `@midnight`  | `0 0 * * *` | Once a day (midnight)     |
-| `@hourly`               | `0 * * * *` | Once an hour              |
+| `@yearly` / `@annually` | `0 0 1 1 *` | 每年一次（1 月 1 日） |
+| `@monthly`              | `0 0 1 * *` | 每月一次（每月 1 日）    |
+| `@weekly`               | `0 0 * * 0` | 每周一次（周日）      |
+| `@daily` / `@midnight`  | `0 0 * * *` | 每天一次（午夜）     |
+| `@hourly`               | `0 * * * *` | 每小时一次              |
 
 ```ts
 const next = Bun.cron.parse("@daily");
 console.log(next); // => next UTC midnight
 ```
 
-### Time zone
+### 时区
 
-`Bun.cron.parse()` and the in-process `Bun.cron(schedule, handler)` interpret schedules in **UTC**. There is no DST to handle — `0 9 * * *` always means 9:00 UTC.
+`Bun.cron.parse()` 和进程内 `Bun.cron(schedule, handler)` 会使用 **UTC** 来解释计划。无需处理 DST（夏令时）——`0 9 * * *` 永远表示 9:00 UTC。
 
-The OS-level `Bun.cron(path, schedule, title)` uses the **system's local time zone**, because that's how crontab, launchd, and Windows Task Scheduler work. To make the two forms agree, run the process with `TZ=UTC`.
+操作系统级 `Bun.cron(path, schedule, title)` 使用**系统的本地时区**，因为这就是 crontab、launchd 和 Windows 任务计划程序的工作方式。要让两种形式保持一致，请用 `TZ=UTC` 运行该进程。
 
-### Day-of-month and day-of-week interaction
+### 月份中的日期与星期交互
 
-When **both** day-of-month and day-of-week are specified (neither is `*`), the expression matches when **either** condition is true. This follows the [POSIX cron](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/crontab.html) standard.
+当**同时**指定了 day-of-month 和 day-of-week（两者都不是 `*`）时，只要**任一**条件为真，表达式就会匹配。这遵循 [POSIX cron](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/crontab.html) 标准。
 
 ```ts
-// Fires on the 15th of every month OR every Friday
+// 在每月 15 日或每周五触发
 Bun.cron.parse("0 0 15 * FRI");
 ```
 
-When only one is specified (the other is `*`), only that field is used for matching.
+当只指定了一个（另一个是 `*`）时，仅使用该字段进行匹配。
 
 ---
 
 ## `Bun.cron(schedule, handler)` — in-process
 
-Run a callback on a cron schedule inside the current process.
+在当前进程内以 cron 计划运行回调。
 
 ```ts
 const job = Bun.cron("*/5 * * * *", async () => {
@@ -145,37 +145,37 @@ const job = Bun.cron("*/5 * * * *", async () => {
 });
 ```
 
-This is the lightweight option for long-running servers and workers — no system cron daemon required, works the same on every platform, and shares state (database pools, caches, module-level variables) between invocations.
+这是适用于长期运行的服务器和工作线程的轻量选项——不需要系统 cron 守护进程，在每个平台上工作方式一致，并且在多次触发之间共享状态（数据库连接池、缓存、模块级变量）。
 
 |                              | In-process                       | [OS-level](#bun-cron-path-schedule-title-os-level) |
 | ---------------------------- | -------------------------------- | -------------------------------------------------- |
 | Survives process exit/reboot | No                               | Yes                                                |
-| Shared state between runs    | Yes                              | No (fresh process each time)                       |
+| Shared state between runs    | Yes                              | No（每次都是全新进程）                       |
 | Platform requirements        | None                             | crontab / launchd / Task Scheduler                 |
 | Windows expression limits    | None                             | [48-trigger cap](#trigger-limit)                   |
 | Return type                  | [`CronJob`](#the-cronjob-handle) | `Promise<void>`                                    |
 
-### Parameters
+### 参数
 
-| Parameter  | Type                         | Description                                                                                                                                                                  |
+| 参数  | 类型                         | 描述                                                                                                                                                                  |
 | ---------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `schedule` | `string`                     | A [cron expression](#cron-expression-syntax) or nickname like `"@hourly"`.                                                                                                   |
-| `handler`  | `(this: CronJob) => unknown` | Called on each fire. May return a Promise — the next fire is not scheduled until it settles. Inside a `function` callback, `this` is the `CronJob` (so `this.stop()` works). |
+| `schedule` | `string`                     | 一个 [cron 表达式](#cron-expression-syntax) 或昵称（例如 `"@hourly"`）。                                                                                                   |
+| `handler`  | `(this: CronJob) => unknown` | 每次触发都会调用。可以返回 Promise —— 在它完成之前不会安排下一次触发。在 `function` 回调内部，`this` 是 `CronJob`（因此 `this.stop()` 可以生效）。 |
 
-Returns a [`CronJob`](#the-cronjob-handle) synchronously. Throws a `TypeError` if the expression is invalid or has no future occurrences (e.g. `"0 0 30 2 *"` — February 30th).
+同步返回一个 [`CronJob`](#the-cronjob-handle)。如果表达式无效或在未来没有任何发生（例如 `"0 0 30 2 *"`——2 月 30 日），会抛出 `TypeError`。
 
-### No-overlap guarantee
+### 不重叠保证
 
-The next fire time is computed only after the handler — including any returned `Promise` — settles. If your handler takes 90 seconds and the schedule is `* * * * *`, the second fire is the first minute boundary _after_ the handler finishes, not 60 seconds after the first fire. Invocations never stack.
+只有在 handler（包括任何返回的 Promise）结束之后，才会计算下一次触发时间。如果你的 handler 需要 90 秒，而计划是 `* * * * *`，那么第二次触发将是 handler 完成后的第一个整分钟边界，而不是第一次触发后 60 秒。调用之间不会堆叠。
 
-### Error handling
+### 错误处理
 
-Errors match `setTimeout` semantics:
+错误行为与 `setTimeout` 保持一致：
 
-- A synchronous `throw` emits `process.on("uncaughtException")`.
-- A rejected returned `Promise` emits `process.on("unhandledRejection")`.
+- 同步 `throw` 会触发 `process.on("uncaughtException")`。
+- 被拒绝的返回 `Promise` 会触发 `process.on("unhandledRejection")`。
 
-Without a listener, the process exits with code `1`. With a listener, the job keeps running — it does not stop on the first failure.
+没有监听器时，进程会以代码 `1` 退出。设置了监听器时，任务会继续运行——不会在第一次失败后停止。
 
 ```ts
 process.on("unhandledRejection", err => log.error("cron failed:", err));
@@ -187,9 +187,9 @@ Bun.cron("* * * * *", async () => {
 
 ### `bun --hot`
 
-Under `bun --hot`, all in-process cron jobs are stopped immediately before the module graph re-evaluates. Every `Bun.cron()` call still in your source then re-registers. Editing the schedule, editing the handler, or deleting the line entirely all take effect on save without leaking timers.
+在 `bun --hot` 下，所有进程内 cron 任务会在模块图重新求值之前立刻停止。之后你源代码中的每次 `Bun.cron()` 调用都会重新注册。修改计划、修改 handler 或者直接删除那一行，都将在保存时生效，而不会泄漏定时器。
 
-### The `CronJob` handle
+### `CronJob` 句柄
 
 ```ts
 using job = Bun.cron("0 * * * *", () => {});
@@ -200,248 +200,243 @@ job.unref(); // allow the process to exit even while scheduled
 job.ref(); // keep the process alive (default)
 ```
 
-`CronJob` is [`Disposable`](https://github.com/tc39/proposal-explicit-resource-management) — `using job = Bun.cron(...)` auto-stops at scope exit. `stop()`, `ref()`, and `unref()` all return the job for chaining.
+`CronJob` 是 [`Disposable`](https://github.com/tc39/proposal-explicit-resource-management) —— `using job = Bun.cron(...)` 会在作用域退出时自动停止。`stop()`、`ref()` 和 `unref()` 都会返回该 job 以便链式调用。
 
-### Fake timers
+### 假定时器
 
-In-process cron is anchored to the real wall clock. `jest.useFakeTimers()`, `setSystemTime()`, `advanceTimersByTime()`, and `runAllTimers()` do not affect when it fires.
+进程内 cron 以真实的墙钟时间为基准。`jest.useFakeTimers()`、`setSystemTime()`、`advanceTimersByTime()` 和 `runAllTimers()` 不会影响它何时触发。
 
 ---
 
 ## `Bun.cron(path, schedule, title)` — OS-level
 
-Register an OS-level cron job that runs a JavaScript/TypeScript module on a schedule.
+注册一个操作系统级别的 cron 任务，按计划运行 JavaScript/TypeScript 模块。
 
 ```ts
 await Bun.cron("./worker.ts", "30 2 * * MON", "weekly-report");
 ```
 
-### Parameters
+### 参数
 
-| Parameter  | Type     | Description                                                |
+| 参数  | 类型     | 描述                                                |
 | ---------- | -------- | ---------------------------------------------------------- |
-| `path`     | `string` | Path to the script (resolved relative to caller)           |
-| `schedule` | `string` | Cron expression or nickname                                |
-| `title`    | `string` | Unique job identifier (alphanumeric, hyphens, underscores) |
+| `path`     | `string` | 脚本路径（相对于调用者解析）           |
+| `schedule` | `string` | Cron 表达式或别名                                |
+| `title`    | `string` | 唯一任务标识符（字母数字、连字符、下划线） |
 
-Re-registering with the same `title` overwrites the existing job in-place — the old schedule is replaced, not duplicated.
+使用相同的 `title` 重新注册会就地覆盖现有任务——旧的计划会被替换，而不是重复添加。
 
 ```ts
-await Bun.cron("./worker.ts", "0 * * * *", "my-job"); // every hour
-await Bun.cron("./worker.ts", "*/15 * * * *", "my-job"); // replaces: every 15 min
+await Bun.cron("./worker.ts", "0 * * * *", "my-job"); // 每小时
+await Bun.cron("./worker.ts", "*/15 * * * *", "my-job"); // 替换为：每 15 分钟
 ```
 
-### The `scheduled()` handler
+### `scheduled()` 处理程序
 
-The registered script must export a default object with a `scheduled()` method, following the [Cloudflare Workers Cron Triggers API](https://developers.cloudflare.com/workers/runtime-apis/handlers/scheduled/):
+注册的脚本必须导出一个带有 `scheduled()` 方法的默认对象，遵循 [Cloudflare Workers Cron Triggers API](https://developers.cloudflare.com/workers/runtime-apis/handlers/scheduled/)：
 
 ```ts worker.ts
 export default {
   scheduled(controller: Bun.CronController) {
     console.log(controller.cron); // "30 2 * * 1"
     console.log(controller.type); // "scheduled"
-    console.log(controller.scheduledTime); // 1737340201847 (Date.now() at invocation)
+    console.log(controller.scheduledTime); // 1737340201847（调用时的 Date.now()）
   },
 };
 ```
 
-The handler can be `async`. Bun waits for the returned promise to settle before exiting.
+处理程序可以是 `async`。Bun 会等待返回的 promise 完成后再退出。
 
 ---
 
-## How it works per platform
+## 各平台的工作原理
 
 ### Linux
 
-Bun uses [crontab](https://man7.org/linux/man-pages/man5/crontab.5.html) to register jobs. Each job is stored as a line in your user's crontab with a `# bun-cron: <title>` marker comment above it.
+Bun 使用 [crontab](https://man7.org/linux/man-pages/man5/crontab.5.html) 注册任务。每个任务作为一行存储在您用户的 crontab 中，上方带有 `# bun-cron: <title>` 标记注释。
 
-The crontab entry looks like:
+crontab 条目如下所示：
 
 ```
 <schedule> '<bun-path>' run --cron-title=<title> --cron-period='<schedule>' '<script-path>'
 ```
 
-When the cron daemon fires the job, Bun imports your module and calls the `scheduled()` handler.
+当 cron 守护进程触发任务时，Bun 会导入您的模块并调用 `scheduled()` 处理程序。
 
-**Viewing registered jobs:**
+**查看已注册的任务：**
 
 ```sh
 crontab -l
 ```
 
-**Logs:** On Linux, cron output goes to the system log. Check with:
+**日志：** 在 Linux 上，cron 输出进入系统日志。使用以下命令查看：
 
 ```sh
-# systemd-based (Ubuntu, Fedora, Arch, etc.)
-journalctl -u cron       # or crond on some distros
+# 基于 systemd 的系统（Ubuntu、Fedora、Arch 等）
+journalctl -u cron       # 或在某些发行版上为 crond
 journalctl -u cron --since "1 hour ago"
 
-# syslog-based (older systems)
+# 基于 syslog 的系统（旧系统）
 grep CRON /var/log/syslog
 ```
 
-To capture stdout/stderr to a file, redirect output in the crontab entry directly, or add logging inside your `scheduled()` handler.
+要将 stdout/stderr 捕获到文件，可直接在 crontab 条目中重定向输出，或在 `scheduled()` 处理程序内添加日志记录。
 
-**Manually uninstalling without code:**
+**无需代码手动卸载：**
 
 ```sh
-# Edit your crontab and remove the "# bun-cron: <title>" comment
-# and the command line below it
+# 编辑您的 crontab 并删除 "# bun-cron: <title>" 注释
+# 及其下方的命令行
 crontab -e
 
-# Or remove ALL bun cron jobs at once by filtering them out:
+# 或通过过滤一次性删除所有 bun cron 任务：
 crontab -l | grep -v "# bun-cron:" | grep -v "\-\-cron-title=" | crontab -
 ```
 
 ### macOS
 
-Bun uses [launchd](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html) to register jobs. Each job is installed as a plist file at:
+Bun 使用 [launchd](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html) 注册任务。每个任务作为 plist 文件安装在：
 
 ```
 ~/Library/LaunchAgents/bun.cron.<title>.plist
 ```
 
-The plist uses `StartCalendarInterval` to define the schedule. Complex patterns with ranges, lists, or steps are supported — Bun expands them into multiple `StartCalendarInterval` dicts via Cartesian product.
+plist 使用 `StartCalendarInterval` 定义计划。支持包含范围、列表或步长的复杂模式——Bun 通过笛卡尔积将它们展开为多个 `StartCalendarInterval` 字典。
 
-**Viewing registered jobs:**
+**查看已注册的任务：**
 
 ```sh
 launchctl list | grep bun.cron
 ```
 
-**Logs:** stdout and stderr are written to:
+**日志：** stdout 和 stderr 写入到：
 
 ```
 /tmp/bun.cron.<title>.stdout.log
 /tmp/bun.cron.<title>.stderr.log
 ```
 
-For example, a job titled `weekly-report`:
+例如，一个标题为 `weekly-report` 的任务：
 
 ```sh
 cat /tmp/bun.cron.weekly-report.stdout.log
 tail -f /tmp/bun.cron.weekly-report.stderr.log
 ```
 
-**Manually uninstalling without code:**
+**无需代码手动卸载：**
 
 ```sh
-# Unload the job from launchd
+# 从 launchd 卸载任务
 launchctl bootout gui/$(id -u)/bun.cron.<title>
 
-# Delete the plist file
+# 删除 plist 文件
 rm ~/Library/LaunchAgents/bun.cron.<title>.plist
 
-# Example for a job titled "weekly-report":
+# 示例：标题为 "weekly-report" 的任务：
 launchctl bootout gui/$(id -u)/bun.cron.weekly-report
 rm ~/Library/LaunchAgents/bun.cron.weekly-report.plist
 ```
 
 ### Windows
 
-Bun uses [Windows Task Scheduler](https://learn.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-start-page) with XML-based task definitions. Each job is registered as a scheduled task named `bun-cron-<title>` using [`CalendarTrigger`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-calendartrigger-triggergroup-element) elements and [`Repetition`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-repetition-triggerbasetype-element) patterns.
+Bun 使用基于 XML 任务定义的 [Windows Task Scheduler](https://learn.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-start-page)，使用 [`CalendarTrigger`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-calendartrigger-triggergroup-element) 元素和 [`Repetition`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-repetition-triggerbasetype-element) 模式。
 
-Most cron expressions are fully supported, including `@daily`, `@weekly`, `@monthly`, `@yearly`, ranges (`1-5`), lists (`1,15`), named days/months, and day-of-month patterns.
+大多数 cron 表达式都得到完全支持，包括 `@daily`、`@weekly`、`@monthly`、`@yearly`、范围 (`1-5`)、列表 (`1,15`)、命名日/月和日期模式。
 
-#### User context
+#### 用户上下文
 
-Tasks are registered using [`S4U` (Service-for-User)](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-logontype-simpletype) logon type, which runs jobs as the registering user even when not logged in — matching Linux `crontab` behavior. No password is stored.
+任务使用 [`S4U` (Service-for-User)](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-logontype-simpletype) 登录类型注册，即使用户未登录也会以注册用户的身份运行任务——与 Linux `crontab` 行为一致。不存储密码。
 
-TCP/IP networking (`fetch()`, HTTP, WebSocket, database connections) works normally. The only restriction is that S4U tasks cannot access [Windows-authenticated network resources](https://learn.microsoft.com/en-us/windows/win32/taskschd/security-contexts-for-running-tasks) (SMB file shares, mapped drives, Kerberos/NTLM services).
+TCP/IP 网络（`fetch()`、HTTP、WebSocket、数据库连接）正常工作。唯一的限制是 S4U 任务无法访问 [Windows 认证的网络资源](https://learn.microsoft.com/en-us/windows/win32/taskschd/security-contexts-for-running-tasks)（SMB 文件共享、映射驱动器、Kerberos/NTLM 服务）。
 
-On headless servers and CI environments where the current user's [Security Identifier (SID)](https://learn.microsoft.com/en-us/windows/security/identity-protection/access-control/security-identifiers) cannot be resolved — such as service accounts created by [NSSM](https://nssm.cc/) or similar tools — `Bun.cron()` will fail with an error explaining the issue. To work around this, either run Bun as a regular user account, or create the scheduled task manually with `schtasks /create /xml <file> /tn <name> /ru SYSTEM /f`.
+在无法解析当前用户 [Security Identifier (SID)](https://learn.microsoft.com/en-us/windows/security/identity-protection/access-control/security-identifiers) 的无头服务器和 CI 环境中——例如由 [NSSM](https://nssm.cc/) 或类似工具创建的服务账户——`Bun.cron()` 将失败并返回解释该问题的错误。要解决此问题，可以将 Bun 作为普通用户账户运行，或使用 `schtasks /create /xml <file> /tn <name> /ru SYSTEM /f` 手动创建计划任务。
 
-#### Trigger limit
+#### 触发器限制
 
 <Warning>
-  Windows Task Scheduler enforces a limit of [48 triggers per
-  task](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-triggers-tasktype-element) (the
-  `CalendarTrigger` element has
-  [`maxOccurs="48"`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-calendartrigger-triggergroup-element)).
-  Some cron expressions that work on Linux and macOS exceed this limit on Windows. When a pattern exceeds the limit,
-  `Bun.cron()` rejects it with an error message.
+  Windows Task Scheduler 对每个任务的触发器数量限制为 [48 个](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-triggers-tasktype-element)（`CalendarTrigger` 元素的 [`maxOccurs="48"`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-calendartrigger-triggergroup-element)）。
+  某些在 Linux 和 macOS 上有效的 cron 表达式在 Windows 上会超出此限制。当模式超出限制时，`Bun.cron()` 将返回错误消息拒绝该表达式。
 </Warning>
 
-**Expressions that work on all platforms:**
+**在所有平台上都有效的表达式：**
 
-| Pattern                                    | Trigger strategy                                                                                                                                           | Count |
+| 模式                                    | 触发器策略                                                                                                                                           | 数量 |
 | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| `*/5 * * * *`                              | Single trigger with [`Repetition`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-repetition-triggerbasetype-element) (PT5M) | 1     |
-| `*/15 * * * *`                             | Single trigger with Repetition (PT15M)                                                                                                                     | 1     |
-| `0 9 * * MON-FRI`                          | One `CalendarTrigger` per weekday                                                                                                                          | 5     |
-| `0,30 9-17 * * *`                          | 2 minutes × 9 hours                                                                                                                                        | 18    |
-| `@daily`, `@weekly`, `@monthly`, `@yearly` | Single trigger                                                                                                                                             | 1     |
+| `*/5 * * * *`                              | 使用 [`Repetition`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-repetition-triggerbasetype-element) (PT5M) 的单一触发器 | 1     |
+| `*/15 * * * *`                             | 使用 Repetition (PT15M) 的单一触发器                                                                                                                     | 1     |
+| `0 9 * * MON-FRI`                          | 每个工作日一个 `CalendarTrigger`                                                                                                                          | 5     |
+| `0,30 9-17 * * *`                          | 2 分钟 × 9 小时                                                                                                                                        | 18    |
+| `@daily`, `@weekly`, `@monthly`, `@yearly` | 单一触发器                                                                                                                                             | 1     |
 
-**Expressions that fail on Windows** (but work on Linux and macOS):
+**在 Windows 上失败的表达式**（但在 Linux 和 macOS 上有效）：
 
-| Pattern           | Why                                           | Trigger count |
+| 模式           | 原因                                           | 触发器数量 |
 | ----------------- | --------------------------------------------- | ------------- |
-| `*/7 * * * *`     | 9 minute values × 24 hours                    | 216           |
-| `*/8 * * * *`     | 8 minute values × 24 hours                    | 192           |
-| `*/9 * * * *`     | 7 minute values × 24 hours                    | 168           |
-| `*/11 * * * *`    | 6 minute values × 24 hours                    | 144           |
-| `*/13 * * * *`    | 5 minute values × 24 hours                    | 120           |
-| `*/15 * * 6 *`    | Month restriction prevents Repetition: 4 × 24 | 96            |
-| `0,30 * 15 * FRI` | OR-split doubles triggers: 2 × 24 × 2         | 96            |
+| `*/7 * * * *`     | 9 个分钟值 × 24 小时                    | 216           |
+| `*/8 * * * *`     | 8 个分钟值 × 24 小时                    | 192           |
+| `*/9 * * * *`     | 7 个分钟值 × 24 小时                    | 168           |
+| `*/11 * * * *`    | 6 个分钟值 × 24 小时                    | 144           |
+| `*/13 * * * *`    | 5 个分钟值 × 24 小时                    | 120           |
+| `*/15 * * 6 *`    | 月份限制阻止了 Repetition：4 × 24 | 96            |
+| `0,30 * 15 * FRI` | OR 分割使触发器翻倍：2 × 24 × 2         | 96            |
 
-The key factor is whether the expression can use a [`Repetition`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-repetition-triggerbasetype-element) interval (single trigger) or must expand to individual `CalendarTrigger` elements. Minute steps that **evenly divide 60** (`*/1`, `*/2`, `*/3`, `*/4`, `*/5`, `*/6`, `*/10`, `*/12`, `*/15`, `*/20`, `*/30`) use Repetition and work regardless of other fields. Steps that don't divide 60 (`*/7`, `*/8`, `*/9`, `*/11`, `*/13`, etc.) must be expanded, and with 24 hours active, the count quickly exceeds 48.
+关键因素是表达式是否可以使用 [`Repetition`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-repetition-triggerbasetype-element) 间隔（单一触发器），或者必须展开为独立的 `CalendarTrigger` 元素。能**整除 60**的分钟步长（`*/1`、`*/2`、`*/3`、`*/4`、`*/5`、`*/6`、`*/10`、`*/12`、`*/15`、`*/20`、`*/30`）使用 Repetition，无论其他字段如何都能工作。不能整除 60 的步长（`*/7`、`*/8`、`*/9`、`*/11`、`*/13` 等）必须展开，而在 24 小时全天运行的情况下，数量很快会超过 48。
 
-To work around it, simplify the expression or restrict the hour range:
+要解决此问题，请简化表达式或限制小时范围：
 
 ```ts
-// ❌ Fails on Windows: */7 with all hours = 216 triggers
+// ❌ 在 Windows 上失败：*/7 配合全天 = 216 个触发器
 await Bun.cron("./job.ts", "*/7 * * * *", "my-job");
 
-// ✅ Works: restrict to specific hours (9 values × 5 hours = 45 triggers)
+// ✅ 有效：限制为特定小时（9 个值 × 5 小时 = 45 个触发器）
 await Bun.cron("./job.ts", "*/7 9-13 * * *", "my-job");
 
-// ✅ Works: use a divisor of 60 instead (Repetition, 1 trigger)
+// ✅ 有效：改用 60 的约数（Repetition，1 个触发器）
 await Bun.cron("./job.ts", "*/5 * * * *", "my-job");
 ```
 
-#### Windows containers
+#### Windows 容器
 
 <Warning>
-  `Bun.cron()` is not supported in Windows Docker containers. The Task Scheduler service is not running in `servercore`
-  or `nanoserver` images. Use an in-process scheduler for containerized workloads.
+  `Bun.cron()` 在 Windows Docker 容器中不受支持。Task Scheduler 服务不在 `servercore` 或 `nanoserver` 镜像中运行。对于容器化工作负载，请使用进程内调度器。
 </Warning>
 
-**Viewing registered jobs:**
+**查看已注册的任务：**
 
 ```powershell
 schtasks /query /tn "bun-cron-<title>"
 
-# List all bun cron tasks
+# 列出所有 bun cron 任务
 schtasks /query | findstr "bun-cron-"
 ```
 
-**Manually uninstalling without code:**
+**无需代码手动卸载：**
 
 ```powershell
 schtasks /delete /tn "bun-cron-<title>" /f
 
-# Example:
+# 示例：
 schtasks /delete /tn "bun-cron-weekly-report" /f
 ```
 
-Or open **Task Scheduler** (taskschd.msc), find the task named `bun-cron-<title>`, right-click, and delete it.
+或者打开**任务计划程序**（taskschd.msc），找到名为 `bun-cron-<title>` 的任务，右键单击并删除它。
 
 ---
 
 ## `Bun.cron.remove()`
 
-Remove a previously registered cron job by its title. Works on all platforms.
+通过其标题移除先前注册的定时任务。适用于所有平台。
 
 ```ts
 await Bun.cron.remove("weekly-report");
 ```
 
-This reverses what `Bun.cron()` did:
+这会撤销 `Bun.cron()` 的操作：
 
-| Platform | What `remove()` does                                     |
-| -------- | -------------------------------------------------------- |
-| Linux    | Edits crontab to remove the entry and its marker comment |
-| macOS    | Runs `launchctl bootout` and deletes the plist file      |
-| Windows  | Runs `schtasks /delete` to remove the scheduled task     |
+| 平台 | `remove()` 的操作 |
+| ---- | ----------------- |
+| Linux | 编辑 crontab 以移除该条目及其标记注释 |
+| macOS | 运行 `launchctl bootout` 并删除 plist 文件 |
+| Windows | 运行 `schtasks /delete` 以移除计划任务 |
 
-Removing a job that doesn't exist resolves without error.
+移除一个不存在的任务会无错误地完成。

@@ -1,11 +1,11 @@
 ---
 title: "bun outdated"
-description: "Check for outdated dependencies"
+description: "检查过期的依赖"
 ---
 
 import Outdated from "/snippets/cli/outdated.mdx";
 
-Use `bun outdated` to check for outdated dependencies in your project. This command displays a table of dependencies that have newer versions available.
+使用 `bun outdated` 来检查项目中过期的依赖。该命令会显示一个依赖列表表格，其中列出了有更新版本的依赖包。
 
 ```sh terminal icon="terminal"
 bun outdated
@@ -21,24 +21,24 @@ bun outdated
 | eslint-plugin-sonarjs (dev)    | 0.23.0  | 0.23.0    | 3.0.1      |
 | expect-type (dev)              | 0.16.0  | 0.16.0    | 1.1.0      |
 | prettier (dev)                 | 3.4.2   | 3.5.0     | 3.5.0      |
-| tsup (dev)                     | 8.3.5   | 8.3.6     | 8.3.6      |
+| tsup (dev)                    | 8.3.5   | 8.3.6     | 8.3.6      |
 | typescript (dev)               | 5.7.2   | 5.7.3     | 5.7.3      |
 
 ```
 
-## Version Information
+## 版本信息
 
-The output table shows three version columns:
+输出的表格显示了三列版本信息：
 
-- **Current**: The version currently installed
-- **Update**: The latest version that satisfies your package.json version range
-- **Latest**: The latest version published to the registry
+- **Current（当前）**：当前安装的版本
+- **Update（更新）**：满足你的 package.json 版本范围的最新版本
+- **Latest（最新）**：注册表中发布的最新版本
 
-### Dependency Filters
+### 依赖过滤
 
-`bun outdated` supports searching for outdated dependencies by package names and glob patterns.
+`bun outdated` 支持通过包名或通配符模式搜索过期的依赖。
 
-To check if specific dependencies are outdated, pass the package names as positional arguments:
+要检查特定的依赖是否过期，可以将包名作为位置参数传递：
 
 ```sh terminal icon="terminal"
 bun outdated eslint-plugin-security eslint-plugin-sonarjs
@@ -52,7 +52,7 @@ bun outdated eslint-plugin-security eslint-plugin-sonarjs
 
 ```
 
-You can also pass glob patterns to check for outdated packages:
+你也可以传入通配符模式来检查过期的包：
 
 ```sh terminal icon="terminal"
 bun outdated 'eslint*'
@@ -66,7 +66,7 @@ bun outdated 'eslint*'
 | eslint-plugin-sonarjs (dev)    | 0.23.0  | 0.23.0 | 3.0.1      |
 ```
 
-For example, to check for outdated `@types/*` packages:
+例如，要检查过期的 `@types/*` 包：
 
 ```sh terminal icon="terminal"
 bun outdated '@types/*'
@@ -78,7 +78,7 @@ bun outdated '@types/*'
 | @types/bun (dev)   | 1.3.0   | 1.3.3  | 1.3.3 |
 ```
 
-Or to exclude all `@types/*` packages:
+或者排除所有 `@types/*` 包：
 
 ```sh terminal icon="terminal"
 bun outdated '!@types/*'
@@ -93,13 +93,13 @@ bun outdated '!@types/*'
 | eslint-plugin-sonarjs (dev)    | 0.23.0  | 0.23.0    | 3.0.1      |
 | expect-type (dev)              | 0.16.0  | 0.16.0    | 1.1.0      |
 | prettier (dev)                 | 3.4.2   | 3.5.0     | 3.5.0      |
-| tsup (dev)                     | 8.3.5   | 8.3.6     | 8.3.6      |
+| tsup (dev)                    | 8.3.5   | 8.3.6     | 8.3.6      |
 | typescript (dev)               | 5.7.2   | 5.7.3     | 5.7.3      |
 ```
 
-### Workspace Filters
+### 工作区过滤
 
-Use the `--filter` flag to check for outdated dependencies in a different workspace package:
+使用 `--filter` 参数可以检查其它工作区包的过期依赖：
 
 ```sh terminal icon="terminal"
 bun outdated --filter='@monorepo/types'
@@ -112,7 +112,7 @@ bun outdated --filter='@monorepo/types'
 | typescript (dev)   | 5.7.2   | 5.7.3  | 5.7.3  |
 ```
 
-You can pass multiple `--filter` flags to check multiple workspaces:
+你可以传入多个 `--filter` 来检查多个工作区：
 
 ```sh terminal icon="terminal"
 bun outdated --filter @monorepo/types --filter @monorepo/cli
@@ -121,15 +121,15 @@ bun outdated --filter @monorepo/types --filter @monorepo/cli
 ```txt
 | Package                        | Current | Update | Latest     |
 | ------------------------------ | ------- | ------ | ---------- |
-| eslint (dev)                 	 | 8.57.1  | 8.57.1 | 9.20.0     |
+| eslint (dev)                   | 8.57.1  | 8.57.1 | 9.20.0     |
 | eslint-plugin-security (dev)   | 2.1.1   | 2.1.1  | 3.0.1      |
 | eslint-plugin-sonarjs (dev)    | 0.23.0  | 0.23.0 | 3.0.1      |
 | expect-type (dev)              | 0.16.0  | 0.16.0 | 1.1.0      |
-| tsup (dev)                     | 8.3.5   | 8.3.6  | 8.3.6      |
+| tsup (dev)                    | 8.3.5   | 8.3.6  | 8.3.6      |
 | typescript (dev)               | 5.7.2   | 5.7.3  | 5.7.3      |
 ```
 
-You can also pass glob patterns to filter by workspace names:
+你也可以使用通配符匹配工作区名：
 
 ```sh terminal icon="terminal"
 bun outdated --filter='@monorepo/{types,cli}'
@@ -142,13 +142,13 @@ bun outdated --filter='@monorepo/{types,cli}'
 | eslint-plugin-security (dev)   | 2.1.1   | 2.1.1  | 3.0.1      |
 | eslint-plugin-sonarjs (dev)    | 0.23.0  | 0.23.0 | 3.0.1      |
 | expect-type (dev)              | 0.16.0  | 0.16.0 | 1.1.0      |
-| tsup (dev)                     | 8.3.5   | 8.3.6  | 8.3.6      |
+| tsup (dev)                    | 8.3.5   | 8.3.6  | 8.3.6      |
 | typescript (dev)               | 5.7.2   | 5.7.3  | 5.7.3      |
 ```
 
-### Catalog Dependencies
+### 目录依赖
 
-`bun outdated` supports checking catalog dependencies defined in`package.json`:
+`bun outdated` 支持检查 `package.json` 中定义的目录依赖：
 
 ```sh terminal icon="terminal"
 bun outdated -r

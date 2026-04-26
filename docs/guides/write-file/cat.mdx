@@ -1,12 +1,12 @@
 ---
-title: Write a file to stdout
-sidebarTitle: Write file to stdout
+title: 写入文件到标准输出
+sidebarTitle: 写文件到标准输出
 mode: center
 ---
 
-Bun exposes `stdout` as a `BunFile` with the `Bun.stdout` property. This can be used as a destination for [`Bun.write()`](/runtime/file-io#writing-files-bun-write).
+Bun 通过 `Bun.stdout` 属性将 `stdout` 公开为一个 `BunFile`。这可以用作 [`Bun.write()`](/runtime/file-io#writing-files-bun-write) 的目标。
 
-This code writes a file to `stdout` similar to the `cat` command in Unix.
+这段代码将文件写入 `stdout`，类似于 Unix 中的 `cat` 命令。
 
 ```ts cat.ts icon="/icons/typescript.svg"
 const path = "/path/to/file.txt";
@@ -16,4 +16,4 @@ await Bun.write(Bun.stdout, file);
 
 ---
 
-See [Docs > API > File I/O](/runtime/file-io#writing-files-bun-write) for complete documentation of `Bun.write()`.
+完整的 `Bun.write()` 文档请参阅 [文档 > API > 文件 I/O](/runtime/file-io#writing-files-bun-write)。

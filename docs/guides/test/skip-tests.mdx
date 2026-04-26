@@ -1,22 +1,22 @@
 ---
-title: Skip tests with the Bun test runner
-sidebarTitle: Skip tests
+title: 使用 Bun 测试运行器跳过测试
+sidebarTitle: 跳过测试
 mode: center
 ---
 
-To skip a test with the Bun test runner, use the `test.skip` function.
+要在 Bun 测试运行器中跳过测试，请使用 `test.skip` 函数。
 
 ```ts test.ts icon="/icons/typescript.svg"
 import { test } from "bun:test";
 
-test.skip("unimplemented feature", () => {
+test.skip("尚未实现的功能", () => {
   expect(Bun.isAwesome()).toBe(true);
 });
 ```
 
 ---
 
-Running `bun test` will not execute this test. It will be marked as skipped in the terminal output.
+运行 `bun test` 将不会执行此测试。它将在终端输出中被标记为跳过。
 
 ```sh terminal icon="terminal"
 bun test
@@ -26,18 +26,18 @@ bun test
 test.test.ts:
 ✓ add [0.03ms]
 ✓ multiply [0.02ms]
-» unimplemented feature
+» 尚未实现的功能
 
- 2 pass
- 1 skip
- 0 fail
- 2 expect() calls
-Ran 3 tests across 1 files. [74.00ms]
+ 2 通过
+ 1 跳过
+ 0 失败
+ 2 次 expect() 调用
+共执行 3 个测试，来自 1 个文件。 [74.00ms]
 ```
 
 ---
 
-See also:
+另请参见：
 
-- [Mark a test as a todo](/guides/test/todo-tests)
-- [Docs > Test runner > Writing tests](/test/writing-tests)
+- [将测试标记为待办](/guides/test/todo-tests)
+- [文档 > 测试运行器 > 编写测试](/test/writing-tests)

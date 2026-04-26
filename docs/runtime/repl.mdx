@@ -1,17 +1,17 @@
 ---
 title: "REPL"
-description: "An interactive JavaScript and TypeScript REPL with syntax highlighting, history, and tab completion"
+description: "一个带语法高亮、历史记录和自动补全功能的交互式 JavaScript 和 TypeScript REPL"
 ---
 
-`bun repl` starts an interactive Read-Eval-Print Loop (REPL) for evaluating JavaScript and TypeScript expressions. Use it to test code snippets, explore APIs, and debug.
+`bun repl` 会启动一个用于求值 JavaScript 和 TypeScript 表达式的交互式读取-求值-打印循环（REPL）。用它来测试代码片段、探索 API，并进行调试。
 
 ```sh terminal icon="terminal"
 bun repl
 ```
 
 ```txt
-Welcome to Bun v1.3.3
-Type .copy [code] to copy to clipboard. .help for more info.
+欢迎使用 Bun v1.3.3
+输入 .copy [code] 以复制到剪贴板。输入 .help 了解更多信息。
 
 > 1 + 1
 2
@@ -23,26 +23,26 @@ undefined
 
 ---
 
-## Features
+## 功能
 
-- **TypeScript & JSX** — Write TypeScript and JSX directly. Bun transpiles everything on the fly.
-- **Top-level `await`** — Await promises directly at the prompt without wrapping in an async function.
-- **Syntax highlighting** — Input is highlighted as you type.
-- **Persistent history** — History is saved to `~/.bun_repl_history` and persists across sessions.
-- **Tab completion** — Press `Tab` to complete property names and REPL commands.
-- **Multi-line input** — Unclosed brackets, braces, and parentheses automatically continue on the next line.
-- **Node.js globals** — `require`, `module`, `__dirname`, and `__filename` are available, resolved relative to your current working directory.
+- **TypeScript 和 JSX** — 直接书写 TypeScript 和 JSX。Bun 会即时转译所有代码。
+- **顶层 `await`** — 直接在命令行等待 Promise，无需包裹在异步函数中。
+- **语法高亮** — 输入时即时高亮显示语法。
+- **持久化历史** — 历史记录保存到 `~/.bun_repl_history`，跨会话保留。
+- **Tab 自动补全** — 按 `Tab` 补全属性名和 REPL 命令。
+- **多行输入** — 未闭合的括号、大括号和圆括号会自动换行继续输入。
+- **Node.js 全局变量** — 提供 `require`、`module`、`__dirname` 和 `__filename`，相对当前工作目录解析。
 
 ---
 
-## Special variables
+## 特殊变量
 
-The REPL exposes two special variables that update after each evaluation.
+REPL 会暴露两个特殊变量，每次求值后会更新。
 
-| Variable | Description                       |
-| -------- | --------------------------------- |
-| `_`      | The result of the last expression |
-| `_error` | The last error that was thrown    |
+| 变量       | 说明                              |
+| --------- | --------------------------------- |
+| `_`       | 上一个表达式的结果                |
+| `_error`  | 上一次抛出的错误                  |
 
 ```txt
 > 2 + 2
@@ -57,9 +57,9 @@ SyntaxError: JSON Parse error: Unexpected identifier "oops"
 
 ---
 
-## Top-level `await`
+## 顶层 `await`
 
-Promises are automatically awaited. You can `await` any expression directly at the prompt.
+Promise 会自动等待。你可以直接在命令行使用 `await`。
 
 ```txt
 > await fetch("https://api.github.com/repos/oven-sh/bun").then(r => r.json()).then(r => r.stargazers_count)
@@ -72,9 +72,9 @@ undefined
 
 ---
 
-## Importing modules
+## 导入模块
 
-Just like Bun's runtime, you can use either `require` or `import` in the REPL and it Just Works — mix ESM and CommonJS freely at the prompt. Module resolution uses the same rules as `bun run`, so you can import from `node_modules`, relative paths, or `node:` builtins.
+与 Bun 运行时一样，你可以在 REPL 中使用 `require` 或 `import`，且能自由混合使用 ESM 和 CommonJS。模块解析规则与 `bun run` 相同，可以导入 `node_modules`、相对路径或 `node:` 内置模块。
 
 ```txt
 > import { z } from "zod"
@@ -85,13 +85,13 @@ undefined
 '/tmp/file.txt'
 ```
 
-Declarations persist for the rest of the session, and `const`/`let` can be redeclared across evaluations (unlike in regular scripts) so you can re-run `import` and `require` statements while iterating.
+声明会在整个会话中保持，且允许跨次执行重新声明 `const` / `let`（与普通脚本不同），方便你在迭代时重复执行 `import` 和 `require` 语句。
 
 ---
 
-## Multi-line input
+## 多行输入
 
-When you press `Enter` on a line with unclosed brackets, braces, or parentheses, the REPL automatically continues on the next line. The prompt changes to `...` to indicate continuation.
+当你在未闭合括号、大括号或圆括号的行按下 `Enter`，REPL 会自动换行继续。提示符变为 `...` 表示续行。
 
 ```txt
 > function add(a, b) {
@@ -102,55 +102,55 @@ undefined
 5
 ```
 
-For longer multi-line entries, use `.editor` to enter editor mode, which buffers all input until you press `Ctrl+D`.
+对于更长的多行输入，使用 `.editor` 进入编辑器模式，所有输入会缓冲直到按 `Ctrl+D`。
 
 ---
 
-## REPL commands
+## REPL 命令
 
-Type `.help` at the prompt to see all available REPL commands.
+在提示符输入 `.help` 查看所有可用的 REPL 命令。
 
-| Command    | Description                                                                                      |
-| ---------- | ------------------------------------------------------------------------------------------------ |
-| `.help`    | Print the help message listing commands and keybindings                                          |
-| `.exit`    | Exit the REPL                                                                                    |
-| `.clear`   | Clear the screen                                                                                 |
-| `.copy`    | Copy the last result to the clipboard. Pass an expression to evaluate and copy it: `.copy 1 + 1` |
-| `.load`    | Load a file into the REPL session: `.load ./script.ts`                                           |
-| `.save`    | Save the current REPL history to a file: `.save ./session.txt`                                   |
-| `.editor`  | Enter multi-line editor mode (press `Ctrl+D` to evaluate, `Ctrl+C` to cancel)                    |
-| `.break`   | Cancel the current multi-line input                                                              |
-| `.history` | Print the command history                                                                        |
-
----
-
-## Keybindings
-
-The REPL supports Emacs-style line editing.
-
-| Keybinding          | Action                                                   |
-| ------------------- | -------------------------------------------------------- |
-| `Ctrl+A`            | Move to start of line                                    |
-| `Ctrl+E`            | Move to end of line                                      |
-| `Ctrl+B` / `Ctrl+F` | Move backward/forward one character                      |
-| `Alt+B` / `Alt+F`   | Move backward/forward one word                           |
-| `Ctrl+U`            | Delete to start of line                                  |
-| `Ctrl+K`            | Delete to end of line                                    |
-| `Ctrl+W`            | Delete word backward                                     |
-| `Ctrl+D`            | Delete character (or exit if line is empty)              |
-| `Ctrl+L`            | Clear screen                                             |
-| `Ctrl+T`            | Swap the two characters before the cursor                |
-| `Up` / `Down`       | Navigate history                                         |
-| `Tab`               | Auto-complete                                            |
-| `Ctrl+C`            | Cancel current input (press twice on empty line to exit) |
+| 命令        | 说明                                                                                           |
+| ----------- | ------------------------------------------------------------------------------------------------ |
+| `.help`     | 打印帮助信息，列出命令和快捷键                                                                   |
+| `.exit`     | 退出 REPL                                                                                      |
+| `.clear`    | 清屏                                                                                         |
+| `.copy`     | 复制最近结果到剪贴板。也可以传入表达式计算并复制：`.copy 1 + 1`                                  |
+| `.load`     | 加载文件到 REPL 会话：`.load ./script.ts`                                                       |
+| `.save`     | 将当前 REPL 历史保存到文件：`.save ./session.txt`                                               |
+| `.editor`   | 进入多行编辑器模式（按 `Ctrl+D` 执行，`Ctrl+C` 取消）                                          |
+| `.break`    | 取消当前多行输入                                                                              |
+| `.history`  | 打印命令历史                                                                                  |
 
 ---
 
-## History
+## 快捷键
 
-REPL history is automatically saved to `~/.bun_repl_history` (up to 1000 entries) and loaded at the start of each session. Use `Up`/`Down` to navigate.
+REPL 支持 Emacs 风格的行编辑。
 
-To export your history to a different file, use `.save`:
+| 快捷键              | 功能                                       |
+| ------------------- | ------------------------------------------ |
+| `Ctrl+A`            | 移动光标至行首                            |
+| `Ctrl+E`            | 移动光标至行尾                            |
+| `Ctrl+B` / `Ctrl+F` | 向后/向前移动一个字符                      |
+| `Alt+B` / `Alt+F`   | 向后/向前移动一个单词                      |
+| `Ctrl+U`            | 删除至行首                                |
+| `Ctrl+K`            | 删除至行尾                                |
+| `Ctrl+W`            | 向后删除一个单词                          |
+| `Ctrl+D`            | 删除字符（行为空时退出）                   |
+| `Ctrl+L`            | 清屏                                     |
+| `Ctrl+T`            | 交换光标前两个字符                        |
+| `上箭头` / `下箭头` | 浏览历史                                  |
+| `Tab`               | 自动补全                                  |
+| `Ctrl+C`            | 取消当前输入（空行时连续按两次退出）      |
+
+---
+
+## 历史记录
+
+REPL 历史会自动保存到 `~/.bun_repl_history`（最多 1000 条）并在每次会话开始时加载。使用上下键浏览。
+
+若要导出历史到其它文件，使用 `.save`：
 
 ```txt
 > .save ./my-session.txt
@@ -158,9 +158,9 @@ To export your history to a different file, use `.save`:
 
 ---
 
-## Non-interactive mode
+## 非交互模式
 
-Use `-e` / `--eval` to evaluate a script with REPL semantics and exit. Use `-p` / `--print` to additionally print the result.
+使用 `-e` / `--eval` 以 REPL 语义执行脚本并退出。使用 `-p` / `--print` 除执行外会打印结果。
 
 ```sh terminal icon="terminal"
 bun repl -e "const x: number = 42; console.log(x)"
@@ -173,4 +173,4 @@ bun repl -p "{ a: 1, b: 2 }"
 # { a: 1, b: 2 }
 ```
 
-This uses the same transforms as the interactive REPL, so a bare object literal like `{ a: 1 }` is treated as an object expression instead of a block statement. The process exits after the event loop drains (pending timers and I/O complete first). On error, the process exits with code `1`.
+该模式使用与交互 REPL 相同的转换，裸对象字面量如 `{ a: 1 }` 会被当作对象表达式而非代码块。事件循环清空后进程退出（挂起的计时器和 I/O 会先执行完成）。出错时进程返回码为 `1`。

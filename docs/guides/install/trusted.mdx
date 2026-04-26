@@ -1,32 +1,31 @@
 ---
-title: Add a trusted dependency
-sidebarTitle: Add a trusted dependency
+title: 添加受信任的依赖
+sidebarTitle: 添加受信任的依赖
 mode: center
 ---
 
-Unlike other npm clients, Bun does not execute arbitrary lifecycle scripts for installed dependencies, such as `postinstall` and `node-gyp` builds. These scripts represent a potential security risk, as they can execute arbitrary code on your machine.
+与其他 npm 客户端不同，Bun 不会为已安装的依赖执行任意的生命周期脚本，例如 `postinstall` 和 `node-gyp` 构建。这些脚本存在潜在的安全风险，因为它们可以在你的机器上执行任意代码。
 
 <Note>
-  Bun includes a default allowlist of popular packages containing `postinstall` scripts that are known to be safe. You
-  can see this list [here](https://github.com/oven-sh/bun/blob/main/src/install/default-trusted-dependencies.txt). This
-  default list only applies to packages installed from npm. For packages from other sources (such as `file:`, `link:`,
-  `git:`, or `github:` dependencies), you must explicitly add them to `trustedDependencies`.
+  Bun 包含一个默认的允许列表，列出了包含 `postinstall` 脚本且已知安全的流行包。你可以
+  在[这里](https://github.com/oven-sh/bun/blob/main/src/install/default-trusted-dependencies.txt)查看该列表。
+  该默认列表仅适用于从 npm 安装的包。对于来自其他来源的包（例如 `file:`、`link:`、`git:` 或 `github:` 依赖），
+  你必须显式地将它们添加到 `trustedDependencies` 中。
 </Note>
 
 ---
 
-If you are seeing one of the following errors, you are probably trying to use a package that uses `postinstall` to work properly:
+如果你遇到以下错误之一，很可能是你正在尝试使用一个需要 `postinstall` 脚本才能正常工作的包：
 
 - `error: could not determine executable to run for package`
 - `InvalidExe`
 
 ---
 
-To allow Bun to execute lifecycle scripts for a specific package, add the package to `trustedDependencies` in your package.json file. You can do this automatically by running the command `bun pm trust <pkg>`.
+要允许 Bun 对特定包执行生命周期脚本，请将该包添加到你 package.json 文件中的 `trustedDependencies`。你也可以通过运行命令 `bun pm trust <pkg>` 来自动完成此操作。
 
 <Note>
-  Note that this only allows lifecycle scripts for the specific package listed in `trustedDependencies`, _not_ the
-  dependencies of that dependency!
+  请注意，这只允许对 `trustedDependencies` 中列出的特定包执行生命周期脚本，**不包括**该依赖包的依赖！
 </Note>
 
 ```json package.json icon="file-json"
@@ -39,7 +38,7 @@ To allow Bun to execute lifecycle scripts for a specific package, add the packag
 
 ---
 
-Once this is added, run a fresh install. Bun will re-install your dependencies and properly install
+添加完成后，运行全新安装。Bun 会重新安装你的依赖并正确执行安装。
 
 ```sh terminal icon="terminal"
 rm -rf node_modules
@@ -49,4 +48,4 @@ bun install
 
 ---
 
-See [Docs > Package manager > Trusted dependencies](/pm/lifecycle) for complete documentation of trusted dependencies.
+完整的受信任依赖文档请参阅[文档 > 包管理器 > 受信任的依赖](/pm/lifecycle)。

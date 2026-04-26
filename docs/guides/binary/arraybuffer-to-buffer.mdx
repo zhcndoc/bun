@@ -1,12 +1,12 @@
 ---
-title: Convert an ArrayBuffer to a Buffer
-sidebarTitle: "ArrayBuffer to Buffer"
+title: 将 ArrayBuffer 转换为 Buffer
+sidebarTitle: "ArrayBuffer 转 Buffer"
 mode: center
 ---
 
-The Node.js [`Buffer`](https://nodejs.org/api/buffer.html) API predates the introduction of `ArrayBuffer` into the JavaScript language. Bun implements both.
+Node.js 的 [`Buffer`](https://nodejs.org/api/buffer.html) API 出现早于 JavaScript 语言中 `ArrayBuffer` 的引入。Bun 同时实现了这两者。
 
-Use the static `Buffer.from()` method to create a `Buffer` from an `ArrayBuffer`.
+使用静态方法 `Buffer.from()` 从一个 `ArrayBuffer` 创建一个 `Buffer`。
 
 ```ts
 const arrBuffer = new ArrayBuffer(64);
@@ -15,13 +15,13 @@ const nodeBuffer = Buffer.from(arrBuffer);
 
 ---
 
-To create a `Buffer` that only views a portion of the underlying buffer, pass the offset and length to the constructor.
+要创建一个仅查看底层缓冲区部分内容的 `Buffer`，请向构造函数传入偏移量和长度。
 
 ```ts
 const arrBuffer = new ArrayBuffer(64);
-const nodeBuffer = Buffer.from(arrBuffer, 0, 16); // view first 16 bytes
+const nodeBuffer = Buffer.from(arrBuffer, 0, 16); // 查看前16字节
 ```
 
 ---
 
-See [Docs > API > Binary Data](/runtime/binary-data#conversion) for complete documentation on manipulating binary data with Bun.
+完整的使用 Bun 操作二进制数据的文档，请参见 [文档 > API > 二进制数据](/runtime/binary-data#conversion)。

@@ -1,41 +1,38 @@
 ---
-title: Server-Sent Events (SSE) with Bun
-sidebarTitle: Server-Sent Events
+title: 使用 Bun 的服务器发送事件（SSE）
+sidebarTitle: 服务器发送事件
 mode: center
 ---
 
-[Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) let you push a stream of text events to the browser over a single HTTP response. The client consumes them via [`EventSource`](https://developer.mozilla.org/en-US/docs/Web/API/EventSource).
+[服务器发送事件](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) 允许您通过单个 HTTP 响应向浏览器推送一系列文本事件。客户端通过 [`EventSource`](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) 来接收这些事件。
 
-In Bun, you can implement an SSE endpoint by returning a `Response` whose body is a streaming source and setting the `Content-Type` header to `text/event-stream`.
+在 Bun 中，您可以通过返回一个主体为流式来源的 `Response`，并将 `Content-Type` 头设置为 `text/event-stream` 来实现 SSE 端点。
 
 <Note>
-  `Bun.serve` closes idle connections after **10 seconds** by default. A quiet SSE stream counts as idle, so the
-  examples below call `server.timeout(req, 0)` to disable the timeout for the stream. See
-  [`idleTimeout`](/runtime/http/server#idletimeout) for details.
+  `Bun.serve` 默认会在 **10 秒** 后关闭空闲连接。一个安静的 SSE 流会被视为空闲，因此下面的示例调用了 `server.timeout(req, 0)` 来禁用此流的超时。详情请参见
+  [`idleTimeout`](/runtime/http/server#idletimeout)。
 </Note>
 
-## Using an async generator
+## 使用异步生成器
 
-In Bun, `new Response` accepts an async generator function directly. This is usually the simplest way to write an SSE endpoint — each `yield` flushes a chunk to the client, and if the client disconnects, the generator's `finally` block runs so you can clean up.
+在 Bun 中，`new Response` 直接接受一个异步生成器函数。这通常是编写 SSE 端点的最简单方法——每次 `yield` 会向客户端刷新一块数据，如果客户端断开连接，生成器的 `finally` 块会执行，从而可以清理资源。
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.serve({
   port: 3000,
   routes: {
     "/events": (req, server) => {
-      // SSE streams are often quiet between events. By default,
-      // Bun.serve closes connections after 10 seconds of inactivity.
-      // Disable the idle timeout for this request so the stream
-      // stays open indefinitely.
+      // SSE 流事件间通常比较安静。
+      // 默认情况下，Bun.serve 会在 10 秒无活动后关闭连接。
+      // 禁用该请求的空闲超时，以保持流无限期打开。
       server.timeout(req, 0);
 
       return new Response(
         async function* () {
           yield `data: connected at ${Date.now()}\n\n`;
 
-          // Emit a tick every 5 seconds until the client disconnects.
-          // When the client goes away, the generator is returned
-          // (cancelled) and this loop stops automatically.
+          // 每 5 秒发送一个 tick，直到客户端断开连接。
+          // 客户端断开时，生成器被返回（取消），此循环自动停止。
           while (true) {
             await Bun.sleep(5000);
             yield `data: tick ${Date.now()}\n\n`;
@@ -53,9 +50,9 @@ Bun.serve({
 });
 ```
 
-## Using a `ReadableStream`
+## 使用 `ReadableStream`
 
-If your events originate from callbacks — message brokers, timers, external pushes — rather than a linear `await` flow, a `ReadableStream` often fits better. When the client disconnects, Bun calls the stream's `cancel()` method automatically, so you can release any resources you set up in `start()`.
+如果您的事件来自回调——消息代理、定时器、外部推送——而不是线性的 `await` 流，`ReadableStream` 通常更合适。当客户端断开连接时，Bun 会自动调用流的 `cancel()` 方法，因此您可以在 `start()` 中设置的资源进行释放。
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.serve({
@@ -74,7 +71,7 @@ Bun.serve({
           }, 5000);
         },
         cancel() {
-          // Called automatically when the client disconnects.
+          // 当客户端断开连接时自动调用。
           clearInterval(timer);
         },
       });

@@ -1,38 +1,38 @@
 ---
 title: JSON5
-description: Use Bun's built-in support for JSON5 files through both runtime APIs and bundler integration
+description: 通过运行时 API 和打包工具集成，使用 Bun 内置对 JSON5 文件的支持
 ---
 
-In Bun, JSON5 is a first-class citizen alongside JSON, TOML, and YAML. You can:
+在 Bun 中，JSON5 与 JSON、TOML 和 YAML 一样，是一等公民。你可以：
 
-- Parse and stringify JSON5 with `Bun.JSON5.parse` and `Bun.JSON5.stringify`
-- `import` & `require` JSON5 files as modules at runtime (including hot reloading & watch mode support)
-- `import` & `require` JSON5 files in frontend apps via Bun's bundler
-
----
-
-## Conformance
-
-Bun's JSON5 parser passes 100% of the [official JSON5 test suite](https://github.com/json5/json5-tests). The parser is written in Zig for optimal performance. You can view our [translated test suite](https://github.com/oven-sh/bun/blob/main/test/js/bun/json5/json5-test-suite.test.ts) to see every test case.
+- 使用 `Bun.JSON5.parse` 和 `Bun.JSON5.stringify` 解析和序列化 JSON5
+- 在运行时以模块形式 `import` 和 `require` JSON5 文件（支持热重载和监视模式）
+- 通过 Bun 的打包工具在前端应用中 `import` 和 `require` JSON5 文件
 
 ---
 
-## Runtime API
+## 兼容性
+
+Bun 的 JSON5 解析器通过了官方 [JSON5 测试套件](https://github.com/json5/json5-tests) 100% 的测试。解析器使用 Zig 编写以实现最佳性能。你可以查看我们的 [翻译测试套件](https://github.com/oven-sh/bun/blob/main/test/js/bun/json5/json5-test-suite.test.ts) 查看每个测试用例。
+
+---
+
+## 运行时 API
 
 ### `Bun.JSON5.parse()`
 
-Parse a JSON5 string into a JavaScript value.
+将 JSON5 字符串解析为 JavaScript 值。
 
 ```ts
 import { JSON5 } from "bun";
 
 const data = JSON5.parse(`{
-  // JSON5 supports comments
+  // JSON5 支持注释
   name: 'my-app',
   version: '1.0.0',
   debug: true,
 
-  // trailing commas are allowed
+  // 允许尾随逗号
   tags: ['web', 'api',],
 }`);
 
@@ -45,59 +45,59 @@ console.log(data);
 // }
 ```
 
-#### Supported JSON5 Features
+#### 支持的 JSON5 特性
 
-JSON5 is a superset of JSON based on ECMAScript 5.1 syntax. It supports:
+JSON5 是基于 ECMAScript 5.1 语法的 JSON 超集。它支持：
 
-- **Comments**: single-line (`//`) and multi-line (`/* */`)
-- **Trailing commas**: in objects and arrays
-- **Unquoted keys**: valid ECMAScript 5.1 identifiers can be used as keys
-- **Single-quoted strings**: in addition to double-quoted strings
-- **Multi-line strings**: using backslash line continuations
-- **Hex numbers**: `0xFF`
-- **Leading & trailing decimal points**: `.5` and `5.`
-- **Infinity and NaN**: positive and negative
-- **Explicit plus sign**: `+42`
+- **注释**：单行注释 (`//`) 和多行注释 (`/* */`)
+- **尾随逗号**：对象和数组中允许
+- **未加引号的键**：有效的 ECMAScript 5.1 标识符可以用作键
+- **单引号字符串**：除了双引号字符串外支持单引号
+- **多行字符串**：使用反斜杠换行
+- **十六进制数**：`0xFF`
+- **数字前后的小数点**：`.5` 和 `5.`
+- **无限大和 NaN**：正负无穷和非数字值
+- **显式加号**：`+42`
 
 ```ts
 const data = JSON5.parse(`{
-  // Unquoted keys
+  // 未加引号的键
   unquoted: 'keys work',
 
-  // Single and double quotes
+  // 单引号和双引号
   single: 'single-quoted',
   double: "double-quoted",
 
-  // Trailing commas
+  // 尾随逗号
   trailing: 'comma',
 
-  // Special numbers
+  // 特殊数字
   hex: 0xDEADbeef,
   half: .5,
   to: Infinity,
   nan: NaN,
 
-  // Multi-line strings
+  // 多行字符串
   multiline: 'line 1 \
 line 2',
 }`);
 ```
 
-#### Error Handling
+#### 错误处理
 
-`Bun.JSON5.parse()` throws a `SyntaxError` if the input is invalid JSON5:
+如果输入不是有效的 JSON5，`Bun.JSON5.parse()` 会抛出 `SyntaxError`：
 
 ```ts
 try {
   JSON5.parse("{invalid}");
 } catch (error) {
-  console.error("Failed to parse JSON5:", error.message);
+  console.error("解析 JSON5 失败:", error.message);
 }
 ```
 
 ### `Bun.JSON5.stringify()`
 
-Stringify a JavaScript value to a JSON5 string.
+将 JavaScript 值序列化为 JSON5 字符串。
 
 ```ts
 import { JSON5 } from "bun";
@@ -107,9 +107,9 @@ console.log(str);
 // {name:'my-app',version:'1.0.0'}
 ```
 
-#### Pretty Printing
+#### 美化输出
 
-Pass a `space` argument to format the output with indentation:
+传入 `space` 参数来格式化输出并缩进：
 
 ```ts
 const pretty = JSON5.stringify(
@@ -133,16 +133,16 @@ console.log(pretty);
 // }
 ```
 
-The `space` argument can be a number (number of spaces) or a string (used as the indent character):
+`space` 参数可为数字（空格数）或字符串（用作缩进字符）：
 
 ```ts
-// Tab indentation
+// 使用制表符缩进
 JSON5.stringify(data, null, "\t");
 ```
 
-#### Special Values
+#### 特殊值
 
-Unlike `JSON.stringify`, `JSON5.stringify` preserves special numeric values:
+与 `JSON.stringify` 不同，`JSON5.stringify` 会保留特殊数值：
 
 ```ts
 JSON5.stringify({ inf: Infinity, ninf: -Infinity, nan: NaN });
@@ -151,15 +151,15 @@ JSON5.stringify({ inf: Infinity, ninf: -Infinity, nan: NaN });
 
 ---
 
-## Module Import
+## 模块导入
 
-### ES Modules
+### ES 模块
 
-You can import JSON5 files directly as ES modules:
+可以直接将 JSON5 文件作为 ES 模块导入：
 
 ```json5 config.json5
 {
-  // Database configuration
+  // 数据库配置
   database: {
     host: "localhost",
     port: 5432,
@@ -174,7 +174,7 @@ You can import JSON5 files directly as ES modules:
 }
 ```
 
-#### Default Import
+#### 默认导入
 
 ```ts app.ts icon="/icons/typescript.svg"
 import config from "./config.json5";
@@ -183,9 +183,9 @@ console.log(config.database.host); // "localhost"
 console.log(config.features.auth); // true
 ```
 
-#### Named Imports
+#### 命名导入
 
-You can destructure top-level properties as named imports:
+可以将顶层属性作为命名导入进行解构：
 
 ```ts app.ts icon="/icons/typescript.svg"
 import { database, features } from "./config.json5";
@@ -196,21 +196,21 @@ console.log(features.rateLimit); // true
 
 ### CommonJS
 
-JSON5 files can also be required in CommonJS:
+JSON5 文件同样可以在 CommonJS 中通过 require 引入：
 
 ```ts app.ts icon="/icons/typescript.svg"
 const config = require("./config.json5");
 console.log(config.database.name); // "myapp"
 
-// Destructuring also works
+// 解构也支持
 const { database, features } = require("./config.json5");
 ```
 
 ---
 
-## Hot Reloading with JSON5
+## JSON5 热重载
 
-When you run your application with `bun --hot`, changes to JSON5 files are automatically detected and reloaded:
+当使用 `bun --hot` 运行你的应用时，JSON5 文件的变动会自动被检测并重载：
 
 ```json5 config.json5
 {
@@ -240,7 +240,7 @@ Bun.serve({
 });
 ```
 
-Run with hot reloading:
+使用热重载启动：
 
 ```bash terminal icon="terminal"
 bun --hot server.ts
@@ -248,23 +248,23 @@ bun --hot server.ts
 
 ---
 
-## Bundler Integration
+## 打包工具集成
 
-When you import JSON5 files and bundle with Bun, the JSON5 is parsed at build time and included as a JavaScript module:
+当你导入 JSON5 文件并使用 Bun 打包时，JSON5 会在构建时被解析，并作为 JavaScript 模块包含：
 
 ```bash terminal icon="terminal"
 bun build app.ts --outdir=dist
 ```
 
-This means:
+这意味着：
 
-- Zero runtime JSON5 parsing overhead in production
-- Smaller bundle sizes
-- Tree-shaking support for unused properties (named imports)
+- 生产环境零运行时 JSON5 解析开销
+- 更小的包体积
+- 对未使用属性支持摇树优化（命名导入）
 
-### Dynamic Imports
+### 动态导入
 
-JSON5 files can be dynamically imported:
+JSON5 文件也支持动态导入：
 
 ```ts
 const { default: config } = await import("./config.json5");

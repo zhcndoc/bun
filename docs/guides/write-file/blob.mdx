@@ -1,12 +1,12 @@
 ---
-title: Write a Blob to a file
-sidebarTitle: Write Blob
+title: 将 Blob 写入文件
+sidebarTitle: 写入 Blob
 mode: center
 ---
 
-This code snippet writes a `Blob` to disk at a particular path.
+这段代码将一个 `Blob` 写入磁盘上的指定路径。
 
-It uses the fast [`Bun.write()`](/runtime/file-io#writing-files-bun-write) API to efficiently write data to disk. The first argument is a _destination_, like an absolute path or `BunFile` instance. The second argument is the _data_ to write.
+它使用快速的 [`Bun.write()`](/runtime/file-io#writing-files-bun-write) API 高效地写入数据。第一个参数是一个 _目标位置_，例如绝对路径或 `BunFile` 实例。第二个参数是要写入的 _数据_。
 
 ```ts
 const path = "/path/to/file.txt";
@@ -15,16 +15,16 @@ await Bun.write(path, "Lorem ipsum");
 
 ---
 
-The `BunFile` class extends `Blob`, so you can pass a `BunFile` directly into `Bun.write()` as well.
+`BunFile` 类继承自 `Blob`，所以你也可以直接将 `BunFile` 传入 `Bun.write()`。
 
 ```ts
 const path = "./out.txt";
 const data = Bun.file("./in.txt");
 
-// write the contents of ./in.txt to ./out.txt
+// 将 ./in.txt 的内容写入 ./out.txt
 await Bun.write(path, data);
 ```
 
 ---
 
-See [Docs > API > File I/O](/runtime/file-io#writing-files-bun-write) for complete documentation of `Bun.write()`.
+完整的 `Bun.write()` 文档请参见 [文档 > API > 文件 I/O](/runtime/file-io#writing-files-bun-write)。

@@ -1,30 +1,28 @@
 ---
 title: Markdown
-description: Parse and render Markdown with Bun's built-in Markdown API, supporting GFM extensions and custom rendering callbacks
+description: 使用 Bun 内置的 Markdown API 解析并渲染 Markdown，支持 GFM 扩展和自定义渲染回调
 ---
 
-<Callout type="note">
-  **Unstable API** — This API is under active development and may change in future versions of Bun.
-</Callout>
+<Callout type="note">**不稳定的 API** — 该 API 正在积极开发中，未来版本的 Bun 可能会发生变化。</Callout>
 
-Bun includes a fast, built-in Markdown parser written in Zig. It supports GitHub Flavored Markdown (GFM) extensions and provides three APIs:
+Bun 包含一个用 Zig 编写的快速内置 Markdown 解析器。它支持 GitHub 风格的 Markdown (GFM) 扩展，并提供三种 API：
 
-- `Bun.markdown.html()` — render Markdown to an HTML string
-- `Bun.markdown.render()` — render Markdown with custom callbacks for each element
-- `Bun.markdown.react()` — render Markdown to React JSX elements
+- `Bun.markdown.html()` — 将 Markdown 渲染为 HTML 字符串
+- `Bun.markdown.render()` — 使用自定义回调渲染 Markdown 的每个元素
+- `Bun.markdown.react()` — 渲染 Markdown 为 React JSX 元素
 
 ---
 
 ## `Bun.markdown.html()`
 
-Convert a Markdown string to HTML.
+将 Markdown 字符串转换为 HTML。
 
 ```ts
 const html = Bun.markdown.html("# Hello **world**");
 // "<h1>Hello <strong>world</strong></h1>\n"
 ```
 
-GFM extensions like tables, strikethrough, and task lists are enabled by default:
+默认启用 GFM 扩展，如表格、删除线和任务列表：
 
 ```ts
 const html = Bun.markdown.html(`
@@ -36,64 +34,64 @@ const html = Bun.markdown.html(`
 `);
 ```
 
-### Options
+### 选项
 
-Pass an options object as the second argument to configure the parser:
+作为第二个参数传入选项对象以配置解析器：
 
 ```ts
 const html = Bun.markdown.html("some markdown", {
-  tables: true, // GFM tables (default: true)
-  strikethrough: true, // GFM strikethrough (default: true)
-  tasklists: true, // GFM task lists (default: true)
-  tagFilter: true, // GFM tag filter for disallowed HTML tags
-  autolinks: true, // Autolink URLs, emails, and www. links
+  tables: true, // GFM 表格（默认：true）
+  strikethrough: true, // GFM 删除线（默认：true）
+  tasklists: true, // GFM 任务列表（默认：true）
+  tagFilter: true, // 过滤不允许的 HTML 标签
+  autolinks: true, // 自动链接 URL、邮箱和 www. 开头的链接
 });
 ```
 
-All available options:
+所有可用选项：
 
-| Option                 | Default | Description                                                 |
-| ---------------------- | ------- | ----------------------------------------------------------- |
-| `tables`               | `false` | GFM tables                                                  |
-| `strikethrough`        | `false` | GFM strikethrough (`~~text~~`)                              |
-| `tasklists`            | `false` | GFM task lists (`- [x] item`)                               |
-| `autolinks`            | `false` | Enable autolinks — see [Autolinks](#autolinks)              |
-| `headings`             | `false` | Heading IDs and autolinks — see [Heading IDs](#heading-ids) |
-| `hardSoftBreaks`       | `false` | Treat soft line breaks as hard breaks                       |
-| `wikiLinks`            | `false` | Enable `[[wiki links]]`                                     |
-| `underline`            | `false` | `__text__` renders as `<u>` instead of `<strong>`           |
-| `latexMath`            | `false` | Enable `$inline$` and `$$display$$` math                    |
-| `collapseWhitespace`   | `false` | Collapse whitespace in text                                 |
-| `permissiveAtxHeaders` | `false` | ATX headers without space after `#`                         |
-| `noIndentedCodeBlocks` | `false` | Disable indented code blocks                                |
-| `noHtmlBlocks`         | `false` | Disable HTML blocks                                         |
-| `noHtmlSpans`          | `false` | Disable inline HTML                                         |
-| `tagFilter`            | `false` | GFM tag filter for disallowed HTML tags                     |
+| 选项                   | 默认值  | 描述                                                  |
+| ---------------------- | ------- | ----------------------------------------------------- |
+| `tables`               | `false` | GFM 表格                                              |
+| `strikethrough`        | `false` | GFM 删除线 (`~~text~~`)                               |
+| `tasklists`            | `false` | GFM 任务列表 (`- [x] item`)                           |
+| `autolinks`            | `false` | 启用自动链接 — 参见 [自动链接](#autolinks)            |
+| `headings`             | `false` | 启用标题 ID 和自动链接 — 参见 [标题 ID](#heading-ids) |
+| `hardSoftBreaks`       | `false` | 把软换行视为硬换行                                    |
+| `wikiLinks`            | `false` | 启用 `[[wiki links]]`                                 |
+| `underline`            | `false` | `__text__` 渲染为 `<u>` 而非 `<strong>`               |
+| `latexMath`            | `false` | 启用 `$inline$` 和 `$$display$$` 数学模式             |
+| `collapseWhitespace`   | `false` | 折叠文本中的空白                                      |
+| `permissiveAtxHeaders` | `false` | 允许 ATX 标题在 `#` 之后无空格                        |
+| `noIndentedCodeBlocks` | `false` | 禁用缩进代码块                                        |
+| `noHtmlBlocks`         | `false` | 禁用 HTML 块                                          |
+| `noHtmlSpans`          | `false` | 禁用内联 HTML                                         |
+| `tagFilter`            | `false` | 过滤不允许的 HTML 标签                                |
 
-#### Autolinks
+#### 自动链接
 
-Pass `true` to enable all autolink types, or an object for granular control:
+传入 `true` 可启用所有自动链接类型，或者传入对象以精细控制：
 
 ```ts
-// Enable all autolinks (URL, WWW, email)
+// 启用所有自动链接（URL、WWW、邮箱）
 Bun.markdown.html("Visit www.example.com", { autolinks: true });
 
-// Enable only specific types
+// 仅启用特定类型
 Bun.markdown.html("Visit www.example.com", {
   autolinks: { url: true, www: true },
 });
 ```
 
-#### Heading IDs
+#### 标题 ID
 
-Pass `true` to enable both heading IDs and autolink headings, or an object for granular control:
+传入 `true` 可同时启用标题 ID 和自动链接标题，或者传入对象进行细粒度控制：
 
 ```ts
-// Enable heading IDs and autolink headings
+// 启用标题 ID 和自动链接标题
 Bun.markdown.html("## Hello World", { headings: true });
 // '<h2 id="hello-world"><a href="#hello-world">Hello World</a></h2>\n'
 
-// Enable only heading IDs (no autolink)
+// 仅启用标题 ID（无自动链接）
 Bun.markdown.html("## Hello World", { headings: { ids: true } });
 // '<h2 id="hello-world">Hello World</h2>\n'
 ```
@@ -102,7 +100,7 @@ Bun.markdown.html("## Hello World", { headings: { ids: true } });
 
 ## `Bun.markdown.render()`
 
-Parse Markdown and render it using custom JavaScript callbacks. This gives you full control over the output format — you can generate HTML with custom classes, React elements, ANSI terminal output, or any other string format.
+解析 Markdown 并使用自定义 JavaScript 回调渲染。这样可以完全控制输出格式——你可以生成带自定义类的 HTML、React 元素、ANSI 终端输出或任何其他字符串格式。
 
 ```ts
 const result = Bun.markdown.render("# Hello **world**", {
@@ -113,59 +111,59 @@ const result = Bun.markdown.render("# Hello **world**", {
 // '<h1 class="title">Hello <b>world</b></h1>'
 ```
 
-### Callback signature
+### 回调函数签名
 
-Each callback receives:
+每个回调接收：
 
-1. **`children`** — the accumulated content of the element as a string
-2. **`meta`** (optional) — an object with element-specific metadata
+1. **`children`** — 元素累积的内容字符串
+2. **`meta`**（可选）— 带有元素特定元数据的对象
 
-Return a string to replace the element's rendering. Return `null` or `undefined` to omit the element from the output entirely. If no callback is registered for an element, its children pass through unchanged.
+返回一个字符串替代元素渲染。返回 `null` 或 `undefined` 则完全忽略该元素。如果未注册元素回调，则其子元素会原样通过。
 
-### Block callbacks
+### 块级回调
 
-| Callback     | Meta                                          | Description                                                                              |
-| ------------ | --------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `heading`    | `{ level, id? }`                              | Heading level 1–6. `id` is set when `headings: { ids: true }` is enabled                 |
-| `paragraph`  | —                                             | Paragraph block                                                                          |
-| `blockquote` | —                                             | Blockquote block                                                                         |
-| `code`       | `{ language? }`                               | Fenced or indented code block. `language` is the info-string when specified on the fence |
-| `list`       | `{ ordered, start?, depth }`                  | `depth` is nesting level (0 = top-level). `start` is set for ordered lists               |
-| `listItem`   | `{ index, depth, ordered, start?, checked? }` | See [List item meta](#list-item-meta) below                                              |
-| `hr`         | —                                             | Horizontal rule                                                                          |
-| `table`      | —                                             | Table block                                                                              |
-| `thead`      | —                                             | Table head                                                                               |
-| `tbody`      | —                                             | Table body                                                                               |
-| `tr`         | —                                             | Table row                                                                                |
-| `th`         | `{ align? }`                                  | Table header cell. `align` is `"left"`, `"center"`, `"right"`, or absent                 |
-| `td`         | `{ align? }`                                  | Table data cell                                                                          |
-| `html`       | —                                             | Raw HTML content                                                                         |
+| 回调         | 元数据                                      | 描述                                                        |
+| ------------ | ------------------------------------------- | ----------------------------------------------------------- |
+| `heading`    | `{ level: number, id?: string }`            | 标题级别 1–6。启用 `headings: { ids: true }` 时会设置 `id`  |
+| `paragraph`  | —                                           | 段落块                                                      |
+| `blockquote` | —                                           | 引用块                                                      |
+| `code`       | `{ language?: string }`                     | 围栏代码或缩进代码块。`language` 是围栏信息字符串（若指定） |
+| `list`       | `{ ordered: boolean, start?: number }`      | 有序或无序列表。有序列表的起始数字为 `start`                |
+| `listItem`   | `{ checked?: boolean }`                     | 列表项。任务列表项（`- [x]` / `- [ ]`）会设置 `checked`     |
+| `hr`         | —                                           | 分割线                                                      |
+| `table`      | —                                           | 表格块                                                      |
+| `thead`      | —                                           | 表头                                                        |
+| `tbody`      | —                                           | 表格主体                                                    |
+| `tr`         | —                                           | 表格行                                                      |
+| `th`         | `{ align?: "left" \| "center" \| "right" }` | 表头单元格。指定对齐时设置 `align`                          |
+| `td`         | `{ align?: "left" \| "center" \| "right" }` | 表格单元格。指定对齐时设置 `align`                          |
+| `html`       | —                                           | 原始 HTML 内容                                              |
 
-#### List item meta
+#### 列表项元数据
 
-The `listItem` callback receives everything needed to render markers directly:
+`listItem` 回调会接收渲染标记所需的所有信息：
 
-- `index` — 0-based position within the parent list
-- `depth` — the parent list's nesting level (0 = top-level)
-- `ordered` — whether the parent list is ordered
-- `start` — the parent list's start number (only when `ordered` is true)
-- `checked` — task list state (only for `- [x]` / `- [ ]` items)
+- `index` — 在父列表中的基于 0 的位置
+- `depth` — 父列表的嵌套层级（0 = 顶层）
+- `ordered` — 父列表是否为有序列表
+- `start` — 父列表的起始编号（仅当 `ordered` 为 true 时）
+- `checked` — 任务列表状态（仅用于 `- [x]` / `- [ ]` 项）
 
-### Inline callbacks
+### 行内回调
 
-| Callback        | Meta                               | Description                  |
-| --------------- | ---------------------------------- | ---------------------------- |
-| `strong`        | —                                  | Strong emphasis (`**text**`) |
-| `emphasis`      | —                                  | Emphasis (`*text*`)          |
-| `link`          | `{ href: string, title?: string }` | Link                         |
-| `image`         | `{ src: string, title?: string }`  | Image                        |
-| `codespan`      | —                                  | Inline code (`` `code` ``)   |
-| `strikethrough` | —                                  | Strikethrough (`~~text~~`)   |
-| `text`          | —                                  | Plain text content           |
+| 回调            | 元数据                             | 描述                    |
+| --------------- | ---------------------------------- | ----------------------- |
+| `strong`        | —                                  | 加粗强调 (`**text**`)   |
+| `emphasis`      | —                                  | 斜体强调 (`*text*`)     |
+| `link`          | `{ href: string, title?: string }` | 链接                    |
+| `image`         | `{ src: string, title?: string }`  | 图像                    |
+| `codespan`      | —                                  | 行内代码 (`` `code` ``) |
+| `strikethrough` | —                                  | 删除线 (`~~text~~`)     |
+| `text`          | —                                  | 纯文本内容              |
 
-### Examples
+### 示例
 
-#### Custom HTML with classes
+#### 带类的自定义 HTML
 
 ```ts
 const html = Bun.markdown.render("# Title\n\nHello **world**", {
@@ -175,7 +173,7 @@ const html = Bun.markdown.render("# Title\n\nHello **world**", {
 });
 ```
 
-#### Stripping all formatting
+#### 去除所有格式
 
 ```ts
 const plaintext = Bun.markdown.render("# Hello **world**", {
@@ -191,20 +189,20 @@ const plaintext = Bun.markdown.render("# Hello **world**", {
 // "Hello world"
 ```
 
-#### Omitting elements
+#### 忽略元素
 
-Return `null` or `undefined` to remove an element from the output:
+返回 `null` 或 `undefined` 可从输出中删除某元素：
 
 ```ts
 const result = Bun.markdown.render("# Title\n\n![logo](img.png)\n\nHello", {
-  image: () => null, // Remove all images
+  image: () => null, // 移除所有图片
   heading: children => children,
   paragraph: children => children + "\n",
 });
 // "Title\nHello\n"
 ```
 
-#### ANSI terminal output
+#### ANSI 终端输出
 
 ```ts
 const ansi = Bun.markdown.render("# Hello\n\nThis is **bold** and *italic*", {
@@ -215,9 +213,9 @@ const ansi = Bun.markdown.render("# Hello\n\nThis is **bold** and *italic*", {
 });
 ```
 
-#### Nested list numbering
+#### 嵌套列表编号
 
-The `listItem` callback receives everything needed to render markers directly — no post-processing:
+`listItem`回调函数接收渲染标记所需的所有内容——无需后期处理：
 
 ```ts
 const result = Bun.markdown.render("1. first\n   1. sub-a\n   2. sub-b\n2. second", {
@@ -242,7 +240,7 @@ const result = Bun.markdown.render("1. first\n   1. sub-a\n   2. sub-b\n2. secon
 // 2. second
 ```
 
-#### Code block syntax highlighting
+#### 代码块语法高亮
 
 ````ts
 const result = Bun.markdown.render("```js\nconsole.log('hi')\n```", {
@@ -253,9 +251,9 @@ const result = Bun.markdown.render("```js\nconsole.log('hi')\n```", {
 });
 ````
 
-### Parser options
+### 解析器选项
 
-Parser options are passed as a separate third argument:
+解析器选项作为第三个参数传入：
 
 ```ts
 const result = Bun.markdown.render(
@@ -272,7 +270,7 @@ const result = Bun.markdown.render(
 
 ## `Bun.markdown.react()`
 
-Render Markdown directly to React elements. Returns a `<Fragment>` that you can use as a component return value.
+将 Markdown 直接渲染为 React 元素。返回一个 `<Fragment>`，可以作为组件返回值使用。
 
 ```tsx
 function Markdown({ text }: { text: string }) {
@@ -280,9 +278,9 @@ function Markdown({ text }: { text: string }) {
 }
 ```
 
-### Server-side rendering
+### 服务端渲染
 
-Works with `renderToString()` and React Server Components:
+支持 `renderToString()` 和 React 服务端组件：
 
 ```tsx
 import { renderToString } from "react-dom/server";
@@ -291,9 +289,9 @@ const html = renderToString(Bun.markdown.react("# Hello **world**"));
 // "<h1>Hello <strong>world</strong></h1>"
 ```
 
-### Component overrides
+### 组件替代
 
-Replace any HTML element with a custom React component by passing it in the second argument, keyed by tag name:
+通过第二个参数传入以标签名为键的自定义 React 组件，替换任意 HTML 元素：
 
 ```tsx
 function Code({ language, children }) {
@@ -331,37 +329,37 @@ const el = Bun.markdown.react(
 );
 ```
 
-#### Available overrides
+#### 可覆盖元素列表
 
-Every HTML tag produced by the parser can be overridden:
+解析器产生的每个 HTML 标签都可以被替换：
 
-| Option       | Props                        | Description                                                     |
-| ------------ | ---------------------------- | --------------------------------------------------------------- |
-| `h1`–`h6`    | `{ id?, children }`          | Headings. `id` is set when `headings: { ids: true }` is enabled |
-| `p`          | `{ children }`               | Paragraph                                                       |
-| `blockquote` | `{ children }`               | Blockquote                                                      |
-| `pre`        | `{ language?, children }`    | Code block. `language` is the info string (e.g. `"js"`)         |
-| `hr`         | `{}`                         | Horizontal rule (no children)                                   |
-| `ul`         | `{ children }`               | Unordered list                                                  |
-| `ol`         | `{ start, children }`        | Ordered list. `start` is the first item number                  |
-| `li`         | `{ checked?, children }`     | List item. `checked` is set for task list items                 |
-| `table`      | `{ children }`               | Table                                                           |
-| `thead`      | `{ children }`               | Table head                                                      |
-| `tbody`      | `{ children }`               | Table body                                                      |
-| `tr`         | `{ children }`               | Table row                                                       |
-| `th`         | `{ align?, children }`       | Table header cell                                               |
-| `td`         | `{ align?, children }`       | Table data cell                                                 |
-| `em`         | `{ children }`               | Emphasis (`*text*`)                                             |
-| `strong`     | `{ children }`               | Strong (`**text**`)                                             |
-| `a`          | `{ href, title?, children }` | Link                                                            |
-| `img`        | `{ src, alt?, title? }`      | Image (no children)                                             |
-| `code`       | `{ children }`               | Inline code                                                     |
-| `del`        | `{ children }`               | Strikethrough (`~~text~~`)                                      |
-| `br`         | `{}`                         | Hard line break (no children)                                   |
+| 选项         | Props                        | 描述                                             |
+| ------------ | ---------------------------- | ------------------------------------------------ |
+| `h1`–`h6`    | `{ id?, children }`          | 标题。启用 `headings: { ids: true }` 时带有 `id` |
+| `p`          | `{ children }`               | 段落                                             |
+| `blockquote` | `{ children }`               | 引用                                             |
+| `pre`        | `{ language?, children }`    | 代码块。`language` 是信息字符串（例如 `"js"`）   |
+| `hr`         | `{}`                         | 分割线（无子元素）                               |
+| `ul`         | `{ children }`               | 无序列表                                         |
+| `ol`         | `{ start, children }`        | 有序列表。`start` 是起始编号                     |
+| `li`         | `{ checked?, children }`     | 列表项。任务列表项带 `checked`                   |
+| `table`      | `{ children }`               | 表格                                             |
+| `thead`      | `{ children }`               | 表头                                             |
+| `tbody`      | `{ children }`               | 表体                                             |
+| `tr`         | `{ children }`               | 表格行                                           |
+| `th`         | `{ align?, children }`       | 表头单元格                                       |
+| `td`         | `{ align?, children }`       | 表格单元格                                       |
+| `em`         | `{ children }`               | 斜体强调 (`*text*`)                              |
+| `strong`     | `{ children }`               | 加粗 (`**text**`)                                |
+| `a`          | `{ href, title?, children }` | 链接                                             |
+| `img`        | `{ src, alt?, title? }`      | 图像（无子元素）                                 |
+| `code`       | `{ children }`               | 行内代码                                         |
+| `del`        | `{ children }`               | 删除线 (`~~text~~`)                              |
+| `br`         | `{}`                         | 硬换行（无子元素）                               |
 
-### React 18 and older
+### React 18 及更早版本
 
-By default, elements use `Symbol.for('react.transitional.element')` as the `$$typeof` symbol. For React 18 and older, pass `reactVersion: 18` in the options (third argument):
+默认情况下，元素使用 `Symbol.for('react.transitional.element')` 作为 `$$typeof` 符号。对于 React 18 及更早版本，在选项（第三参数）中传入 `reactVersion: 18`：
 
 ```tsx
 function Markdown({ text }: { text: string }) {
@@ -369,9 +367,9 @@ function Markdown({ text }: { text: string }) {
 }
 ```
 
-### Parser options
+### 解析器选项
 
-All [parser options](#options) are passed as the third argument:
+所有[解析器选项](#options)作为第三个参数传入：
 
 ```tsx
 const el = Bun.markdown.react("## Hello World", undefined, {

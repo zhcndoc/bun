@@ -1,245 +1,243 @@
 ---
-title: .npmrc support
+title: .npmrc 支持
 description:
 ---
 
-Bun supports loading configuration options from [`.npmrc`](https://docs.npmjs.com/cli/v10/configuring-npm/npmrc) files, allowing you to reuse existing registry/scope configurations.
+Bun 支持从 [`.npmrc`](https://docs.npmjs.com/cli/v10/configuring-npm/npmrc) 文件加载配置选项，允许你重用现有的 registry/作用域配置。
 
 <Note>
-  We recommend migrating your `.npmrc` file to Bun's [`bunfig.toml`](/runtime/bunfig) format, as it provides more
-  flexible options and can let you configure Bun-specific options.
+  我们建议将你的 `.npmrc` 文件迁移到 Bun 的 [`bunfig.toml`](/runtime/bunfig) 格式，因为它提供了更灵活的选项，并且可以让你配置 Bun 特有的选项。
 </Note>
 
 ---
 
-## Supported options
+## 支持的选项
 
-### Set the default registry
+### 设置默认的 registry
 
-The default registry is used to resolve packages, its default value is `npm`'s official registry (`https://registry.npmjs.org/`).
+默认 registry 用于解析包，其默认值是 `npm` 的官方 registry (`https://registry.npmjs.org/`)。
 
-To change it, you can set the `registry` option in `.npmrc`:
+要更改它，你可以在 `.npmrc` 中设置 `registry` 选项：
 
 ```ini .npmrc icon="npm"
 registry=http://localhost:4873/
 ```
 
-The equivalent `bunfig.toml` option is [`install.registry`](/runtime/bunfig#install-registry):
+对应的 `bunfig.toml` 选项是 [`install.registry`](/runtime/bunfig#install-registry)：
 
 ```toml bunfig.toml icon="settings"
 install.registry = "http://localhost:4873/"
 ```
 
-### Set the registry for a specific scope
+### 为特定作用域设置 registry
 
-`@<scope>:registry` allows you to set the registry for a specific scope:
+`@<scope>:registry` 允许你为特定的作用域设置 registry：
 
 ```ini .npmrc icon="npm"
 @myorg:registry=http://localhost:4873/
 ```
 
-The equivalent `bunfig.toml` option is to add a key in [`install.scopes`](/runtime/bunfig#install-registry):
+对应的 `bunfig.toml` 选项是在 [`install.scopes`](/runtime/bunfig#install-registry) 中添加一个键：
 
 ```toml bunfig.toml icon="settings"
 [install.scopes]
 myorg = "http://localhost:4873/"
 ```
 
-### Configure options for a specific registry
+### 配置特定 registry 的选项
 
-`//<registry_url>/:<key>=<value>` allows you to set options for a specific registry:
+`//<registry_url>/:<key>=<value>` 允许你为特定 registry 设置选项：
 
 ```ini .npmrc icon="npm"
-# set an auth token for the registry
-# ${...} is a placeholder for environment variables
+# 为 registry 设置认证令牌
+# ${...} 是环境变量的占位符
 //http://localhost:4873/:_authToken=${NPM_TOKEN}
 
 
-# or you could set a username and password
-# note that the password is base64 encoded
+# 或者你可以设置用户名和密码
+# 注意密码是 base64 编码过的
 //http://localhost:4873/:username=myusername
 
 //http://localhost:4873/:_password=${NPM_PASSWORD}
 
-# or use _auth, which is your username and password
-# combined into a single string, which is then base 64 encoded
+# 或者使用 _auth，它是用户名和密码合并成一个字符串后 base64 编码的结果
 //http://localhost:4873/:_auth=${NPM_AUTH}
 ```
 
-The following options are supported:
+支持的选项包括：
 
 - `_authToken`
 - `username`
-- `_password` (base64 encoded password)
-- `_auth` (base64 encoded username:password, e.g. `btoa(username + ":" + password)`)
+- `_password`（base64 编码的密码）
+- `_auth`（base64 编码的用户名:密码，例如 `btoa(username + ":" + password)`）
 - `email`
 
-The equivalent `bunfig.toml` option is to add a key in [`install.scopes`](/runtime/bunfig#install-registry):
+对应的 `bunfig.toml` 选项是在 [`install.scopes`](/runtime/bunfig#install-registry) 中添加一个键：
 
 ```toml bunfig.toml icon="settings"
 [install.scopes]
 myorg = { url = "http://localhost:4873/", username = "myusername", password = "$NPM_PASSWORD" }
 ```
 
-### `link-workspace-packages`: Control workspace package installation
+### `link-workspace-packages`: 控制工作区包的安装
 
-Controls how workspace packages are installed when available locally:
+控制本地可用时工作区包的安装方式：
 
 ```ini .npmrc icon="npm"
 link-workspace-packages=true
 ```
 
-The equivalent `bunfig.toml` option is [`install.linkWorkspacePackages`](/runtime/bunfig#install-linkworkspacepackages):
+对应的 `bunfig.toml` 选项是 [`install.linkWorkspacePackages`](/runtime/bunfig#install-linkworkspacepackages)：
 
 ```toml bunfig.toml icon="settings"
 [install]
 linkWorkspacePackages = true
 ```
 
-### `save-exact`: Save exact versions
+### `save-exact`: 保存确切版本
 
-Always saves exact versions without the `^` prefix:
+始终保存确切版本，不带 `^` 前缀：
 
 ```ini .npmrc icon="npm"
 save-exact=true
 ```
 
-The equivalent `bunfig.toml` option is [`install.exact`](/runtime/bunfig#install-exact):
+对应的 `bunfig.toml` 选项是 [`install.exact`](/runtime/bunfig#install-exact)：
 
 ```toml bunfig.toml icon="settings"
 [install]
 exact = true
 ```
 
-### `ignore-scripts`: Skip lifecycle scripts
+### `ignore-scripts`: 跳过生命周期脚本
 
-Prevents running lifecycle scripts during installation:
+防止在安装时运行生命周期脚本：
 
 ```ini .npmrc icon="npm"
 ignore-scripts=true
 ```
 
-This is equivalent to using the `--ignore-scripts` flag with `bun install`.
+这相当于使用 `bun install` 的 `--ignore-scripts` 标志。
 
-### `dry-run`: Preview changes without installing
+### `dry-run`: 预览变更但不安装
 
-Shows what would be installed without actually installing:
+显示将会安装的内容，但实际不进行安装：
 
 ```ini .npmrc icon="npm"
 dry-run=true
 ```
 
-The equivalent `bunfig.toml` option is [`install.dryRun`](/runtime/bunfig#install-dryrun):
+对应的 `bunfig.toml` 选项是 [`install.dryRun`](/runtime/bunfig#install-dryrun)：
 
 ```toml bunfig.toml icon="settings"
 [install]
 dryRun = true
 ```
 
-### `cache`: Configure cache directory
+### `cache`: 配置缓存目录
 
-Set the cache directory path, or disable caching:
+设置缓存目录路径，或禁用缓存：
 
 ```ini .npmrc icon="npm"
-# set a custom cache directory
+# 设置自定义缓存目录
 cache=/path/to/cache
 
-# or disable caching
+# 或禁用缓存
 cache=false
 ```
 
-The equivalent `bunfig.toml` option is [`install.cache`](/runtime/bunfig#install-cache):
+对应的 `bunfig.toml` 选项是 [`install.cache`](/runtime/bunfig#install-cache)：
 
 ```toml bunfig.toml icon="settings"
 [install.cache]
-# set a custom cache directory
+# 设置自定义缓存目录
 dir = "/path/to/cache"
 
-# or disable caching
+# 或禁用缓存
 disable = true
 ```
 
-### `ca` and `cafile`: Configure CA certificates
+### `ca` 和 `cafile`: 配置 CA 证书
 
-Configure custom CA certificates for registry connections:
+为 registry 连接配置自定义 CA 证书：
 
 ```ini .npmrc icon="npm"
-# single CA certificate
+# 单个 CA 证书
 ca="-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"
 
-# multiple CA certificates
+# 多个 CA 证书
 ca[]="-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"
 ca[]="-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"
 
-# or specify a path to a CA file
+# 或指定 CA 文件路径
 cafile=/path/to/ca-bundle.crt
 ```
 
-### `omit` and `include`: Control dependency types
+### `omit` 和 `include`: 控制依赖类型
 
-Control which dependency types are installed:
+控制安装哪些依赖类型：
 
 ```ini .npmrc icon="npm"
-# omit dev dependencies
+# 忽略开发依赖
 omit=dev
 
-# omit multiple types
+# 忽略多种类型
 omit[]=dev
 omit[]=optional
 
-# include specific types (overrides omit)
+# 包含指定类型（覆盖 omit）
 include=dev
 ```
 
-Valid values: `dev`, `peer`, `optional`
+有效值：`dev`，`peer`，`optional`
 
-### `install-strategy` and `node-linker`: Installation strategy
+### `install-strategy` 和 `node-linker`: 安装策略
 
-Control how packages are installed in `node_modules`. Bun supports two different configuration options for compatibility with different package managers.
+控制 `node_modules` 中包的安装方式。Bun 支持两种不同的配置选项，以兼容不同的包管理器。
 
-**npm's `install-strategy`:**
+**npm 的 `install-strategy`：**
 
 ```ini .npmrc icon="npm"
-# flat node_modules structure (default)
+# 扁平 node_modules 结构（默认）
 install-strategy=hoisted
 
-# symlinked structure
+# 符号链接结构
 install-strategy=linked
 ```
 
-**pnpm/yarn's `node-linker`:**
+**pnpm / yarn 的 `node-linker`：**
 
-The `node-linker` option controls the installation mode. Bun supports values from both pnpm and yarn:
+`node-linker` 选项控制安装模式。Bun 支持 pnpm 和 yarn 两者的值：
 
-| Value          | Description                                     | Accepted by |
-| -------------- | ----------------------------------------------- | ----------- |
-| `isolated`     | Symlinked structure with isolated dependencies  | pnpm        |
-| `hoisted`      | Flat node_modules structure                     | pnpm        |
-| `pnpm`         | Symlinked structure (same as `isolated`)        | yarn        |
-| `node-modules` | Flat node_modules structure (same as `hoisted`) | yarn        |
+| 值             | 描述                                         | 接受者       |
+| -------------- | -------------------------------------------- | ------------ |
+| `isolated`     | 符号链接结构，带有隔离依赖                    | pnpm         |
+| `hoisted`      | 扁平 node_modules 结构                        | pnpm         |
+| `pnpm`         | 符号链接结构（等同于 `isolated`）             | yarn         |
+| `node-modules` | 扁平 node_modules 结构（等同于 `hoisted`）     | yarn         |
 
 ```ini .npmrc icon="npm"
-# symlinked/isolated mode
+# 符号链接 / 隔离模式
 node-linker=isolated
 node-linker=pnpm
 
-# flat/hoisted mode
+# 扁平 / 托举模式
 node-linker=hoisted
 node-linker=node-modules
 ```
 
-### `public-hoist-pattern` and `hoist-pattern`: Control hoisting
+### `public-hoist-pattern` 和 `hoist-pattern`: 控制托举
 
-Control which packages are hoisted to the root `node_modules`:
+控制哪些包被托举到根节点的 `node_modules`：
 
 ```ini .npmrc icon="npm"
-# packages matching this pattern will be hoisted to the root
+# 匹配该模式的包将被托举到根目录
 public-hoist-pattern=*eslint*
 
-# multiple patterns
+# 多个模式
 public-hoist-pattern[]=*eslint*
 public-hoist-pattern[]=*prettier*
 
-# control general hoisting behavior
+# 控制通用的托举行为
 hoist-pattern=*
 ```

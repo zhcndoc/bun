@@ -1,56 +1,56 @@
 ---
-title: Build an app with SvelteKit and Bun
-sidebarTitle: "SvelteKit with Bun"
+title: 使用 SvelteKit 和 Bun 构建应用
+sidebarTitle: "SvelteKit 与 Bun"
 mode: center
 ---
 
-Use `sv create my-app` to create a SvelteKit project with SvelteKit CLI. Answer the prompts to select a template and set up your development environment.
+使用 `sv create my-app` 通过 SvelteKit CLI 创建一个 SvelteKit 项目。根据提示选择模板并设置开发环境。
 
 ```sh terminal icon="terminal"
 bunx sv create my-app
 ```
 
 ```txt
-┌  Welcome to the Svelte CLI! (v0.5.7)
+┌  欢迎使用 Svelte CLI！(v0.5.7)
 │
-◇  Which template would you like?
-│  SvelteKit demo
+◇  请选择模板：
+│  SvelteKit 演示
 │
-◇  Add type checking with Typescript?
-│  Yes, using Typescript syntax
+◇  是否添加 Typescript 类型检查？
+│  是，使用 Typescript 语法
 │
-◆  Project created
+◆  项目已创建
 │
-◇  What would you like to add to your project?
-│  none
+◇  您想添加什么到项目中？
+│  无
 │
-◇  Which package manager do you want to install dependencies with?
+◇  请选择安装依赖的包管理器：
 │  bun
 │
-◇  Successfully installed dependencies
+◇  依赖安装成功
 │
-◇  Project next steps ─────────────────────────────────────────────────────╮
+◇  项目下一步操作 ──────────────────────────────────────────────────────╮
 │                                                                          │
 │  1: cd my-app                                                            │
-│  2: git init && git add -A && git commit -m "Initial commit" (optional)  │
+│  2: git init && git add -A && git commit -m "Initial commit"（可选）   │
 │  3: bun run dev -- --open                                                │
 │                                                                          │
-│  To close the dev server, hit Ctrl-C                                     │
+│  关闭开发服务器，请按 Ctrl-C                                             │
 │                                                                          │
-│  Stuck? Visit us at https://svelte.dev/chat                              │
+│  遇到问题？访问 https://svelte.dev/chat                                  │
 │                                                                          │
 ├──────────────────────────────────────────────────────────────────────────╯
 │
-└  You're all set!
+└  一切就绪！
 ```
 
 ---
 
-Once the project is initialized, `cd` into the new project. You don't need to run 'bun install' since the dependencies are already installed.
+项目初始化完成后，进入新项目目录。由于依赖已安装，无需运行 `bun install`。
 
-Then start the development server with `bun --bun run dev`.
+然后使用 `bun --bun run dev` 启动开发服务器。
 
-To run the dev server with Node.js instead of Bun, you can omit the `--bun` flag.
+如果想用 Node.js 而非 Bun 运行开发服务器，可以省略 `--bun` 标志。
 
 ```sh terminal icon="terminal"
 cd my-app
@@ -59,34 +59,34 @@ bun --bun run dev
 
 ```txt
   $ vite dev
-  Forced re-optimization of dependencies
+  强制重新优化依赖
 
-    VITE v5.4.10  ready in 424 ms
+    VITE v5.4.10  424 ms 内完成准备
 
-    ➜  Local:   http://localhost:5173/
-    ➜  Network: use --host to expose
-    ➜  press h + enter to show help
+    ➜  本地访问:   http://localhost:5173/
+    ➜  网络访问: 使用 --host 参数以公开访问
+    ➜  按 h + 回车 显示帮助
 ```
 
 ---
 
-Visit [http://localhost:5173](http://localhost:5173/) in a browser to see the template app.
+在浏览器访问 [http://localhost:5173](http://localhost:5173/) 查看模板应用。
 
 <Frame>
-  ![SvelteKit app running](https://github.com/oven-sh/bun/assets/3084745/7c76eae8-78f9-44fa-9f15-1bd3ca1a47c0)
+  ![运行中的 SvelteKit 应用](https://github.com/oven-sh/bun/assets/3084745/7c76eae8-78f9-44fa-9f15-1bd3ca1a47c0)
 </Frame>
 
 ---
 
-If you edit and save `src/routes/+page.svelte`, you should see your changes hot-reloaded in the browser.
+编辑并保存 `src/routes/+page.svelte` 后，你的改动会在浏览器中热重载显示。
 
 ---
 
-To build for production, you'll need to add the right SvelteKit adapter. Currently we recommend the
+要构建生产版本，需要添加合适的 SvelteKit 适配器。当前推荐
 
-`bun add -D svelte-adapter-bun`.
+`bun add -D svelte-adapter-bun`。
 
-Now, make the following changes to your `svelte.config.js`.
+然后，对你的 `svelte.config.js` 做如下修改。
 
 ```js svelte.config.js icon="file-code"
 import adapter from "@sveltejs/adapter-auto"; // [!code --]
@@ -95,14 +95,13 @@ import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-  // Consult https://svelte.dev/docs/kit/integrations#preprocessors
-  // for more information about preprocessors
+  // 详细信息请参考：https://svelte.dev/docs/kit/integrations#preprocessors
   preprocess: vitePreprocess(),
 
   kit: {
-    // adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
-    // If your environment is not supported, or you settled on a specific environment, switch out the adapter.
-    // See https://svelte.dev/docs/kit/adapters for more information about adapters.
+    // adapter-auto 仅支持部分环境，具体环境列表请见 https://svelte.dev/docs/kit/adapter-auto
+    // 如果你的环境不被支持，或者你想指定特定环境，请切换适配器。
+    // 更多适配器信息请见 https://svelte.dev/docs/kit/adapters
     adapter: adapter(),
   },
 };
@@ -112,7 +111,7 @@ export default config;
 
 ---
 
-To build a production bundle:
+构建生产包：
 
 ```sh terminal icon="terminal"
 bun --bun run build
@@ -120,19 +119,19 @@ bun --bun run build
 
 ```txt
   $ vite build
-  vite v5.4.10 building SSR bundle for production...
-  "confetti" is imported from external module "@neoconfetti/svelte" but never used in "src/routes/sverdle/+page.svelte".
-  ✓ 130 modules transformed.
-  vite v5.4.10 building for production...
-  ✓ 148 modules transformed.
+  vite v5.4.10 正在构建 SSR 生产包…
+  "confetti" 从外部模块 "@neoconfetti/svelte" 导入，但在 "src/routes/sverdle/+page.svelte" 中未使用。
+  ✓ 转换了 130 个模块。
+  vite v5.4.10 正在构建生产包…
+  ✓ 转换了 148 个模块。
   ...
-  ✓ built in 231ms
+  ✓ 231ms 内完成构建
   ...
-  ✓ built in 899ms
+  ✓ 899ms 内完成构建
 
-  Run npm run preview to preview your production build locally.
+  运行 npm run preview 可在本地预览生产构建。
 
-  > Using svelte-adapter-bun
-    ✔ Start server with: bun ./build/index.js
-    ✔ done
+  > 使用 svelte-adapter-bun
+    ✔ 通过 bun ./build/index.js 启动服务器
+    ✔ 完成
 ```

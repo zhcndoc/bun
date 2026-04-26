@@ -1,21 +1,21 @@
 ---
-title: Spawn a child process and communicate using IPC
-sidebarTitle: Spawn a child process and communicate using IPC
+title: 派生子进程并使用 IPC 通信
+sidebarTitle: 派生子进程并使用 IPC 通信
 mode: center
 ---
 
-Use [`Bun.spawn()`](/runtime/child-process) to spawn a child process. When spawning a second `bun` process, you can open a direct inter-process communication (IPC) channel between the two processes.
+使用 [`Bun.spawn()`](/runtime/child-process) 来派生子进程。在派生第二个 `bun` 进程时，你可以在两个进程之间打开直接的进程间通信（IPC）通道。
 
 <Note>
-  This API is only compatible with other `bun` processes. Use `process.execPath` to get a path to the currently running
-  `bun` executable.
+  此 API 仅与其他 `bun` 进程兼容。使用 `process.execPath` 可获取当前正在运行的
+  `bun` 可执行文件的路径。
 </Note>
 
 ```ts parent.ts icon="/icons/typescript.svg"
 const child = Bun.spawn(["bun", "child.ts"], {
   ipc(message) {
     /**
-     * The message received from the sub process
+     * 从子进程接收到的消息
      **/
   },
 });
@@ -23,47 +23,47 @@ const child = Bun.spawn(["bun", "child.ts"], {
 
 ---
 
-The parent process can send messages to the subprocess using the `.send()` method on the returned `Subprocess` instance. A reference to the sending subprocess is also available as the second argument in the `ipc` handler.
+父进程可以使用返回的 `Subprocess` 实例上的 `.send()` 方法向子进程发送消息。在 `ipc` 处理器的第二个参数中，还可以获得发送消息的子进程的引用。
 
 ```ts parent.ts icon="/icons/typescript.svg"
 const childProc = Bun.spawn(["bun", "child.ts"], {
   ipc(message, childProc) {
     /**
-     * The message received from the sub process
+     * 从子进程接收到的消息
      **/
-    childProc.send("Respond to child");
+    childProc.send("回复子进程");
   },
 });
 
-childProc.send("I am your father"); // The parent can send messages to the child as well
+childProc.send("我是你的父亲"); // 父进程也可以向子进程发送消息
 ```
 
 ---
 
-Meanwhile the child process can send messages to its parent using with `process.send()` and receive messages with `process.on("message")`. This is the same API used for `child_process.fork()` in Node.js.
+同时，子进程可以使用 `process.send()` 向父进程发送消息，并使用 `process.on("message")` 接收消息。这与 Node.js 中 `child_process.fork()` 使用的 API 相同。
 
 ```ts child.ts icon="/icons/typescript.svg"
-process.send("Hello from child as string");
-process.send({ message: "Hello from child as object" });
+process.send("来自子进程的字符串消息");
+process.send({ message: "来自子进程的对象消息" });
 
 process.on("message", message => {
-  // print message from parent
+  // 打印来自父进程的消息
   console.log(message);
 });
 ```
 
 ---
 
-All messages are serialized using the JSC `serialize` API, which allows for the same set of [transferrable types](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects) supported by `postMessage` and `structuredClone`, including strings, typed arrays, streams, and objects.
+所有消息均使用 JSC 的 `serialize` API 进行序列化，该 API 支持与 `postMessage` 和 `structuredClone` 相同的一组[可传输类型](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects)，包括字符串、类型化数组、流和对象。
 
 ```ts child.ts icon="/icons/typescript.svg"
-// send a string
-process.send("Hello from child as string");
+// 发送字符串
+process.send("来自子进程的字符串消息");
 
-// send an object
-process.send({ message: "Hello from child as object" });
+// 发送对象
+process.send({ message: "来自子进程的对象消息" });
 ```
 
 ---
 
-See [Docs > API > Child processes](/runtime/child-process) for complete documentation.
+完整文档请参见 [Docs > API > 子进程](/runtime/child-process)。

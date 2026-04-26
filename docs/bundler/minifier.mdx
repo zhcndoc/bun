@@ -1,70 +1,70 @@
 ---
-name: Minifier
-description: Reduce bundle sizes with Bun's JavaScript and TypeScript minifier
+name: 压缩器
+description: 使用 Bun 的 JavaScript 和 TypeScript 压缩器减少包大小
 ---
 
-Bun includes a fast JavaScript and TypeScript minifier that can reduce bundle sizes by 80% or more (depending on the codebase) and make output code run faster. The minifier performs dozens of optimizations including constant folding, dead code elimination, and syntax transformations. Unlike other minifiers, Bun's minifier makes `bun build` run faster since there's less code to print.
+Bun 内置了一个快速的 JavaScript 和 TypeScript 压缩器，可以根据代码库情况将包大小减少 80% 甚至更多，同时提升输出代码的运行速度。该压缩器执行了数十种优化，包括常量折叠、死代码消除和语法转换。与其他压缩器不同，Bun 的压缩器还能让 `bun build` 运行更快，因为打印的代码更少。
 
-## CLI Usage
+## CLI 用法
 
-### Enable all minification
+### 启用所有压缩
 
-Use the `--minify` flag to enable all minification modes:
+使用 `--minify` 标志启用所有压缩模式：
 
 ```bash
 bun build ./index.ts --minify --outfile=out.js
 ```
 
-The `--minify` flag automatically enables:
+`--minify` 标志会自动启用：
 
-- Whitespace minification
-- Syntax minification
-- Identifier minification
+- 空白字符压缩
+- 语法压缩
+- 标识符压缩
 
-### Production mode
+### 生产模式
 
-The `--production` flag automatically enables minification:
+`--production` 标志会自动启用压缩：
 
 ```bash
 bun build ./index.ts --production --outfile=out.js
 ```
 
-The `--production` flag also:
+`--production` 标志还会：
 
-- Sets `process.env.NODE_ENV` to `production`
-- Enables the production-mode JSX import & transform
+- 设置 `process.env.NODE_ENV` 为 `production`
+- 启用生产模式下的 JSX 导入和转换
 
-### Granular control
+### 细粒度控制
 
-You can enable specific minification modes individually:
+你可以单独启用特定的压缩模式：
 
 ```bash
-# Only remove whitespace
+# 仅移除空白字符
 bun build ./index.ts --minify-whitespace --outfile=out.js
 
-# Only minify syntax
+# 仅压缩语法
 bun build ./index.ts --minify-syntax --outfile=out.js
 
-# Only minify identifiers
+# 仅压缩标识符
 bun build ./index.ts --minify-identifiers --outfile=out.js
 
-# Combine specific modes
+# 组合特定模式
 bun build ./index.ts --minify-whitespace --minify-syntax --outfile=out.js
 ```
 
 ## JavaScript API
 
-When using Bun's bundler programmatically, configure minification through the `minify` option:
+使用 Bun 的打包器进行编程时，通过 `minify` 选项配置压缩：
 
 ```ts
 await Bun.build({
   entrypoints: ["./index.ts"],
   outdir: "./out",
-  minify: true, // Enable all minification modes
+  minify: true, // 启用所有压缩模式
 });
 ```
 
-For granular control, pass an object:
+细粒度控制则传入对象：
 
 ```ts
 await Bun.build({
@@ -78,29 +78,29 @@ await Bun.build({
 });
 ```
 
-## Minification Modes
+## 压缩模式
 
-Bun's minifier has three independent modes that can be enabled separately or combined.
+Bun 的压缩器有三个独立模式，可单独或组合启用。
 
-### Whitespace minification (`--minify-whitespace`)
+### 空白字符压缩（`--minify-whitespace`）
 
-Removes all unnecessary whitespace, newlines, and formatting from the output.
+移除输出中的所有多余空白字符、换行和格式。
 
-### Syntax minification (`--minify-syntax`)
+### 语法压缩（`--minify-syntax`）
 
-Rewrites JavaScript syntax to shorter equivalent forms and performs constant folding, dead code elimination, and other optimizations.
+将 JavaScript 语法重写为更短的等效形式，并执行常量折叠、死代码消除及其他优化。
 
-### Identifier minification (`--minify-identifiers`)
+### 标识符压缩（`--minify-identifiers`）
 
-Renames local variables and function names to shorter identifiers using frequency-based optimization.
+根据使用频率重命名局部变量和函数名为更短的标识符。
 
-## All Transformations
+## 所有转换
 
-### Boolean literal shortening
+### 布尔字面量缩短
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Converts boolean literals to shorter expressions.
+将布尔字面量转换为更短的表达式。
 
 ```ts Input
 true
@@ -112,11 +112,11 @@ false
 !1
 ```
 
-### Boolean algebra optimizations
+### 布尔代数优化
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Simplifies boolean expressions using logical rules.
+通过逻辑规则简化布尔表达式。
 
 ```ts Input
 !!x
@@ -136,11 +136,11 @@ x
 !0
 ```
 
-### Undefined shortening
+### undefined 缩短
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Replaces `undefined` with shorter equivalent.
+用更短的等效表达式替换 `undefined`。
 
 ```ts Input
 undefined
@@ -152,11 +152,11 @@ void 0
 let x=void 0;
 ```
 
-### Undefined equality optimization
+### undefined 相等性优化
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Optimizes loose equality checks with undefined.
+优化与 undefined 的宽松相等检查。
 
 ```ts Input
 x == undefined
@@ -168,11 +168,11 @@ x == null
 x != null
 ```
 
-### Infinity shortening
+### Infinity 缩短
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Converts Infinity to mathematical expressions.
+将 Infinity 转换为数学表达式。
 
 ```ts Input
 Infinity
@@ -184,11 +184,11 @@ Infinity
 -1/0
 ```
 
-### Typeof optimizations
+### typeof 优化
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Optimizes typeof comparisons and evaluates constant typeof expressions.
+优化 typeof 对比并求值常量 typeof 表达式。
 
 ```ts Input
 typeof x === 'undefined'
@@ -212,11 +212,11 @@ typeof x<'u'
 "bigint"
 ```
 
-### Number formatting
+### 数字格式化
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Formats numbers in the most compact representation.
+以最紧凑形式格式化数字。
 
 ```ts Input
 10000
@@ -234,11 +234,11 @@ Formats numbers in the most compact representation.
 -42
 ```
 
-### Arithmetic constant folding
+### 算术常量折叠
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Evaluates arithmetic operations at compile time.
+编译时计算算术运算。
 
 ```ts Input
 1 + 2
@@ -258,11 +258,11 @@ Evaluates arithmetic operations at compile time.
 8
 ```
 
-### Bitwise constant folding
+### 位运算常量折叠
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Evaluates bitwise operations at compile time.
+编译时计算位运算。
 
 ```ts Input
 5 & 3
@@ -282,11 +282,11 @@ Evaluates bitwise operations at compile time.
 -6
 ```
 
-### String concatenation
+### 字符串拼接
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Combines string literals at compile time.
+编译时合并字符串字面量。
 
 ```ts Input
 "a" + "b"
@@ -300,11 +300,11 @@ Combines string literals at compile time.
 "foobarbaz"
 ```
 
-### String indexing
+### 字符串索引
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Evaluates string character access at compile time.
+编译时计算字符串字符访问。
 
 ```ts Input
 "foo"[2]
@@ -316,11 +316,11 @@ Evaluates string character access at compile time.
 "h"
 ```
 
-### Template literal folding
+### 模板字面量折叠
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Evaluates template literals with constant expressions.
+编译时计算带常量表达式的模板字面量。
 
 ```ts Input
 `a${123}b`
@@ -332,11 +332,11 @@ Evaluates template literals with constant expressions.
 "result: 15"
 ```
 
-### Template literal to string conversion
+### 模板字面量转字符串
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Converts simple template literals to regular strings.
+将简单模板字面量转换为常规字符串。
 
 ```ts Input
 `Hello World`
@@ -349,11 +349,11 @@ Line 2`
 "Line 1\nLine 2"
 ```
 
-### String quote optimization
+### 字符串引号优化
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Chooses the optimal quote character to minimize escapes.
+选择最优引号以减少转义。
 
 ```ts Input
 "It's a string"
@@ -367,11 +367,11 @@ Chooses the optimal quote character to minimize escapes.
 "Simple string"
 ```
 
-### Array spread inlining
+### 数组展开内联
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Inlines array spread operations with constant arrays.
+内联对常量数组的数组展开操作。
 
 ```ts Input
 [1, ...[2, 3], 4]
@@ -383,11 +383,11 @@ Inlines array spread operations with constant arrays.
 [a,b]
 ```
 
-### Array indexing
+### 数组索引
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Evaluates constant array access at compile time.
+编译时计算常量数组访问。
 
 ```ts Input
 [x][0]
@@ -401,11 +401,11 @@ x
 void 0
 ```
 
-### Property access optimization
+### 属性访问优化
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Converts bracket notation to dot notation when possible.
+可用时将括号访问转换为点访问。
 
 ```ts Input
 obj["property"]
@@ -421,11 +421,11 @@ obj["123"]
 obj["invalid-name"]
 ```
 
-### Comparison folding
+### 比较折叠
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Evaluates constant comparisons at compile time.
+编译时计算常量比较。
 
 ```ts Input
 3 < 5
@@ -443,11 +443,11 @@ Evaluates constant comparisons at compile time.
 !0
 ```
 
-### Logical operation folding
+### 逻辑操作折叠
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Simplifies logical operations with constant values.
+简化带常量值的逻辑操作。
 
 ```ts Input
 true && x
@@ -463,11 +463,11 @@ x
 x
 ```
 
-### Nullish coalescing folding
+### 空值合并折叠
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Evaluates nullish coalescing with known values.
+编译时计算已知值的空值合并操作。
 
 ```ts Input
 null ?? x
@@ -481,11 +481,11 @@ x
 42
 ```
 
-### Comma expression simplification
+### 逗号表达式简化
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Removes side-effect-free expressions from comma sequences.
+移除无副作用的逗号序列表达式。
 
 ```ts Input
 (0, x)
@@ -497,11 +497,11 @@ x
 x
 ```
 
-### Ternary conditional folding
+### 三元条件折叠
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Evaluates conditional expressions with constant conditions.
+编译时计算常量条件的三元表达式。
 
 ```ts Input
 true ? a : b
@@ -517,11 +517,11 @@ x ? !0 : !1
 x ? !1 : !0
 ```
 
-### Unary expression folding
+### 一元表达式折叠
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Simplifies unary operations.
+简化一元操作。
 
 ```ts Input
 +123
@@ -537,16 +537,13 @@ Simplifies unary operations.
 123
 123
 x
-~~x
-!!x
-x
 ```
 
-### Double negation removal
+### 双重否定移除
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Removes unnecessary double negations.
+移除不必要的双重否定。
 
 ```ts Input
 !!x
@@ -558,11 +555,11 @@ x
 !x
 ```
 
-### If statement optimization
+### if 语句优化
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Optimizes if statements with constant conditions.
+优化常量条件的 if 语句。
 
 ```ts Input
 if (true) x;
@@ -573,16 +570,16 @@ if (x) {} else y;
 
 ```js Output
 x;
-// removed
+// 移除
 if(x)a;
 if(!x)y;
 ```
 
-### Dead code elimination
+### 死代码消除
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Removes unreachable code and code without side effects.
+移除不可达和无副作用代码。
 
 ```ts Input
 if (false) {
@@ -598,11 +595,11 @@ function foo() {
 function foo(){return x}
 ```
 
-### Unreachable branch removal
+### 不可达分支移除
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Removes branches that can never execute.
+移除永远不会执行的分支。
 
 ```ts Input
 while (false) {
@@ -611,14 +608,14 @@ while (false) {
 ```
 
 ```js Output
-// removed entirely
+// 完全移除
 ```
 
-### Empty block removal
+### 空块移除
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Removes empty blocks and unnecessary braces.
+移除空块和多余的大括号。
 
 ```ts Input
 { }
@@ -627,14 +624,14 @@ if (x) { }
 
 ```js Output
 ;
-// removed
+// 移除
 ```
 
-### Single statement block unwrapping
+### 单语句块展开
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Removes unnecessary braces around single statements.
+移除单语句块多余的大括号。
 
 ```ts Input
 if (condition) {
@@ -646,11 +643,11 @@ if (condition) {
 if(condition)doSomething();
 ```
 
-### TypeScript enum inlining
+### TypeScript 枚举内联
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Inlines TypeScript enum values at compile time.
+编译时内联 TypeScript 枚举值。
 
 ```ts Input
 enum Color { Red, Green, Blue }
@@ -661,26 +658,26 @@ const x = Color.Red;
 const x=0;
 ```
 
-### Pure annotation support
+### 纯净标注支持
 
-**Mode:** Always active
+**模式：** 始终生效
 
-Respects `/*@__PURE__*/` annotations for tree shaking.
+尊重 `/*@__PURE__*/` 标注以支持摇树优化。
 
 ```ts Input
 const x = /*@__PURE__*/ expensive();
-// If x is unused...
+// 如果 x 未使用...
 ```
 
 ```js Output
-// removed entirely
+// 完全移除
 ```
 
-### Identifier renaming
+### 标识符重命名
 
-**Mode:** `--minify-identifiers`
+**模式：** `--minify-identifiers`
 
-Renames local variables to shorter names based on usage frequency.
+根据使用频率重命名局部变量为更短的名称。
 
 ```ts Input
 function calculateSum(firstNumber, secondNumber) {
@@ -693,25 +690,25 @@ function calculateSum(firstNumber, secondNumber) {
 function a(b,c){const d=b+c;return d}
 ```
 
-**Naming strategy:**
+**命名策略：**
 
-- Most frequently used identifiers get the shortest names (a, b, c...)
-- Single letters: a-z (26 names)
-- Double letters: aa-zz (676 names)
-- Triple letters and beyond as needed
+- 使用频率最高的标识符获得最短名称（a, b, c…）
+- 单字母：a-z（共 26 个）
+- 双字母：aa-zz（676 个）
+- 必要时使用三字母及以上
 
-**Preserved identifiers:**
+**保留标识符：**
 
-- JavaScript keywords and reserved words
-- Global identifiers
-- Named exports (to maintain API)
-- CommonJS names: `exports`, `module`
+- JavaScript 关键字和保留字
+- 全局标识符
+- 命名导出（保持 API 稳定）
+- CommonJS 名称：`exports`、`module`
 
-### Whitespace removal
+### 空白字符移除
 
-**Mode:** `--minify-whitespace`
+**模式：** `--minify-whitespace`
 
-Removes all unnecessary whitespace.
+移除所有多余空白。
 
 ```ts Input
 function add(a, b) {
@@ -724,11 +721,11 @@ let x = 10;
 function add(a,b){return a+b;}let x=10;
 ```
 
-### Semicolon optimization
+### 分号优化
 
-**Mode:** `--minify-whitespace`
+**模式：** `--minify-whitespace`
 
-Inserts semicolons only when necessary.
+仅在必要时插入分号。
 
 ```ts Input
 let a = 1;
@@ -740,11 +737,11 @@ return a + b;
 let a=1;let b=2;return a+b
 ```
 
-### Operator spacing removal
+### 操作符空格移除
 
-**Mode:** `--minify-whitespace`
+**模式：** `--minify-whitespace`
 
-Removes spaces around operators.
+移除操作符周围空格。
 
 ```ts Input
 a + b
@@ -758,29 +755,29 @@ x=y*z
 foo&&bar||baz
 ```
 
-### Comment removal
+### 注释移除
 
-**Mode:** `--minify-whitespace`
+**模式：** `--minify-whitespace`
 
-Removes comments except important license comments.
+移除注释，但保留重要的许可证注释。
 
 ```ts Input
-// This comment is removed
-/* So is this */
-/*! But this license comment is kept */
-function test() { /* inline comment */ }
+// 该注释被移除
+/* 这个也是 */
+/*! 但该许可证注释被保留 */
+function test() { /* 内联注释 */ }
 ```
 
 ```js Output
-/*! But this license comment is kept */
+/*! 但该许可证注释被保留 */
 function test(){}
 ```
 
-### Object and array formatting
+### 对象和数组格式化
 
-**Mode:** `--minify-whitespace`
+**模式：** `--minify-whitespace`
 
-Removes whitespace in object and array literals.
+移除对象和数组字面量内空白。
 
 ```ts Input
 const obj = {
@@ -794,11 +791,11 @@ const arr = [1, 2, 3];
 const obj={name:"John",age:30};const arr=[1,2,3];
 ```
 
-### Control flow formatting
+### 控制流格式化
 
-**Mode:** `--minify-whitespace`
+**模式：** `--minify-whitespace`
 
-Removes whitespace in control structures.
+移除控制结构内空白。
 
 ```ts Input
 if (condition) {
@@ -813,11 +810,11 @@ for (let i = 0; i < 10; i++) {
 if(condition)doSomething();for(let i=0;i<10;i++)console.log(i);
 ```
 
-### Function formatting
+### 函数格式化
 
-**Mode:** `--minify-whitespace`
+**模式：** `--minify-whitespace`
 
-Removes whitespace in function declarations.
+移除函数声明内空白。
 
 ```ts Input
 function myFunction(param1, param2) {
@@ -830,11 +827,11 @@ const arrow = (a, b) => a + b;
 function myFunction(a,b){return a+b}const arrow=(a,b)=>a+b;
 ```
 
-### Parentheses minimization
+### 括号最小化
 
-**Mode:** Always active
+**模式：** 始终生效
 
-Only adds parentheses when necessary for operator precedence.
+仅在优先级需要时添加括号。
 
 ```ts Input
 (a + b) * c
@@ -848,25 +845,25 @@ a+b*c
 x
 ```
 
-### Property mangling
+### 属性名重整
 
-**Mode:** `--minify-identifiers` (with configuration)
+**模式：** `--minify-identifiers`（需配置）
 
-Renames object properties to shorter names when configured.
+启用时，将对象属性名重命名为更短名称。
 
 ```ts Input
 obj.longPropertyName
 ```
 
-```js Output (with property mangling enabled)
+```js Output（启用属性名重整）
 obj.a
 ```
 
-### Template literal value folding
+### 模板字面量值折叠
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Converts non-string interpolated values to strings and folds them into the template.
+将非字符串插值值转为字符串并折叠进模板。
 
 ```ts Input
 `hello ${123}`
@@ -884,11 +881,11 @@ Converts non-string interpolated values to strings and folds them into the templ
 "big: 10"
 ```
 
-### String length constant folding
+### 字符串长度常量折叠
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Evaluates `.length` property on string literals at compile time.
+编译时计算字符串字面量的 `.length` 属性。
 
 ```ts Input
 "hello world".length
@@ -900,11 +897,11 @@ Evaluates `.length` property on string literals at compile time.
 4
 ```
 
-### Constructor call simplification
+### 构造函数调用简化
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Simplifies constructor calls for built-in types.
+简化内置类型的构造函数调用。
 
 ```ts Input
 new Object()
@@ -922,11 +919,11 @@ new Array(x, y)
 [x,y]
 ```
 
-### Single property object inlining
+### 单属性对象内联
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Inlines property access for objects with a single property.
+内联只有单个属性的对象的属性访问。
 
 ```ts Input
 ({fn: () => console.log('hi')}).fn()
@@ -936,11 +933,11 @@ Inlines property access for objects with a single property.
 (() => console.log('hi'))()
 ```
 
-### String charCodeAt constant folding
+### 字符串 charCodeAt 常量折叠
 
-**Mode:** Always active
+**模式：** 始终生效
 
-Evaluates `charCodeAt()` on string literals for ASCII characters.
+对 ASCII 字符串字面量计算 `charCodeAt()`。
 
 ```ts Input
 "hello".charCodeAt(1)
@@ -952,11 +949,11 @@ Evaluates `charCodeAt()` on string literals for ASCII characters.
 65
 ```
 
-### Void 0 equality to null equality
+### void 0 等价 null 相等转换
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Converts loose equality checks with `void 0` to `null` since they're equivalent.
+将与 `void 0` 的宽松相等转换为 `null`，因为等价。
 
 ```ts Input
 x == void 0
@@ -968,11 +965,11 @@ x == null
 x != null
 ```
 
-### Negation operator optimization
+### 取反操作符优化
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Moves negation operator through comma expressions.
+将取反操作符移至逗号表达式内。
 
 ```ts Input
 -(a, b)
@@ -984,11 +981,11 @@ a,-b
 x,y,-z
 ```
 
-### Import.meta property inlining
+### Import.meta 属性内联
 
-**Mode:** Bundle mode
+**模式：** 打包模式下
 
-Inlines `import.meta` properties at build time when values are known.
+构建时内联已知的 `import.meta` 属性值。
 
 ```ts Input
 import.meta.dir
@@ -1004,11 +1001,11 @@ import.meta.url
 "file:///full/path/to/file.js"
 ```
 
-### Variable declaration merging
+### 变量声明合并
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Merges adjacent variable declarations of the same type.
+合并相邻的相同类型变量声明。
 
 ```ts Input
 let a = 1;
@@ -1022,11 +1019,11 @@ let a=1,b=2;
 const c=3,d=4;
 ```
 
-### Expression statement merging
+### 表达式语句合并
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Merges adjacent expression statements using comma operator.
+使用逗号运算符合并相邻表达式语句。
 
 ```ts Input
 console.log(1);
@@ -1038,11 +1035,11 @@ console.log(3);
 console.log(1),console.log(2),console.log(3);
 ```
 
-### Return statement merging
+### return 语句合并
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Merges expressions before return with comma operator.
+合并 return 前的表达式，使用逗号运算符。
 
 ```ts Input
 console.log(x);
@@ -1053,11 +1050,11 @@ return y;
 return console.log(x),y;
 ```
 
-### Throw statement merging
+### throw 语句合并
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Merges expressions before throw with comma operator.
+合并 throw 前的表达式，使用逗号运算符。
 
 ```ts Input
 console.log(x);
@@ -1068,17 +1065,17 @@ throw new Error();
 throw(console.log(x),new Error());
 ```
 
-### TypeScript enum cross-module inlining
+### TypeScript 枚举跨模块内联
 
-**Mode:** `--minify-syntax` (bundle mode)
+**模式：** `--minify-syntax`（打包模式）
 
-Inlines enum values across module boundaries.
+跨模块边界内联枚举值。
 
 ```ts Input 
 // lib.ts
 export enum Color { Red, Green, Blue }
 
-// Input (main.ts)
+// 输入（main.ts）
 import { Color } from './lib';
 const x = Color.Red;
 ```
@@ -1087,11 +1084,11 @@ const x = Color.Red;
 const x=0;
 ```
 
-### Computed property enum inlining
+### 计算属性枚举内联
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Inlines enum values used as computed object properties.
+内联用作计算属性对象属性的枚举值。
 
 ```ts Input
 enum Keys { FOO = 'foo' }
@@ -1102,11 +1099,11 @@ const obj = { [Keys.FOO]: value }
 const obj={foo:value}
 ```
 
-### String number to numeric index
+### 字符串数字转数字索引
 
-**Mode:** `--minify-syntax`
+**模式：** `--minify-syntax`
 
-Converts string numeric property access to numeric index.
+将字符串数字属性访问转换为数字索引。
 
 ```ts Input
 obj["0"]
@@ -1118,11 +1115,11 @@ obj[0]
 arr[5]
 ```
 
-### Arrow function body shortening
+### 箭头函数主体简写
 
-**Mode:** Always active
+**模式：** 始终生效
 
-Uses expression body syntax when an arrow function only returns a value.
+当箭头函数仅返回值时，使用表达式主体语法。
 
 ```ts Input
 () => { return x; }
@@ -1134,11 +1131,11 @@ Uses expression body syntax when an arrow function only returns a value.
 a => a + 1
 ```
 
-### Object property shorthand
+### 对象属性简写
 
-**Mode:** Always active
+**模式：** 始终生效
 
-Uses shorthand syntax when property name and value identifier match.
+当属性名与值的标识符相同时，使用简写语法。
 
 ```ts Input
 { x: x, y: y }
@@ -1150,11 +1147,11 @@ Uses shorthand syntax when property name and value identifier match.
 { name, age }
 ```
 
-### Method shorthand
+### 方法简写
 
-**Mode:** Always active
+**模式：** 始终生效
 
-Uses method shorthand syntax in object literals.
+在对象字面量中使用方法简写语法。
 
 ```ts Input
 {
@@ -1170,11 +1167,11 @@ Uses method shorthand syntax in object literals.
 }
 ```
 
-### Drop debugger statements
+### 移除 debugger 语句
 
-**Mode:** `--drop=debugger`
+**模式：** `--drop=debugger`
 
-Removes `debugger` statements from code.
+移除代码中的 `debugger` 语句。
 
 ```ts Input
 function test() {
@@ -1187,11 +1184,11 @@ function test() {
 function test(){return x}
 ```
 
-### Drop console calls
+### 移除 console 调用
 
-**Mode:** `--drop=console`
+**模式：** `--drop=console`
 
-Removes all `console.*` method calls from code.
+移除所有 `console.*` 方法调用。
 
 ```ts Input
 console.log("debug");
@@ -1205,31 +1202,31 @@ void 0;
 x=void 0;
 ```
 
-### Drop custom function calls
+### 移除自定义函数调用
 
-**Mode:** `--drop=<name>`
+**模式：** `--drop=<name>`
 
-Removes calls to specified global functions or methods.
+移除指定全局函数或方法的调用。
 
 ```ts Input
 assert(condition);
 obj.assert(test);
 ```
 
-```js Output with --drop=assert
+```js Output（使用 --drop=assert）
 void 0;
 void 0;
 ```
 
-## Keep Names
+## 保留名称
 
-When minifying identifiers, you may want to preserve original function and class names for debugging purposes. Use the `--keep-names` flag:
+压缩标识符时，如果想保留原始函数和类名以便调试，可以使用 `--keep-names` 标志：
 
 ```bash
 bun build ./index.ts --minify --keep-names --outfile=out.js
 ```
 
-Or in the JavaScript API:
+或者在 JavaScript API 中：
 
 ```ts
 await Bun.build({
@@ -1242,11 +1239,11 @@ await Bun.build({
 });
 ```
 
-This preserves the `.name` property on functions and classes while still minifying the actual identifier names in the code.
+这会保留函数和类的 `.name` 属性，同时仍压缩实际的标识符名称。
 
-## Combined Example
+## 组合示例
 
-Using all three minification modes together:
+同时使用三种压缩模式：
 
 ```ts input.ts (158 bytes)
 const myVariable = 42;
@@ -1261,26 +1258,26 @@ const output = myFunction();
 ```
 
 ```js output.js
-// Output with --minify (49 bytes, 69% reduction)
+// 使用 --minify 输出（49 字节，减少 69%）
 const a=42,b=()=>{const c=!0,d=void 0;return c?a:d},e=b();
 ```
 
-## When to Use Minification
+## 何时使用压缩
 
-**Use `--minify` for:**
+**适用 `--minify` 的场景：**
 
-- Production bundles
-- Reducing CDN bandwidth costs
-- Improving page load times
+- 生产环境包
+- 降低 CDN 带宽成本
+- 提升页面加载速度
 
-**Use individual modes for:**
+**适用单独模式的场景：**
 
-- **`--minify-whitespace`:** Quick size reduction without semantic changes
-- **`--minify-syntax`:** Smaller output while keeping readable identifiers for debugging
-- **`--minify-identifiers`:** Maximum size reduction (combine with `--keep-names` for better stack traces)
+- **`--minify-whitespace`：** 快速减小尺寸，不改变语义
+- **`--minify-syntax`：** 输出更小，同时保留可读标识符，便于调试
+- **`--minify-identifiers`：** 最大尺寸减小（结合 `--keep-names` 可得更好的堆栈信息）
 
-**Avoid minification for:**
+**避免压缩的场景：**
 
-- Development builds (harder to debug)
-- When you need readable error messages
-- Libraries where consumers may read the source
+- 开发构建（调试更困难）
+- 需要可读错误信息时
+- 代码库供消费者阅读源码的库

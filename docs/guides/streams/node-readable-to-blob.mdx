@@ -1,10 +1,10 @@
 ---
-title: Convert a Node.js Readable to a Blob
-sidebarTitle: Readable to Blob
+title: 将 Node.js Readable 转换为 Blob
+sidebarTitle: Readable 转 Blob
 mode: center
 ---
 
-To convert a Node.js `Readable` stream to a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) in Bun, you can create a new [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object with the stream as the body, then use [`response.blob()`](https://developer.mozilla.org/en-US/docs/Web/API/Response/blob) to read the stream into a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob).
+要在 Bun 中将 Node.js 的 `Readable` 流转换为 [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob)，可以使用该流作为主体创建一个新的 [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) 对象，然后使用 [`response.blob()`](https://developer.mozilla.org/en-US/docs/Web/API/Response/blob) 将流读取为 [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob)。
 
 ```ts
 import { Readable } from "stream";

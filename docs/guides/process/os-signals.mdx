@@ -1,31 +1,31 @@
 ---
-title: Listen to OS signals
-sidebarTitle: OS signals
+title: 监听操作系统信号
+sidebarTitle: 操作系统信号
 mode: center
 ---
 
-Bun supports the Node.js `process` global, including the `process.on()` method for listening to OS signals.
+Bun 支持 Node.js 的全局对象 `process`，包括用于监听操作系统信号的 `process.on()` 方法。
 
 ```ts
 process.on("SIGINT", () => {
-  console.log("Received SIGINT");
+  console.log("收到 SIGINT 信号");
 });
 ```
 
 ---
 
-If you don't know which signal to listen for, you listen to the [`"beforeExit"`](https://nodejs.org/api/process.html#event-beforeexit) and [`"exit"`](https://nodejs.org/api/process.html#event-exit) events.
+如果你不知道应该监听哪个信号，可以监听 [`"beforeExit"`](https://nodejs.org/api/process.html#event-beforeexit) 和 [`"exit"`](https://nodejs.org/api/process.html#event-exit) 事件。
 
 ```ts
 process.on("beforeExit", code => {
-  console.log(`Event loop is empty!`);
+  console.log(`事件循环已空！`);
 });
 
 process.on("exit", code => {
-  console.log(`Process is exiting with code ${code}`);
+  console.log(`进程以代码 ${code} 退出`);
 });
 ```
 
 ---
 
-See [Docs > API > Utils](/runtime/utils) for more useful utilities.
+更多实用工具请参见 [文档 > API > 工具](/runtime/utils)。

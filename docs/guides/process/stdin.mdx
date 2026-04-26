@@ -1,10 +1,10 @@
 ---
-title: Read from stdin
-sidebarTitle: Read from stdin
+title: 从 stdin 读取
+sidebarTitle: 从 stdin 读取
 mode: center
 ---
 
-For CLI tools, it's often useful to read from `stdin`. In Bun, the `console` object is an `AsyncIterable` that yields lines from `stdin`.
+对于 CLI 工具来说，从 `stdin` 读取常常非常有用。在 Bun 中，`console` 对象是一个 `AsyncIterable`，它会产生来自 `stdin` 的行。
 
 ```ts index.ts icon="/icons/typescript.svg"
 const prompt = "Type something: ";
@@ -17,7 +17,7 @@ for await (const line of console) {
 
 ---
 
-Running this file results in a never-ending interactive prompt that echoes whatever the user types.
+运行此文件会得到一个永不结束的交互式提示，回显用户输入的内容。
 
 ```sh terminal icon="terminal"
 bun run index.ts
@@ -32,14 +32,14 @@ You typed: hello again
 
 ---
 
-Bun also exposes stdin as a `BunFile` via `Bun.stdin`. This is useful for incrementally reading large inputs that are piped into the `bun` process.
+Bun 还通过 `Bun.stdin` 将 stdin 作为一个 `BunFile` 暴露出来。这对于对通过管道传入 `bun` 进程的大量输入进行增量读取非常有用。
 
-There is no guarantee that the chunks will be split line-by-line.
+无法保证读取的块是逐行分割的。
 
 ```ts stdin.ts icon="/icons/typescript.svg"
 for await (const chunk of Bun.stdin.stream()) {
-  // chunk is Uint8Array
-  // this converts it to text (assumes ASCII encoding)
+  // chunk 是 Uint8Array
+  // 将其转换为文本（假设 ASCII 编码）
   const chunkText = Buffer.from(chunk).toString();
   console.log(`Chunk: ${chunkText}`);
 }
@@ -47,7 +47,7 @@ for await (const chunk of Bun.stdin.stream()) {
 
 ---
 
-This will print the input that is piped into the `bun` process.
+这会打印通过管道传入 `bun` 进程的输入。
 
 ```sh terminal icon="terminal"
 echo "hello" | bun run stdin.ts
@@ -59,4 +59,4 @@ Chunk: hello
 
 ---
 
-See [Docs > API > Utils](/runtime/utils) for more useful utilities.
+更多实用工具请参见 [文档 > API > Utils](/runtime/utils)。
