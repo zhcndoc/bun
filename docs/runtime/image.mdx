@@ -1,0 +1,211 @@
+---
+title: 图像
+description: 使用快速的原生管道解码、转换和编码图像
+---
+
+`Bun.Image` 是一个可链式调用的图像管道，用于解码、调整大小、旋转以及重新编码 JPEG、PNG、WebP、HEIC 和 AVIF——基于 libjpeg-turbo、spng、libwebp 和 SIMD 几何内核构建，零 npm 依赖，也无需原生插件构建步骤。
+
+```ts
+await Bun.file("photo.jpg").image().resize(400, 400, { fit: "inside" }).webp({ quality: 80 }).write("thumb.webp");
+```
+
+该 API 的设计参考了 [Sharp](https://sharp.pixelplumbing.com/)：从输入构造，串联转换，选择输出格式，然后对终结方法使用 `await`。在终结方法被 `await` 之前，不会执行任何操作，且工作会在 JavaScript 线程之外执行。
+
+## 输入
+
+构造函数接受路径、字节或 `Blob`——包括 `Bun.file()` 和 `Bun.s3()`。`Blob#image()` 是 `new Bun.Image(blob)` 的简写：
+
+```ts
+new Bun.Image("./photo.jpg"); // 文件路径
+new Bun.Image(buffer); // Buffer / ArrayBuffer / TypedArray
+new Bun.Image(Bun.file("photo.jpg")); // BunFile（延迟读取，线程外执行）
+Bun.file("photo.jpg").image(); // 同上
+Bun.s3("bucket/photo.jpg").image(); // S3File
+```
+
+格式会根据字节内容自动识别——会忽略扩展名和 `Content-Type`。
+
+**路径字符串是文件系统路径。** 不要直接将受用户控制的字符串传给构造函数——这会成为任意文件读取原语。请将不受信任的输入读入 `Buffer`（例如通过 `fetch`/`Bun.file` 并进行你自己的校验），然后传入这些字节。
+
+当传入 `TypedArray`/`ArrayBuffer` 时，在终结方法尚未完成时不要修改它——解码会在线程外运行并借用这些字节。`SharedArrayBuffer` 和可调整大小的缓冲区会被拒绝；请使用 `buf.slice()` 传入固定视图。
+
+第二个 `options` 参数用于防护解压炸弹并控制 EXIF 处理：
+
+```ts
+new Bun.Image(input, {
+  // 如果 width*height > 这个值则拒绝。会在读取头部后、
+  // 分配像素缓冲区之前检查。默认值与 Sharp 一致（约 268 MP）。
+  maxPixels: 4096 * 4096,
+  // 在任何其他操作之前应用 JPEG EXIF 方向。默认：true。
+  autoOrient: true,
+});
+```
+
+## 元数据
+
+无需解码像素数据即可读取 `width`、`height` 和 `format`：
+
+```ts
+const { width, height, format } = await new Bun.Image(input).metadata();
+// => { width: 1920, height: 1080, format: "jpeg" }
+```
+
+## 调整大小
+
+```ts
+img.resize(800); // 宽度为 800，保持宽高比
+img.resize(800, 600); // 精确为 800×600（拉伸）
+img.resize(800, 600, { fit: "inside" }); // 适配到 800×600 内
+img.resize(800, 600, { withoutEnlargement: true }); // 永不放大
+img.resize(800, 600, { filter: "mitchell" });
+```
+
+| `fit`              | 行为                                                |
+| ------------------ | --------------------------------------------------- |
+| `"fill"`（默认）   | 拉伸到精确的 `width × height`                        |
+| `"inside"`         | 保持宽高比；结果适配于 _within_ 该边界内 |
+
+`filter` 用于选择重采样内核。默认的 `"lanczos3"` 是照片的最佳选择。
+
+| Filter                    | 适用场景                                         |
+| ------------------------- | ------------------------------------------------ |
+| `"lanczos3"` _（默认）_   | 通用，照片最锐利                                 |
+| `"lanczos2"`              | 略柔和，振铃伪影更少                             |
+| `"mitchell"`              | 平滑渐变；经典的双三次折中方案                   |
+| `"cubic"`                 | Catmull-Rom——比 Mitchell 更锐利，可能产生振铃    |
+| `"mks2013"` / `"mks2021"` | “Magic Kernel Sharp”；Facebook/Instagram 使用    |
+| `"bilinear"` / `"linear"` | 快速，柔和                                       |
+| `"box"`                   | 区域平均；适合大倍率整数缩小                     |
+| `"nearest"`               | 像素风格 / 硬边缘                                |
+
+当源图像是 JPEG 且目标尺寸最多只有源尺寸的一半时，解码会直接跳到最接近的 M/8 IDCT 缩放，因此即使从一张 24 MP 照片生成缩略图，也不会生成完整分辨率缓冲区。
+
+## 旋转 · 翻转
+
+```ts
+img.rotate(90); // 顺时针旋转 90°（仅支持 90 的倍数）
+img.flip(); // 垂直镜像（绕 x 轴）
+img.flop(); // 水平镜像（绕 y 轴）
+```
+
+## 调节
+
+```ts
+img.modulate({
+  brightness: 1.2, // 1 = 不变
+  saturation: 0, // 0 = 灰度，1 = 不变，>1 = 增强
+});
+```
+
+## 输出格式
+
+调用格式方法会设置编码目标；如果不调用，则复用源格式。
+
+```ts
+img.jpeg({ quality: 85 }); // 1–100，默认 80
+img.png({ compressionLevel: 6 }); // zlib 级别 0–9
+img.png({ palette: true, colors: 64, dither: true }); // 索引 PNG
+img.webp({ quality: 80 });
+img.webp({ lossless: true });
+img.heic({ quality: 80 }); // 仅 macOS / Windows
+img.avif({ quality: 60 }); // 仅 macOS / Windows
+```
+
+`palette: true` 会量化为一个 ≤256 色调色板，并输出索引型（color-type 3）PNG，可选使用 Floyd–Steinberg `dither`。对于截图和 UI 资源，这通常比真彩色小 3–5 倍。
+
+## 终结方法
+
+在以下方法中的任意一个被 `await` 之前，管道不会执行任何工作：
+
+```ts
+await img.bytes(); // Uint8Array
+await img.buffer(); // Buffer
+await img.blob(); // Blob，.type 设置为输出 MIME
+await img.toBase64(); // string
+await img.dataurl(); // "data:image/png;base64,…"
+await img.write("out.webp"); // number（写入的字节数）
+await img.write(Bun.s3("bucket/out.webp"));
+```
+
+`.write()` 接受与 `Bun.write` 相同的目标——路径字符串、`Bun.file()`、`Bun.s3()` 或文件描述符。如果你没有串联格式方法，并且目标是路径字符串，则会由扩展名选择格式（`.jpg`/`.png`/`.webp`/`.heic`/`.avif`）。
+
+## 占位符
+
+如果你想在真实图像加载前于 HTML 中内联一个低质量占位图，`.placeholder()` 会返回一个由 [ThumbHash](https://evanw.github.io/thumbhash/) 渲染的、≤32px 的模糊 `data:` URL——约 400–700 字节，无需客户端解码器：
+
+```ts
+const lqip = await Bun.file("hero.jpg").image().placeholder();
+// <img src={lqip} … /> — 然后在加载时切换到真实 URL。
+```
+
+如果想对图像 _本身_ 进行由粗到细的渲染，请编码为渐进式 JPEG：
+
+```ts
+img.jpeg({ progressive: true });
+```
+
+第一个终结方法解析后，`img.width` 和 `img.height` 反映的是 _输出_ 尺寸（在此之前它们为 `-1`）。
+
+## `Bun.serve` 集成
+
+`Bun.Image` 管道是一个有效的 `Response` body，并会自动设置 `Content-Type`。为了在服务端处理程序中让编码保持在 JS 线程之外，请先 `await` 一个终结方法：
+
+```ts
+Bun.serve({
+  routes: {
+    "/avatar/:id": async req => {
+      // 在接触文件系统之前先验证（见上面的输入说明）。
+      if (!/^[a-z0-9]+$/.test(req.params.id)) return new Response(null, { status: 400 });
+      const out = await Bun.file(`avatars/${req.params.id}.png`).image().resize(128, 128).webp().blob();
+      return new Response(out);
+    },
+  },
+});
+```
+
+直接传入管道（`new Response(img)`）也可以，但目前会在 body 初始化期间同步执行编码。
+
+## 剪贴板
+
+```ts
+const img = Bun.Image.fromClipboard();
+if (img) {
+  const png = await img.resize(800, 800, { fit: "inside" }).png().bytes();
+}
+```
+
+`fromClipboard()` 会从 macOS 和 Windows 的系统剪贴板读取 PNG、TIFF、HEIC、JPEG、WebP、GIF 或 BMP；之后再交给常规解码管道处理。如果没有图像则返回 `null`，而在 Linux 上始终返回 `null`——请自行调用 `wl-paste`/`xclip` 并将字节传给构造函数。
+
+如果你想要一个被动的“剪贴板里有图像，按 ⌘V”提示，可以轮询 `clipboardChangeCount()`（单个整数读取），并且只在它变化时调用 `hasClipboardImage()`；macOS 没有剪贴板变化通知，所以这是文档化的模式。
+
+## 平台后端
+
+|                        | Linux                             | macOS             | Windows      |
+| ---------------------- | --------------------------------- | ----------------- | ------------ |
+| JPEG / PNG / WebP      | libjpeg-turbo · spng · libwebp    | 相同              | 相同         |
+| BMP / GIF（解码）      | 内置                              | ImageIO           | WIC          |
+| TIFF（解码）           | ❌                                | ImageIO           | WIC          |
+| Resize / rotate / flip | Highway SIMD                      | Accelerate vImage | Highway SIMD |
+| HEIC / AVIF            | ❌ `ERR_IMAGE_FORMAT_UNSUPPORTED` | ImageIO ²         | WIC ¹        |
+| Clipboard              | ❌ 返回 `null`                    | NSPasteboard      | Win32        |
+
+¹ Windows 需要来自 Microsoft Store 的 **HEIF Image Extensions** / **AV1 Video Extension**。
+² AVIF _encode_ 需要系统级 AV1 编码器——仅 Apple Silicon M3+ 可用。Intel Mac 和 M1/M2 会以 `ERR_IMAGE_FORMAT_UNSUPPORTED` 拒绝；AVIF _decode_ 在所有 ImageIO 支持的地方都可用（macOS 13+）。
+
+当当前机器上没有可用的系统后端格式时，终结方法会以 `error.code === "ERR_IMAGE_FORMAT_UNSUPPORTED"` 拒绝——可据此分支回退到可移植格式：
+
+```ts
+const out = await img
+  .avif({ quality: 50 })
+  .bytes()
+  .catch(e => {
+    if (e.code === "ERR_IMAGE_FORMAT_UNSUPPORTED") return img.webp({ quality: 80 }).bytes();
+    throw e;
+  });
+```
+
+由系统后端处理的格式（TIFF、HEIC、AVIF、剪贴板）会继承 **操作系统** 的补丁级别——请保持 macOS / Windows 更新。JPEG、PNG 和 WebP 在所有平台上都走相同的静态链接编解码器，因此编码输出在 Linux、macOS 和 Windows 之间是字节级一致的。若要为几何处理也强制使用可移植的 Highway 路径——例如用于金图测试——请设置进程全局后端：
+
+```ts
+Bun.Image.backend = "bun"; // macOS/Windows 上默认是 "system"
+```

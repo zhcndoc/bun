@@ -123,10 +123,10 @@ Bun 被设计为 Node.js 的更快速、更精简、更现代化的替代品。
 
 Bun 从零开始设计，充分考虑当今的 JavaScript 生态系统。
 
-- **速度**。Bun 进程启动速度目前比 Node.js [快 4 倍](https://twitter.com/jarredsumner/status/1499225725492076544)（您可以自行尝试！）
-- **TypeScript 和 JSX 支持**。您可以直接执行 `.jsx`、`.ts` 和 `.tsx` 文件；Bun 的转译器会在执行前将它们转换为纯 JavaScript。
-- **ESM 和 CommonJS 兼容**。尽管世界正在向 ES 模块（ESM）转变，但 npm 上的数百万包仍依赖 CommonJS。Bun 推荐使用 ES 模块，但支持 CommonJS。
-- **Web 标准 API**。Bun 实现了标准 Web API，如 `fetch`、`WebSocket` 和 `ReadableStream`。Bun 底层使用由 Apple 为 Safari 开发的 JavaScriptCore 引擎，因此一些 API 例如 [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) 和 [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL) 直接采用了 [Safari 的实现](https://github.com/oven-sh/bun/blob/HEAD/src/bun.js/bindings/webcore/JSFetchHeaders.cpp)。
-- **Node.js 兼容**。除了支持 Node 风格的模块解析外，Bun 还致力于完全兼容 Node.js 内置全局变量（`process`、`Buffer`）和模块（`path`、`fs`、`http` 等）。_这是一项持续进行中的工作，目前尚未完成_。详见 [兼容性页面](/runtime/nodejs-compat) 获取最新进度。
+- **速度**。Bun 进程启动速度目前比 Node.js 快 [4 倍](https://twitter.com/jarredsumner/status/1499225725492076544)（不妨亲自试试！）
+- **TypeScript 和 JSX 支持**。您可以直接执行 `.jsx`、`.ts` 和 `.tsx` 文件；Bun 的转译器会在执行前将它们转换为原生 JavaScript。
+- **ESM 和 CommonJS 兼容性**。世界正在转向 ES 模块（ESM），但 npm 上数以百万计的包仍然需要 CommonJS。Bun 推荐使用 ES 模块，但也支持 CommonJS。
+- **Web 标准 API**。Bun 实现了诸如 `fetch`、`WebSocket` 和 `ReadableStream` 等标准 Web API。Bun 由 JavaScriptCore 引擎驱动，该引擎由 Apple 为 Safari 开发，因此像 [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) 和 [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL) 这样的 API 直接使用了 [Safari 的实现](https://github.com/oven-sh/bun/blob/HEAD/src/jsc/bindings/webcore/JSFetchHeaders.cpp)。
+- **Node.js 兼容性**。除了支持 Node 风格的模块解析外，Bun 还旨在与内置的 Node.js 全局对象（`process`、`Buffer`）和模块（`path`、`fs`、`http` 等）完全兼容。_这项工作仍在进行中，尚未完成。_ 请参阅 [兼容性页面](/runtime/nodejs-compat) 了解当前状态。
 
 Bun 不仅是一个运行时。长期目标是成为一个统一的基础设施工具包，用于构建 JavaScript/TypeScript 应用，涵盖包管理器、转译器、打包器、脚本执行器、测试运行器等多方面功能。

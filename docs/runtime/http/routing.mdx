@@ -5,7 +5,7 @@ description: 在 `Bun.serve` 中使用静态路径、参数和通配符定义路
 
 你可以通过使用 `routes` 属性（用于静态路径、参数和通配符）或通过 [`fetch`](#fetch) 方法处理未匹配请求，向 `Bun.serve()` 添加路由。
 
-`Bun.serve()` 的路由基于 uWebSocket 的[树结构方法](https://github.com/oven-sh/bun/blob/0d1a00fa0f7830f8ecd99c027fce8096c9d459b6/packages/bun-uws/src/HttpRouter.h#L57-L64)，增加了[基于 SIMD 加速的路由参数解码](https://github.com/oven-sh/bun/blob/main/src/bun.js/bindings/decodeURIComponentSIMD.cpp#L21-L271)和[JavaScriptCore 结构缓存](https://github.com/oven-sh/bun/blob/main/src/bun.js/bindings/ServerRouteList.cpp#L100-L101)，以推高现代硬件允许的性能极限。
+`Bun.serve()` 的路由器建立在 uWebSocket 的 [基于树的方式](https://github.com/oven-sh/bun/blob/0d1a00fa0f7830f8ecd99c027fce8096c9d459b6/packages/bun-uws/src/HttpRouter.h#L57-L64) 之上，加入了 [SIMD 加速的路由参数解码](https://github.com/oven-sh/bun/blob/main/src/jsc/bindings/decodeURIComponentSIMD.cpp#L21-L271) 和 [JavaScriptCore 结构缓存](https://github.com/oven-sh/bun/blob/main/src/jsc/bindings/ServerRouteList.cpp#L100-L101)，以推动现代硬件所能达到的性能极限。
 
 ## 基本设置
 

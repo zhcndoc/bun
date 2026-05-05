@@ -163,7 +163,7 @@ depth = 3
 port = 3000
 ```
 
-## Test runner
+## 测试运行器
 
 测试运行器配置于 `bunfig.toml` 的 `[test]` 部分。
 
@@ -825,11 +825,11 @@ silent = true
 
 ```sh terminal icon="terminal"
 bun run dev
-echo "Running \"dev\"..."
+echo "正在运行 \"dev\"..."
 ```
 
 ```txt
-Running "dev"...
+正在运行 "dev"...
 ```
 
 启用该选项后，命令将不再打印：
@@ -839,7 +839,7 @@ bun run dev
 ```
 
 ```txt
-Running "dev"...
+正在运行 "dev"...
 ```
 
 这等同于对所有 `bun run` 命令使用 `--silent` 参数：
@@ -859,13 +859,13 @@ bun run --silent dev
 elide-lines = 10
 ```
 
-### `run.dieWithParent` - exit when the parent process dies
+### `run.noOrphans` - 不留下孤儿进程
 
-When `true`, Bun watches the process that spawned it and exits as soon as that parent goes away — even if the parent was `SIGKILL`ed and never got a chance to forward a signal. On its own exit, Bun also recursively `SIGKILL`s every descendant process so nothing it spawned outlives it. Useful when Bun is launched by a supervisor (Electron, a CI runner, a thin shim) that may be force-killed.
+设为 `true` 时，Bun 会监视启动它的进程，并在该父进程消失后立即退出——即使父进程被 `SIGKILL`，也不会有机会转发信号。在退出时，Bun 还会递归地对其创建的所有后代进程发送 `SIGKILL`，确保它启动的进程不会比它活得更久。适用于 Bun 由某个监督程序（Electron、CI 运行器、轻量级 shim）启动，而该监督程序可能被强制终止的场景。
 
-Linux and macOS only (no-op on Windows and other platforms). Equivalent to the `BUN_FEATURE_FLAG_DIE_WITH_PARENT=1` environment variable.
+仅适用于 Linux 和 macOS（在 Windows 及其他平台上无效）。等同于 `--no-orphans` CLI 标志或 `BUN_FEATURE_FLAG_NO_ORPHANS=1` 环境变量。
 
 ```toml title="bunfig.toml" icon="settings"
 [run]
-dieWithParent = true
+noOrphans = true
 ```

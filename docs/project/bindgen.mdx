@@ -16,7 +16,7 @@ description: Bun 的 Bindgen
 
 定义一个简单函数实现文件，比如 `add`
 
-```zig src/bun.js/math.zig
+```zig src/jsc/math.zig
 pub fn add(global: *jsc.JSGlobalObject, a: i32, b: i32) !i32 {
     return std.math.add(i32, a, b) catch {
         // 绑定函数可以返回 `error.OutOfMemory` 和 `error.JSError`。
@@ -35,7 +35,7 @@ const jsc = bun.jsc;
 
 然后用 `.bind.ts` 文件描述 API schema。绑定文件位置与 Zig 文件并列。
 
-```ts src/bun.js/math.bind.ts icon="/icons/typescript.svg"
+```ts src/jsc/math.bind.ts icon="/icons/typescript.svg"
 import { t, fn } from "bindgen";
 
 export const add = fn({
@@ -78,7 +78,7 @@ declare function add(a: number, b: number = 1): number;
 
 `variants` 可以指定多个变体（也叫重载）。
 
-```ts src/bun.js/math.bind.ts icon="/icons/typescript.svg"
+```ts src/jsc/math.bind.ts icon="/icons/typescript.svg"
 import { t, fn } from "bindgen";
 
 export const action = fn({
