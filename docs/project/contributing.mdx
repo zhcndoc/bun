@@ -28,28 +28,32 @@ bun bd
 <CodeGroup>
 
 ```bash macOS (Homebrew)
-brew install automake ccache cmake coreutils gnu-sed go icu4c libiconv libtool ninja pkg-config rust ruby
+brew install automake ccache cmake coreutils gnu-sed go icu4c libiconv libtool ninja pkg-config rustup-init ruby
 ```
 
 ```bash Ubuntu/Debian
-sudo apt install curl wget lsb-release software-properties-common cargo cmake git golang libtool ninja-build pkg-config rustc ruby-full xz-utils
+sudo apt install curl wget lsb-release software-properties-common cmake git golang libtool ninja-build pkg-config ruby-full xz-utils
 ```
 
 ```bash Arch
-sudo pacman -S base-devel cmake git go libiconv libtool make ninja pkg-config python rust sed unzip ruby
+sudo pacman -S base-devel cmake git go libiconv libtool make ninja pkg-config python rustup sed unzip ruby
 ```
 
 ```bash Fedora
-sudo dnf install cargo clang21 llvm21 lld21 cmake git golang libtool ninja-build pkg-config rustc ruby libatomic-static libstdc++-static sed unzip which libicu-devel 'perl(Math::BigInt)'
+sudo dnf install clang21 llvm21 lld21 cmake git golang libtool ninja-build pkg-config ruby libatomic-static libstdc++-static sed unzip which libicu-devel 'perl(Math::BigInt)'
 ```
 
 ```bash openSUSE Tumbleweed
-sudo zypper install go cmake ninja automake git icu rustup && rustup toolchain install stable
+sudo zypper install go cmake ninja automake git icu rustup
 ```
 
 </CodeGroup>
 
-> **注意**：Zig 编译器由构建脚本自动安装和更新，无需手动安装。
+Bun 使用 Rust 编写，并且需要特定的 nightly 工具链（固定在 `rust-toolchain.toml` 中）。请通过 [rustup](https://rustup.rs) 安装 Rust，而不是使用发行版自带的 `rust`/`cargo` 包——构建脚本会使用 rustup 自动安装并更新固定的 nightly：
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
 
 开始之前，您需要已安装 Bun 的发布版本构建，因为我们使用自己的打包器来转译和压缩代码，以及用于代码生成脚本。
 
@@ -104,7 +108,7 @@ brew install llvm@21
 ```
 
 ```bash Ubuntu/Debian
-# LLVM has an automatic installation script that is compatible with all versions of Ubuntu
+# LLVM 有一个适用于所有 Ubuntu 版本的自动安装脚本
 wget https://apt.llvm.org/llvm.sh -O - | sudo bash -s -- 21 all
 ```
 
@@ -135,13 +139,13 @@ which clang-21
 <CodeGroup>
 
 ```bash macOS (Homebrew)
-# use fish_add_path if you're using fish
-# use path+="$(brew --prefix llvm@21)/bin" if you are using zsh
+# 如果你使用 fish，请使用 fish_add_path
+# 如果你使用 zsh，请使用 path+="$(brew --prefix llvm@21)/bin"
 export PATH="$(brew --prefix llvm@21)/bin:$PATH"
 ```
 
 ```bash Arch
-# use fish_add_path if you're using fish
+# 如果你使用 fish，请使用 fish_add_path
 export PATH="$PATH:/usr/lib/llvm21/bin"
 ```
 
@@ -168,9 +172,9 @@ x.y.z_debug
 
 ## VSCode
 
-VSCode 是推荐的 Bun 开发 IDE，且已配置好。打开后，您可以运行 `Extensions: Show Recommended Extensions` 来安装 Zig 和 C++ 的推荐扩展。ZLS 会自动配置。
+VSCode 是推荐用于 Bun 开发的 IDE，因为它已经完成配置。打开后，您可以运行 `Extensions: Show Recommended Extensions` 来安装 Rust 和 C++ 的推荐扩展。rust-analyzer 会自动获取工作区的 `Cargo.toml`；分析时会使用 `rust-toolchain.toml` 中固定的工具链，因此诊断结果与构建保持一致。
 
-如果您使用其他编辑器，请确保将 ZLS 配置为使用自动安装的 Zig 编译器，路径为 `./vendor/zig/zig.exe`。文件名为 `zig.exe` 是为了兼容 Windows，但在 macOS/Linux 上同样有效（只是扩展名比较特殊）。
+如果您使用其他编辑器，请将 rust-analyzer（或编辑器的 Rust 插件）指向仓库根目录——Cargo 工作区和 `rust-toolchain.toml` 会自动被识别。
 
 推荐将 `./build/debug` 添加到您的 `$PATH`，这样就可以在终端中直接运行：
 
@@ -188,13 +192,14 @@ bun bd test foo.test.ts
 bun bd ./foo.ts
 ```
 
-Bun 通常在 Zig 代码改动时，调试构建大约需要 2.5 分钟。如果您的开发流程是“改一行，保存，重建”，等待时间会很长。建议：
+完整的调试构建在 Rust 或 C++ 发生更改时可能需要几分钟；cargo 的增量编译会让后续仅 Rust 的重建快得多。如果您的开发流程是“改一行、保存、重建”，您仍然会在等待链接步骤上花费太多时间。相反：
 
-- 批量提交改动
-- 确保 zls 在增量模式下运行以检查 LSP 错误（如果您使用 VSCode 并且安装了 Zig，且运行过 `bun run build` 下载 Zig，应当自动生效）
-- 优先使用调试器（VSCode 中的 "CodeLLDB"）逐步调试代码
-- 使用调试日志。设置 `BUN_DEBUG_<scope>=1` 可启用对应 `Output.scoped(.<scope>, .hidden)` 的调试日志。可设置 `BUN_DEBUG_QUIET_LOGS=1` 关闭所有未显式开启的调试日志。要将调试日志输出到文件，设置 `BUN_DEBUG=<日志文件路径>.log`。发布版本会严格移除调试日志。
-- `src/js/**/*.ts` 文件的改动重建几乎是即时的。C++ 改动慢一些，但仍远快于 Zig（Zig 是单一编译单元，C++ 是多个编译单元）。
+- 批量进行更改
+- 使用 `cargo check -p <crate>`（或对整个工作区使用 `bun run rust:check`）来在不链接的情况下检查 Rust 类型。`bun run watch` 会在每次保存时运行 `cargo check`。
+- 确保 rust-analyzer 正在运行以提供内联诊断（如果您使用 VSCode 并安装了推荐扩展，这应该可以直接工作）
+- 更倾向使用调试器（VSCode 中的 “CodeLLDB”）逐步执行代码。
+- 使用调试日志。`BUN_DEBUG_<scope>=1` 会为对应的 `declare_scope!(<scope>, ...)` / `scoped_log!(<scope>, ...)` 日志启用调试输出。您也可以设置 `BUN_DEBUG_QUIET_LOGS=1` 来禁用所有未显式启用的调试日志。要将调试日志输出到文件中，可使用 `BUN_DEBUG=<path-to-file>.log`。调试日志在发布构建中会被大量移除。
+- `src/js/\*\*.ts` 的更改几乎可以瞬间重建。单个 Rust crate 的更改和 C++ 更改都是增量的；只有最终链接步骤是不可避免的。
 
 ## 代码生成脚本
 
@@ -202,11 +207,11 @@ Bun 构建过程中使用了多个代码生成脚本。这些脚本在相关文�
 
 主要有：
 
-- `./src/codegen/generate-jssink.ts` — 生成 `build/debug/codegen/JSSink.cpp` 和 `JSSink.h`，实现多个用于与 `ReadableStream` 交互的类。这是 `FileSink`、`ArrayBufferSink`、`"type": "direct"` 流以及其他流相关功能的内部实现。
-- `./src/codegen/generate-classes.ts` — 生成 `build/debug/codegen/ZigGeneratedClasses*`，生成 Zig 和 C++ 绑定，用于 Zig 实现的 JavaScriptCore 类。在 `**/*.classes.ts` 文件中定义各种类、方法、原型、getter/setter 等接口，代码生成器读取这些定义生成在 C++ 中实现JavaScript对象的模板代码并与 Zig 绑定。
-- `./src/codegen/cppbind.ts` — 生成对带有 `[[ZIG_EXPORT]]` 特性的 C++ 函数的自动 Zig 绑定。
-- `./src/codegen/bundle-modules.ts` — 打包内置模块如 `node:fs`、`bun:ffi` 成为可包含于最终二进制的文件。开发时可重新加载这些文件，无需重建 Zig（仍需运行 `bun run build`，但会从磁盘重新读取转译文件）。发布时嵌入二进制中。
-- `./src/codegen/bundle-functions.ts` — 打包用 JavaScript/TypeScript 实现的全局函数，如 `ReadableStream`、`WritableStream` 等。这与内置模块类似，但生成的代码更接近 WebKit/Safari 的实现，方便从 WebKit 复制粘贴作为起点。
+- `./src/codegen/generate-jssink.ts` -- 生成 `build/debug/codegen/JSSink.cpp`、`build/debug/codegen/JSSink.h`，它们实现了用于与 `ReadableStream` 交互的各种类。这也是 `FileSink`、`ArrayBufferSink`、`"type": "direct"` 流以及其他与流相关代码的内部实现方式。
+- `./src/codegen/generate-classes.ts` -- 为用 Rust 实现的 JavaScriptCore 类生成 Rust 和 C++ 绑定。在 `**/*.classes.ts` 文件中，我们定义各种类、方法、原型、getter/setter 等接口，代码生成器读取这些定义并生成实现 JavaScript 对象的样板代码，然后将其连接到 Rust。
+- `./src/codegen/cppbind.ts` -- 扫描 C++ 绑定中带有导出属性标记的函数，并为其生成自动化 Rust FFI 封装（`cpp.rs`）。
+- `./src/codegen/bundle-modules.ts` -- 将 `node:fs`、`bun:ffi` 等内置模块打包为可包含进最终二进制文件的文件。在开发模式下，这些内容可以在无需重建原生代码的情况下重新加载（您仍然需要运行 `bun run build`，但之后会重新从磁盘读取转译后的文件）。在发布构建中，它们会被嵌入到二进制文件中。
+- `./src/codegen/bundle-functions.ts` -- 将以 JavaScript/TypeScript 实现、可全局访问的函数打包，如 `ReadableStream`、`WritableStream` 等。它们的使用方式与内置模块类似，但输出更接近 WebKit/Safari 对 Safari 内置函数的实现方式，因此我们可以将 WebKit 中的实现直接复制过来作为起点。
 
 ## 修改 ESM 模块
 
@@ -248,23 +253,23 @@ bun-1234566 --version
 Bun 的 CI 在 BuildKite 上运行。安装 [BuildKite CLI](https://github.com/buildkite/cli)（`brew install buildkite/buildkite/bk`），并将 `BUILDKITE_API_TOKEN` 设置为只读作用域的 [API token](https://buildkite.com/user/api-access-tokens)。仓库包含一个 `.bk.yaml`，因此 `bk` 命令默认使用 `bun` pipeline。
 
 ```sh
-bun run ci:status         # progress summary for the current branch's latest build
-bun run ci:errors         # rendered test-failure output, tagged [new] vs [also on main]
-bun run ci:logs           # save full logs for each failed job to ./tmp/ci-<build>/
-bun run ci:watch          # watch until the build finishes
-bun run ci:find           # print the build number (compose with raw `bk`)
+bun run ci:status         # 当前分支最新构建的进度摘要
+bun run ci:errors         # 渲染后的测试失败输出，标记 [new] 与 [also on main]
+bun run ci:logs           # 将每个失败任务的完整日志保存到 ./tmp/ci-<build>/
+bun run ci:watch          # 监视直到构建完成
+bun run ci:find           # 打印构建编号（可与原始 `bk` 组合使用）
 ```
 
 以上所有命令都接受一个目标：`#1234`（PR 编号）、PR URL、分支名或构建编号。如果不指定，则使用当前 git 分支。
 
 ## AddressSanitizer
 
-[AddressSanitizer](https://en.wikipedia.org/wiki/AddressSanitizer) 有助于查找内存问题，并在 Linux 和 macOS 上 Bun 的调试构建中默认启用。包括 Zig 代码以及所有依赖。它会让 Zig 代码构建时间大约变为 2 倍；如果这阻碍了你的效率，你可以用 `bun run build:debug:noasan`（或在 `scripts/build.ts` 中传入 `--asan=off`）禁用它，但通常我们建议在构建之间将改动批量提交。
+[AddressSanitizer](https://en.wikipedia.org/wiki/AddressSanitizer) 有助于发现内存问题，并且在 Linux 和 macOS 上 Bun 的调试构建中默认启用。它覆盖 Rust 代码、C++ 绑定以及所有依赖项。这会让构建时间大约增加 2 倍；如果这影响到您的效率，您可以使用 `bun run build:debug:noasan` 禁用它（或者向 `scripts/build.ts` 传递 `--asan=off`），但通常我们建议您在两次构建之间批量完成更改。
 
 构建带 Address Sanitizer 的发布版，运行：
 
 ```bash
-bun run build:release:asan
+bun run build:asan
 ```
 
 在 CI 中，我们至少有一个目标使用 Address Sanitizer 来运行测试套件。
@@ -274,10 +279,10 @@ bun run build:release:asan
 默认不克隆 WebKit（节约时间和空间）。要本地克隆并构建 WebKit：
 
 ```bash
-# 克隆 WebKit 到 ./vendor/WebKit
+# 将 WebKit 克隆到 ./vendor/WebKit
 git clone https://github.com/oven-sh/WebKit vendor/WebKit
 
-# Check out the commit hash specified in WEBKIT_VERSION in scripts/build/deps/webkit.ts
+# 检出 scripts/build/deps/webkit.ts 中 WEBKIT_VERSION 指定的提交哈希
 git -C vendor/WebKit checkout <commit_hash>
 
 # 构建 JSC 的调试版本，产物在 ./vendor/WebKit/WebKitBuild/Debug
@@ -298,7 +303,9 @@ bun run build:local
 - `build.zig` 中的 `codegen_path` 改为 `build/debug-local/codegen`
 - `.vscode/launch.json` 中相应配置的路径改为 `./build/debug-local/`
 
-注意 WebKit 文件夹（含构建产物）大小超过 8GB。
+- `src/js/builtins.d.ts` 第一行
+- `.clangd` 配置中的 `CompilationDatabase` 行应为 `CompilationDatabase: build/debug-local`
+- `.vscode/launch.json` 中，许多配置使用了 `./build/debug/`，请按需修改
 
 如果使用 JSC 调试构建且用 VSCode，务必运行 “C/C++: Select a Configuration” 以配置 IntelliSense 找到调试头文件。
 
@@ -376,6 +383,6 @@ bun run build -DUSE_STATIC_LIBATOMIC=OFF
 
 ## 使用 bun-debug
 
-- 禁用日志：`BUN_DEBUG_QUIET_LOGS=1 bun-debug ...`（关闭所有调试日志）
-- 为指定 Zig 作用域启用日志：`BUN_DEBUG_EventLoop=1 bun-debug ...`（启用 `std.log.scoped(.EventLoop)` 日志）
-- Bun 会对运行的每个文件进行转译，在调试构建中实际执行的代码位于 `/tmp/bun-debug-src/...path/to/file`，例如 `/home/bun/index.ts` 转译后在 `/tmp/bun-debug-src/home/bun/index.ts`
+- 禁用日志：`BUN_DEBUG_QUIET_LOGS=1 bun-debug ...`（用于禁用所有调试日志）
+- 为特定范围启用日志：`BUN_DEBUG_EventLoop=1 bun-debug ...`（用于启用 `scoped_log!(EventLoop, ...)` 输出）
+- Bun 会转译它运行的每个文件，要查看调试构建中实际执行的源代码，请在 `/tmp/bun-debug-src/...path/to/file` 中查找，例如 `/home/bun/index.ts` 的转译版本会位于 `/tmp/bun-debug-src/home/bun/index.ts`

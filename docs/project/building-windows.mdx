@@ -37,20 +37,22 @@ winget install "Visual Studio Community 2022" --override "--add Microsoft.Visual
 
 - LLVM 21.1.8
 - Go
-- Rust
+- Rust (via rustup)
 - NASM
 - Perl
 - Ruby
 - Node.js
 
-<Note>构建过程中会自动下载、安装和更新 Zig 编译器。</Note>
+<Note>
+  `rust-toolchain.toml` 中固定的 Rust nightly 工具链会在首次构建时由 rustup 自动安装。
+</Note>
 
 使用 [Scoop](https://scoop.sh) 来安装这些剩余工具。
 
 ```ps1 Scoop (x64)
 irm https://get.scoop.sh | iex
-scoop install nodejs-lts go rust nasm ruby perl ccache
-# scoop 似乎在同时安装 llvm 以及其余组件时会有问题
+scoop install nodejs-lts go rustup nasm ruby perl ccache
+# scoop 在同时安装 llvm 和其他工具时似乎存在 bug
 scoop install llvm@21.1.8
 ```
 
@@ -111,8 +113,7 @@ ninja -Cbuild/debug
 
 ## 额外路径
 
-- WebKit 解压路径为 `build/debug/cache/webkit/`
-- Zig 解压路径为 `build/debug/cache/zig/bin/zig.exe`
+- WebKit 已提取到 `build/debug/cache/webkit/`
 
 ## 测试
 

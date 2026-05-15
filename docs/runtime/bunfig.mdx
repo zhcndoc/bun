@@ -670,13 +670,13 @@ linker = "hoisted"
 
 ### `install.globalStore`
 
-在使用 `"isolated"` 链接器时，将包安装结果跨项目共享到全局虚拟存储 `<cache>/links/` 中，并将 `node_modules/.bun/<pkg>@<ver>` 链接到其中，而不是将每个包实际物化到项目中。可使在 `rm -rf node_modules` 之后的热安装快一个数量级。默认 `true`。也可通过 `BUN_INSTALL_GLOBAL_STORE` 环境变量设置。
+When using the `"isolated"` linker, share package installations across projects in a global virtual store at `<cache>/links/` and link `node_modules/.bun/<pkg>@<ver>` into it instead of materializing each package into the project. Makes warm installs after `rm -rf node_modules` an order of magnitude faster. Default `false`. Can also be set with the `BUN_INSTALL_GLOBAL_STORE` environment variable.
 
 完整文档请参见[包管理器 > 全局虚拟存储](/pm/global-store)。
 
 ```toml title="bunfig.toml" icon="settings"
 [install]
-globalStore = false
+globalStore = true
 ```
 
 ### `install.publicHoistPattern`

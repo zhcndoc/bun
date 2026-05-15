@@ -124,11 +124,11 @@ node_modules/.bun/package@1.0.0_react@18.2.0/
 
 ### Global virtual store
 
-默认情况下，存储条目会先被物化到 `<cache>/links/` 中的 [global virtual store](/pm/global-store) 一次，而 `node_modules/.bun/<pkg>@<ver>` 则是指向它的符号链接。在 `rm -rf node_modules` 之后进行的热安装，只需为每个包创建一个符号链接，而不必重新复制每个包的文件，在典型的中型项目中大约可快 **7×**。有关完整布局、基准测试和取舍，请参阅 [global store 文档](/pm/global-store)。
+当启用 [`install.globalStore`](/runtime/bunfig#install-globalstore) 时，存储条目会先物化一次到 `<cache>/links/` 下的 [global virtual store](/pm/global-store)，而 `node_modules/.bun/<pkg>@<ver>` 则是指向它的符号链接。在 `rm -rf node_modules` 之后进行冷启动安装时，每个包只需创建一个符号链接，而不是再次复制每个包的文件，这在典型的中型项目中大约快 **7×**。全局存储默认**关闭**；请参阅 [global store 文档](/pm/global-store) 了解如何启用、完整布局、基准测试和权衡。
 
 ### 后端策略
 
-当某个条目不符合 global store 条件（或者 global store 被禁用）时，Bun 会使用以下方式之一将其物化到项目中：
+当全局存储被禁用（默认）或某个条目不适合使用时，Bun 会使用以下方式之一将条目物化到项目中：
 
 - **Clonefile**（macOS）— 复制时写入的文件系统克隆，效率最高
 - **Hardlink**（Linux/Windows）— 硬链接节省磁盘空间

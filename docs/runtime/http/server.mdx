@@ -169,6 +169,49 @@ Bun.serve({
 
 ---
 
+## HTTP/3 (QUIC)
+
+<Note>在 `Bun.serve` 中对 HTTP/3 的支持是**实验性**的，未来版本中可能会更改。</Note>
+
+`Bun.serve` 也可以通过 QUIC 监听 HTTP/3。将 `http3: true` 与 [`tls`](./tls) 一起设置——HTTP/3 始终需要 TLS。
+
+```ts
+Bun.serve({
+  tls: {
+    key: Bun.file("./key.pem"),
+    cert: Bun.file("./cert.pem"),
+  },
+  http3: true, // [!code ++]
+  fetch(req) {
+    return new Response("通过 HTTP/3 你好！");
+  },
+});
+```
+
+启用 `http3` 后，服务器会在同一端口上同时通过 TCP（HTTP/1.1）和 UDP（HTTP/3）监听。HTTP/1.1 响应会包含一个 `Alt-Svc` 标头，声明 HTTP/3 端点，以便支持的客户端可以自动升级。
+
+如果只想提供 HTTP/3——完全不启用 TCP 监听——请设置 `http1: false`：
+
+```ts
+Bun.serve({
+  tls: {
+    key: Bun.file("./key.pem"),
+    cert: Bun.file("./cert.pem"),
+  },
+  http3: true,
+  http1: false, // [!code ++]
+  fetch(req) {
+    return new Response("仅 HTTP/3");
+  },
+});
+```
+
+<Note>
+  `http3` 不支持 unix 域套接字——QUIC 需要一个 UDP 端口。`http1: false` 需要 `http3: true`。
+</Note>
+
+---
+
 ## idleTimeout
 
 默认情况下，`Bun.serve` 会在**10秒**无活动后关闭连接。当没有数据被发送或接收时，连接被视为空闲——这包括正在处理的请求，即你的处理程序仍在运行但尚未向响应写入任何字节。浏览器和 `fetch()` 客户端会将其视为连接重置。
@@ -177,7 +220,7 @@ Bun.serve({
 
 ```ts
 Bun.serve({
-  // 30 seconds (default is 10)
+  // 30 秒（默认值为 10）
   idleTimeout: 30,
 
   fetch(req) {
@@ -307,7 +350,7 @@ server.reload({
 ```ts
 const server = Bun.serve({
   async fetch(req, server) {
-    // Give this request up to 60 seconds of inactivity instead of the default 10
+    // 给这个请求最多 60 秒的无活动时间，而不是默认的 10 秒
     server.timeout(req, 60);
 
     // 如果请求体发送超过 60 秒，则请求将被中止
@@ -324,15 +367,15 @@ const server = Bun.serve({
 Bun.serve({
   routes: {
     "/events": (req, server) => {
-      // Disable the idle timeout for this streaming response.
-      // Otherwise the connection will be closed if no bytes
-      // are sent for 10 seconds (the default idleTimeout).
+      // 为此流式响应禁用空闲超时。
+      // 否则如果 10 秒内（默认的 idleTimeout）
+      // 没有发送字节，连接将被关闭。
       server.timeout(req, 0);
 
       return new Response(
         async function* () {
           yield "data: hello\n\n";
-          // events can arrive sporadically without the connection being killed
+          // 事件可以零星到达，而不会导致连接被终止
         },
         { headers: { "Content-Type": "text/event-stream" } },
       );
@@ -509,27 +552,27 @@ export interface Post {
 ```ts expandable See TypeScript Definitions
 interface Server extends Disposable {
   /**
-   * 停止服务器接受新连接。
-   * @param closeActiveConnections 若为 true，立即终止所有连接
-   * @returns 服务器停止时解析的 Promise
+   * Stop the server from accepting new connections.
+   * @param closeActiveConnections If true, immediately terminate all connections
+   * @returns Promise resolved when the server stops
    */
   stop(closeActiveConnections?: boolean): Promise<void>;
 
   /**
-   * 更新处理器，无需重启服务器。
-   * 仅可更新 fetch 和 error 处理器。
+   * Reload handlers without restarting the server.
+   * Only fetch and error handlers can be updated.
    */
   reload(options: Serve): void;
 
   /**
-   * 向运行中的服务器发起请求。
-   * 用于测试或内部路由。
+   * Make a request to the running server.
+   * Used for testing or internal routing.
    */
   fetch(request: Request | string): Response | Promise<Response>;
 
   /**
-   * 将 HTTP 请求升级为 WebSocket 连接。
-   * @returns 升级成功返回 true，失败返回 false
+   * Upgrade an HTTP request to a WebSocket connection.
+   * @returns true if the upgrade succeeds, false otherwise
    */
   upgrade<T = undefined>(
     request: Request,
@@ -540,8 +583,8 @@ interface Server extends Disposable {
   ): boolean;
 
   /**
-   * 向所有订阅某主题的 WebSocket 客户端发布消息。
-   * @returns 已发送字节数，若丢弃返回 0，若施加背压返回 -1
+   * Publish a message to all WebSocket clients subscribed to a topic.
+   * @returns Number of bytes sent, 0 if dropped, -1 if backpressure is applied
    */
   publish(
     topic: string,
@@ -550,71 +593,71 @@ interface Server extends Disposable {
   ): ServerWebSocketSendStatus;
 
   /**
-   * 获取某主题订阅的 WebSocket 客户端数量。
+   * Get the number of WebSocket clients subscribed to a topic.
    */
   subscriberCount(topic: string): number;
 
   /**
-   * 获取客户端 IP 地址和端口。
-   * @returns 关闭请求或 Unix 套接字返回 null
+   * Get the client IP address and port.
+   * @returns null for closed requests or Unix sockets
    */
   requestIP(request: Request): SocketAddress | null;
 
   /**
-   * 为请求设置自定义空闲超时。
-   * @param seconds 超时时间（秒），传 0 禁用
+   * Set a custom idle timeout for a request.
+   * @param seconds Timeout in seconds, 0 to disable
    */
   timeout(request: Request, seconds: number): void;
 
   /**
-   * 在服务器运行时保持进程存活。
+   * Keep the process alive while the server is running.
    */
   ref(): void;
 
   /**
-   * 允许服务器成为唯一运行时进程退出。
+   * Allow the server to be the only running runtime process to exit.
    */
   unref(): void;
 
-  /** 当前正在处理的 HTTP 请求数量 */
+  /** Current number of HTTP requests being processed */
   readonly pendingRequests: number;
 
-  /** 当前活跃的 WebSocket 连接数 */
+  /** Current number of active WebSocket connections */
   readonly pendingWebSockets: number;
 
-  /** 服务器完整 URL，包括协议、主机名和端口 */
+  /** Full server URL, including protocol, hostname, and port */
   readonly url: URL;
 
-  /** 服务器监听的端口 */
+  /** Port the server is listening on */
   readonly port: number;
 
-  /** 服务器绑定的主机名 */
+  /** Hostname the server is bound to */
   readonly hostname: string;
 
-  /** 服务器是否处于开发模式 */
+  /** Whether the server is in development mode */
   readonly development: boolean;
 
-  /** 服务器实例 ID */
+  /** Server instance ID */
   readonly id: string;
 }
 
 interface WebSocketHandler<T = undefined> {
-  /** 最大 WebSocket 消息大小，单位字节 */
+  /** Maximum WebSocket message size, in bytes */
   maxPayloadLength?: number;
 
-  /** 应用背压前排队消息的字节数 */
+  /** Number of bytes to queue messages before applying backpressure */
   backpressureLimit?: number;
 
-  /** 达到背压限制时是否关闭连接 */
+  /** Whether to close the connection when the backpressure limit is reached */
   closeOnBackpressureLimit?: boolean;
 
-  /** 背压解除时调用 */
+  /** Called when backpressure is relieved */
   drain?(ws: ServerWebSocket<T>): void | Promise<void>;
 
-  /** 空闲超时时间，单位秒 */
+  /** Idle timeout, in seconds */
   idleTimeout?: number;
 
-  /** 启用 per-message deflate 压缩 */
+  /** Enable per-message deflate compression */
   perMessageDeflate?:
     | boolean
     | {
@@ -622,51 +665,51 @@ interface WebSocketHandler<T = undefined> {
         decompress?: WebSocketCompressor | boolean;
       };
 
-  /** 发送 Ping 帧以保持连接活跃 */
+  /** Send Ping frames to keep the connection alive */
   sendPings?: boolean;
 
-  /** 是否服务器会接收自身发布的消息 */
+  /** Whether the server will receive messages published to itself */
   publishToSelf?: boolean;
 
-  /** 连接打开时调用 */
+  /** Called when the connection opens */
   open?(ws: ServerWebSocket<T>): void | Promise<void>;
 
-  /** 收到消息时调用 */
+  /** Called when a message is received */
   message(ws: ServerWebSocket<T>, message: string | Buffer): void | Promise<void>;
 
-  /** 连接关闭时调用 */
+  /** Called when the connection closes */
   close?(ws: ServerWebSocket<T>, code: number, reason: string): void | Promise<void>;
 
-  /** 收到 Ping 帧时调用 */
+  /** Called when a Ping frame is received */
   ping?(ws: ServerWebSocket<T>, data: Buffer): void | Promise<void>;
 
-  /** 收到 Pong 帧时调用 */
+  /** Called when a Pong frame is received */
   pong?(ws: ServerWebSocket<T>, data: Buffer): void | Promise<void>;
 }
 
 interface TLSOptions {
-  /** 证书颁发机构链 */
+  /** Certificate authority chain */
   ca?: string | Buffer | BunFile | Array<string | Buffer | BunFile>;
 
-  /** 服务器证书 */
+  /** Server certificate */
   cert?: string | Buffer | BunFile | Array<string | Buffer | BunFile>;
 
-  /** DH 参数文件路径 */
+  /** Path to the DH parameters file */
   dhParamsFile?: string;
 
-  /** 私钥 */
+  /** Private key */
   key?: string | Buffer | BunFile | Array<string | Buffer | BunFile>;
 
-  /** 减少 TLS 内存使用 */
+  /** Reduce TLS memory usage */
   lowMemoryMode?: boolean;
 
-  /** 私钥密码 */
+  /** Private key passphrase */
   passphrase?: string;
 
-  /** OpenSSL 选项标志 */
+  /** OpenSSL option flags */
   secureOptions?: number;
 
-  /** SNI 服务器名称 */
+  /** SNI server name */
   serverName?: string;
 }
 ```

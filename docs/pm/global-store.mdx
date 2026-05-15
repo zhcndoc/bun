@@ -11,32 +11,25 @@ description: "只安装一次。每个项目都链接到同一份副本。"
 
 ## 启用
 
-在所有平台上，配合 isolated linker 时，全局虚拟存储**默认开启**。hoisted linker 不会使用它。
+全局虚拟存储**默认关闭**。它只适用于 isolated linker；hoisted linker 不会使用它。
 
-```bash terminal icon="terminal"
-bun install --linker isolated
-```
-
-要让 isolated 成为某个项目的默认设置：
+要为某个项目启用它：
 
 ```toml title="bunfig.toml" icon="settings"
 [install]
 linker = "isolated"
+globalStore = true
 ```
 
-要退出并回退到每个项目各自的包副本：
-
-```toml title="bunfig.toml" icon="settings"
-[install]
-linker = "isolated"
-globalStore = false
-```
+或者通过环境变量按次启用：
 
 ```bash terminal icon="terminal"
-BUN_INSTALL_GLOBAL_STORE=0 bun install --linker isolated
+BUN_INSTALL_GLOBAL_STORE=1 bun install --linker isolated
 ```
 
-## 为什么它快
+要显式关闭它（默认行为），请设置 `globalStore = false` 或 `BUN_INSTALL_GLOBAL_STORE=0`。
+
+## Why it's fast
 
 之前的 isolated linker 会在每次安装时，对每个包都调用 `clonefileat()`（macOS）或 `link()`/`copyfile()`（其他平台），即使包缓存已经是热的，而缺失的只有 `node_modules`。对一个 1,400 包的 fixture 在 macOS 上进行热安装的分析显示，主线程有 **95.4 % 的时间都花在 `clonefileat` 里**：
 
@@ -125,7 +118,7 @@ project/node_modules/
 
 ## peer 依赖
 
-已解析的 peer 依赖——必需和可选的——会作为依赖符号链接并入每个全局条目，并计入其哈希。Bun 会为那些只在 `peerDependenciesMeta` 中列出名称、却没有对应 `peerDependencies` 条目的包合成一个隐式的 `"*"` 可选 peer（与 pnpm 和 yarn 一致），因此像 `webpack` 这样只在 `peerDependenciesMeta` 中声明 `webpack-cli` 的包，在项目中安装了 `webpack-cli` 时，仍会在其全局条目里得到一个 `webpack-cli` 符号链接。
+已解析的 peer 依赖——必需和可选的——会作为依赖符号链接并入每个全局条目，并计入其哈希。Bun 会为那些只在 `peerDependenciesMeta` 中列出名称、却没有对应 `peerDependencies` 条目的包合成一个隐式的 `"*"` 可选 peer（与 pnpm 和 yarn 一致），因此像 `webpack` 这样只在 `peerDependenciesMeta` 中声明 `webpack-cli` 的包，在项目中安装了 `webpack-cli` 时，仍然会在其全局条目里得到一个 `webpack-cli` 符号链接。
 
 ## 取舍
 
