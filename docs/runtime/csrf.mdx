@@ -6,13 +6,19 @@ description: 使用 Bun 的内置 API 生成和验证 CSRF 令牌
 Bun 通过 `Bun.CSRF` 提供了一个内置 API，用于生成和验证 [CSRF（跨站请求伪造）](https://owasp.org/www-community/attacks/csrf)令牌。令牌使用 HMAC 签名，并包含过期时间戳以限制令牌的有效期窗口。
 
 ```ts title="csrf.ts" icon="/icons/typescript.svg"
-// 生成令牌
-const token = Bun.CSRF.generate("my-secret");
+// 生成一个与请求者会话绑定的令牌
+const token = Bun.CSRF.generate("my-secret", { sessionId: "user-session-id" });
 
-// 验证令牌
-const isValid = Bun.CSRF.verify(token, { secret: "my-secret" });
+// 验证它
+const isValid = Bun.CSRF.verify(token, { secret: "my-secret", sessionId: "user-session-id" });
 console.log(isValid); // true
 ```
+
+<Callout type="warning">
+  始终同时将 `sessionId`（请求者的会话标识符或用户 ID）传递给 `generate()` 和 `verify()`。如果不传递，
+  令牌就只与密钥绑定——服务器曾签发过的任何令牌都对每个用户有效，因此攻击者可以在自己的会话中获取一个令牌，
+  并在受害者浏览器发起的伪造跨站请求中重放它。
+</Callout>
 
 ---
 
@@ -29,23 +35,26 @@ const token = Bun.CSRF.generate("my-secret-key");
 - `secret`（string，可选）— 用于签署令牌的密钥。如果未提供，Bun 会生成一个随机的内存中默认密钥（每个线程唯一）。
 - `options`（object，可选）：
 
-| 选项        | 类型     | 默认值        | 描述                                                                                            |
-| ----------- | -------- | ------------- | ------------------------------------------------------------------------------------------------------ |
-| `expiresIn` | `number` | `86400000`    | 令牌过期的毫秒数。默认为 24 小时。                                            |
-| `encoding`  | `string` | `"base64url"` | 令牌编码格式：`"base64"`、`"base64url"` 或 `"hex"`。                                          |
-| `algorithm` | `string` | `"sha256"`    | HMAC 算法：`"sha256"`、`"sha384"`、`"sha512"`、`"sha512-256"`、`"blake2b256"` 或 `"blake2b512"`。 |
+| Option      | Type     | Default       | Description                                                                                                                                                     |
+| ----------- | -------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `expiresIn` | `number` | `86400000`    | 令牌过期前的毫秒数。默认是 24 小时。                                                                                                                             |
+| `encoding`  | `string` | `"base64url"` | 令牌编码格式：`"base64"`、`"base64url"` 或 `"hex"`。                                                                                                            |
+| `algorithm` | `string` | `"sha256"`    | HMAC 算法：`"sha256"`、`"sha384"`、`"sha512"`、`"sha512-256"`、`"blake2b256"` 或 `"blake2b512"`。                                                               |
+| `sessionId` | `string` | (none)        | 将令牌绑定到请求主体（会话 ID、用户 ID 或等效标识）。只有在 `verify()` 中传入相同的 `sessionId` 时，令牌才会验证通过。                                           |
 
 **返回：** `string` — 编码后的令牌。
 
 ```ts title="generate-options.ts" icon="/icons/typescript.svg"
-// 1 小时后过期的令牌，使用十六进制编码
+// 绑定到请求者会话的令牌，1 小时后过期，编码为 hex
 const token = Bun.CSRF.generate("my-secret", {
+  sessionId: "user-session-id",
   expiresIn: 60 * 60 * 1000,
   encoding: "hex",
 });
 
 // 使用不同的算法
 const token2 = Bun.CSRF.generate("my-secret", {
+  sessionId: "user-session-id",
   algorithm: "sha512",
 });
 ```
@@ -65,25 +74,27 @@ const isValid = Bun.CSRF.verify(token, { secret: "my-secret-key" });
 - `token`（string，必需）— 要验证的令牌。
 - `options`（object，可选）：
 
-| 选项        | 类型     | 默认值        | 描述                                                                                          |
-| ----------- | -------- | ------------- | ---------------------------------------------------------------------------------------------------- |
-| `secret`    | `string` | (auto)        | 用于签署令牌的密钥。如果未提供，则使用与 `generate()` 相同的内存中默认值。 |
-| `maxAge`    | `number` | `86400000`    | 令牌的最大存活时间（毫秒），独立于令牌自身的 `expiresIn`。                       |
-| `encoding`  | `string` | `"base64url"` | 必须与 `generate()` 期间使用的编码匹配。                                                    |
-| `algorithm` | `string` | `"sha256"`    | 必须与 `generate()` 期间使用的算法匹配。                                                   |
+| Option      | Type     | Default       | Description                                                                                                                                                                                                          |
+| ----------- | -------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `secret`    | `string` | (auto)        | 用于签署令牌的密钥。如果未提供，则使用与 `generate()` 相同的内存默认密钥。                                                                                                                                        |
+| `maxAge`    | `number` | `86400000`    | 令牌的最大年龄（毫秒），独立于令牌自身的 `expiresIn`。                                                                                                                                                             |
+| `encoding`  | `string` | `"base64url"` | 必须与 `generate()` 中使用的编码一致。                                                                                                                                                                               |
+| `algorithm` | `string` | `"sha256"`    | 必须与 `generate()` 中使用的算法一致。                                                                                                                                                                              |
+| `sessionId` | `string` | (none)        | 必须与 `generate()` 中使用的 `sessionId` 一致。绑定到某一主体的令牌会对任何其他主体验证失败；而在生成时未提供 `sessionId` 的令牌，如果验证时提供了 `sessionId`，也会验证失败。 |
 
 **返回：** `boolean`
 
 ```ts title="verify-options.ts" icon="/icons/typescript.svg"
-// 验证十六进制编码的令牌
-const isValid = Bun.CSRF.verify(hexToken, {
+// 验证一个绑定到请求者会话的令牌
+const isValid = Bun.CSRF.verify(token, {
   secret: "my-secret",
-  encoding: "hex",
+  sessionId: "user-session-id",
 });
 
 // 强制执行比生成令牌时更短的最大存活时间
 const isValid2 = Bun.CSRF.verify(token, {
   secret: "my-secret",
+  sessionId: "user-session-id",
   maxAge: 60 * 1000, // 拒绝超过 1 分钟的令牌
 });
 ```
@@ -92,15 +103,31 @@ const isValid2 = Bun.CSRF.verify(token, {
 
 ## 在 `Bun.serve()` 中使用
 
-典型模式是在渲染表单时生成令牌，将其嵌入隐藏字段中，并在提交表单时进行验证。
+一个典型模式是在渲染表单时生成令牌，将其嵌入隐藏字段，并在表单提交时验证它。将请求者的会话标识符作为 `sessionId` 传递给这两次调用，这样令牌只对签发给它的用户有效。
 
 ```ts title="server.ts" icon="/icons/typescript.svg"
 const SECRET = process.env.CSRF_SECRET || "my-secret";
 
+// 从会话 cookie 中解析请求者的会话标识符。
+// 当访问者还没有会话时返回 null——切勿退回到共享的占位符，
+// 否则所有没有会话的访问者都会共享同一个令牌绑定。
+function getSessionId(req: Request): string | null {
+  return req.headers.get("cookie")?.match(/(?:^|;\s*)session=([^;]+)/)?.[1] ?? null;
+}
+
 const server = Bun.serve({
   routes: {
-    "/form": () => {
-      const token = Bun.CSRF.generate(SECRET);
+    "/form": req => {
+      // 在签发表单前为每个访问者创建一个会话，
+      // 这样令牌就会绑定到这个访问者，而不是其他任何人。
+      let sessionId = getSessionId(req);
+      const headers = new Headers({ "Content-Type": "text/html" });
+      if (!sessionId) {
+        sessionId = crypto.randomUUID();
+        headers.append("Set-Cookie", `session=${sessionId}; HttpOnly; SameSite=Lax; Path=/`);
+      }
+
+      const token = Bun.CSRF.generate(SECRET, { sessionId });
 
       return new Response(
         `<form method="POST" action="/submit">
@@ -108,16 +135,17 @@ const server = Bun.serve({
           <input type="text" name="message" />
           <button type="submit">发送</button>
         </form>`,
-        { headers: { "Content-Type": "text/html" } },
+        { headers },
       );
     },
 
     "/submit": {
       POST: async req => {
+        const sessionId = getSessionId(req);
         const formData = await req.formData();
         const csrfToken = formData.get("_csrf");
 
-        if (typeof csrfToken !== "string" || !Bun.CSRF.verify(csrfToken, { secret: SECRET })) {
+        if (!sessionId || typeof csrfToken !== "string" || !Bun.CSRF.verify(csrfToken, { secret: SECRET, sessionId })) {
           return new Response("无效的 CSRF 令牌", { status: 403 });
         }
 
@@ -155,6 +183,7 @@ interface CSRFGenerateOptions {
   expiresIn?: number;
   encoding?: "base64" | "base64url" | "hex";
   algorithm?: CSRFAlgorithm;
+  sessionId?: string;
 }
 
 interface CSRFVerifyOptions {
@@ -162,6 +191,7 @@ interface CSRFVerifyOptions {
   encoding?: "base64" | "base64url" | "hex";
   algorithm?: CSRFAlgorithm;
   maxAge?: number;
+  sessionId?: string;
 }
 
 namespace Bun.CSRF {
