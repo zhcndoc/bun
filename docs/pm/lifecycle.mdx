@@ -44,11 +44,23 @@ Bun 采取“默认安全”的策略，而不是执行任意脚本。你可以�
 
 添加到 `trustedDependencies` 后，安装或重新安装该包。Bun 会读取此字段并运行对应包的生命周期脚本。
 
-默认情况下，前 500 个带生命周期脚本的 npm 包是被允许的。你可以在[这里](https://github.com/oven-sh/bun/blob/main/src/install/default-trusted-dependencies.txt)查看完整名单。
+一份经过筛选的、带有生命周期脚本的常见 npm 包列表默认是允许的。你可以在[这里](https://github.com/oven-sh/bun/blob/main/src/install/default-trusted-dependencies.txt)查看完整列表。
 
 <Note>
   默认信任的依赖列表仅适用于从 npm 安装的包。对于来自其他来源的包（例如 `file:`、`link:`、`git:` 或 `github:` 依赖），即使包名匹配默认列表中的条目，也必须显式将其添加到 `trustedDependencies` 中才能运行它们的生命周期脚本。这样可以防止恶意包通过本地文件路径或 git 仓库伪装成受信任包。
 </Note>
+
+### `trustedDependencies` 字段的行为
+
+在 `package.json` 中定义 `trustedDependencies` 会**替换**默认列表，而不是在其基础上扩展。每个项目只会应用以下三种模式中的一种：
+
+| `package.json`                        | 允许运行生命周期脚本的包                              |
+| ------------------------------------- | ----------------------------------------------------- |
+| 省略 `trustedDependencies`            | Bun 内置列表中的包（仅限 npm 来源）。                 |
+| `trustedDependencies: ["pkg-a", ...]` | **仅**列出的包。默认列表会被忽略。                    |
+| `trustedDependencies: []`             | **没有**任何包，包括默认列表中的包。                 |
+
+当你想完全放弃默认允许列表，而又不想在每次安装时都传入 `--ignore-scripts`，可以设置 `trustedDependencies: []`。如果你定义了显式的 `trustedDependencies` 列表，请把你仍然需要其生命周期脚本的[默认列表](https://github.com/oven-sh/bun/blob/main/src/install/default-trusted-dependencies.txt)中的包也一并包含进去（例如 `sharp` 或 `esbuild`）——它们将不再被隐式信任。
 
 ---
 

@@ -1035,14 +1035,16 @@ try {
 
 ### PostgreSQL 连接错误
 
-| 错误码                              | 说明                             |
-| ----------------------------------- | -------------------------------- |
-| `ERR_POSTGRES_CONNECTION_CLOSED`    | 连接被关闭或未建立               |
-| `ERR_POSTGRES_CONNECTION_TIMEOUT`   | 连接超时未建立                   |
-| `ERR_POSTGRES_IDLE_TIMEOUT`          | 因空闲超时断开连接               |
-| `ERR_POSTGRES_LIFETIME_TIMEOUT`      | 连接存活时间超长                 |
-| `ERR_POSTGRES_TLS_NOT_AVAILABLE`     | SSL/TLS 不可用                  |
-| `ERR_POSTGRES_TLS_UPGRADE_FAILED`    | SSL/TLS 升级失败                |
+| 连接错误                             | 说明                                                                                                                                                                                                                                                                            |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ERR_POSTGRES_CONNECTION_CLOSED`      | 已建立的连接被终止                                                                                                                                                                                                                                                                |
+| `ERR_POSTGRES_CONNECTION_FAILED`      | 连接已被接受，但在握手完成前就被关闭（例如服务器仍在启动中）。在查询等待期间会持续重试并进行退避，直到 `connectionTimeout`。注意：服务器在启动期间发送的错误（如 `57P03`）会表现为 `ERR_POSTGRES_SERVER_ERROR` |
+| `ERR_POSTGRES_CONNECTION_REFUSED`     | 由于地址上没有服务在监听，连接被拒绝。会立即失败且不会重试                                                                                                                                                                                                                         |
+| `ERR_POSTGRES_CONNECTION_TIMEOUT`     | 在超时时间内未能建立连接                                                                                                                                                                                                                                                          |
+| `ERR_POSTGRES_IDLE_TIMEOUT`            | 因空闲而关闭连接                                                                                                                                                                                                                                                                    |
+| `ERR_POSTGRES_LIFETIME_TIMEOUT`       | 连接超过最大存活时间                                                                                                                                                                                                                                                               |
+| `ERR_POSTGRES_TLS_NOT_AVAILABLE`      | SSL/TLS 连接不可用                                                                                                                                                                                                                                                                |
+| `ERR_POSTGRES_TLS_UPGRADE_FAILED`     | 将连接升级为 SSL/TLS 失败                                                                                                                                                                                                                                                          |
 
 ### 认证错误
 
@@ -1077,8 +1079,8 @@ try {
 | `ERR_POSTGRES_OVERFLOW`                      | 数值溢出                      |
 | `ERR_POSTGRES_UNSUPPORTED_BYTEA_FORMAT`     | 不支持的二进制格式            |
 | `ERR_POSTGRES_UNSUPPORTED_INTEGER_SIZE`     | 整数大小不支持                |
-| `ERR_POSTGRES_MULTIDIMENSIONAL_ARRAY_NOT_SUPPORTED_YET` | 不支持多维数组           |
-| `ERR_POSTGRES_NULLS_IN_ARRAY_NOT_SUPPORTED_YET` | 不支持数组中有 NULL          |
+| `ERR_POSTGRES_MULTIDIMENSIONAL_ARRAY_NOT_SUPPORTED_YET` | 暂不支持多维数组           |
+| `ERR_POSTGRES_NULLS_IN_ARRAY_NOT_SUPPORTED_YET` | 暂不支持数组中包含 NULL          |
 
 ### 协议错误
 
@@ -1086,7 +1088,7 @@ try {
 | -------------------------------- | ---------------- |
 | `ERR_POSTGRES_EXPECTED_REQUEST`  | 期望客户端请求   |
 | `ERR_POSTGRES_EXPECTED_STATEMENT` | 期望预处理语句  |
-| `ERR_POSTGRES_INVALID_BACKEND_KEY_DATA` | 后端键数据无效 |
+| `ERR_POSTGRES_INVALID_BACKEND_KEY_DATA` | 后端密钥数据无效 |
 | `ERR_POSTGRES_INVALID_MESSAGE`   | 协议消息无效     |
 | `ERR_POSTGRES_INVALID_MESSAGE_LENGTH` | 消息长度无效   |
 | `ERR_POSTGRES_UNEXPECTED_MESSAGE` | 意外消息类型    |
@@ -1114,14 +1116,14 @@ SQLite 错误包含错误码和错误编号，参考 SQLite 标准错误码：
 | `SQLITE_READONLY`   | 8     | 试图写入只读数据库           |
 | `SQLITE_IOERR`      | 10    | 磁盘 I/O 错误               |
 | `SQLITE_CORRUPT`    | 11    | 数据库文件损坏              |
-| `SQLITE_FULL`       | 13    | 磁盘空间或数据库满          |
+| `SQLITE_FULL`       | 13    | 磁盘空间或数据库已满          |
 | `SQLITE_CANTOPEN`   | 14    | 无法打开数据库文件           |
 | `SQLITE_PROTOCOL`   | 15    | 数据库锁协议错误             |
-| `SQLITE_SCHEMA`     | 17    | 数据库结构改变              |
-| `SQLITE_TOOBIG`     | 18    | 字符串或 BLOB 超长          |
+| `SQLITE_SCHEMA`     | 17    | 数据库结构已更改              |
+| `SQLITE_TOOBIG`     | 18    | 字符串或 BLOB 过长          |
 | `SQLITE_MISMATCH`   | 20    | 数据类型不匹配              |
 | `SQLITE_MISUSE`     | 21    | 错误使用 SQLite 库          |
-| `SQLITE_AUTH`       | 23    | 访问权限拒绝                |
+| `SQLITE_AUTH`       | 23    | 访问权限被拒绝                |
 
 错误处理示例：
 
@@ -1154,8 +1156,8 @@ import { sql } from "bun";
 
 const [{ x, y }] = await sql`SELECT 9223372036854777 as x, 12345 as y`;
 
-console.log(typeof x, x); // "string" "9223372036854777"
-console.log(typeof y, y); // "number" 12345
+console.log(typeof x, x); // "字符串" "9223372036854777"
+console.log(typeof y, y); // "数字" 12345
 ```
 
 ---
@@ -1252,28 +1254,30 @@ Bun 自动向 MySQL 发送客户端信息，方便监控：
 
 MySQL 类型映射到 JS 类型如下：
 
-| MySQL 类型                             | JS 类型                 | 备注                                                           |
-| ------------------------------------ | ----------------------- | -------------------------------------------------------------- |
-| INT、TINYINT、MEDIUMINT               | number                  | 在安全整数范围内                                                |
-| BIGINT                               | string、number 或 BigInt | 在 i32/u32 范围内为 number，否则为 string 或 BigInt，视 bigint 选项而定 |
-| DECIMAL、NUMERIC                     | string                  | 保持精度                                                       |
-| FLOAT、DOUBLE                       | number                  |                                                                |
-| DATE                                 | Date                    | JS Date 对象                                                  |
-| DATETIME、TIMESTAMP                 | Date                    | 支持时区处理                                                  |
-| TIME                                 | number                  | 以微秒计数                                                   |
-| YEAR                                 | number                  |                                                                |
-| CHAR、VARCHAR、VARSTRING、STRING      | string                  |                                                                |
-| TINYTEXT、MEDIUMTEXT、TEXT、LONGTEXT | string                  |                                                                |
-| TINYBLOB、MEDIUMBLOB、BLOB、LONGBLOB | string                  | BLOB 等价于 TEXT 类型                                          |
-| JSON                                 | object/array            | 自动解析                                                     |
-| BIT(1)                               | boolean                 | MySQL 中的 BIT(1) 类型                                        |
-| GEOMETRY                             | string                  | 几何数据                                                     |
+| MySQL 类型                              | JavaScript 类型          | 备注                                                                                              |
+| --------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------- |
+| INT, TINYINT, MEDIUMINT                 | number                   | 在安全整数范围内                                                                                  |
+| BIGINT                                  | string, number or BigInt | 如果值适合 i32/u32 大小，则为 number；否则根据 `bigint` 选项为 string 或 BigInt                 |
+| DECIMAL, NUMERIC                        | string                   | 为保留精度                                                                                       |
+| FLOAT, DOUBLE                           | number                   |                                                                                                   |
+| DATE                                    | Date                     | JavaScript Date 对象                                                                             |
+| DATETIME, TIMESTAMP                     | Date                     | 按 UTC 解码（见下文说明）；`0000-00-00` 会变成无效日期                                            |
+| TIME                                    | number                   | 总微秒数                                                                                         |
+| YEAR                                    | number                   |                                                                                                   |
+| CHAR, VARCHAR, VARSTRING, STRING        | string                   |                                                                                                   |
+| TINY TEXT, MEDIUM TEXT, TEXT, LONG TEXT | string                   |                                                                                                   |
+| TINY BLOB, MEDIUM BLOB, BLOG, LONG BLOB | string                   | BLOB 类型是 TEXT 类型的别名                                                                        |
+| JSON                                    | object/array             | 自动解析                                                                                         |
+| BIT(1)                                  | boolean                  | MySQL 中的 BIT(1)                                                                                 |
+| GEOMETRY                                | string                   | 几何数据                                                                                         |
 
-#### 与 PostgreSQL 差异
+`DATETIME` 和 `TIMESTAMP` 值在传输过程中不包含时区，因此 Bun 会按 **UTC** 读取回来——你得到的 `Date` 会保留存储时相同的 UTC 墙上时间，而不受机器时区影响。这与值的写入方式一致（绑定的 `Date` 会存储其 UTC 分量）。PostgreSQL 的 `timestamp`（无时区）也是如此；`timestamptz` 则带有显式偏移，因此不受影响。
 
-尽管 API 统一，行为有区别：
+#### 与 PostgreSQL 的差异
 
-1. **参数占位符**：MySQL 内部使用 `?`，Bun 自动转换 `$1`, `$2` 风格占位符
+尽管 API 统一，行为上仍有区别：
+
+1. **参数占位符**：MySQL 内部使用 `?`，Bun 自动转换 `$1`、`$2` 风格占位符
 2. **RETURNING 语法**：MySQL 不支持 RETURNING，使用 `result.lastInsertRowid` 或单独 SELECT
 3. **数组类型**：MySQL 无原生数组类型，区别于 PostgreSQL
 
@@ -1293,7 +1297,7 @@ MySQL 类型映射到 JS 类型如下：
 
 - GSSAPI 认证
 - `SCRAM-SHA-256-PLUS` 支持
-- Point & PostGIS 类型
+- Point 和 PostGIS 类型
 - 多维整数数组（仅支持部分类型）
 
 ---
@@ -1305,7 +1309,7 @@ MySQL 类型映射到 JS 类型如下：
 ```ts
 // 获取插入 ID
 const result = await mysql`INSERT INTO users (name) VALUES (${"Alice"})`;
-console.log(result.lastInsertRowid); // MySQL LAST_INSERT_ID()
+console.log(result.lastInsertRowid); // MySQL 的 LAST_INSERT_ID()
 
 // 受影响的行数
 const updated = await mysql`UPDATE users SET active = ${false} WHERE age < ${18}`;
@@ -1340,8 +1344,6 @@ try {
 3. **批量操作用事务包裹**：关联查询放在同个事务里
 4. **合理建立索引**：MySQL 查询性能依赖索引策略
 5. **使用 `utf8mb4` 字符集**：默认启用，支持完整 Unicode 字符
-
----
 
 ## 常见问题
 

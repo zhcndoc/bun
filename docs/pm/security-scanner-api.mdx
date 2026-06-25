@@ -13,7 +13,7 @@ Bun 的包管理器可以在安装前扫描包中的安全漏洞，帮助保护�
 
 ```toml bunfig.toml icon="settings"
 [install.security]
-scanner = "@acme/bun-security-scanner"
+scanner = "@oven/bun-security-scanner" # 示例名称，请替换为您扫描器的包名
 ```
 
 配置后，Bun 将会：
@@ -52,11 +52,11 @@ scanner = "@acme/bun-security-scanner"
 从 npm 安装安全扫描器：
 
 ```bash terminal icon="terminal"
-bun add -d @acme/bun-security-scanner
+bun add -d @oven/bun-security-scanner
 ```
 
 <Note>
-  请查阅您所用安全扫描器的文档，了解其具体的包名和安装说明。大多数扫描器通过 `bun add` 方式安装。
+  `@oven/bun-security-scanner` 是一个示例包名，不是真实存在的包。请将其替换为您要使用的扫描器，并查阅该扫描器的文档以了解准确的包名和安装说明。大多数扫描器使用 `bun add` 安装。
 </Note>
 
 ### 配置扫描器
@@ -65,7 +65,7 @@ bun add -d @acme/bun-security-scanner
 
 ```toml bunfig.toml icon="settings"
 [install.security]
-scanner = "@acme/bun-security-scanner"
+scanner = "@oven/bun-security-scanner" # 示例名称，请替换为您扫描器的包名
 ```
 
 ### 企业配置

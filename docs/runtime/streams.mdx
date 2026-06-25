@@ -1,9 +1,9 @@
 ---
-title: Streams
-description: 使用 Bun 的流 API 以无需一次性加载全部数据到内存中即可处理二进制数据
+title: 流
+description: 使用 Bun 的流 API 以无需一次性将全部数据加载到内存中即可处理二进制数据
 ---
 
-Streams 是处理二进制数据而无需一次性加载全部到内存中的重要抽象。它们通常用于读写文件、发送和接收网络请求以及处理大量数据。
+流是处理二进制数据而无需一次性全部加载到内存中的重要抽象。它们通常用于读写文件、发送和接收网络请求以及处理大量数据。
 
 Bun 实现了 Web API 中的 [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) 和 [`WritableStream`](https://developer.mozilla.org/en-US/docs/Web/API/WritableStream)。
 
@@ -14,7 +14,7 @@ Bun 实现了 Web API 中的 [`ReadableStream`](https://developer.mozilla.org/en
   文档](https://nodejs.org/api/stream.html)。
 </Note>
 
-To create a `ReadableStream`:
+创建一个 `ReadableStream`：
 
 ```ts
 const stream = new ReadableStream({
@@ -68,6 +68,30 @@ const stream = new ReadableStream({
 ```
 
 当使用直接 `ReadableStream` 时，目标端会处理所有的数据块队列。流的消费者将收到与传给 `controller.write()` 完全一致的内容，不进行任何编码或修改。
+
+### 处理背压
+
+`controller.write()` 返回已写入的字节数。当目标端的内部缓冲区已满时（例如较慢的 HTTP 客户端），它会改为返回一个**负数**。数据块仍然会被接受——负返回值表示需要暂停并等待目标端将数据排空。
+
+要等待排空，请 `await controller.flush(true)`：
+
+```ts
+const stream = new ReadableStream({
+  type: "direct",
+  async pull(controller) {
+    for (const chunk of chunks) {
+      const n = controller.write(chunk);
+      if (typeof n === "number" && n < 0) {
+        // 目标端已积压；在写入更多数据之前等待其排空
+        await controller.flush(true);
+      }
+    }
+    controller.close();
+  },
+});
+```
+
+对于默认（非 `direct`）的 `ReadableStream` 和异步生成器响应体，Bun 会自动应用这种背压——当目标端积压时，生产者会暂停。
 
 ---
 

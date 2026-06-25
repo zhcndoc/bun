@@ -3,20 +3,20 @@ title: "bunfig.toml"
 description: "使用配置文件 bunfig.toml 配置 Bun 的行为"
 ---
 
-Bun 的行为可以通过其配置文件 `bunfig.toml` 进行配置。
+可以通过其配置文件 `bunfig.toml` 来配置 Bun 的行为。
 
-一般来说，Bun 依赖于已有的配置文件，如 `package.json` 和 `tsconfig.json` 来配置其行为。`bunfig.toml` 仅在配置 Bun 特定内容时才需要。此文件是可选的，Bun 在没有它的情况下也能开箱即用。
+一般来说，Bun 依赖已有的配置文件，例如 `package.json` 和 `tsconfig.json` 来配置其行为。`bunfig.toml` 只在需要配置 Bun 特定内容时才需要。此文件是可选的，Bun 在没有它的情况下也能开箱即用。
 
 ## 全局 vs. 本地
 
 通常建议在项目根目录下添加一个 `bunfig.toml` 文件，与 `package.json` 并列。
 
-要进行全局配置，你也可以在以下路径之一创建 `.bunfig.toml` 文件：
+若要进行全局配置，你也可以在以下路径之一创建 `.bunfig.toml` 文件：
 
 - `$HOME/.bunfig.toml`
 - `$XDG_CONFIG_HOME/.bunfig.toml`
 
-如果同时检测到全局与本地的 bunfig，结果将进行浅合并，本地设置覆盖全局。在适用情况下，CLI 标志将覆盖 `bunfig` 设置。
+如果同时检测到全局与本地 bunfig，结果将进行浅合并，本地设置覆盖全局。在适用情况下，CLI 标志将覆盖 `bunfig` 设置。
 
 ## 运行时
 
@@ -148,9 +148,9 @@ file = false
 depth = 3
 ```
 
-此设置控制控制台输出中对象呈现的嵌套层数。值越高，显示的嵌套属性越多，但复杂对象时输出会较冗长。该设置可被 `--console-depth` CLI 标志覆盖。
+此设置控制控制台输出中对象呈现的嵌套层数。值越高，显示的嵌套属性越多，但复杂对象时输出会更冗长。该设置可被 `--console-depth` CLI 标志覆盖。
 
-## Serve
+## 服务
 
 `Bun.serve` 和 `bun run` 在提供 HTTP 服务时的选项配置在 `[serve]` 部分下。
 
@@ -226,7 +226,7 @@ coverage = false
 ```toml title="bunfig.toml" icon="settings"
 [test]
 
-# 要求做到 90% 的行级和函数级覆盖率
+# 要求达到 90% 的行级和函数级覆盖率
 coverageThreshold = 0.9
 ```
 
@@ -275,7 +275,7 @@ coveragePathIgnorePatterns = [
 
 ### `test.coverageReporter`
 
-默认情况下，覆盖率报告会输出到控制台。为了 CI 环境中持久保存和供其他工具使用，请使用 `lcov`。
+默认情况下，覆盖率报告会输出到控制台。为了在 CI 环境中持久保存并供其他工具使用，请使用 `lcov`。
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -578,7 +578,7 @@ registry = "https://username:password@registry.npmjs.org"
 
 配置工作区（monorepo）包的链接方式。
 
-是否将工作空间包从 monorepo 根目录链接到各自的 `node_modules` 目录。默认 `true`。
+是否将工作区包从 monorepo 根目录链接到各自的 `node_modules` 目录。默认 `true`。
 
 ```toml title="bunfig.toml" icon="settings"
 [install]
@@ -670,7 +670,7 @@ linker = "hoisted"
 
 ### `install.globalStore`
 
-When using the `"isolated"` linker, share package installations across projects in a global virtual store at `<cache>/links/` and link `node_modules/.bun/<pkg>@<ver>` into it instead of materializing each package into the project. Makes warm installs after `rm -rf node_modules` an order of magnitude faster. Default `false`. Can also be set with the `BUN_INSTALL_GLOBAL_STORE` environment variable.
+当使用 `"isolated"` 链接器时，会在全局虚拟存储 `<cache>/links/` 中跨项目共享包安装，并将 `node_modules/.bun/<pkg>@<ver>` 链接到其中，而不是将每个包实际展开到项目中。这样在 `rm -rf node_modules` 之后的热安装会快一个数量级。默认 `false`。也可以通过 `BUN_INSTALL_GLOBAL_STORE` 环境变量设置。
 
 完整文档请参见[包管理器 > 全局虚拟存储](/pm/global-store)。
 
@@ -713,21 +713,25 @@ logLevel = "warn"
 首先，从 npm 安装安全扫描器：
 
 ```bash terminal icon="terminal"
-bun add -d @acme/bun-security-scanner
+bun add -d @oven/bun-security-scanner
 ```
 
-然后在 `bunfig.toml` 配置：
+<Note>
+  `@oven/bun-security-scanner` 是一个示例包名，不是真实存在的包。请将其替换为你要使用的扫描器，并查阅该扫描器的文档以获取准确的包名和安装说明。大多数扫描器都可通过 `bun add` 安装。
+</Note>
+
+然后在你的 `bunfig.toml` 中进行配置：
 
 ```toml bunfig.toml icon="settings"
 [install.security]
-scanner = "@acme/bun-security-scanner"
+scanner = "@oven/bun-security-scanner" # 示例名称，请替换为你的扫描器包名
 ```
 
 配置安全扫描器后：
 
-- 自动安装功能自动禁用以保障安全
+- 自动安装功能会自动禁用，以保障安全
 - 安装前扫描包
-- 发现致命问题时取消安装
+- 发现严重问题时取消安装
 - 安装过程中显示安全警告
 
 详细了解[使用和编写安全扫描器](/pm/security-scanner-api)。

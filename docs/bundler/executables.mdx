@@ -6,7 +6,7 @@ description: "使用 Bun 从 TypeScript 或 JavaScript 文件生成独立可执�
 Bun 的打包器支持 `--compile` 标志，用于从 TypeScript 或 JavaScript 文件生成独立的二进制可执行文件。
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash terminal icon="terminal"
     bun build ./cli.ts --compile --outfile mycli
     ```
@@ -48,7 +48,7 @@ Hello world!
 构建 Linux x64 版本（大多数服务器）：
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash icon="terminal" terminal
     bun build --compile --target=bun-linux-x64 ./index.ts --outfile myapp
 
@@ -72,7 +72,7 @@ Hello world!
       },
     });
 
-    // Baseline (2013 年前 CPU)
+    // 基线版（2013 年前 CPU）
     await Bun.build({
       entrypoints: ["./index.ts"],
       compile: {
@@ -81,7 +81,7 @@ Hello world!
       },
     });
 
-    // Modern (2013 年及以后 CPU, 更快)
+    // 现代版（2013 年及以后 CPU，更快）
     await Bun.build({
       entrypoints: ["./index.ts"],
       compile: {
@@ -97,9 +97,9 @@ Hello world!
 构建 Linux ARM64 版本（如 Graviton 或 Raspberry Pi）：
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash icon="terminal" terminal
-    # 注意：默认架构为 x64，如果未指定架构。
+    # 注意：如果未指定架构，默认架构为 x64。
     bun build --compile --target=bun-linux-arm64 ./index.ts --outfile myapp
     ```
   </Tab>
@@ -119,7 +119,7 @@ Hello world!
 构建 Windows x64 版本：
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash icon="terminal" terminal
     bun build --compile --target=bun-windows-x64 ./path/to/my/app.ts --outfile myapp
 
@@ -140,11 +140,11 @@ Hello world!
       entrypoints: ["./path/to/my/app.ts"],
       compile: {
         target: "bun-windows-x64",
-        outfile: "./myapp", // 自动加 .exe 后缀
+        outfile: "./myapp", // 自动加上 .exe 后缀
       },
     });
 
-    // Baseline 或 modern 版本
+    // 基线版或现代版
     await Bun.build({
       entrypoints: ["./path/to/my/app.ts"],
       compile: {
@@ -160,11 +160,11 @@ Hello world!
 为 Windows arm64 构建：
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash icon="terminal" terminal
     bun build --compile --target=bun-windows-arm64 ./path/to/my/app.ts --outfile myapp
 
-    # note: if no .exe extension is provided, Bun will automatically add it for Windows executables
+    # 注意：如果不提供 .exe 后缀，Bun 会自动为 Windows 可执行文件加上
     ```
 
   </Tab>
@@ -174,7 +174,7 @@ Hello world!
       entrypoints: ["./path/to/my/app.ts"],
       compile: {
         target: "bun-windows-arm64",
-        outfile: "./myapp", // .exe added automatically
+        outfile: "./myapp", // 自动加上 .exe
       },
     });
     ```
@@ -185,7 +185,7 @@ Hello world!
 构建 macOS arm64 版本：
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash icon="terminal" terminal
     bun build --compile --target=bun-darwin-arm64 ./path/to/my/app.ts --outfile myapp
     ```
@@ -206,7 +206,7 @@ Hello world!
 构建 macOS x64 版本：
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash icon="terminal" terminal
     bun build --compile --target=bun-darwin-x64 ./path/to/my/app.ts --outfile myapp
     ```
@@ -252,7 +252,7 @@ Hello world!
 使用 `--define` 标志可将编译时常量注入可执行文件，例如版本号、构建时间戳或配置值：
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash icon="terminal" terminal
     bun build --compile --define BUILD_VERSION='"1.2.3"' --define BUILD_TIME='"2024-01-15T10:30:00Z"' src/cli.ts --outfile mycli
     ```
@@ -290,7 +290,7 @@ Hello world!
 部署到生产环境推荐做法：
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash icon="terminal" terminal
     bun build --compile --minify --sourcemap ./path/to/my/app.ts --outfile myapp
     ```
@@ -314,7 +314,7 @@ Hello world!
 为提升启动速度，启用字节码编译：
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash icon="terminal" terminal
     bun build --compile --minify --sourcemap --bytecode ./path/to/my/app.ts --outfile myapp
     ```
@@ -357,7 +357,7 @@ Hello world!
 **`--compile-exec-argv="args"`** — 嵌入运行时参数，通过 `process.execArgv` 可访问：
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash icon="terminal" terminal
     bun build --compile --compile-exec-argv="--smol --user-agent=MyBot" ./app.ts --outfile myapp
     ```
@@ -376,7 +376,7 @@ Hello world!
 </Tabs>
 
 ```ts app.ts icon="/icons/typescript.svg"
-// 编译后的程序中
+// 在编译后的程序中
 console.log(process.execArgv); // ["--smol", "--user-agent=MyBot"]
 ```
 
@@ -428,7 +428,7 @@ bun build --compile --compile-autoload-tsconfig --compile-autoload-package-json 
 要禁用 `.env` 或 `bunfig.toml` 以实现确定性执行：
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash icon="terminal" terminal
     # 禁用 .env 加载
     bun build --compile --no-compile-autoload-dotenv ./app.ts --outfile myapp
@@ -469,7 +469,7 @@ bun build --compile --compile-autoload-tsconfig --compile-autoload-package-json 
 
 通过设置环境变量 `BUN_BE_BUN=1`，可以让独立可执行文件模拟 `bun` CLI 自身行为。此时可执行文件会忽略自身打包的入口点，转而暴露 Bun CLI 的所有功能。
 
-For example, consider an executable compiled from this script:
+例如，考虑一个由以下脚本编译而成的可执行文件：
 
 ```bash icon="terminal" terminal
 echo "console.log(\"you shouldn't see this\");" > such-bun.js
@@ -534,7 +534,7 @@ console.log(`Server running at http://localhost:${server.port}`);
 <!DOCTYPE html>
 <html>
   <head>
-    <title>My App</title>
+    <title>我的应用</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -559,7 +559,7 @@ body {
 构建为单个可执行文件：
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash terminal icon="terminal"
     bun build --compile ./server.ts --outfile myapp
     ```
@@ -600,7 +600,7 @@ Bun 会自动处理前端资源的 MIME 类型和缓存头。HTML 引入会被�
 使用独立可执行文件中的 Worker，需要将 Worker 入口也加入构建：
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash terminal icon="terminal"
     bun build --compile ./index.ts ./my-worker.ts --outfile myapp
     ```
@@ -838,7 +838,7 @@ console.log(addon.hello());
 使用 `bun build --compile` 时，可包含目录中的文件：
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash terminal icon="terminal"
     bun build --compile ./index.ts ./public/**/*.png
     ```
@@ -878,7 +878,21 @@ export default {
 
 这个方法目前是权宜之计，未来会提供更直接的 API。
 
-### 列出所有嵌入文件
+### 运行时检测独立模式
+
+使用 `Bun.isStandaloneExecutable` 来检查当前进程是否正在从编译后的二进制文件运行：
+
+```ts index.ts icon="/icons/typescript.svg"
+if (Bun.isStandaloneExecutable) {
+  // 从 `bun build --compile` 的输出运行
+} else {
+  // 通过 `bun <file>` 运行，或作为库使用
+}
+```
+
+与 `Bun.embeddedFiles.length > 0` 不同，这种检查不会为每个嵌入文件分配 `Blob` 对象，因此即使二进制文件嵌入了大量资源，也可以安全地在启动时调用。
+
+### 列出嵌入文件
 
 `Bun.embeddedFiles` 提供了访问所有嵌入文件的 `Blob` 对象：
 
@@ -937,7 +951,7 @@ serve({
 禁用内容哈希配置资源命名：
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash terminal icon="terminal"
     bun build --compile --asset-naming="[name].[ext]" ./index.ts
     ```
@@ -964,7 +978,7 @@ serve({
 启用代码压缩以减少可执行文件体积：
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash terminal icon="terminal"
     bun build --compile --minify ./index.ts --outfile myapp
     ```
@@ -1005,7 +1019,7 @@ Bun 使用自身压缩器来减小代码体积。不过总体上 Bun 的二进�
 在 Windows 上编译独立可执行文件时，可以定制生成的 `.exe` 文件的元数据：
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash terminal icon="terminal"
     # 自定义图标
     bun build --compile --windows-icon=path/to/icon.ico ./app.ts --outfile myapp
@@ -1103,7 +1117,7 @@ codesign -vvv --verify ./myapp
 独立可执行文件支持代码拆分。结合 `--compile` 和 `--splitting` 可生成带有运行时动态加载代码拆分块的可执行文件。
 
 <Tabs>
-  <Tab title="CLI">
+  <Tab title="命令行">
     ```bash terminal icon="terminal"
     bun build --compile --splitting ./src/entry.ts --outdir ./build
     ```

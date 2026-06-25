@@ -138,6 +138,11 @@ bun build <入口点>
   启用 React 快速刷新转换（用于开发测试）
 </ParamField>
 
+<ParamField path="--react-compiler" type="boolean">
+  在 `.jsx`/`.tsx` 文件上运行 React 编译器，自动对组件和 hooks 进行记忆化。输出模式由
+  <code>--target</code> 决定（<code>browser</code> → client，<code>bun</code>/<code>node</code> → ssr）。实验性功能。
+</ParamField>
+
 ### 独立可执行文件
 
 <ParamField path="--compile" type="boolean">

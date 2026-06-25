@@ -152,6 +152,19 @@ bun list --all
 ├── ...
 ```
 
+仅打印受信任的依赖项（允许运行生命周期脚本的依赖）。当在 `package.json` 中设置了 `trustedDependencies` 时，会显示该列表中的包；否则会显示 Bun 的 [默认受信任依赖](https://github.com/oven-sh/bun/blob/main/src/install/default-trusted-dependencies.txt) 列表中的包。
+
+```bash terminal icon="terminal"
+bun pm ls --trusted
+# or
+bun list --trusted
+```
+
+```txt
+/path/to/project node_modules (135)
+└── esbuild@0.21.5
+```
+
 ## whoami
 
 打印你的 npm 用户名。需要已登录（`bunx npm login`）并在 `bunfig.toml` 或 `.npmrc` 中保存凭据：

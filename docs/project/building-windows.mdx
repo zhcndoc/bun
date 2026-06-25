@@ -37,7 +37,7 @@ winget install "Visual Studio Community 2022" --override "--add Microsoft.Visual
 
 - LLVM 21.1.8
 - Go
-- Rust (via rustup)
+- Rust（通过 rustup）
 - NASM
 - Perl
 - Ruby
@@ -99,7 +99,7 @@ Get-Command mt
 ```ps1
 bun run build
 
-# 初次运行完成后，可以用下面命令构建
+# 首次运行完成后，可以用下面命令构建
 ninja -Cbuild/debug
 ```
 
@@ -140,4 +140,55 @@ bun-debug test "C:\bun\test\js\bun\resolve\import-meta.test.js"
 
 ### 输出写入失败 ‘bun-debug.exe’: 权限被拒绝
 
-如果 `bun-debug.exe` 已打开，您无法覆盖它。可能是您有正在运行的实例，或者在 VSCode 调试器中还未关闭。
+如果 `bun-debug.exe` 已打开，就无法覆盖它。您很可能有一个正在运行的实例，也许是在 vscode 调试器中？
+
+## 从 Linux 交叉编译
+
+Windows 二进制文件（x64 和 arm64）也可以在 Linux 主机上构建。该构建使用主机 LLVM 提供的 `clang-cl`、`lld-link`、`llvm-lib` 和 `llvm-rc`——它们是每个 LLVM 发行版的一部分——再加上一个用于头文件和导入库的 MSVC CRT/STL 与 Windows SDK 的 “xwin splat”。
+
+### 前置条件
+
+1. 与原生构建使用的相同 LLVM 版本（参见 `scripts/bootstrap.sh` 中的 `llvm_version_exact`），并确保可使用 `clang-cl`、`lld-link`、`llvm-lib` 和 `llvm-rc`。在 Debian/Ubuntu 上，`apt.llvm.org` 软件包提供了这些工具。
+2. `nasm`（仅 Windows x64 需要——BoringSSL 的 x64 汇编使用 NASM 语法）。
+3. Windows 目标的 Rust std（`rust-toolchain.toml` 中列出了这些目标；如果缺失，请执行 `rustup target add x86_64-pc-windows-msvc aarch64-pc-windows-msvc`）。
+4. 一个 Windows sysroot：一个 [xwin](https://github.com/Jake-Shadle/xwin) 的 splat，其中包含按 Visual Studio 安装布局展开的 MSVC CRT、Windows SDK 和 ATL。请注意，下载这些组件意味着您同意 Microsoft 适用于它们的许可条款。
+
+```bash
+cargo install xwin # 或下载一个发布版二进制文件
+xwin --accept-license --arch x86_64,aarch64 --sdk-version 10.0.26100 --crt-version 14.44.17.14 --include-atl splat \
+  --use-winsysroot-style --preserve-ms-arch-notation --include-debug-libs \
+  --output /opt/winsysroot
+# clang-cl/lld-link 将 SDK 路径视为 "Include"/"Lib"；
+# splat 会用小写写入这些路径，所以需要把两种拼写都做别名（需要与
+# splat 相同的权限——当目录可写时，configure 会自行创建这些别名）。
+ln -s include "/opt/winsysroot/Windows Kits/10/Include"
+ln -s lib "/opt/winsysroot/Windows Kits/10/Lib"
+```
+
+构建会自动在 `/opt/winsysroot`（或 `/opt/xwin`）查找 sysroot；如果放在其他位置，请设置 `WINDOWS_SYSROOT=<path>` 或传入 `--winsysroot=<path>`（使用可由用户写入的路径也能让 configure 为您管理这些别名）。configure 会在每次交叉构建开始时验证该 splat。CI 代理会将相同的 splat 烘焙到它们的镜像中（`.buildkite/Dockerfile`、`scripts/bootstrap.sh`）；当某个代理没有该 splat 时，构建会在 configure 时将其下载到缓存目录中。
+
+### 构建
+
+```bash
+# Debug 构建
+bun run build --profile=windows-x64
+bun run build --profile=windows-arm64
+
+# Release 构建
+bun run build --profile=windows-x64-release
+bun run build --profile=windows-arm64-release
+```
+
+输出会生成在 `build/debug-windows-x64/bun-debug.exe`、`build/release-windows-aarch64/bun-profile.exe` + `bun.exe` 等位置。等效的原始标志：`bun run build --os=windows --arch=aarch64`。
+
+交叉编译出的可执行文件不会在主机上运行（会跳过 `--revision` 冒烟测试），因此请在 Windows 机器上或在 Wine 下测试它们。
+
+### LTO
+
+x64 release 交叉构建支持 ThinLTO，以及跨语言（Rust↔C++）LTO，CI 的 Windows x64 交叉构建通道默认启用它。若在本地使用，则需要显式开启：
+
+```bash
+bun run build --profile=windows-x64-release --lto=on
+```
+
+这会用 `-flto=thin` 编译 bun 的 C/C++，让 rustc 输出 LLVM bitcode（`-Clinker-plugin-lto`），拉取 `bun-webkit-windows-amd64-lto` 的 ThinLTO 预构建产物，并使用 rustc 自带的 `lld-link` 将所有内容链接起来（其 LLVM 足够新，能够读取两个编译器生成的 bitcode）。arm64 不支持 LTO（没有 `-lto` 的 WebKit 预构建产物——LLVM 的 CodeView emitter 在 LTO 代码生成期间无法处理 ARM64 NEON tuple 寄存器），`--baseline` 也不支持。
