@@ -4,7 +4,7 @@ sidebarTitle: 写入到标准输出
 mode: center
 ---
 
-`console.log` 函数会写入到 `stdout`。它会自动在打印的数据末尾追加换行符。
+`console.log` 函数将内容写入 `stdout`，并在打印的数据末尾追加换行符。
 
 ```ts
 console.log("Lorem ipsum");
@@ -12,7 +12,7 @@ console.log("Lorem ipsum");
 
 ---
 
-对于更高级的用例，Bun 通过 `Bun.stdout` 属性将 `stdout` 以 `BunFile` 形式暴露出来。它可以作为 [`Bun.write()`](/runtime/file-io#writing-files-bun-write) 的写入目标。
+Bun 还通过 `Bun.stdout` 属性将 `stdout` 暴露为 `BunFile`。将其作为目标传递给 [`Bun.write()`](/runtime/file-io#writing-files-bun-write)。
 
 ```ts
 await Bun.write(Bun.stdout, "Lorem ipsum");
@@ -20,4 +20,4 @@ await Bun.write(Bun.stdout, "Lorem ipsum");
 
 ---
 
-完整的 `Bun.write()` 文档请参见 [文档 > API > 文件 I/O](/runtime/file-io#writing-files-bun-write)。
+请参阅 [`Bun.write()`](/runtime/file-io#writing-files-bun-write)。

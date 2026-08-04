@@ -4,7 +4,7 @@ sidebarTitle: "Blob 转字符串"
 mode: center
 ---
 
-[`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) 类提供了多种方法以不同格式获取其内容，包括 `.text()`。
+[`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) 类提供了多种方法，可以以不同格式读取其内容，其中包括 `.text()`。
 
 ```ts
 const blob = new Blob(["hello world"]);
@@ -14,4 +14,4 @@ const str = await blob.text();
 
 ---
 
-完整的二进制数据操作文档，请参见 [文档 > API > 二进制数据](/runtime/binary-data#conversion) 中关于使用 Bun 操作二进制数据的内容。
+请参阅[二进制数据](/runtime/binary-data#conversion)。

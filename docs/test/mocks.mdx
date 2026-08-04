@@ -3,7 +3,7 @@ title: "Mock"
 description: "学习如何在 Bun 测试中创建和使用模拟函数、间谍以及模块模拟"
 ---
 
-模拟对于测试至关重要，它允许你用受控的实现替换依赖项。Bun 提供了全面的模拟功能，包括函数模拟、间谍以及模块模拟。
+模拟会使用受控的实现替换依赖项。Bun 支持函数模拟、间谍以及模块模拟。
 
 ## 基础函数模拟
 
@@ -24,7 +24,7 @@ test("random", () => {
 
 ### Jest 兼容性
 
-或者，你也可以像在 Jest 中那样使用 `jest.fn()` 函数。它的行为完全相同。
+你也可以像在 Jest 中一样使用 `jest.fn()`。它的行为完全相同。
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect, jest } from "bun:test";
@@ -41,7 +41,7 @@ test("random", () => {
 
 ## 模拟函数属性
 
-`mock()` 的返回值是一个带有附加属性的新函数。
+`mock()` 返回一个带有附加属性的新函数。
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { mock } from "bun:test";
@@ -65,28 +65,28 @@ random.mock.results;
 
 模拟函数实现了以下属性和方法：
 
-| 属性/方法                             | 描述                                         |
-| ------------------------------------- | --------------------------------------------- |
-| `mockFn.getMockName()`                | 返回模拟名称                                  |
-| `mockFn.mock.calls`                   | 每次调用的参数数组                            |
-| `mockFn.mock.results`                 | 每次调用的返回值数组                          |
-| `mockFn.mock.instances`               | 每次调用的 `this` 上下文数组                  |
-| `mockFn.mock.contexts`                | 每次调用的 `this` 上下文数组                  |
-| `mockFn.mock.lastCall`                | 最近一次调用的参数                            |
-| `mockFn.mockClear()`                  | 清空调用历史                                  |
-| `mockFn.mockReset()`                  | 清空调用历史且移除实现                        |
-| `mockFn.mockRestore()`                | 恢复原始实现                                  |
-| `mockFn.mockImplementation(fn)`       | 设置新的实现                                  |
-| `mockFn.mockImplementationOnce(fn)`   | 只为下一次调用设置实现                        |
-| `mockFn.mockName(name)`               | 设置模拟名称                                  |
-| `mockFn.mockReturnThis()`             | 设置返回值为 `this`                           |
-| `mockFn.mockReturnValue(value)`       | 设置返回值                                    |
-| `mockFn.mockReturnValueOnce(value)`   | 只为下一次调用设置返回值                      |
-| `mockFn.mockResolvedValue(value)`     | 设置解析（resolved）的 Promise 值             |
-| `mockFn.mockResolvedValueOnce(value)` | 只为下一次调用设置解析的 Promise 值            |
-| `mockFn.mockRejectedValue(value)`     | 设置拒绝（rejected）的 Promise 值             |
-| `mockFn.mockRejectedValueOnce(value)` | 只为下一次调用设置拒绝的 Promise 值            |
-| `mockFn.withImplementation(fn, callback)` | 临时更改实现                                  |
+| 属性/方法                                 | 描述                           |
+| ----------------------------------------- | ------------------------------ |
+| `mockFn.getMockName()`                    | 返回模拟函数名称               |
+| `mockFn.mock.calls`                       | 每次调用的参数数组             |
+| `mockFn.mock.results`                     | 每次调用的返回值数组           |
+| `mockFn.mock.instances`                   | 使用 `new` 创建的实例数组      |
+| `mockFn.mock.contexts`                    | 每次调用的 `this` 上下文数组   |
+| `mockFn.mock.lastCall`                    | 最近一次调用的参数             |
+| `mockFn.mockClear()`                      | 清除调用历史                   |
+| `mockFn.mockReset()`                      | 清除调用历史并移除实现         |
+| `mockFn.mockRestore()`                    | 恢复原始实现                   |
+| `mockFn.mockImplementation(fn)`           | 设置新的实现                   |
+| `mockFn.mockImplementationOnce(fn)`       | 仅为下一次调用设置实现         |
+| `mockFn.mockName(name)`                   | 设置模拟函数名称               |
+| `mockFn.mockReturnThis()`                 | 将返回值设置为 `this`          |
+| `mockFn.mockReturnValue(value)`           | 设置返回值                     |
+| `mockFn.mockReturnValueOnce(value)`       | 仅为下一次调用设置返回值       |
+| `mockFn.mockResolvedValue(value)`         | 设置已解决的 Promise 值        |
+| `mockFn.mockResolvedValueOnce(value)`     | 仅为下一次调用设置已解决的 Promise |
+| `mockFn.mockRejectedValue(value)`         | 设置已拒绝的 Promise 值        |
+| `mockFn.mockRejectedValueOnce(value)`     | 仅为下一次调用设置已拒绝的 Promise |
+| `mockFn.withImplementation(fn, callback)` | 临时更改实现                   |
 
 ### 实际示例
 
@@ -165,7 +165,7 @@ test("async mock functions", async () => {
 
 ## 使用 spyOn() 创建间谍
 
-可以不替换函数实现而追踪其调用。使用 `spyOn()` 创建间谍；这些间谍可以用于 `.toHaveBeenCalled()` 和 `.toHaveBeenCalledTimes()`。
+使用 `spyOn()` 跟踪对函数的调用，而不会将其替换为模拟函数。间谍可以传递给 `.toHaveBeenCalled()` 和 `.toHaveBeenCalledTimes()`。
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect, spyOn } from "bun:test";
@@ -240,7 +240,7 @@ test("spy with mock implementation", async () => {
 
 ## 使用 mock.module() 进行模块模拟
 
-模块模拟允许覆盖模块行为。使用 `mock.module(path: string, callback: () => Object)` 来模拟模块。
+使用 `mock.module(path: string, callback: () => Object)` 覆盖模块的行为。
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect, mock } from "bun:test";
@@ -264,7 +264,7 @@ test("mock.module", async () => {
 
 ### 重写已导入模块
 
-如果你需要重写已经导入的模块，无需额外操作。调用 `mock.module()` 即可覆盖模块。
+调用 `mock.module()` 会覆盖模块，即使该模块已经被导入。
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect, mock } from "bun:test";
@@ -294,7 +294,7 @@ test("mock.module", async () => {
 
 ### 提前声明与预加载
 
-如果你需要确保模块在导入前被模拟，应使用 `--preload` 在测试运行前加载模拟。
+为了确保模块在导入之前已被模拟，请使用 `--preload` 在测试运行前加载模拟模块。
 
 ```ts title="my-preload.ts" icon="/icons/typescript.svg"
 import { mock } from "bun:test";
@@ -310,7 +310,7 @@ mock.module("./module", () => {
 bun test --preload ./my-preload
 ```
 
-为了方便，可以将预加载写入你的 `bunfig.toml`：
+为了避免每次运行测试时都输入 `--preload`，请将其添加到 `bunfig.toml` 中：
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -322,11 +322,9 @@ preload = ["./my-preload"]
 
 #### 何时使用预加载
 
-**如果模拟的模块已被导入，会发生什么？**
+模拟已经导入的模块会更新模块缓存，因此任何导入该模块的代码都会获取模拟版本。不过，原始模块已经执行过，因此其副作用也已经发生。
 
-如果模拟了已导入的模块，模块缓存中会更新该模块。这意味着导入它的模块将得到模拟版本，但原始模块已经执行过了，相关副作用已发生。
-
-如果你想阻止原模块执行，应使用 `--preload` 在测试前加载模拟。
+若要完全避免执行原始模块，请使用 `--preload` 在测试运行前加载模拟模块。
 
 #### 实际模块模拟示例
 
@@ -384,7 +382,7 @@ test("database operations", async () => {
 
 ### 清除所有模拟
 
-重置所有模拟函数状态（调用、结果等），但不还原它们的原始实现：
+`mock.clearAllMocks()` 会重置每个模拟的 `.mock.calls`、`.mock.instances`、`.mock.contexts` 和 `.mock.results` 属性。与 `mock.restore()` 不同，它不会恢复原始实现：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { expect, mock, test } from "bun:test";
@@ -410,11 +408,30 @@ test("clearing all mocks", () => {
 });
 ```
 
-这会重置所有模拟的 `.mock.calls`、`.mock.instances`、`.mock.contexts` 和 `.mock.results`，但不像 `mock.restore()` 那样恢复原始实现。
+### 重置所有模拟
+
+`jest.resetAllMocks()`（及其 `vi.resetAllMocks()` 别名）会对每个模拟调用 `mockFn.mockReset()`：除了执行 `clearAllMocks()` 的操作外，它还会删除通过 `mockImplementation()`、`mockReturnValue()` 等方法设置的实现。它不会恢复 spy 的原始实现：
+
+```ts title="test.ts" icon="/icons/typescript.svg"
+import { expect, jest, test } from "bun:test";
+
+const random = jest.fn(() => Math.random());
+
+test("resetting all mocks", () => {
+  random();
+  expect(random).toHaveBeenCalledTimes(1);
+
+  jest.resetAllMocks();
+
+  expect(random).toHaveBeenCalledTimes(0);
+  // 与 clearAllMocks() 不同，实现已被删除
+  expect(random()).toBeUndefined();
+});
+```
 
 ### 恢复所有模拟
 
-与逐个调用 `mockFn.mockRestore()` 不同，可用 `mock.restore()` 一次性恢复所有模拟。此操作不会重置通过 `mock.module()` 覆盖的模块值。
+`mock.restore()` 一次性恢复所有模拟，而不必分别对每个模拟调用 `mockFn.mockRestore()`。它不会重置通过 `mock.module()` 覆盖的模块。
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { expect, mock, spyOn, test } from "bun:test";
@@ -451,7 +468,7 @@ test("foo, bar, baz", () => {
 });
 ```
 
-将 `mock.restore()` 放入每个测试文件的 `afterEach` 钩子或测试预加载代码中，可以减少测试代码量。
+在 `afterEach` 块或测试预加载脚本中调用 `mock.restore()`，这样就不必在每个测试中重复清理操作。
 
 ## Vitest 兼容性
 
@@ -472,15 +489,14 @@ test("vitest compatibility", () => {
   // vi.spyOn
   // vi.mock
   // vi.restoreAllMocks
+  // vi.resetAllMocks
   // vi.clearAllMocks
 });
 ```
 
-这样可以更轻松地将 Vitest 测试迁移到 Bun，无需重写所有模拟。
+你可以直接移植 Vitest 测试，无需重写模拟函数。
 
 ## 实现细节
-
-了解 `mock.module()` 的工作原理可帮助更有效地使用：
 
 ### 缓存交互
 
@@ -488,11 +504,11 @@ test("vitest compatibility", () => {
 
 ### 惰性求值
 
-模拟工厂回调只有在模块真正被导入或 require 时才会被执行。
+模拟工厂回调仅在模块被导入或加载时求值。
 
 ### 路径解析
 
-Bun 会自动解析模块标识符，支持：
+Bun 以解析 `import` 的相同方式解析模块说明符，支持：
 
 - 相对路径（`'./module'`）
 - 绝对路径（`'/path/to/module'`）
@@ -503,11 +519,11 @@ Bun 会自动解析模块标识符，支持：
 - **在首次导入前模拟**：原模块不会执行副作用
 - **在导入后模拟**：原模块副作用已经发生
 
-因此，建议使用 `--preload` 来防止副作用。
+因此，对于需要阻止副作用的模拟，请使用 `--preload`。
 
 ### 实时绑定
 
-模拟的 ESM 模块保持实时绑定，因此修改模拟会更新所有已有导入。
+被模拟的 ESM 模块会维护实时绑定，因此更改模拟内容会更新所有现有导入。
 
 ## 高级模式
 
@@ -630,8 +646,8 @@ test("service calls API correctly", async () => {
 
 ### 自动模拟
 
-目前不支持 `__mocks__` 目录和自动模拟。如此阻碍你迁移到 Bun，请[提交 issue](https://github.com/oven-sh/bun/issues)。
+Bun 不支持 `__mocks__` 目录或自动模拟。如果这阻碍了你迁移到 Bun，请[提交 issue](https://github.com/oven-sh/bun/issues)。
 
 ### ESM 与 CommonJS
 
-模块模拟对 ESM 和 CommonJS 模块实现不同。对于 ES 模块，Bun 对 JavaScriptCore 进行补丁，允许运行时覆盖导出值，并递归更新实时绑定。
+ESM 和 CommonJS 模块的模块模拟实现方式不同。对于 ES 模块，Bun 会修补 JavaScriptCore，以便在运行时覆盖导出值，并递归更新实时绑定。

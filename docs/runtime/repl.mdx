@@ -59,7 +59,7 @@ SyntaxError: JSON Parse error: Unexpected identifier "oops"
 
 ## 顶层 `await`
 
-Promise 会自动等待。你可以直接在命令行使用 `await`。
+你可以直接在提示符中对任意表达式使用 `await`。
 
 ```txt
 > await fetch("https://api.github.com/repos/oven-sh/bun").then(r => r.json()).then(r => r.stargazers_count)
@@ -74,7 +74,7 @@ undefined
 
 ## 导入模块
 
-与 Bun 运行时一样，你可以在 REPL 中使用 `require` 或 `import`，且能自由混合使用 ESM 和 CommonJS。模块解析规则与 `bun run` 相同，可以导入 `node_modules`、相对路径或 `node:` 内置模块。
+与 Bun 的运行时一样，REPL 同时接受 `require` 和 `import`：可以在提示符中自由混用 ES 模块和 CommonJS。模块解析使用与 `bun run` 相同的规则，因此可以从 `node_modules`、相对路径或 `node:` 内置模块中导入。
 
 ```txt
 > import { z } from "zod"
@@ -85,7 +85,7 @@ undefined
 '/tmp/file.txt'
 ```
 
-声明会在整个会话中保持，且允许跨次执行重新声明 `const` / `let`（与普通脚本不同），方便你在迭代时重复执行 `import` 和 `require` 语句。
+声明会在会话的剩余时间内持续存在，并且可以在不同求值之间重新声明 `const`/`let`（这与常规脚本不同），因此可以在迭代过程中重复运行 `import` 和 `require` 语句。
 
 ---
 
@@ -173,4 +173,4 @@ bun repl -p "{ a: 1, b: 2 }"
 # { a: 1, b: 2 }
 ```
 
-该模式使用与交互 REPL 相同的转换，裸对象字面量如 `{ a: 1 }` 会被当作对象表达式而非代码块。事件循环清空后进程退出（挂起的计时器和 I/O 会先执行完成）。出错时进程返回码为 `1`。
+两个选项使用与交互式 REPL 相同的转换方式，因此像 `{ a: 1 }` 这样的裸对象字面量会被视为对象表达式，而不是块语句。事件循环清空后进程退出（待处理的计时器和 I/O 会先完成）。发生错误时，进程以代码 `1` 退出。

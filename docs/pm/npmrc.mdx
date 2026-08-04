@@ -3,10 +3,10 @@ title: .npmrc 支持
 description:
 ---
 
-Bun 支持从 [`.npmrc`](https://docs.npmjs.com/cli/v10/configuring-npm/npmrc) 文件加载配置选项，允许你重用现有的 registry/作用域配置。
+Bun 会从 [`.npmrc`](https://docs.npmjs.com/cli/v10/configuring-npm/npmrc) 文件中加载配置选项，因此你可以复用现有的注册表和作用域配置。
 
 <Note>
-  我们建议将你的 `.npmrc` 文件迁移到 Bun 的 [`bunfig.toml`](/runtime/bunfig) 格式，因为它提供了更灵活的选项，并且可以让你配置 Bun 特有的选项。
+  我们建议将你的 `.npmrc` 文件迁移到 Bun 的 [`bunfig.toml`](/runtime/bunfig) 格式，该格式支持更多选项，包括 Bun 专属选项。
 </Note>
 
 ---
@@ -15,9 +15,9 @@ Bun 支持从 [`.npmrc`](https://docs.npmjs.com/cli/v10/configuring-npm/npmrc) �
 
 ### 设置默认的 registry
 
-默认 registry 用于解析包，其默认值是 `npm` 的官方 registry (`https://registry.npmjs.org/`)。
+Bun 从默认 registry 中解析软件包，该 registry 是 `npm` 的官方 registry（`https://registry.npmjs.org/`）。
 
-要更改它，你可以在 `.npmrc` 中设置 `registry` 选项：
+要更改它，请在 `.npmrc` 中设置 `registry` 选项：
 
 ```ini .npmrc icon="npm"
 registry=http://localhost:4873/
@@ -31,7 +31,7 @@ install.registry = "http://localhost:4873/"
 
 ### 为特定作用域设置 registry
 
-`@<scope>:registry` 允许你为特定的作用域设置 registry：
+`@<scope>:registry` 为特定作用域设置 registry：
 
 ```ini .npmrc icon="npm"
 @myorg:registry=http://localhost:4873/
@@ -46,7 +46,7 @@ myorg = "http://localhost:4873/"
 
 ### 配置特定 registry 的选项
 
-`//<registry_url>/:<key>=<value>` 允许你为特定 registry 设置选项：
+`//<registry_url>/:<key>=<value>` 为特定 registry 设置选项：
 
 ```ini .npmrc icon="npm"
 # 为 registry 设置认证令牌
@@ -68,8 +68,8 @@ myorg = "http://localhost:4873/"
 
 - `_authToken`
 - `username`
-- `_password`（base64 编码的密码）
-- `_auth`（base64 编码的用户名:密码，例如 `btoa(username + ":" + password)`）
+- `_password`（经过 base64 编码的密码）
+- `_auth`（经过 base64 编码的 username:password，例如 `btoa(username + ":" + password)`）
 - `email`
 
 对应的 `bunfig.toml` 选项是在 [`install.scopes`](/runtime/bunfig#install-registry) 中添加一个键：
@@ -79,7 +79,7 @@ myorg = "http://localhost:4873/"
 myorg = { url = "http://localhost:4873/", username = "myusername", password = "$NPM_PASSWORD" }
 ```
 
-### `link-workspace-packages`: 控制工作区包的安装
+### `link-workspace-packages`：控制工作区包的安装
 
 控制本地可用时工作区包的安装方式：
 
@@ -94,7 +94,7 @@ link-workspace-packages=true
 linkWorkspacePackages = true
 ```
 
-### `save-exact`: 保存确切版本
+### `save-exact`：保存确切版本
 
 始终保存确切版本，不带 `^` 前缀：
 
@@ -109,7 +109,7 @@ save-exact=true
 exact = true
 ```
 
-### `ignore-scripts`: 跳过生命周期脚本
+### `ignore-scripts`：跳过生命周期脚本
 
 防止在安装时运行生命周期脚本：
 
@@ -119,9 +119,9 @@ ignore-scripts=true
 
 这相当于使用 `bun install` 的 `--ignore-scripts` 标志。
 
-### `dry-run`: 预览变更但不安装
+### `dry-run`：预览变更但不安装
 
-显示将会安装的内容，但实际不进行安装：
+显示将要安装的内容，但不会实际安装任何内容：
 
 ```ini .npmrc icon="npm"
 dry-run=true
@@ -134,7 +134,7 @@ dry-run=true
 dryRun = true
 ```
 
-### `cache`: 配置缓存目录
+### `cache`：配置缓存目录
 
 设置缓存目录路径，或禁用缓存：
 
@@ -157,7 +157,7 @@ dir = "/path/to/cache"
 disable = true
 ```
 
-### `ca` 和 `cafile`: 配置 CA 证书
+### `ca` 和 `cafile`：配置 CA 证书
 
 为 registry 连接配置自定义 CA 证书：
 
@@ -173,7 +173,7 @@ ca[]="-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"
 cafile=/path/to/ca-bundle.crt
 ```
 
-### `omit` 和 `include`: 控制依赖类型
+### `omit` 和 `include`：控制依赖类型
 
 控制安装哪些依赖类型：
 
@@ -191,9 +191,9 @@ include=dev
 
 有效值：`dev`，`peer`，`optional`
 
-### `install-strategy` 和 `node-linker`: 安装策略
+### `install-strategy` 和 `node-linker`：安装策略
 
-控制 `node_modules` 中包的安装方式。Bun 支持两种不同的配置选项，以兼容不同的包管理器。
+控制软件包在 `node_modules` 中的布局方式。为了兼容其他包管理器，Bun 同时接受 npm 的 `install-strategy` 和 pnpm/yarn 的 `node-linker`。有关托举布局和隔离布局的差异，请参阅[隔离安装](/pm/isolated-installs)。
 
 **npm 的 `install-strategy`：**
 
@@ -207,7 +207,7 @@ install-strategy=linked
 
 **pnpm / yarn 的 `node-linker`：**
 
-`node-linker` 选项控制安装模式。Bun 支持 pnpm 和 yarn 两者的值：
+`node-linker` 控制安装模式。Bun 接受来自 pnpm 和 yarn 的值：
 
 | 值             | 描述                                         | 接受者       |
 | -------------- | -------------------------------------------- | ------------ |
@@ -226,7 +226,7 @@ node-linker=hoisted
 node-linker=node-modules
 ```
 
-### `public-hoist-pattern` 和 `hoist-pattern`: 控制托举
+### `public-hoist-pattern` 和 `hoist-pattern`：控制托举
 
 控制哪些包被托举到根节点的 `node_modules`：
 

@@ -3,9 +3,9 @@ title: 路由
 description: 在 `Bun.serve` 中使用静态路径、参数和通配符定义路由
 ---
 
-你可以通过使用 `routes` 属性（用于静态路径、参数和通配符）或通过 [`fetch`](#fetch) 方法处理未匹配请求，向 `Bun.serve()` 添加路由。
+使用 `routes` 属性向 `Bun.serve()` 添加路由（静态路径、参数和通配符），或使用 [`fetch`](#fetch) 方法处理未匹配的请求。
 
-`Bun.serve()` 的路由器建立在 uWebSocket 的 [基于树的方式](https://github.com/oven-sh/bun/blob/0d1a00fa0f7830f8ecd99c027fce8096c9d459b6/packages/bun-uws/src/HttpRouter.h#L57-L64) 之上，加入了 [SIMD 加速的路由参数解码](https://github.com/oven-sh/bun/blob/main/src/jsc/bindings/decodeURIComponentSIMD.cpp#L21-L271) 和 [JavaScriptCore 结构缓存](https://github.com/oven-sh/bun/blob/main/src/jsc/bindings/ServerRouteList.cpp#L100-L101)，以推动现代硬件所能达到的性能极限。
+`Bun.serve()` 的路由器基于 uWebSocket 的[基于树的方法](https://github.com/oven-sh/bun/blob/0d1a00fa0f7830f8ecd99c027fce8096c9d459b6/packages/bun-uws/src/HttpRouter.h#L57-L64)构建，加入了 [SIMD 加速的路由参数解码](https://github.com/oven-sh/bun/blob/main/src/jsc/bindings/decodeURIComponentSIMD.cpp#L21-L271)和 [JavaScriptCore 结构缓存](https://github.com/oven-sh/bun/blob/main/src/jsc/bindings/ServerRouteList.cpp#L100-L101)，以突破现代硬件所允许的性能极限。
 
 ## 基本设置
 
@@ -34,9 +34,9 @@ interface BunRequest<T extends string> extends Request {
 
 ## 异步路由
 
-### Async/await
+### 异步/等待
 
-你可以在路由处理函数中使用 async/await 返回 `Promise<Response>`。
+在路由处理函数中使用 async/await，以返回一个 `Promise<Response>`。
 
 ```ts
 import { sql, serve } from "bun";
@@ -100,7 +100,7 @@ Bun.serve({
 
 ## 类型安全的路由参数
 
-TypeScript 会在字符串字面量传参时解析路由参数，从而使编辑器在访问 `request.params` 时提供自动补全。
+TypeScript 在以字符串字面量形式传入路由参数时会对其进行解析，因此访问 `request.params` 时，编辑器会显示自动补全。
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 import type { BunRequest } from "bun";
@@ -124,11 +124,11 @@ Bun.serve({
 });
 ```
 
-百分号编码的路由参数值会自动解码，支持 Unicode 字符。无效的 unicode 会被替换成 Unicode 替代字符 `&0xFFFD;`。
+Bun 会自动解码经过百分号编码的路由参数值，包括 Unicode 字符。无效的 Unicode 会被替换为 Unicode 替换字符（`\uFFFD`）。
 
 ### 静态响应
 
-路由也可以是 `Response` 对象（无处理函数）。Bun.serve() 针对零分配调度做了优化——非常适合健康检查、重定向和固定内容：
+路由也可以是 `Response` 对象（无需处理函数）。`Bun.serve()` 会针对零分配调度对其进行优化，非常适合健康检查、重定向和固定内容：
 
 ```ts
 Bun.serve({
@@ -160,7 +160,7 @@ Bun.serve({
 
 ### 文件响应与静态响应的区别
 
-在路由中提供文件时，行为因缓冲文件内容还是直接传输而异：
+从路由提供文件时，具体行为取决于你是将文件内容缓冲起来，还是直接提供文件：
 
 ```ts
 Bun.serve({
@@ -194,6 +194,34 @@ Bun.serve({
 - 内存高效 — 只缓冲传输时的小块数据，不缓存整个文件
 - 适合用于：大文件、动态内容、用户上传、频繁变更的文件
 
+### 目录路由
+
+若要在某个 URL 前缀下提供整个目录树，请将 `{ dir }` 作为路由值传入。路由路径必须以 `/*` 结尾。
+
+```ts
+Bun.serve({
+  routes: {
+    "/static/*": { dir: "./public" },
+  },
+});
+```
+
+请求 URL 中前缀之后的部分会进行一次百分号解码，然后以相对于 `dir` 的路径打开。非规范路径（包含 `.`, `..`、空片段、`%2F`，或使用 `%XX` 序列编码了可在路径片段中直接出现的字符）会被拒绝并返回 `404`，因此提供的路径始终是路由器匹配到的路径。在 Linux 上，打开操作使用 `openat2(RESOLVE_IN_ROOT)`，因此试图逃逸出 `dir` 的符号链接会受到内核限制。
+
+{% callout %}
+路由区分大小写，但 macOS 和 Windows 上的文件系统默认不区分大小写，因此，大小写不同的 URL（`/static/Admin/secret.txt`）会匹配目录通配路由，而不是同级的 `/static/admin/*` 处理程序，并且仍会打开 `admin/secret.txt`。与 nginx、Caddy 及其他静态文件服务器一样，不要将受访问控制的内容放在 `dir` 中，并依赖重叠路由来限制访问。
+{% /callout %}
+
+目录路由与文件路由共享响应处理路径：
+
+- **Content-Type** 根据文件扩展名设置。
+- 每个响应都会发送 **Last-Modified** 和弱 `ETag`（`W/"<size>-<mtime>"`），并会遵循 `If-Modified-Since` / `If-None-Match`，在条件满足时返回 `304 Not Modified`。
+- 支持**范围请求**，并使用 `Accept-Ranges: bytes` 和 `Content-Range`。
+- 如果请求解析到的目录路径不带结尾的 `/`，则会返回 `301` 重定向到带结尾斜杠的 URL；带结尾斜杠时，则提供该目录中的 `index.html`。
+- 缺失文件返回 `404`。
+
+传入 `statCache: false` 可禁用按路径缓存的 `Last-Modified`（每个路由可节省约 20 KB）。
+
 ---
 
 ## 流式传输文件
@@ -213,7 +241,7 @@ Bun.serve({
   在内核级实现零拷贝文件传输—这是发送文件最快的方式。
 </Info>
 
-你可以使用 `Bun.file` 对象的 [`slice(start, end)`](https://developer.mozilla.org/zh-CN/docs/Web/API/Blob/slice) 方法发送文件的部分内容。此方法会自动为 `Response` 设置 `Content-Range` 和 `Content-Length` 头部。
+要发送文件的一部分，请在 `Bun.file` 对象上使用 [`slice(start, end)`](https://developer.mozilla.org/en-US/docs/Web/API/Blob/slice) 方法。Bun 会自动在 `Response` 对象上设置 `Content-Range` 和 `Content-Length` 标头。
 
 ```ts
 Bun.serve({
@@ -237,7 +265,7 @@ Bun.serve({
 
 ## `fetch` 请求处理器
 
-`fetch` 处理器用于处理未被任一路由匹配的入站请求。它接收一个 [`Request`](https://developer.mozilla.org/zh-CN/docs/Web/API/Request) 对象，返回一个 [`Response`](https://developer.mozilla.org/zh-CN/docs/Web/API/Response) 或 [`Promise<Response>`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Promise)。
+`fetch` 处理器会处理未匹配任何路由的传入请求。它接收一个 [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) 对象，并返回一个 [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) 或 [`Promise<Response>`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)。
 
 ```ts
 Bun.serve({
@@ -276,7 +304,7 @@ Bun.serve({
 });
 ```
 
-你还可以从 `fetch` 处理器访问 `Server` 对象。它是传递给 `fetch` 函数的第二个参数。
+`fetch` 处理器还会将 `Server` 对象作为其第二个参数接收。
 
 ```ts
 // `server` 作为第二个参数传递给 `fetch`。

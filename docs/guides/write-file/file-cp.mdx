@@ -4,9 +4,7 @@ sidebarTitle: 复制文件
 mode: center
 ---
 
-此代码片段将文件复制到磁盘上的另一个位置。
-
-它使用快速的 [`Bun.write()`](/runtime/file-io#writing-files-bun-write) API 高效地将数据写入磁盘。第一个参数是一个 _目标_，例如绝对路径或 `BunFile` 实例。第二个参数是要写入的 _数据_。
+使用 [`Bun.write()`](/runtime/file-io#writing-files-bun-write) 将文件复制到磁盘上的另一个位置。第一个参数是_目标位置_，例如绝对路径或 `BunFile` 实例。第二个参数是要写入的_数据_。
 
 ```ts
 const file = Bun.file("/path/to/original.txt");
@@ -15,4 +13,4 @@ await Bun.write("/path/to/copy.txt", file);
 
 ---
 
-完整的 `Bun.write()` 文档请参见 [文档 > API > 文件 I/O](/runtime/file-io#writing-files-bun-write)。
+请参阅 [`Bun.write()`](/runtime/file-io#writing-files-bun-write)。

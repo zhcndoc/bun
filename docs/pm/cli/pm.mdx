@@ -3,7 +3,7 @@ title: "bun pm"
 description: "包管理器工具"
 ---
 
-`bun pm` 命令组提供了一套用于操作 Bun 包管理器的实用工具。
+`bun pm` 命令组是一组用于使用 Bun 包管理器的实用工具。
 
 ## pack
 
@@ -13,7 +13,7 @@ description: "包管理器工具"
 bun pm pack
 ```
 
-此命令创建一个 `.tgz` 文件，包含所有将发布到 npm 的文件，规则与 `npm pack` 相同。
+`bun pm pack` 会创建一个包含所有将发布到 npm 的文件的 `.tgz` 文件，并遵循与 `npm pack` 相同的规则。
 
 ## 示例
 
@@ -44,12 +44,12 @@ bun pm pack --destination ./dist
 
 ## 选项
 
-- `--dry-run`：执行所有操作但不写入 tar 包到磁盘，显示将包含的内容。
-- `--destination <dir>`：指定 tar 包保存的目录。
-- `--filename <name>`：指定 tar 包保存的精确文件名。
-- `--ignore-scripts`：跳过运行 prepack、postpack 和 prepare 脚本。
-- `--gzip-level <0-9>`：设置 gzip 压缩级别，范围 0 到 9（默认 9）。
-- `--quiet`：仅输出 tar 包文件名，抑制详细输出，适合脚本和自动化。
+- `--dry-run`：执行所有任务，但不将压缩包写入磁盘。显示将包含的内容。
+- `--destination <dir>`：保存压缩包的目录。
+- `--filename <name>`：压缩包的确切文件名。
+- `--ignore-scripts`：跳过运行 pre/postpack 和 prepare 脚本。
+- `--gzip-level <0-9>`：设置 gzip 压缩级别，范围为 0 到 9（默认为 9）。
+- `--quiet`：仅输出压缩包文件名，抑制其余输出。在脚本中很有用。
 
 > **注意：** `--filename` 和 `--destination` 不能同时使用。
 
@@ -85,8 +85,6 @@ bun pm pack --quiet
 my-package-1.0.0.tgz
 ```
 
-`--quiet` 参数在自动化流程中非常有用，可直接获取生成的 tar 包文件名以便后续处理。
-
 ## bin
 
 打印当前项目的 `bin` 目录路径：
@@ -111,7 +109,7 @@ bun pm bin -g
 
 ## ls
 
-打印当前项目已安装依赖及解析版本，不包含它们的依赖。
+要打印当前项目中已安装依赖及其解析后的版本，不包括它们的依赖：
 
 ```bash terminal icon="terminal"
 bun pm ls
@@ -128,7 +126,7 @@ bun list
 └── zod@3.21.4
 ```
 
-打印所有已安装依赖，包括多级依赖：
+要打印所有已安装的依赖，包括第 n 阶依赖：
 
 ```bash terminal icon="terminal"
 bun pm ls --all
@@ -152,11 +150,11 @@ bun list --all
 ├── ...
 ```
 
-仅打印受信任的依赖项（允许运行生命周期脚本的依赖）。当在 `package.json` 中设置了 `trustedDependencies` 时，会显示该列表中的包；否则会显示 Bun 的 [默认受信任依赖](https://github.com/oven-sh/bun/blob/main/src/install/default-trusted-dependencies.txt) 列表中的包。
+仅打印受信任的依赖（允许运行[生命周期脚本](/pm/lifecycle)的依赖）。当在 `package.json` 中设置了 `trustedDependencies` 时，Bun 会显示该列表中的软件包；否则会显示其[默认受信任依赖](https://github.com/oven-sh/bun/blob/main/src/install/default-trusted-dependencies.txt)列表中的软件包。
 
 ```bash terminal icon="terminal"
 bun pm ls --trusted
-# or
+# 或者
 bun list --trusted
 ```
 
@@ -173,7 +171,7 @@ bun list --trusted
 bun pm whoami
 ```
 
-## hash
+## 哈希
 
 生成并打印当前锁文件的哈希：
 
@@ -193,7 +191,7 @@ bun pm hash-string
 bun pm hash-print
 ```
 
-## cache
+## 缓存
 
 打印 Bun 的全局模块缓存路径：
 
@@ -207,7 +205,7 @@ bun pm cache
 bun pm cache rm
 ```
 
-## migrate
+## 迁移
 
 迁移其他包管理器的锁文件，不安装任何东西：
 
@@ -215,7 +213,7 @@ bun pm cache rm
 bun pm migrate
 ```
 
-## untrusted
+## 未受信任
 
 打印当前带有脚本的未受信任依赖：
 
@@ -250,7 +248,7 @@ bun pm trust <names>
 bun pm default-trusted
 ```
 
-查看当前列表可访问 GitHub [这里](https://github.com/oven-sh/bun/blob/main/src/install/default-trusted-dependencies.txt)
+查看 [GitHub 上的当前列表](https://github.com/oven-sh/bun/blob/main/src/install/default-trusted-dependencies.txt)。
 
 ## version
 
@@ -298,7 +296,7 @@ bun pm version patch
 v1.0.1
 ```
 
-支持 `patch`、`minor`、`major`、`premajor`、`preminor`、`prepatch`、`prerelease`、`from-git` 或具体版本如 `1.2.3`。默认会创建 git 提交和标签，除非使用 `--no-git-tag-version` 跳过。
+支持 `patch`、`minor`、`major`、`premajor`、`preminor`、`prepatch`、`prerelease`、`from-git`，或类似 `1.2.3` 的指定版本。默认情况下会创建 git 提交和标签；传入 `--no-git-tag-version` 可跳过这些操作。
 
 ## pkg
 
@@ -325,7 +323,7 @@ bun pm pkg get scripts.build                      # 嵌套属性
 # 设置
 bun pm pkg set name="my-package"                  # 简单属性
 bun pm pkg set scripts.test="jest" version=2.0.0  # 多个属性
-bun pm pkg set {"private":"true"} --json          # 使用 --json 标志的 JSON 值
+bun pm pkg set private=true --json                # 使用 --json 标志的 JSON 值
 
 # 删除
 bun pm pkg delete description                     # 单个属性

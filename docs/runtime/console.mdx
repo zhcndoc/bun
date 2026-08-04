@@ -12,17 +12,17 @@ description: Bun 中的 console 对象
 
 ## 对象检查深度
 
-Bun 允许你配置在 `console.log()` 输出中嵌套对象的显示深度：
+你可以配置 `console.log()` 打印嵌套对象的深度：
 
-- **命令行参数**：使用 `--console-depth <number>` 为单次运行设置深度
-- **配置文件**：在 `bunfig.toml` 中设置 `console.depth` 以进行持久化配置
-- **默认值**：对象默认被检查到 `2` 层深度
+- **CLI 标志**：使用 `--console-depth <number>` 为单次运行设置深度
+- **配置**：在 `bunfig.toml` 中设置 `console.depth`，使其在多次运行中保持生效
+- **默认值**：对象默认检查到 `2` 层深度
 
 ```js
 const nested = { a: { b: { c: { d: "deep" } } } };
 console.log(nested);
-// 默认（深度 2）：{ a: { b: [Object] } }
-// 设置深度为 4：{ a: { b: { c: { d: 'deep' } } } }
+// 默认（深度 2）：{ a: { b: { c: [Object ...] } } }
+// 深度为 4 时：{ a: { b: { c: { d: 'deep' } } } }
 ```
 
 命令行参数优先于配置文件设置。
@@ -31,7 +31,7 @@ console.log(nested);
 
 ## 从标准输入读取
 
-在 Bun 中，`console` 对象可以作为一个 `AsyncIterable`，用于顺序读取 `process.stdin` 中的行。
+在 Bun 中，`console` 对象也是一个 `AsyncIterable`，可以逐行读取 `process.stdin`。
 
 ```ts adder.ts icon="/icons/typescript.svg"
 for await (const line of console) {
@@ -39,7 +39,7 @@ for await (const line of console) {
 }
 ```
 
-这对于实现交互式程序非常有用，比如下面的加法计算器示例。
+你可以使用它来编写交互式程序，例如下面的加法计算器。
 
 ```ts adder.ts icon="/icons/typescript.svg"
 console.log(`让我们加一些数字吧！`);

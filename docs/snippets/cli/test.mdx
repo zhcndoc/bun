@@ -11,11 +11,11 @@ bun test <patterns>
 </ParamField>
 
 <ParamField path="--rerun-each" type="number">
-  每个测试文件重新运行 <code>NUMBER</code> 次，有助于捕捉某些错误
+  重新运行每个测试文件 <code>NUMBER</code> 次，以帮助发现某些错误
 </ParamField>
 
 <ParamField path="--retry" type="number">
-  所有测试的默认重试次数。失败的测试将最多重试 <code>NUMBER</code> 次。可被每个测试的 <code>{`{ retry: N }`}</code> 设置覆盖
+  最多重试失败的测试 <code>NUMBER</code> 次。可被每个测试的 <code>{`{ retry: N }`}</code> 覆盖
 </ParamField>
 
 <ParamField path="--concurrent" type="boolean">
@@ -96,7 +96,7 @@ bun test
 bun test foo bar
 ```
 
-运行所有测试文件，只包含名称包含 "baz" 的测试：
+运行所有测试文件，仅包含名称中含有 "baz" 的测试：
 
 ```bash terminal icon="terminal"
 bun test --test-name-pattern baz

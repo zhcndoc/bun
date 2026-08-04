@@ -4,14 +4,14 @@ sidebarTitle: 从 npm 迁移到 bun
 mode: center
 ---
 
-`bun install` 是一个兼容 Node.js 的 npm 客户端，旨在成为极其快速的 npm 继任者。
+`bun install` 是一个快速且兼容 Node.js 的 npm 客户端。
 
 要从 `npm install` 迁移到 `bun install`，请改用 `bun install`，不要再使用 `npm install`。
 
-- **为 Node.js 和 Bun 设计**：`bun install` 会安装一个兼容 Node.js 的 `node_modules` 文件夹。你可以在 Node.js 项目中直接替代 `npm install` 使用，无需任何代码更改，也无需使用 Bun 的运行时。
-- **自动将 `package-lock.json` 转换为 bun 的锁文件格式 `bun.lock`**，保留你现有解析的依赖版本，无需任何手动操作。你可以在公司偷偷用 `bun install` 替代 `npm install`，没人会发现。
-- **兼容 `.npmrc`**：bun install 会读取 npm 的 `.npmrc` 里的 npm registry 配置，因此你可以为 npm 和 Bun 使用同样的配置。
-- **硬链接**：在 Windows 和 Linux 上，`bun install` 使用硬链接以节省磁盘空间和缩短安装时间。
+- **为 Node.js 和 Bun 设计**：`bun install` 会安装一个兼容 Node.js 的 `node_modules` 文件夹。你可以在 Node.js 项目中直接替代 `npm install` 使用，无需修改任何代码，也无需使用 Bun 的运行时。
+- **自动将 `package-lock.json` 转换为 Bun 的 `bun.lock` 锁文件格式**，并保留现有已解析的依赖版本。你可以在工作中悄悄使用 `bun install` 替代 `npm install`，而不会被任何人察觉。
+- **兼容 `.npmrc`**：`bun install` 会从 npm 的 `.npmrc` 中读取 npm registry 配置，因此 npm 和 Bun 可以使用相同的配置。
+- **硬链接**：在 Windows 和 Linux 上，`bun install` 使用硬链接来节省磁盘空间并加快安装速度。
 
 ```bash terminal icon="terminal"
 # 迁移只需一条命令
@@ -31,7 +31,7 @@ bun rm @types/bun
 
 ## 更快地运行 package.json 脚本
 
-从 package.json 中运行脚本，从 `node_modules/.bin` 中运行可执行文件（有点像 `npx`），以及运行 JavaScript/TypeScript 文件（例如 `node`）——全部都由一条命令完成。
+使用单个命令运行 `package.json` 中的脚本、`node_modules/.bin` 中的可执行文件（如 `npx`），以及 JavaScript/TypeScript 文件（如 `node`）。
 
 | NPM                | Bun              |
 | ------------------ | ---------------- |
@@ -40,7 +40,7 @@ bun rm @types/bun
 | `node <file>`      | `bun <file>`     |
 | `npx <package>`    | `bunx <package>` |
 
-当你使用 `bun run <executable>` 时，它会选择本地安装的可执行文件。
+`bun run <executable>` 使用本地安装的可执行文件。
 
 ```sh terminal icon="terminal"
 # 运行 package.json 脚本：
@@ -61,7 +61,7 @@ bun ./index.ts
 
 `bun install` 支持类似 npm 的工作区功能，并且提供更多特性。
 
-在 package.json 中，你可以将 `"workspaces"` 设置为一组相对路径数组。
+在 `package.json` 中，将 `"workspaces"` 设置为相对路径数组。
 
 ```json package.json icon="file-json"
 {
@@ -74,7 +74,7 @@ bun ./index.ts
 
 ### 按工作区名称筛选脚本
 
-在 Bun 中，`--filter` 标志支持通配符模式，会并行执行命令到所有 `name` 匹配该模式的工作区包，并遵循依赖顺序。
+在 Bun 中，`--filter` 标志接受一个 glob 模式，并按照依赖顺序，为每个名称与其匹配的工作区包并发运行命令。
 
 ```sh terminal icon="terminal"
 bun --filter 'lib-*' my-script
@@ -86,7 +86,7 @@ bun --filter 'lib-*' my-script
 
 ## 更新依赖
 
-要更新依赖，可以使用 `bun update <package>`。该命令会将依赖更新到符合 semver 范围的最新版本。
+`bun update <package>` 将依赖更新到满足 `package.json` 中 semver 范围的最新版本。
 
 ```sh terminal icon="terminal"
 # 更新单个依赖
@@ -109,7 +109,7 @@ bun update --latest
 
 ### 查看过期依赖
 
-要查看过期依赖，运行 `bun outdated`。这类似于 `npm outdated`，但输出更为简洁。
+要查看过期依赖，请运行 `bun outdated`。它的工作方式类似于 `npm outdated`，但输出更加紧凑。
 
 ```sh terminal icon="terminal"
 bun outdated
@@ -147,7 +147,7 @@ bun outdated
 
 ## 列出已安装的包
 
-要列出已安装的包，可以使用 `bun pm ls`。这会列出 `node_modules` 文件夹中安装的所有包，bun 的锁文件作为事实依据。你可以传入 `-a` 标志来列出所有已安装的依赖，包括传递依赖。
+`bun pm ls` 列出 `node_modules` 文件夹中安装的软件包，并使用 Bun 的锁文件作为真实来源。传递 `-a` 标志还可以列出传递依赖项。
 
 ```sh terminal icon="terminal"
 # 列出顶级已安装的包：
@@ -184,7 +184,7 @@ my-pkg node_modules
 
 ## 创建包的压缩包
 
-要创建包的 tar 压缩包，可以使用 `bun pm pack`。这会在当前目录创建一个包的 tarball。
+`bun pm pack` 会在当前目录中创建包的 tarball。
 
 ```sh terminal icon="terminal"
 # 创建一个 tarball
@@ -203,9 +203,9 @@ Packed size: 117.50KB
 
 ## Shebang
 
-如果包的 shebang 中引用了 `node`（例如 `#!/usr/bin/env node`），`bun run` 默认会尊重它并使用系统的 `node` 可执行文件。你也可以通过传递 `--bun` 参数强制使用 Bun 的 `node`。
+如果软件包在 `#!/usr/bin/env node` shebang 中引用了 `node`，`bun run` 默认会遵循该设置并使用系统的 `node` 可执行文件。若要强制使用 Bun，请将 `--bun` 传递给 `bun run`。
 
-当你传入 `--bun` 给 `bun run`，我们会在临时目录创建一个指向本地已安装 Bun 可执行文件的 `"node"` 符号链接，并在脚本执行期间将该目录添加到你的 `PATH`。
+传递 `--bun` 时，Bun 会在临时目录中创建一个名为 `"node"`、指向本地安装的 Bun 可执行文件的符号链接，并在脚本运行期间将其添加到 `PATH` 中。
 
 ```sh terminal icon="terminal"
 # 强制使用 Bun 运行时而非 node
@@ -219,7 +219,7 @@ bun run --bun my-script
 
 ## 全局安装
 
-你可以使用 `bun i -g <package>` 全局安装包。默认情况下，这会安装到你用户主目录下的 `.bun/install/global/node_modules` 文件夹。
+使用 `bun i -g <package>` 全局安装软件包。默认情况下，它们会安装到主目录下的 `.bun/install/global/node_modules` 文件夹中。
 
 ```sh terminal icon="terminal"
 # 全局安装一个包

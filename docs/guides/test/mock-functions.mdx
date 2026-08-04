@@ -24,7 +24,7 @@ const random = mock((multiplier: number) => multiplier * Math.random());
 
 ---
 
-`mock()` 的结果是一个新的函数，并附加了一些额外的属性。
+`mock()` 的结果是一个带有额外属性的新函数。
 
 ```ts test.ts icon="/icons/typescript.svg"
 import { mock } from "bun:test";
@@ -46,7 +46,7 @@ random.mock.results;
 
 ---
 
-这些额外的属性使得可以编写关于模拟函数使用情况的 `expect` 断言，包括调用次数、参数和返回值。
+使用这些属性编写 `expect` 断言，以检查模拟函数的使用情况：调用次数、传入的参数以及返回的结果。
 
 ```ts test.ts icon="/icons/typescript.svg"
 import { test, expect, mock } from "bun:test";
@@ -67,4 +67,4 @@ test("random", async () => {
 
 ---
 
-更多关于 Bun 测试运行器中模拟的完整文档，请参见[文档 > 测试运行器 > 模拟](/test/mocks)。
+参见[模拟](/test/mocks)。

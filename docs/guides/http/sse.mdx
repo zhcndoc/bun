@@ -4,9 +4,9 @@ sidebarTitle: 服务器发送事件
 mode: center
 ---
 
-[服务器发送事件](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) 允许您通过单个 HTTP 响应向浏览器推送一系列文本事件。客户端通过 [`EventSource`](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) 来接收这些事件。
+[服务器发送事件](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events)允许你通过单个 HTTP 响应向浏览器推送文本事件流。客户端使用 [`EventSource`](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) 消费这些事件。
 
-在 Bun 中，您可以通过返回一个主体为流式来源的 `Response`，并将 `Content-Type` 头设置为 `text/event-stream` 来实现 SSE 端点。
+要在 Bun 中实现 SSE 端点，请返回一个正文为流式源的 `Response`，并将 `Content-Type` 标头设置为 `text/event-stream`。
 
 <Note>
   `Bun.serve` 默认会在 **10 秒** 后关闭空闲连接。一个安静的 SSE 流会被视为空闲，因此下面的示例调用了 `server.timeout(req, 0)` 来禁用此流的超时。详情请参见
@@ -15,7 +15,7 @@ mode: center
 
 ## 使用异步生成器
 
-在 Bun 中，`new Response` 直接接受一个异步生成器函数。这通常是编写 SSE 端点的最简单方法——每次 `yield` 会向客户端刷新一块数据，如果客户端断开连接，生成器的 `finally` 块会执行，从而可以清理资源。
+在 Bun 中，`new Response` 可以直接接受异步生成器函数；这通常是编写 SSE 端点最简单的方式。每次 `yield` 都会向客户端刷新一个数据块；如果客户端断开连接，生成器的 `finally` 代码块会运行，以便你进行清理。
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.serve({
@@ -52,7 +52,7 @@ Bun.serve({
 
 ## 使用 `ReadableStream`
 
-如果您的事件来自回调——消息代理、定时器、外部推送——而不是线性的 `await` 流，`ReadableStream` 通常更合适。当客户端断开连接时，Bun 会自动调用流的 `cancel()` 方法，因此您可以在 `start()` 中设置的资源进行释放。
+如果你的事件来自回调（消息代理、计时器、外部推送），而不是线性的 `await` 流程，那么 `ReadableStream` 通常更合适。当客户端断开连接时，Bun 会自动调用流的 `cancel()` 方法，因此你可以释放在 `start()` 中设置的所有资源。
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.serve({

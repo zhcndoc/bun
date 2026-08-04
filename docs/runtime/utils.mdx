@@ -34,7 +34,7 @@ Bun.main;
 // /path/to/script.ts
 ```
 
-这对于判断脚本是被直接执行还是被其他脚本导入非常有用。
+使用此属性可以判断脚本是否被直接执行，而不是被其他脚本导入。
 
 ```ts
 if (import.meta.path === Bun.main) {
@@ -100,7 +100,7 @@ const ls = Bun.which("ls", {
 console.log(ls); // "/usr/bin/ls"
 ```
 
-通过传入 `cwd` 选项可从特定目录解析可执行文件。
+传入 `cwd` 选项，可从特定目录中解析可执行文件。
 
 ```ts
 const ls = Bun.which("ls", {
@@ -111,7 +111,7 @@ const ls = Bun.which("ls", {
 console.log(ls); // null
 ```
 
-你可以把它看作是 [`which`](https://www.npmjs.com/package/which) npm 包的内置替代方案。
+这是 [`which`](https://www.npmjs.com/package/which) npm 包的内置替代方案。
 
 ## `Bun.randomUUIDv7()`
 
@@ -126,7 +126,9 @@ const id = randomUUIDv7();
 
 UUID v7 是一个 128 位值，编码了当前时间戳、随机值和计数器。时间戳用最低 48 位编码，随机值和计数器编码于剩余位。
 
-`timestamp` 参数默认为当前时间（毫秒）。时间戳变化时，计数器重置为伪随机数（模 4096）。计数器是原子且线程安全的，这意味着在同一时间戳下，多个 Worker 中调用 `Bun.randomUUIDv7()` 不会出现计数器冲突。
+`timestamp` 参数默认为当前的毫秒级时间。当时钟向前移动时，计数器会重新初始化为一个新的伪随机整数（12 位计数器的最高位保持为 0，因此在回绕前至少还剩 2048 个值）。如果时钟没有超过上一次生成 UUID 时的时间戳，Bun 会复用上一次生成的时间戳并递增计数器。如果计数器发生回绕，Bun 会将生成的时间戳向前推进，而不是让计数器回绕，从而确保返回的 UUID 始终严格递增（RFC 9562 §6.2）。计数器具有原子性且支持线程安全，因此在同一进程中、同一时间戳下从多个 Worker 调用 `Bun.randomUUIDv7()` 不会产生冲突的计数器值。
+
+当传入显式的 `timestamp` 时，Bun 会原样编码该值，并为其维护一个独立的计数器，因此使用显式时间戳的调用不会读取或修改默认路径使用的单调状态。使用相同显式时间戳的重复调用会递增该独立计数器（并在回绕时推进生成的时间戳），因此它们仍可排序；使用不同显式时间戳的调用会重新初始化该计数器。
 
 UUID 的后 8 字节为加密安全的随机值，使用与 `crypto.randomUUID()` 相同的随机数生成器（基于 BoringSSL，底层依赖硬件随机数生成器）。
 
@@ -143,7 +145,7 @@ namespace Bun {
 }
 ```
 
-可选设置编码为 `"buffer"`，避免字符串转换开销。
+将 `"buffer"` 作为编码传入，即可获取一个 16 字节的缓冲区，而不是字符串。这样可以避免字符串转换开销。
 
 ```ts buffer.ts
 const buffer = Bun.randomUUIDv7("buffer");
@@ -172,7 +174,7 @@ const result = peek(promise);
 console.log(result); // "hi"
 ```
 
-这在尝试减少性能敏感代码中的多余微任务时很重要。这是一个高级 API——在生产环境中使用之前，请查看下面的示例。
+在对性能敏感的代码中使用它来避免多余的微任务。这是一个高级 API；在生产环境中使用前，请先查看以下示例。
 
 ```ts
 import { peek } from "bun";
@@ -204,7 +206,7 @@ test("peek", () => {
 });
 ```
 
-`peek.status` 方法可读取 Promise 状态但不触发解析。
+`peek.status` 读取 Promise 的状态，而不会解析它。
 
 ```ts
 import { peek } from "bun";
@@ -224,14 +226,14 @@ test("peek.status", () => {
 
 ## `Bun.openInEditor()`
 
-在默认编辑器中打开文件。Bun 通过 `$VISUAL` 或 `$EDITOR` 环境变量自动检测编辑器。
+在默认编辑器中打开文件。Bun 会根据 `$VISUAL` 或 `$EDITOR` 环境变量自动检测编辑器。
 
 ```ts
 const currentFile = import.meta.url;
 Bun.openInEditor(currentFile);
 ```
 
-可以通过 [`bunfig.toml`](/runtime/bunfig) 文件中的 `debug.editor` 配置覆盖。
+你可以通过 [`bunfig.toml`](/runtime/bunfig) 中的 `debug.editor` 设置覆盖此行为。
 
 ```toml bunfig.toml icon="settings"
 [debug] # [!code ++]
@@ -262,7 +264,7 @@ Bun.deepEquals(foo, { a: 1, b: 2, c: { d: 3 } });
 Bun.deepEquals(foo, { a: 1, b: 2, c: { d: 4 } });
 ```
 
-传入第三个布尔参数以启用“严格”模式。测试运行器中的 `expect().toStrictEqual()` 使用这个。
+传入第三个布尔参数以启用“严格”模式。测试运行器中的 `expect().toStrictEqual()` 使用这个模式。
 
 ```ts
 const a = { entries: [1, 2] };
@@ -303,7 +305,8 @@ Bun.deepEquals(new Foo(), { a: 1 }, true); // false
 - `<` 转为 `&lt;`
 - `>` 转为 `&gt;`
 
-此函数针对大输入做过优化。例如在 M1X 设备，处理速度可达 480 MB/s 至 20 GB/s，取决于需转义的数据量及是否包含非 ASCII 字符。非字符串类型会先转为字符串再转义。
+此函数针对大型输入进行了优化。在 M1X 上，其处理速度为 480 MB/s -
+20 GB/s，具体取决于需要转义的数据量以及是否包含非 ASCII 文本。非字符串类型会在转义前转换为字符串。
 
 ## `Bun.stringWidth()`
 
@@ -319,16 +322,11 @@ Bun.stringWidth("\u001b[31mhello\u001b[0m"); // => 5
 Bun.stringWidth("\u001b[31mhello\u001b[0m", { countAnsiEscapeCodes: true }); // => 12
 ```
 
-适用于：
+用于在终端中对齐文本，或检查字符串是否包含 ANSI 转义码。
 
-- 终端文本对齐
-- 快速检测字符串是否含 ANSI 转义码
-- 测量字符串在终端的宽度
+该 API 与 "string-width" npm 包保持一致，因此现有代码可以在 Bun 和该 npm 包之间相互迁移。
 
-此 API 旨在与流行的 “string-width” 包保持一致，因此
-可以将现有代码在 Bun 之间轻松移植，反之亦然。
-
-[该基准测试中](https://github.com/oven-sh/bun/blob/5147c0ba7379d85d4d1ed0714b84d6544af917eb/bench/snippets/string-width.mjs#L13)，`Bun.stringWidth` 对 500+ 字符的输入比 `string-width` 快约 6,756 倍。感谢 [sindresorhus](https://github.com/sindresorhus) 对 `string-width` 的贡献！
+在[此基准测试](https://github.com/oven-sh/bun/blob/5147c0ba7379d85d4d1ed0714b84d6544af917eb/bench/snippets/string-width.mjs#L13)中，对于长度大于约 500 个字符的输入，`Bun.stringWidth` 比 `string-width` npm 包快约 6,756 倍。非常感谢 [sindresorhus](https://github.com/sindresorhus) 在 `string-width` 方面所做的工作。
 
 ```ts
 ❯ bun string-width.mjs
@@ -346,11 +344,11 @@ benchmark                                          time (avg)             (min �
 npm/string-width    500 chars ascii             249,710 ns/iter (239,970 ns … 293,180 ns) 250,930 ns  276,700 ns 281,450 ns
 ```
 
-`Bun.stringWidth` 的高性能实现基于 Zig 编写，使用 SIMD 指令优化，支持 Latin1、UTF-16 和 UTF-8 编码，并通过 `string-width` 测试。
+`Bun.stringWidth` 使用原生代码和 SIMD 指令实现，并支持 Latin1、UTF-16 和 UTF-8 编码。它通过了 `string-width` 的测试。
 
 <Accordion title="查看完整基准测试">
 
-作为提醒：1 纳秒（ns）等于一秒的十亿分之一。下面是单位换算参考：
+1 纳秒（ns）是十亿分之一秒。单位换算如下：
 
 | 单位 | 1 毫秒等于 |
 | ---- | --------- |
@@ -407,7 +405,7 @@ npm/string-width 35,000 chars ascii+emoji        96.93 ms/iter  (94.39 ms … 10
 npm/string-width      8 chars ansi+emoji          3.92 µs/iter     (3.45 µs … 4.57 µs)   4.09 µs   4.57 µs   4.57 µs
 npm/string-width     80 chars ansi+emoji         24.46 µs/iter     (22.87 µs … 4.2 ms)  23.54 µs  25.89 µs  27.41 µs
 npm/string-width    800 chars ansi+emoji        259.62 µs/iter (246.76 µs … 480.12 µs) 258.65 µs 349.84 µs 372.55 µs
-npm/string-width  8,000 chars ansi+emoji          5.46 ms/iter     (5.41 ms … 5.57 ms)   5.48 ms   5.55 ms   5.57 ms
+npm/string-width    8,000 chars ansi+emoji          5.46 ms/iter     (5.41 ms … 5.57 ms)   5.48 ms   5.55 ms   5.57 ms
 npm/string-width 40,000 chars ansi+emoji        108.91 ms/iter  (107.55 ms … 109.5 ms) 109.25 ms  109.5 ms  109.5 ms
 npm/string-width     19 chars ansi+emoji+ascii    6.53 µs/iter     (6.35 µs … 6.75 µs)   6.54 µs   6.75 µs   6.75 µs
 npm/string-width    190 chars ansi+emoji+ascii   55.52 µs/iter  (52.59 µs … 352.73 µs)  54.19 µs  80.77 µs 167.21 µs
@@ -658,7 +656,7 @@ const str = Bun.inspect(arr);
 
 ### `Bun.inspect.custom`
 
-这是 Bun 使用的符号用于实现 `Bun.inspect`，可覆盖自定义对象的打印方式，与 Node.js 中的 `util.inspect.custom` 相同。
+Bun 用于实现 `Bun.inspect` 的符号。重写它可以自定义对象的打印方式。它与 Node.js 中的 `util.inspect.custom` 完全相同。
 
 ```ts
 class Foo {
@@ -693,7 +691,7 @@ console.log(
 // └───┴───┴───┴───┘
 ```
 
-也可以传入属性数组，仅显示部分属性。
+传入属性名称数组，只显示这些属性。
 
 ```ts
 console.log(
@@ -714,7 +712,7 @@ console.log(
 // └───┴───┴───┘
 ```
 
-也可通过 `{ colors: true }` 选项启用 ANSI 颜色。
+传入 `{ colors: true }` 以启用 ANSI 颜色。
 
 ```ts
 console.log(
@@ -781,7 +779,7 @@ await Bun.readableStreamToFormData(stream, multipartFormBoundary);
 
 ## `Bun.resolveSync()`
 
-使用 Bun 内部模块解析算法同步解析文件路径或模块标识符。第一个参数是待解析路径，第二个是“根”路径。找不到时抛出 `Error`。
+使用 Bun 内部的[模块解析](/runtime/module-resolution)算法解析文件路径或模块说明符。第一个参数是要解析的路径，第二个参数是“根目录”。如果未找到匹配项，则会抛出一个 `Error`。
 
 ```ts
 Bun.resolveSync("./foo.ts", "/path/to/project");
@@ -812,7 +810,7 @@ Bun.resolveSync("./foo.ts", import.meta.dir);
 
 `Bun.stripANSI(text: string): string`
 
-从字符串中去除 ANSI 转义码。用于去除终端输出中的颜色和格式。
+从字符串中移除 ANSI 转义码。可用于移除终端输出中的颜色和格式。
 
 ```ts
 const coloredText = "\u001b[31mHello\u001b[0m \u001b[32mWorld\u001b[0m";
@@ -824,7 +822,7 @@ const formatted = "\u001b[1m\u001b[4mBold and underlined\u001b[0m";
 console.log(Bun.stripANSI(formatted)); // => "Bold and underlined"
 ```
 
-性能显著优于流行的 [`strip-ansi`](https://www.npmjs.com/package/strip-ansi) npm 包：
+`Bun.stripANSI` 比 [`strip-ansi`](https://www.npmjs.com/package/strip-ansi) npm 包更快：
 
 ```bash terminal icon="terminal"
 bun bench/snippets/strip-ansi.mjs
@@ -877,7 +875,97 @@ npm/strip-ansi 212,992 chars long-ansi      1.36 ms/iter   1.38 ms
 
 ## `serialize` 和 `deserialize` 来自 `bun:jsc`
 
-将 JavaScript 值保存为 ArrayBuffer 及还原，请使用 `"bun:jsc"` 模块的 `serialize` 和 `deserialize`。
+<Note>可直接替代 `wrap-ansi` npm 包</Note>
+
+`Bun.wrapAnsi(input: string, columns: number, options?: WrapAnsiOptions): string`
+
+将文本换行至指定的列宽。它会保留 ANSI 转义码和超链接，并正确处理 Unicode/表情符号的宽度。这是 [`wrap-ansi`](https://www.npmjs.com/package/wrap-ansi) npm 包的原生替代方案。
+
+```ts
+// 在 20 列处进行基本换行
+Bun.wrapAnsi("The quick brown fox jumps over the lazy dog", 20);
+// => "The quick brown fox\njumps over the lazy\ndog"
+
+// 保留 ANSI 转义码：开放样式会在每行末尾关闭，
+// 并在下一行重新打开，以确保每一行单独渲染时都能正确显示
+Bun.wrapAnsi("\u001b[31mThe quick brown fox jumps over the lazy dog\u001b[0m", 20);
+// => "\u001b[31mThe quick brown fox\u001b[39m\n\u001b[31mjumps over the lazy\u001b[39m\n\u001b[31mdog\u001b[0m"
+```
+
+### 选项
+
+```ts
+Bun.wrapAnsi("Hello World", 5, {
+  hard: true, // 拆分超过列宽的单词（默认值：false）
+  wordWrap: true, // 在单词边界处换行（默认值：true）
+  trim: true, // 去除每行开头和结尾的空白字符（默认值：true）
+  ambiguousIsNarrow: true, // 将不明确宽度的字符视为窄字符（默认值：true）
+});
+```
+
+| 选项               | 默认值  | 描述                                                                                                         |
+| ------------------- | ------- | --------------------------------------------------------------------------------------------------------------- |
+| `hard`              | `false` | 如果为 `true`，当单词超过列宽时，在单词中间进行拆分。                                           |
+| `wordWrap`          | `true`  | 如果为 `true`，在单词边界处换行。如果为 `false`，则每行都严格在列宽处断开。                   |
+| `trim`              | `true`  | 如果为 `true`，去除每行开头和结尾的空白字符。                                                 |
+| `ambiguousIsNarrow` | `true`  | 如果为 `true`，将不明确宽度的 Unicode 字符视为占 1 列。如果为 `false`，则视为占 2 列。 |
+
+TypeScript 定义：
+
+```ts expandable
+namespace Bun {
+  export function wrapAnsi(
+    /**
+     * 要换行的字符串
+     */
+    input: string,
+    /**
+     * 最大列宽
+     */
+    columns: number,
+    /**
+     * 换行选项
+     */
+    options?: {
+      /**
+       * 如果为 `true`，当单词无法适应一行时，在单词中间进行拆分。
+       * 如果为 `false`，仅在单词边界处断开。
+       *
+       * @default false
+       */
+      hard?: boolean;
+      /**
+       * 如果为 `true`，则尽可能在单词边界处换行。
+       * 如果为 `false`，则每行都严格在列宽处断开（字符会在限制所在位置被拆分，
+       * 忽略单词边界）。
+       *
+       * @default true
+       */
+      wordWrap?: boolean;
+      /**
+       * 如果为 `true`，去除每行开头和结尾的空白字符。
+       * 如果为 `false`，保留空白字符。
+       *
+       * @default true
+       */
+      trim?: boolean;
+      /**
+       * 当字符宽度不明确且该选项为 `true` 时，将不明确宽度的字符按占 1 列计算。
+       * 如果为 `false`，则按占 2 列计算。
+       *
+       * @default true
+       */
+      ambiguousIsNarrow?: boolean;
+    },
+  ): string;
+}
+```
+
+---
+
+## `serialize` & `deserialize` in `bun:jsc`
+
+要将 JavaScript 值保存到 SharedArrayBuffer 中并取回，请使用 `"bun:jsc"` 模块中的 `serialize` 和 `deserialize`。
 
 ```js
 import { serialize, deserialize } from "bun:jsc";
@@ -887,7 +975,7 @@ const obj = deserialize(buf);
 console.log(obj); // => { foo: "bar" }
 ```
 
-它们的实现与 [`structuredClone`](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone) 和 [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) 使用同一序列化机制，并将浏览器的 [HTML Structured Clone Algorithm](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm) 以 ArrayBuffer 形式暴露给 JavaScript。
+在内部，[`structuredClone`](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone) 和 [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) 以相同的方式进行序列化和反序列化。这将底层的 [HTML 结构化克隆算法](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm) 作为 SharedArrayBuffer 暴露给 JavaScript。
 
 ---
 

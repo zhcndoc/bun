@@ -51,7 +51,7 @@ bun install <name>@<version>
 </ParamField>
 
 <ParamField path="--exact" type="boolean">
-  添加确切版本，而非 ^ 范围版本
+  添加确切版本，而不是使用 ^ 范围
 </ParamField>
 
 ### 锁文件控制
@@ -100,8 +100,8 @@ bun install <name>@<version>
   全局安装
 </ParamField>
 
-<ParamField path="--backend" type="string" default="clonefile">
-  平台特定优化选项："clonefile"、"hardlink"、"symlink"、"copyfile"
+<ParamField path="--backend" type="string">
+  平台特定的优化："clonefile"、"hardlink"、"symlink"、"copyfile"
 </ParamField>
 
 <ParamField path="--filter" type="string">
@@ -109,7 +109,7 @@ bun install <name>@<version>
 </ParamField>
 
 <ParamField path="--analyze" type="boolean">
-  递归分析并安装作为参数传入文件的所有依赖
+  递归分析并安装作为参数传入的文件的所有依赖
 </ParamField>
 
 ### 缓存选项
@@ -152,8 +152,8 @@ bun install <name>@<version>
 
 ### 并发与性能
 
-<ParamField path="--concurrent-scripts" type="number" default="5">
-  生命周期脚本的最大并发任务数
+<ParamField path="--concurrent-scripts" type="number">
+  生命周期脚本的最大并发任务数（默认：CPU 核心数的 2 倍）
 </ParamField>
 
 <ParamField path="--network-concurrency" type="number" default="48">

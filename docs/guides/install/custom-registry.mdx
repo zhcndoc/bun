@@ -4,7 +4,7 @@ sidebarTitle: 覆盖默认的 npm registry
 mode: center
 ---
 
-默认的 registry 是 `registry.npmjs.org`。可以在 `bunfig.toml` 中进行全局配置。
+默认 registry 是 `registry.npmjs.org`。在 `bunfig.toml` 中全局覆盖它。
 
 ```toml bunfig.toml icon="settings"
 [install]
@@ -20,7 +20,7 @@ registry = "https://usertitle:password@registry.npmjs.org"
 
 ---
 
-你的 `bunfig.toml` 可以引用环境变量。Bun 会自动加载 `.env.local`、`.env.[NODE_ENV]` 和 `.env` 中的环境变量。更多信息参见 [文档 > 环境变量](/runtime/environment-variables)。
+你的 `bunfig.toml` 可以引用环境变量。Bun 会自动从 `.env.local`、`.env.[NODE_ENV]` 和 `.env` 加载环境变量。参见[环境变量](/runtime/environment-variables)。
 
 ```toml bunfig.toml icon="settings"
 [install]
@@ -29,4 +29,4 @@ registry = { url = "https://registry.npmjs.org", token = "$npm_token" }
 
 ---
 
-完整的 Bun 包管理器文档请参见 [文档 > 包管理器](/pm/cli/install)。
+参见 [`bun install`](/pm/cli/install)。

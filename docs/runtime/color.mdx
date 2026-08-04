@@ -3,13 +3,13 @@ title: 颜色
 description: 将颜色格式化为 CSS、ANSI、数字、十六进制字符串等多种格式
 ---
 
-`Bun.color(input, outputFormat?)` 利用 Bun 的 CSS 解析器来解析、规范化并转换用户输入的颜色，支持多种输出格式，包括：
+`Bun.color(input, outputFormat?)` 使用 Bun 的 CSS 解析器解析、规范化颜色，并将用户输入的颜色转换为以下任一输出格式：
 
 | 格式          | 示例                              |
 | ------------ | -------------------------------- |
 | `"css"`      | `"red"`                          |
 | `"ansi"`     | `"\x1b[38;2;255;0;0m"`           |
-| `"ansi-16"`  | `"\x1b[38;5;\tm"`                |
+| `"ansi-16"`  | `"\x1b[91m"`                     |
 | `"ansi-256"` | `"\x1b[38;5;196m"`               |
 | `"ansi-16m"` | `"\x1b[38;2;255;0;0m"`           |
 | `"number"`   | `0x1a2b3c`                       |
@@ -23,41 +23,41 @@ description: 将颜色格式化为 CSS、ANSI、数字、十六进制字符串�
 | `"[rgb]"`    | `[ 255, 99, 71 ]`                |
 | `"[rgba]"`   | `[ 255, 99, 71, 255]`            |
 
-有许多不同的方式可以使用此 API：
+可用于：
 
-- 验证并规范化颜色，以便将其持久化到数据库中（`number` 是最适合数据库的）
+- 验证颜色并将其规范化后持久化到数据库（`number` 对数据库最友好）
 - 将颜色转换为不同格式
-- 除了许多今天正在使用的那 16 种颜色之外进行更丰富的彩色日志（使用 `ansi` 自动检测终端的颜色支持，或使用 `ansi-16`、`ansi-256`、`ansi-16m` 来指定目标颜色深度）
-- 为在 HTML 中注入的 CSS 格式化颜色
-- 从 CSS 颜色字符串中获取 `r`、`g`、`b` 和 `a` 颜色组件，作为 JavaScript 对象或数字
+- 为终端输出添加超出基本 16 色范围的颜色（使用 `ansi` 自动检测终端颜色支持，或使用 `ansi-16`、`ansi-256` 或 `ansi-16m` 指定颜色深度）
+- 格式化颜色，以便在注入 HTML 的 CSS 中使用
+- 从 CSS 颜色字符串中获取 `r`、`g`、`b` 和 `a` 颜色分量，结果可以是 JavaScript 对象或数字
 
-你可以将其视为流行 npm 包 [`color`](https://github.com/Qix-/color) 和 [`tinycolor2`](https://github.com/bgrins/TinyColor) 的替代品，不过它内置 Bun，支持完整解析 CSS 颜色字符串且没有任何依赖。
+这是 npm 软件包 [`color`](https://github.com/Qix-/color) 和 [`tinycolor2`](https://github.com/bgrins/TinyColor) 的内置替代方案，完整支持解析 CSS 颜色字符串，且零依赖。
 
 ### 灵活的输入
 
-你可以传入以下任意一种：
+`Bun.color` 接受以下任意输入：
 
-- 标准 CSS 颜色名称，如 `"red"`
-- 数字，如 `0xff0000`
-- 十六进制字符串，如 `"#f00"`
-- RGB 字符串，如 `"rgb(255, 0, 0)"`
-- RGBA 字符串，如 `"rgba(255, 0, 0, 1)"`
-- HSL 字符串，如 `"hsl(0, 100%, 50%)"`
-- HSLA 字符串，如 `"hsla(0, 100%, 50%, 1)"`
-- RGB 对象，如 `{ r: 255, g: 0, b: 0 }`
-- RGBA 对象，如 `{ r: 255, g: 0, b: 0, a: 1 }`
-- RGB 数组，如 `[255, 0, 0]`
-- RGBA 数组，如 `[255, 0, 0, 255]`
-- LAB 字符串，如 `"lab(50% 50% 50%)"`
-- ……任何 CSS 能解析成单个颜色值的内容
+- 标准 CSS 颜色名称，例如 `"red"`
+- 数字，例如 `0xff0000`
+- 十六进制字符串，例如 `"#f00"`
+- RGB 字符串，例如 `"rgb(255, 0, 0)"`
+- RGBA 字符串，例如 `"rgba(255, 0, 0, 1)"`
+- HSL 字符串，例如 `"hsl(0, 100%, 50%)"`
+- HSLA 字符串，例如 `"hsla(0, 100%, 50%, 1)"`
+- RGB 对象，例如 `{ r: 255, g: 0, b: 0 }`
+- RGBA 对象，例如 `{ r: 255, g: 0, b: 0, a: 1 }`
+- RGB 数组，例如 `[255, 0, 0]`
+- RGBA 数组，例如 `[255, 0, 0, 255]`
+- LAB 字符串，例如 `"lab(50% 50 50)"`
+- ……以及 CSS 能够解析为单个颜色值的任何其他内容
 
 ### 将颜色格式化为 CSS
 
-`"css"` 格式输出的是有效的 CSS，用于样式表、内联样式、CSS 变量、css-in-js 等，返回颜色的最紧凑字符串表示。
+`"css"` 格式输出可用于样式表、内联样式、CSS 变量或 CSS-in-JS 的有效 CSS。它会返回颜色最紧凑的字符串表示形式。
 
 ```ts
 Bun.color("red", "css"); // "red"
-Bun.color(0xff0000, "css"); // "#f000"
+Bun.color(0xff0000, "css"); // "red"
 Bun.color("#f00", "css"); // "red"
 Bun.color("#ff0000", "css"); // "red"
 Bun.color("rgb(255, 0, 0)", "css"); // "red"
@@ -74,7 +74,7 @@ Bun.color([255, 0, 0, 255], "css"); // "red"
 
 ### 将颜色格式化为 ANSI（用于终端）
 
-`"ansi"` 格式输出适用于终端的 ANSI 转义码，实现彩色文本。
+`"ansi"` 格式输出用于在终端中为文本着色的 ANSI 转义码。
 
 ```ts
 Bun.color("red", "ansi"); // "\u001b[38;2;255;0;0m"
@@ -91,13 +91,13 @@ Bun.color([255, 0, 0], "ansi"); // "\u001b[38;2;255;0;0m"
 Bun.color([255, 0, 0, 255], "ansi"); // "\u001b[38;2;255;0;0m"
 ```
 
-它会根据 stdout 的色深自动选择 `"ansi-16m"`、`"ansi-256"` 或 `"ansi-16"`，取决于环境变量。如果 stdout 不支持任何形式的 ANSI 颜色，则返回空字符串。与 Bun 其他颜色 API 一样，如果输入未知或解析失败，返回 `null`。
+`"ansi"` 格式会根据环境变量检测标准输出的颜色深度，并相应选择 `"ansi-16m"`、`"ansi-256"` 或 `"ansi-16"`。如果标准输出不支持任何形式的 ANSI 颜色，则返回空字符串。与 Bun 颜色 API 的其他部分一样，如果输入未知或解析失败，则返回 `null`。
 
 #### 24 位 ANSI 颜色 (`ansi-16m`)
 
-`"ansi-16m"` 格式输出24位 ANSI 颜色，用于可显示 1600 万色的现代终端。
+`"ansi-16m"` 格式输出 24 位 ANSI 颜色，可以显示 1600 万种颜色，但需要支持该功能的现代终端。
 
-它会将输入颜色转换为 RGBA，然后输出 ANSI 颜色。
+它会将输入颜色转换为 RGBA，然后将其输出为 ANSI 颜色。
 
 ```ts
 Bun.color("red", "ansi-16m"); // "\x1b[38;2;255;0;0m"
@@ -117,24 +117,24 @@ Bun.color("#f00", "ansi-256"); // "\u001b[38;5;196m"
 Bun.color("#ff0000", "ansi-256"); // "\u001b[38;5;196m"
 ```
 
-RGBA 转换为256色的算法来源于 [`tmux`](https://github.com/tmux/tmux/blob/dae2868d1227b95fd076fb4a5efa6256c7245943/colour.c#L44-L55)。
+RGBA 转换为 256 色的算法来源于 [`tmux`](https://github.com/tmux/tmux/blob/dae2868d1227b95fd076fb4a5efa6256c7245943/colour.c#L44-L55)。
 
 #### 16 色 ANSI (`ansi-16`)
 
-`"ansi-16"` 格式，将输入颜色近似到大多数终端支持的16色之一。
+`"ansi-16"` 格式，将输入颜色近似到大多数终端支持的 16 色之一。
 
 ```ts
-Bun.color("red", "ansi-16"); // "\u001b[38;5;\tm"
-Bun.color(0xff0000, "ansi-16"); // "\u001b[38;5;\tm"
-Bun.color("#f00", "ansi-16"); // "\u001b[38;5;\tm"
-Bun.color("#ff0000", "ansi-16"); // "\u001b[38;5;\tm"
+Bun.color("red", "ansi-16"); // "\u001b[91m"
+Bun.color(0xff0000, "ansi-16"); // "\u001b[91m"
+Bun.color("#f00", "ansi-16"); // "\u001b[91m"
+Bun.color("#ff0000", "ansi-16"); // "\u001b[91m"
 ```
 
-它首先将输入转换为24位 RGB 色彩空间，再转换为 `ansi-256`，然后再转换为最近的16色。
+Bun 会将输入转换为 24 位 RGB 颜色空间，然后转换为 `ansi-256`，最后选取与其最接近的 16 种 ANSI 颜色之一。
 
 ### 将颜色格式化为数字
 
-`"number"` 格式输出一个24位数字，用于数据库、配置或任何需要紧凑表示颜色的场景。
+`"number"` 格式将颜色输出为 24 位数字，这是适用于数据库和配置的紧凑表示形式。
 
 ```ts
 Bun.color("red", "number"); // 16711680
@@ -149,7 +149,7 @@ Bun.color("hsla(0, 100%, 50%, 1)", "number"); // 16711680
 
 ### 获取红、绿、蓝和 alpha 通道
 
-你可以使用 `"{rgba}"`、`"{rgb}"`、`"[rgba]"` 和 `"[rgb]"` 格式获取红绿蓝和 alpha 通道，分别以对象或数组形式。
+`"{rgba}"`、`"{rgb}"`、`"[rgba]"` 和 `"[rgb]"` 格式将红、绿、蓝和 alpha 通道作为对象或数组返回。
 
 #### `{rgba}` 对象
 
@@ -178,7 +178,7 @@ Bun.color({ r: 255, g: 0, b: 0 }, "{rgba}"); // { r: 255, g: 0, b: 0, a: 1 }
 Bun.color([255, 0, 0], "{rgba}"); // { r: 255, g: 0, b: 0, a: 1 }
 ```
 
-为了与 CSS 保持一致，`a` 通道是 0 到 1 之间的小数。
+与 CSS 一样，`a` 通道是介于 `0` 和 `1` 之间的小数。
 
 `"{rgb}"` 格式类似，但不包含 alpha 通道。
 
@@ -223,7 +223,7 @@ Bun.color([255, 0, 0], "[rgb]"); // [255, 0, 0]
 
 ### 将颜色格式化为十六进制字符串
 
-`"hex"` 格式输出小写十六进制字符串，用于 CSS 或其他场景。
+`"hex"` 格式输出小写十六进制字符串。
 
 ```ts
 Bun.color("hsl(0, 0%, 50%)", "hex"); // "#808080"
@@ -233,7 +233,7 @@ Bun.color({ r: 255, g: 0, b: 0 }, "hex"); // "#ff0000"
 Bun.color([255, 0, 0], "hex"); // "#ff0000"
 ```
 
-`"HEX"` 格式类似，但输出大写字母的十六进制字符串。
+`"HEX"` 格式相同，但输出大写字母。
 
 ```ts
 Bun.color("hsl(0, 0%, 50%)", "HEX"); // "#808080"
@@ -245,7 +245,7 @@ Bun.color([255, 0, 0], "HEX"); // "#FF0000"
 
 ### 打包时在客户端格式化颜色
 
-像 Bun 的许多 API 一样，你可以使用宏在打包时调用 `Bun.color`，以在客户端 JavaScript 构建中使用：
+与 Bun 的许多 API 一样，你可以在打包时通过 [宏](/bundler/macros) 调用 `Bun.color`，以便在面向客户端的 JavaScript 构建中使用：
 
 ```ts client-side.ts
 import { color } from "bun" with { type: "macro" };
@@ -259,7 +259,7 @@ console.log(color("#f00", "css"));
 bun build ./client-side.ts
 ```
 
-这将输出以下内容到 `client-side.js`：
+`bun build` 会将以下内容写入 `client-side.js`：
 
 ```js
 // client-side.ts

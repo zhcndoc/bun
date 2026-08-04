@@ -3,9 +3,9 @@ title: "工作区"
 description: "开发包含多个独立包的复杂多包仓库（monorepo）"
 ---
 
-Bun 在 `package.json` 中支持 [`workspaces`](https://docs.npmjs.com/cli/v9/using-npm/workspaces?v=true#description)。Workspaces 让你将复杂软件开发为一个由多个独立包组成的 _monorepo_。
+Bun 支持在 `package.json` 中配置 [`workspaces`](https://docs.npmjs.com/cli/v9/using-npm/workspaces?v=true#description)。借助工作区，你可以在单个仓库中开发多个独立的包，这种仓库称为 _monorepo_。
 
-一个 monorepo 通常具有如下结构：
+多包仓库通常具有以下结构：
 
 ```txt File Tree icon="folder-tree"
 <root>
@@ -28,7 +28,7 @@ Bun 在 `package.json` 中支持 [`workspaces`](https://docs.npmjs.com/cli/v9/us
         └── tsconfig.json
 ```
 
-在根目录的 `package.json` 中，使用 `"workspaces"` 键来表示哪些子目录应被视为 monorepo 内的包/工作区。通常将所有工作区放置在名为 `packages` 的目录下。
+根目录 `package.json` 中的 `"workspaces"` 键列出了要作为工作区处理的子目录。按照惯例，这些目录位于名为 `packages` 的目录中。
 
 ```json package.json icon="file-json"
 {
@@ -42,7 +42,8 @@ Bun 在 `package.json` 中支持 [`workspaces`](https://docs.npmjs.com/cli/v9/us
 ```
 
 <Note>
-  **支持 Glob 语法** — Bun 在 `"workspaces"` 中支持完整的 glob 语法，包括否定模式（例如 `!**/excluded/**`）。详细支持语法列表见 [这里](/runtime/glob#supported-glob-patterns)。
+  **Glob 支持** — Bun 在 `"workspaces"` 中支持完整的 glob 语法，包括
+  `!**/excluded/**` 这样的否定模式。请参阅[支持的 glob 模式](/runtime/glob#supported-glob-patterns)。
 </Note>
 
 ```json package.json icon="file-json"
@@ -53,7 +54,7 @@ Bun 在 `package.json` 中支持 [`workspaces`](https://docs.npmjs.com/cli/v9/us
 }
 ```
 
-每个工作区有自己的 `package.json`。当引用 monorepo 中的其他包时，可以在 `package.json` 的版本字段中使用语义化版本号（semver）或工作区协议（例如 `workspace:*`）。
+每个工作区都有自己的 `package.json`。要引用多包仓库中的另一个包，请在 `package.json` 中将 semver 范围或工作区协议（例如 `workspace:*`）用作版本。
 
 ```json packages/pkg-a/package.json icon="file-json"
 {
@@ -65,7 +66,7 @@ Bun 在 `package.json` 中支持 [`workspaces`](https://docs.npmjs.com/cli/v9/us
 }
 ```
 
-`bun install` 会为 monorepo 中的所有工作区安装依赖，如果可能会去重包。如果只想为指定工作区安装依赖，可以使用 `--filter` 标志。
+`bun install` 会为多包仓库中的所有工作区安装依赖，并在可能的情况下对包进行去重。若只想为特定工作区安装依赖，请使用 `--filter` 标志。
 
 ```bash
 # 安装所有以 `pkg-` 开头且不包含 `pkg-c` 的工作区依赖
@@ -75,7 +76,7 @@ bun install --filter "pkg-*" --filter "!pkg-c"
 bun install --filter "./packages/pkg-*" --filter "!pkg-c" # 或 --filter "!./packages/pkg-c"
 ```
 
-发布时，`workspace:` 版本会被替换为包的 `package.json` 中的版本号：
+发布时，Bun 会将 `workspace:` 版本替换为包的 `package.json` 版本：
 
 ```
 "workspace:*" -> "1.0.1"
@@ -83,21 +84,21 @@ bun install --filter "./packages/pkg-*" --filter "!pkg-c" # 或 --filter "!./pac
 "workspace:~" -> "~1.0.1"
 ```
 
-指定具体版本会优先于包的 `package.json` 版本：
+指定的版本优先于包 `package.json` 中的版本：
 
 ```
 "workspace:1.0.2" -> "1.0.2" // 即使当前版本是 1.0.1
 ```
 
-工作区有几个主要优势：
+工作区有几个主要优点。
 
-- **代码可以拆分成逻辑部分。** 如果一个包依赖另一个包，就在 `package.json` 中将其添加为依赖。如果包 `b` 依赖 `a`，那么 `bun install` 会把你本地的 `packages/a` 目录安装到 `node_modules` 中，而不是从 npm 注册表下载。
-- **依赖可以去重。** 如果 `a` 和 `b` 共享一个共同依赖，它会被 _提升（hoist）_ 到根目录的 `node_modules` 目录。这能减少重复的磁盘占用，并最大程度减少与同时安装多个版本包相关的“依赖地狱”问题。
-- **在多个包中运行脚本。** 你可以使用 [`--filter` 标志](/pm/filter) 在你的工作区中对多个包运行 `package.json` 脚本，或使用 `--workspaces` 在所有工作区中运行脚本。
+- **代码可以拆分为逻辑部分。** 如果一个包依赖另一个包，请将其添加为 `package.json` 中的依赖项。如果包 `b` 依赖于 `a`，`bun install` 会将本地的 `packages/a` 目录安装到 `node_modules` 中，而不是从 npm 注册表下载它。
+- **依赖可以去重。** 如果 `a` 和 `b` 共享某个依赖项，该依赖项会被 _提升_ 到根目录的 `node_modules` 目录中。这样可以节省磁盘空间，并减少同时安装同一包多个版本所造成的“依赖地狱”。
+- **在多个包中运行脚本。** 使用 [`--filter` 标志](/pm/filter) 可同时在多个包中运行 `package.json` 脚本，或使用 `--workspaces` 在所有工作区中运行脚本。
 
 ## 使用 Catalogs 共享版本
 
-当多个包需要相同依赖版本时，Catalogs 允许你在根目录的 `package.json` 中一次性定义这些版本，并使用 `catalog:` 协议在工作区中引用。更新 Catalog 会自动更新所有引用它的包。详情请见 [Catalogs](/pm/catalogs)。
+当许多软件包需要使用相同的依赖版本时，请在根目录的 `package.json` 中的 catalog 里统一定义这些版本，然后在工作区中通过 `catalog:` 协议引用它们。更新 catalog 会同步更新所有引用它的软件包。请参阅 [Catalogs](/pm/catalogs)。
 
 <Note>
 ⚡️ **速度** — 即使是大型 monorepo，安装速度依然非常快。Bun 在 Linux 下安装 [Remix](https://github.com/remix-run/remix) monorepo 约需 `500ms`。

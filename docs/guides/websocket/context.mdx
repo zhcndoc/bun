@@ -4,9 +4,9 @@ sidebarTitle: 上下文数据
 mode: center
 ---
 
-在构建 WebSocket 服务器时，通常需要存储与每个已连接客户端关联的一些识别信息或上下文。
+WebSocket 服务器通常需要为每个已连接的客户端存储一些标识信息或上下文。
 
-使用 [Bun.serve()](/runtime/http/websockets#contextual-data)，该“上下文数据”在连接初次升级时通过 `server.upgrade()` 调用中的 `data` 参数设置。
+使用 [Bun.serve()](/runtime/http/websockets#contextual-data)，在升级连接时向 `server.upgrade()` 传递 `data` 参数，以设置这些“上下文数据”。
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.serve({

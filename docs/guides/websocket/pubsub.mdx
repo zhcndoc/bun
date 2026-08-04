@@ -4,7 +4,7 @@ sidebarTitle: 发布-订阅服务器
 mode: center
 ---
 
-Bun 的服务器端 `WebSocket` API 提供了原生的发布-订阅（pub-sub）API。你可以使用 `socket.subscribe(<name>)` 让套接字订阅一组命名频道；也可以使用 `socket.publish(<name>, <message>)` 向某个频道发布消息。
+Bun 的服务端 `WebSocket` API 原生支持发布-订阅功能。使用 `socket.subscribe(<name>)` 将套接字订阅到一组命名频道；使用 `socket.publish(<name>, <message>)` 向频道发布消息。
 
 这段代码片段实现了一个单频道聊天服务器。
 
@@ -16,7 +16,7 @@ const server = Bun.serve({
     const success = server.upgrade(req, { data: { username } });
     if (success) return undefined;
 
-    return new Response("Hello world");
+    return new Response("你好，世界");
   },
   websocket: {
     // TypeScript：像这样指定 ws.data 的类型

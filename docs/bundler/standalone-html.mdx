@@ -9,27 +9,27 @@ Bun 可以将整个前端打包成一个 **单个 `.html` 文件**，无需任�
 bun build --compile --target=browser ./index.html --outdir=dist
 ```
 
-输出是一个完全自包含的 HTML 文档。没有相对路径。没有外部文件。无需服务器。只有一个 `.html` 文件，可以在任何浏览器中打开。
+输出的是一个自包含的 HTML 文档：没有相对路径、没有外部文件，也不需要服务器。
 
 ## 单文件。随处上传。
 
 输出是一个单独的 `.html` 文件，你可以放到任何地方：
 
-- **上传到 S3** 或任何静态文件托管服务 — 无需维护目录结构，只有一个文件
-- **从桌面双击打开** — 在浏览器中打开并且可离线工作，不需要 localhost 服务器
-- **嵌入到你的 webview 中** — 不用处理相对文件
-- **插入到 `<iframe>` 中** — 使用单个文件 URL 在另一个页面中嵌入交互内容
-- **从任何地方提供服务** — 任何 HTTP 服务器、CDN 或文件共享。一个文件，零配置。
+- **上传到 S3** 或任何静态文件托管服务——无需维护目录结构，只需一个文件
+- **从桌面双击打开**——它会在浏览器中打开并离线运行，无需本地主机服务器
+- **嵌入到 WebView 中**——无需处理相对文件
+- **插入 `<iframe>` 中**——只需一个文件 URL，即可将交互式内容嵌入另一个页面
+- **从任意位置提供服务**——任何 HTTP 服务器、CDN 或文件共享服务都可以
 
-无需安装任何东西，不用部署 `node_modules`，不用管理构建产物，也无需考虑相对路径。整个应用 —— 框架代码、样式表、图片等等 —— 都在这唯一的文件中。
+无需安装任何东西，无需部署 `node_modules`，无需协调构建产物，也无需考虑相对路径。
 
 ## 真正的单文件
 
 通常，发布网页意味着管理一个资产文件夹 —— HTML、JavaScript 包、CSS 文件、图片。只移动 HTML 文件，没了其他内容就会坏掉。浏览器以前试图解决这个问题：Safari 的 `.webarchive` 和 `.mhtml` 旨在将页面保存为单文件，但实际上它们会在电脑上解包成一堆松散文件 —— 违背了初衷。
 
-独立 HTML 不同。输出是一个普通的 `.html` 文件。不是归档文件，也不是文件夹。一个文件，内装所有内容。每张图片、每个字体、每行 CSS 和 JavaScript 都通过标准的 `<style>` 标签、`<script>` 标签和 `data:` URI 直接嵌入 HTML。任何浏览器都能打开。任何服务器都能托管。任何文件托管都能存储。
+独立 HTML 输出是一个普通的 `.html` 文件：不是归档文件，也不是文件夹。每一张图片、每一种字体、每一行 CSS 和 JavaScript 都会使用标准的 `<style>` 标签、`<script>` 标签和 `data:` URI 直接嵌入 HTML 中。任何浏览器都可以打开它，任何服务器都可以托管它。
 
-这使得发布网页就像发布 PDF 一样方便 —— 单个文件，你可以随意移动、复制、上传或分享，无需担心路径断裂或资产丢失。
+你可以像分发 PDF 一样分发页面：这是一个可以移动、复制、上传或分享的单一文件，无需担心路径失效或资源缺失。
 
 ## 快速开始
 
@@ -77,34 +77,34 @@ bun build --compile --target=browser ./index.html --outdir=dist
 
 ## 所有内容均内联
 
-Bun 会内联你 HTML 中找到的所有本地资源。如果是相对路径，则嵌入到输出文件中。这不仅限于图片和样式表 —— 适用于任何文件类型。
+Bun 会将 HTML 中找到的每个本地资源都进行内联：任何具有相对路径的文件，无论文件类型是什么，都会嵌入到输出文件中。
 
 ### 什么内容会被内联
 
-| 你的源码                                     | 输出内容                                                               |
-|------------------------------------------------|----------------------------------------------------------------------|
-| `<script src="./app.tsx">`                     | `<script type="module">...打包后的代码...</script>`                      |
-| `<link rel="stylesheet" href="./styles.css">`  | `<style>...打包后的 CSS...</style>`                                     |
-| `<img src="./logo.png">`                       | `<img src="data:image/png;base64,...">`                              |
-| `<img src="./icon.svg">`                       | `<img src="data:image/svg+xml;base64,...">`                          |
-| `<video src="./demo.mp4">`                     | `<video src="data:video/mp4;base64,...">`                            |
-| `<audio src="./click.wav">`                    | `<audio src="data:audio/wav;base64,...">`                            |
-| `<source src="./clip.webm">`                   | `<source src="data:video/webm;base64,...">`                          |
-| `<video poster="./thumb.jpg">`                 | `<video poster="data:image/jpeg;base64,...">`                        |
-| `<link rel="icon" href="./favicon.ico">`       | `<link rel="icon" href="data:image/x-icon;base64,...">`              |
+| 在源文件中                                       | 在输出文件中                                                            |
+| ------------------------------------------------ | ------------------------------------------------------------------------ |
+| `<script src="./app.tsx">`                       | `<script type="module">...bundled code...</script>`                      |
+| `<link rel="stylesheet" href="./styles.css">`    | `<style>...bundled CSS...</style>`                                       |
+| `<img src="./logo.png">`                         | `<img src="data:image/png;base64,...">`                                  |
+| `<img src="./icon.svg">`                         | `<img src="data:image/svg+xml;base64,...">`                              |
+| `<video src="./demo.mp4">`                       | `<video src="data:video/mp4;base64,...">`                                |
+| `<audio src="./click.wav">`                      | `<audio src="data:audio/x-wav;base64,...">`                              |
+| `<source src="./clip.webm">`                     | `<source src="data:video/webm;base64,...">`                              |
+| `<video poster="./thumb.jpg">`                   | `<video poster="data:image/jpeg;base64,...">`                            |
+| `<link rel="icon" href="./favicon.ico">`         | `<link rel="icon" href="data:image/x-icon;base64,...">`                  |
 | `<link rel="manifest" href="./app.webmanifest">` | `<link rel="manifest" href="data:application/manifest+json;base64,...">` |
 | CSS 中的 `url("./bg.png")`                     | CSS 中的 `url(data:image/png;base64,...)`                            |
 | CSS 中的 `@import "./reset.css"`               | 合并到 `<style>` 标签中                                               |
 | CSS 中的 `url("./font.woff2")`                 | CSS 中的 `url(data:font/woff2;base64,...)`                           |
 | JS 中的 `import "./styles.css"`                 | 合并到 `<style>` 标签中                                               |
 
-图片、字体、WASM 二进制、视频、音频文件、SVG —— 任何相对路径引用的文件都会被 base64 编码为 `data:` URI，直接嵌入 HTML。MIME 类型会根据文件扩展名自动检测。
+图像、字体、WASM 二进制文件、视频、音频文件、SVG——任何通过相对路径引用的文件都会被编码为 base64，并直接嵌入 HTML 中的 `data:` URI。Bun 会根据文件扩展名检测 MIME 类型。
 
 外部 URL（如 CDN 链接或绝对链接）保持不变，不会被内联。
 
 ## 与 React 一起使用
 
-React 应用开箱即用。Bun 会自动处理 JSX 转译和 npm 包解析。
+React 应用无需额外配置：Bun 会转译 JSX 并解析 npm 包。
 
 ```bash terminal icon="terminal"
 bun install react react-dom
@@ -231,7 +231,7 @@ bun run build.ts
 4. 将所有相对资源引用转换为 base64 的 `data:` URI
 5. 将打包后的 JS 以内联 `<script type="module">` 形式放在 `</body>` 前
 6. 将打包后的 CSS 以内联 `<style>` 形式放在 `<head>` 内
-7. 输出一个不依赖任何外部文件的单个 `.html` 文件
+7. 输出一个不依赖任何外部文件的单个 `.html` 文件。
 
 ## 压缩
 
@@ -241,7 +241,7 @@ bun run build.ts
 bun build --compile --target=browser --minify ./index.html --outdir=dist
 ```
 
-或通过 API：
+或者使用 JavaScript API：
 
 ```ts build.ts icon="/icons/typescript.svg"
 await Bun.build({
@@ -255,7 +255,7 @@ await Bun.build({
 
 ## JavaScript API
 
-你可以使用 `Bun.build()` 以编程方式生成独立 HTML：
+使用 `Bun.build()` 以编程方式生成独立的 HTML：
 
 ```ts build.ts icon="/icons/typescript.svg"
 const result = await Bun.build({
@@ -305,10 +305,10 @@ bun build --compile --target=browser ./index.html ./about.html --outdir=dist
 API_URL=https://api.example.com bun build --compile --target=browser --env=inline ./index.html --outdir=dist
 ```
 
-JavaScript 中对 `process.env.API_URL` 的引用会在构建时被替换为对应的字面量值。
+Bun 会在构建时将 JavaScript 中对 `process.env.API_URL` 的引用替换为字面值。
 
 ## 限制
 
 - **不支持代码拆分** —— `--splitting` 不能与 `--compile --target=browser` 一起使用
 - **大文件资产** 由于 base64 编码，体积会变大（比原二进制大33%）
-- **外部 URL**（CDN 链接、绝对 URL）保持不变，只有相对路径资源会被内联
+- **外部 URL**（CDN 链接、绝对 URL）保持不变，只有相对路径资源会被内联。

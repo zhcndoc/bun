@@ -1,16 +1,16 @@
 ---
-title: 升级 Bun 到最新版本
+title: 将 Bun 升级到最新版本
 sidebarTitle: 升级 Bun
 mode: center
 ---
 
-Bun 可以使用内置的 `bun upgrade` 命令自我升级。这是获取最新功能和修复的最快方式。
+Bun 使用内置的 `bun upgrade` 命令自行升级。
 
 ```bash terminal icon="terminal"
 bun upgrade
 ```
 
-这会下载并安装最新的稳定版本的 Bun，替换当前已安装的版本。
+`bun upgrade` 会下载并安装最新的稳定版 Bun，替换当前已安装的版本。
 
 <Note>要查看当前的 Bun 版本，请运行 `bun --version`。</Note>
 
@@ -33,13 +33,13 @@ bun --revision
 
 ## 升级到 canary 版本
 
-Canary 版本会在每次提交到 `main` 分支时自动发布。这些版本未经测试，但适合尝试新功能或在正式发布前验证修复的 bug。
+Canary 版本会在每次提交到 `main` 分支时发布。它们未经测试，但可用于尝试新功能，或在正式发布前验证错误修复。
 
 ```bash terminal icon="terminal"
 bun upgrade --canary
 ```
 
-<Warning>Canary 版本不建议用于生产环境。它们可能包含错误或破坏性更改。</Warning>
+<Warning>不建议将 Canary 版本用于生产环境。它们可能包含错误或破坏性更改。</Warning>
 
 ---
 
@@ -74,14 +74,14 @@ bun upgrade --stable
 
 ## 包管理器用户
 
-如果你是通过包管理器安装 Bun，请使用对应包管理器进行升级，避免使用 `bun upgrade` 造成冲突。
+如果你是通过包管理器安装 Bun 的，请使用该包管理器进行升级，而不要使用 `bun upgrade`，以避免冲突。
 
 <Tip>
 **Homebrew 用户** <br />
-为避免与 Homebrew 冲突，请使用 `brew upgrade bun` 升级。
+请改用 `brew upgrade bun`。
 
 **Scoop 用户** <br />
-为避免与 Scoop 冲突，请使用 `scoop update bun` 升级。
+请改用 `scoop update bun`。
 
 </Tip>
 
@@ -90,4 +90,4 @@ bun upgrade --stable
 ## 另请参阅
 
 - [安装](/installation) — 首次安装 Bun
-- [更新包](/pm/cli/update) — 将依赖更新到最新版
+- [更新包](/pm/cli/update) — 将依赖更新到最新版。

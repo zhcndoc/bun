@@ -6,7 +6,7 @@ mode: center
 
 ## 提取社交分享图片和开放图谱标签
 
-Bun 的 [HTMLRewriter](/runtime/html-rewriter) API 可以高效地从 HTML 内容中提取社交分享图片和开放图谱（Open Graph）元数据。这对于构建链接预览功能、社交媒体卡片或网页爬虫特别有用。我们可以使用 HTMLRewriter 来匹配 CSS 选择器，从而处理我们想要操作的 HTML 元素、文本和属性。
+Bun 的 [HTMLRewriter](/runtime/html-rewriter) API 通过将 CSS 选择器与要处理的元素、文本和属性进行匹配，从 HTML 中提取社交分享图片和 Open Graph 元数据。你可以使用它来构建链接预览、社交媒体卡片或网页抓取工具。
 
 ```ts extract-social-meta.ts icon="/icons/typescript.svg"
 interface SocialMetadata {
@@ -83,7 +83,7 @@ async function extractSocialMetadata(url: string): Promise<SocialMetadata> {
 }
 ```
 
-```ts Example Usage icon="/icons/typescript.svg"
+```ts 示例用法 icon="/icons/typescript.svg"
 // 示例用法
 const metadata = await extractSocialMetadata("https://bun.com");
 console.log(metadata);

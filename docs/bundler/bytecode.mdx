@@ -3,52 +3,52 @@ title: 字节码缓存
 description: 使用 Bun 打包器中的字节码缓存加速 JavaScript 执行
 ---
 
-字节码缓存是一种构建时优化，通过将你的 JavaScript 预编译为字节码，从而显著提升应用启动速度。例如，在启用字节码的情况下编译 TypeScript 的 `tsc`，启动时间提升可达 **2 倍**。
+字节码缓存是一种构建时优化，通过预先将 JavaScript 编译为字节码来缩短启动时间。例如，启用字节码后编译 TypeScript 的 `tsc`，启动时间可提升 **2 倍**。
 
 ## 使用方法
 
 ### 基本用法（CommonJS）
 
-使用 `--bytecode` 标志启用字节码缓存。如果没有指定 `--format`，则默认使用 CommonJS：
+使用 `--bytecode` 标志启用字节码缓存。不使用 `--format` 时，输出格式默认为 CommonJS：
 
 ```bash terminal icon="terminal"
 bun build ./index.ts --target=bun --bytecode --outdir=./dist
 ```
 
-这会生成两个文件：
+构建会写入两个文件：
 
-- `dist/index.js` - 你的打包后的 JavaScript（CommonJS）
-- `dist/index.jsc` - 字节码缓存文件
+- `dist/index.js` - 打包后的 JavaScript（CommonJS）
+- `dist/index.js.jsc` - 字节码缓存文件
 
 运行时，Bun 会自动检测并使用 `.jsc` 文件：
 
 ```bash terminal icon="terminal"
-bun ./dist/index.js  # 自动使用 index.jsc
+bun ./dist/index.js  # 自动使用 index.js.jsc
 ```
 
 ### 生成独立可执行文件时
 
-使用 `--compile` 创建可执行文件时，字节码会被嵌入到二进制文件中。支持 ESM 和 CommonJS 两种格式：
+使用 `--compile` 创建可执行文件时，Bun 会将字节码嵌入二进制文件中。ESM 和 CommonJS 均可使用：
 
 ```bash terminal icon="terminal"
-# ESM (requires --compile)
+# ESM（需要 --compile）
 bun build ./cli.ts --compile --bytecode --format=esm --outfile=mycli
 
-# CommonJS (works with or without --compile)
+# CommonJS（使用或不使用 --compile 均可）
 bun build ./cli.ts --compile --bytecode --outfile=mycli
 ```
 
-生成的可执行文件同时包含代码和字节码，在单文件中提供极致性能。
+生成的可执行文件同时包含代码和字节码。
 
 ### ESM 字节码
 
-ESM 字节码需要使用 `--compile`，因为 Bun 会在编译后的二进制文件中嵌入模块元数据（导入/导出信息）。这些元数据使得 JavaScript 引擎在运行时可以完全跳过解析过程。
+ESM 字节码需要使用 `--compile`，因为 Bun 会将模块元数据（导入/导出信息）嵌入编译后的二进制文件中。借助这些元数据，JavaScript 引擎可以在运行时完全跳过解析。
 
-如果没有 `--compile`，ESM 字节码仍然需要解析源代码以分析模块依赖关系——这就失去了字节码缓存的意义。
+如果不使用 `--compile`，ESM 字节码仍需要解析源代码以分析模块依赖，这会违背字节码缓存的目的。
 
 ### 与其他优化结合
 
-字节码支持与代码压缩和源码映射同时使用：
+将字节码与压缩和源映射结合使用：
 
 ```bash terminal icon="terminal"
 bun build --compile --bytecode --minify --sourcemap ./cli.ts --outfile=mycli
@@ -56,7 +56,7 @@ bun build --compile --bytecode --minify --sourcemap ./cli.ts --outfile=mycli
 
 - `--minify` 在生成字节码前压缩代码体积（代码更少，字节码更小）
 - `--sourcemap` 保持错误定位（错误仍指向原始源码）
-- `--bytecode` 消除解析开销
+- `--bytecode` 消除解析开销。
 
 ## 性能影响
 
@@ -139,13 +139,15 @@ export default init;
 bun build --bytecode ./index.ts --outdir=./dist
 ```
 
-如果字节码与当前 Bun 版本不匹配，它会被自动忽略，代码将回退为解析 JavaScript 源码。你的应用仍然可以运行——性能优化会被跳过。
+如果字节码与当前 Bun 版本不匹配，Bun 会忽略它，并回退到解析 JavaScript 源码。
 
 **最佳实践**：将字节码生成纳入 CI/CD 构建流程，不要将 `.jsc` 文件提交到 Git。更新 Bun 时重新生成字节码。
 
 ### 仍需源码文件
 
-- `.js` 文件（打包后的源码）
+字节码不会替代 JavaScript。你必须同时部署两个文件：
+
+- `.js` 文件（打包后的源代码）
 - `.jsc` 文件（字节码缓存）
 
 运行时流程：
@@ -175,13 +177,12 @@ RUN bun install --frozen-lockfile
 COPY . .
 RUN bun build --bytecode --minify --sourcemap \
   --target=bun \
-  --outdir=./dist \
   --compile \
   ./src/server.ts --outfile=./dist/server
 
 FROM oven/bun:1 AS runner
 WORKDIR /app
-COPY --from=builder /dist/server /app/server
+COPY --from=builder /app/dist/server /app/server
 CMD ["./server"]
 ```
 
@@ -214,26 +215,26 @@ ls -lh dist/
 
 ```txt
 -rw-r--r--  1 user  staff   245K  index.js
--rw-r--r--  1 user  staff   1.1M  index.jsc
+-rw-r--r--  1 user  staff   1.1M  index.js.jsc
 ```
 
 `.jsc` 文件通常比 `.js` 大 2-8 倍。
 
-要记录字节码使用情况，设置环境变量 `BUN_JSC_verboseDiskCache=1`。
+要记录是否使用了字节码，请在环境中设置 `BUN_JSC_verboseDiskCache=1`。
 
-成功时日志示例：
-
-```txt
-[Disk cache] cache hit for sourceCode
-```
-
-若缓存未命中，日志示例：
+缓存命中时，Bun 会记录：
 
 ```txt
-[Disk cache] cache miss for sourceCode
+[Disk Cache] Cache hit for sourceCode
 ```
 
-多次缓存未命中正常，因为 Bun 目前不缓存内置模块的 JavaScript 字节码。
+缓存未命中时：
+
+```txt
+[Disk Cache] Cache miss for sourceCode
+```
+
+出现多条缓存未命中日志是正常的：Bun 不会对其内置模块中的 JavaScript 进行字节码缓存。
 
 ### 常见问题
 
@@ -241,9 +242,9 @@ ls -lh dist/
 
 **文件太大**：这是预期的。建议：
 
-- 先用 `--minify` 减小代码体积再生成字节码
-- 网络传输时压缩 `.jsc` 文件（gzip/brotli）
-- 评估启动性能提升是否值得文件增大代价
+- 使用 `--minify` 在生成字节码前减小代码体积
+- 压缩 `.jsc` 文件以便通过网络传输（gzip/brotli）
+- 评估启动速度的提升是否值得文件体积增加
 
 **顶层 await**：不支持，请用异步初始化函数替代。
 
@@ -255,15 +256,13 @@ ls -lh dist/
 2. **字节码编译**：将 AST 编译为字节码，一种更低级但执行更快的中间表示
 3. **执行**：引擎通过解释器或 JIT 编译器执行字节码
 
-字节码介于源代码和机器码之间，可理解为虚拟机的汇编语言。每个字节码指令对应一条操作，如“加载变量”、“两个数字相加”或“调用函数”。
+以上步骤会在**每次**运行代码时执行。一个每天运行 100 次的 CLI 工具会被解析 100 次；一个无服务器函数会在每次冷启动时进行解析。
 
-每次运行你的代码都会执行以上步骤。如果你的 CLI 每天运行 100 次，则代码被解析 100 次。如果是 serverless 函数发生频繁冷启动，解析在每次冷启动时都会进行。
+每次运行你的代码都会执行以上步骤。如果你的 CLI 每天运行 100 次，则代码被解析 100 次。如果是无服务器函数发生频繁冷启动，解析在每次冷启动时都会进行。
 
 字节码缓存将步骤 1 和 2 移到构建时。运行时直接加载预编译的字节码，加快启动。
 
-### 为什么懒解析让字节码更有效
-
-现代 JavaScript 引擎有种巧妙的优化叫**懒解析**，不会一开始解析所有代码，只有函数首次调用时才解析：
+现代 JavaScript 引擎使用一种称为**惰性解析**的优化方式。它们不会预先解析所有代码，而是仅在函数首次被调用时解析该函数：
 
 ```js
 // 没有字节码缓存时：
@@ -277,13 +276,13 @@ function main() {
 }
 ```
 
-解析开销不仅是启动时的成本，而是在应用运行期间根据不同路径陆续产生。字节码缓存则提前编译所有函数，包括本应懒解析的，那些解析工作一次性在构建时完成。
+这意味着解析开销并不只是启动时的成本——随着应用程序执行不同的代码路径，解析会在整个生命周期内持续发生。使用字节码缓存后，**所有函数都会被预编译**，包括那些引擎原本会延迟解析的函数。
 
 ## 字节码格式
 
 ### .jsc 文件内部结构
 
-`.jsc` 文件包含序列化的字节码结构。理解其内容能解释性能优势与文件增大间的权衡。
+`.jsc` 文件包含一个序列化的字节码结构。
 
 **头部部分**（每次加载验证）：
 
@@ -292,22 +291,22 @@ function main() {
 
 **SourceCodeKey**（验证字节码对应源码）：
 
-- **源码哈希**：原始 JavaScript 代码的哈希，Bun 会校验匹配后才使用字节码。
-- **源码长度**：源码精确长度，用于进一步验证。
-- **编译标记**：如严格模式、脚本或模块类型、eval 类型等。不同标记下同一源码生成不同字节码。
+- **源码哈希**：原始 JavaScript 源码的哈希值。Bun 在使用字节码前会验证该哈希是否匹配。
+- **源码长度**：源码的确切长度，用于额外验证。
+- **编译标志**：编译上下文，例如严格模式、脚本与模块，以及 eval 上下文类型。相同源码使用不同标志编译会生成不同的字节码。
 
 **字节码指令**：
 
-- **指令流**：实际的字节码操作码，表示 JavaScript 编译后代码，是可变长度序列。
-- **元数据表**：每条操作码相关的元信息，如性能计数器、类型提示、执行次数（即使未填充）。
-- **跳转目标**：针对控制流（if/else、循环、switch）预计算的地址。
-- **Switch 表**：针对 switch 语句的优化查找表。
+- **指令流**：字节码操作码，即 JavaScript 的编译表示，以可变长度的指令序列存储。
+- **元数据表**：每个操作码都有相关元数据，例如性能分析计数器、类型提示和执行次数（即使这些数据尚未填充）。
+- **跳转目标**：为控制流（if/else、循环、switch 语句）预先计算的地址。
+- **Switch 表**：用于 switch 语句的优化查找表。
 
 **常量与标识符**：
 
-- **常量池**：代码中所有字面量，包括数字、字符串、布尔值、null、undefined。以 JavaScript 值（JSValue）存储，运行时无需解析源码来加载。
-- **标识符表**：代码使用过的所有变量与函数名，采用去重字符串存储。
-- **源码表示标记**：指示常量如何存储（整数、双精度、BigInt 等）。
+- **常量池**：代码中的所有字面量值——数字、字符串、布尔值、null、undefined。这些值以 JavaScript 值（JSValues）的形式存储，因此运行时无需从源码解析。
+- **标识符表**：代码中使用的所有变量名和函数名，以去重后的字符串形式存储。
+- **源码表示标记**：指示常量应如何表示的标志（例如整数、双精度浮点数、大整数等）。
 
 **函数元数据**（每个函数对应）：
 
@@ -324,17 +323,17 @@ function main() {
 
 ### 字节码不包含什么
 
-重要的是，**字节码不包含你的源码文本**，而是：
+**字节码不会嵌入你的源码**。相反：
 
 - JavaScript 源码保存在 `.js` 文件中
 - 字节码只存储源码的哈希和长度
 - 加载时 Bun 验证字节码与当前源码匹配
 
-因此需要同时发布 `.js` 和 `.jsc` 文件，缺一不可。
+这就是为什么你需要同时部署 `.js` 和 `.jsc` 文件：没有对应的 `.js` 文件，`.jsc` 文件就毫无用处。
 
 ## 权衡：文件大小
 
-字节码文件显著大于源码——一般比源码大 2-8 倍。
+Bytecode files are typically 2-8x larger than the source code.
 
 ### 为什么字节码更大？
 
@@ -386,8 +385,8 @@ const sum = arr.reduce((a, b) => a + b, 0);
 
 ### 减少体积的策略
 
-**压缩**
-字节码对 gzip / brotli 压缩非常友好，可减小 60-70%。
+**压缩**：
+字节码通过 gzip/brotli 压缩效果很好（压缩率 60-70%）。重复的结构和元数据能够高效压缩。
 
 **先压缩代码**
 先用 `--minify` 可带来：
@@ -415,8 +414,8 @@ const sum = arr.reduce((a, b) => a + b, 0);
 
 字节码不兼容不同 Bun 版本，原因：
 
-**字节码格式持续演进**
-新旧 JavaScriptCore 版本不断变更操作码、元数据结构，格式不一致。
+**字节码格式变化**：
+JavaScriptCore 的字节码格式会随版本变化。新的操作码会被添加，旧的操作码会被移除或修改，元数据结构也会发生变化。
 
 **版本验证**
 `.jsc` 文件头部包含缓存版本哈希。加载时：
@@ -426,14 +425,12 @@ const sum = arr.reduce((a, b) => a + b, 0);
 3. 不匹配时字节码**静默拒绝**
 4. 回退解析 `.js` 源码
 
-你的应用仍然可以运行——性能优化被跳过。
-
-**降级设计**
-字节码缓存对异常“开放失败”：出错时自动回退解析，无异常抛出，保证代码运行。
+**优雅降级**：
+这种设计意味着字节码缓存会“开放失败”——如果出现任何问题（版本不匹配、文件损坏、文件缺失），代码仍然可以正常运行。你可能会看到启动速度变慢，但不会看到错误。
 
 ## 未链接与已链接字节码
 
-JavaScriptCore 区分“未链接”和“已链接”字节码，这使字节码缓存成为可能。
+JavaScriptCore 区分“未链接”和“已链接”字节码。这种分离机制使字节码缓存成为可能：
 
 ### 未链接字节码（缓存内容）
 
@@ -462,14 +459,10 @@ JavaScriptCore 区分“未链接”和“已链接”字节码，这使字节�
 - **JIT 编译状态**：基线 JIT 或优化 JIT（DFG/FTL）的代码
 - **运行时对象**：JavaScript 对象、原型、作用域指针等
 
-每次运行产生新链接副本，允许：
+这种已链接表示形式会在每次运行代码时重新创建。这种分离机制可以：
 
-1. 缓存昂贵的解析编译（未链接字节码）
+1. 缓存成本高昂的解析编译结果（未链接字节码）
 2. 收集运行时分析数据
 3. 启用基于分析的 JIT 优化
 
-字节码缓存将编译工作从运行时移至构建时，对于频繁启动的应用，可将启动时间减半，但换来更大的磁盘文件。
-
-在生产 CLI 和无服务器部署中，结合 `--bytecode --minify --sourcemap` 可获得性能和调试性的平衡。
-
-# 结束
+对于生产环境中的 CLI 和无服务器部署，结合使用 `--bytecode --minify --sourcemap` 可以在将错误映射回原始源代码的同时，提供最佳的启动速度。

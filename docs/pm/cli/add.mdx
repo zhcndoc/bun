@@ -50,14 +50,14 @@ bun add --peer @types/bun
 
 <Note>**别名** — `-E`</Note>
 
-使用 `--exact` 添加包并固定解析的版本。此操作将解析包的版本并以精确的版本号添加到您的 `package.json` 中，而非版本范围。
+要将软件包固定为已解析的版本，请使用 `--exact`。Bun 会将确切的版本号写入 `package.json`，而不是版本范围。
 
 ```bash terminal icon="terminal"
 bun add react --exact
 bun add react -E
 ```
 
-这将在您的 `package.json` 中添加如下内容：
+`package.json` 中的区别：
 
 ```json package.json icon="file-json"
 {
@@ -79,11 +79,9 @@ bun add --help
 
 ## `--global`
 
-<Note>
-  **注意** — 这不会修改当前项目文件夹的 package.json。**别名** - `bun add --global`，`bun add -g`，`bun install --global` 以及 `bun install -g`
-</Note>
+<Note>**别名** — `bun add --global`、`bun add -g`、`bun install --global` 和 `bun install -g`</Note>
 
-使用 `-g`/`--global` 标志全局安装包。这不会修改您当前项目的 `package.json`。通常用于安装命令行工具。
+要全局安装软件包，请使用 `-g`/`--global` 标志。这不会修改当前项目的 `package.json`。使用它来安装命令行工具。
 
 ```bash terminal icon="terminal"
 bun add --global cowsay # 或 `bun add -g cowsay`
@@ -128,7 +126,7 @@ globalBinDir = "~/.bun/bin"
 }
 ```
 
-Bun 读取此字段，并允许 `my-trusted-package` 执行生命周期脚本。
+Bun 会读取此字段，并运行 `my-trusted-package` 的生命周期脚本。
 
 ## Git 依赖
 
@@ -142,7 +140,7 @@ bun add git@github.com:moment/moment.git
   安装私有仓库时，系统需具备相应的 SSH 凭据以访问该仓库。
 </Note>
 
-Bun 支持多种协议，包括 [`github`](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#github-urls)、[`git`](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#git-urls-as-dependencies)、`git+ssh`、`git+https` 等。
+Bun 支持多种协议，包括 [`github`](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#github-urls)、[`git`](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#git-urls-as-dependencies)、`git+ssh` 和 `git+https`。
 
 ```json package.json icon="file-json"
 {
@@ -157,13 +155,13 @@ Bun 支持多种协议，包括 [`github`](https://docs.npmjs.com/cli/v9/configu
 
 ## Tarball 依赖
 
-包名可以对应公开托管的 `.tgz` 文件。安装时，Bun 将从指定的 tarball URL 下载并安装包，而非从包注册表。
+包名可以对应一个公开托管的 `.tgz` 文件。Bun 会从该 tarball URL 下载并安装包，而不是从包注册表安装。
 
 ```sh terminal icon="terminal"
 bun add zod@https://registry.npmjs.org/zod/-/zod-3.21.4.tgz
 ```
 
-这将在您的 `package.json` 中添加如下行：
+`bun add` 会将 URL 写入你的 `package.json`：
 
 ```json package.json icon="file-json"
 {

@@ -4,7 +4,7 @@ sidebarTitle: 休眠
 mode: center
 ---
 
-`Bun.sleep` 方法提供了一种方便的方式来创建一个在固定毫秒数后解决的 void `Promise`。
+`Bun.sleep()` 返回一个 `void` `Promise`，该 Promise 会在给定的毫秒数后解析。
 
 ```ts
 // 休眠 1 秒
@@ -13,7 +13,7 @@ await Bun.sleep(1000);
 
 ---
 
-在内部，这等价于以下使用 [`setTimeout`](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setTimeout) 的代码片段。
+在内部，它等价于以下 [`setTimeout`](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setTimeout) 代码片段。
 
 ```ts
 await new Promise(resolve => setTimeout(resolve, ms));
@@ -21,4 +21,4 @@ await new Promise(resolve => setTimeout(resolve, ms));
 
 ---
 
-更多实用工具请参见 [文档 > API > Utils](/runtime/utils)。
+请参阅[工具](/runtime/utils)。

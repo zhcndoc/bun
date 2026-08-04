@@ -8,7 +8,7 @@ Drizzle 是一个支持类 SQL “查询构建器”API 和类 ORM [查询 API](
 
 ---
 
-让我们通过 `bun init` 创建一个全新的项目并安装 Drizzle。
+使用 `bun init` 创建一个全新的项目，并安装 Drizzle。
 
 ```sh terminal icon="terminal"
 bun init -y
@@ -18,7 +18,7 @@ bun add -D drizzle-kit
 
 ---
 
-然后我们将使用 `bun:sqlite` 模块连接到 SQLite 数据库，并创建 Drizzle 数据库实例。
+然后使用 `bun:sqlite` 模块连接到 SQLite 数据库，并创建 Drizzle 数据库实例。
 
 ```ts db.ts icon="/icons/typescript.svg"
 import { drizzle } from "drizzle-orm/bun-sqlite";
@@ -43,7 +43,7 @@ console.log(result);
 
 ---
 
-然后使用 Bun 运行 `index.ts`。Bun 会自动创建 `sqlite.db` 并执行查询。
+然后使用 Bun 运行 `index.ts`。Bun 会创建 `sqlite.db` 并执行查询。
 
 ```sh terminal icon="terminal"
 bun run index.ts
@@ -57,7 +57,7 @@ bun run index.ts
 
 ---
 
-让我们为数据库定义一个合适的模式。创建一个 `schema.ts` 文件并定义一个 `movies` 表。
+现在为数据库添加架构。创建一个 `schema.ts` 文件，并定义一个 `movies` 表。
 
 ```ts schema.ts icon="/icons/typescript.svg"
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
@@ -71,7 +71,7 @@ export const movies = sqliteTable("movies", {
 
 ---
 
-我们可以使用 `drizzle-kit` CLI 来生成初始的 SQL 迁移。
+使用 `drizzle-kit` CLI 生成初始 SQL 迁移。
 
 ```sh terminal icon="terminal"
 bunx drizzle-kit generate --dialect sqlite --schema ./schema.ts
@@ -79,9 +79,9 @@ bunx drizzle-kit generate --dialect sqlite --schema ./schema.ts
 
 ---
 
-这会创建一个新的 `drizzle` 目录，其中包含 `.sql` 迁移文件和 `meta` 目录。
+该命令会创建一个 `drizzle` 目录，其中包含一个 `.sql` 迁移文件和一个 `meta` 目录。
 
-```txt File Tree icon="folder-tree"
+```txt 文件树 icon="folder-tree"
 drizzle
 ├── 0000_ordinary_beyonder.sql
 └── meta
@@ -91,9 +91,7 @@ drizzle
 
 ---
 
-我们可以通过 `migrate.ts` 脚本执行这些迁移。
-
-该脚本创建了一个指向 `sqlite.db` 的 SQLite 新连接，然后执行 `drizzle` 目录中所有未执行的迁移。
+使用 `migrate.ts` 脚本执行这些迁移。它会连接到 `sqlite.db`，然后执行 `drizzle` 目录中所有尚未执行的迁移。
 
 ```ts migrate.ts icon="/icons/typescript.svg"
 import { migrate } from "drizzle-orm/bun-sqlite/migrator";
@@ -108,7 +106,7 @@ migrate(db, { migrationsFolder: "./drizzle" });
 
 ---
 
-我们可以使用 `bun` 运行这个脚本来执行迁移。
+使用 `bun` 运行该脚本以执行迁移。
 
 ```sh terminal icon="terminal"
 bun run migrate.ts
@@ -116,7 +114,7 @@ bun run migrate.ts
 
 ---
 
-现在我们有了数据库，让我们添加一些数据。创建一个 `seed.ts` 文件，内容如下。
+现在向数据库中添加一些数据。创建一个 `seed.ts` 文件，内容如下。
 
 ```ts seed.ts icon="/icons/typescript.svg"
 import { db } from "./db";
@@ -154,7 +152,7 @@ Seeding complete.
 
 ---
 
-我们终于有了带模式和示例数据的数据库。让我们使用 Drizzle 查询它。用以下内容替换 `index.ts`。
+现在数据库已经拥有架构和一些示例数据。将 `index.ts` 的内容替换为以下代码，使用 Drizzle 查询数据库。
 
 ```ts index.ts icon="/icons/typescript.svg"
 import * as schema from "./schema";
@@ -166,7 +164,7 @@ console.log(result);
 
 ---
 
-然后运行该文件。你应该能看到我们插入的三部电影。
+然后运行该文件。你应该会看到刚刚插入的三部电影。
 
 ```sh terminal icon="terminal"
 bun run index.ts
@@ -192,4 +190,4 @@ bun run index.ts
 
 ---
 
-完整文档请参考 [Drizzle 官网](https://orm.drizzle.team/docs/overview)。
+请参阅 [Drizzle 文档](https://orm.drizzle.team/docs/overview)。

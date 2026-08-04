@@ -4,7 +4,7 @@ sidebarTitle: 从 Jest 迁移
 mode: center
 ---
 
-在很多情况下，Bun 的测试运行器可以在无需更改代码的情况下运行 Jest 测试套件。只需运行 `bun test`，而不是 `npx jest`、`yarn test` 等。
+在许多情况下，Bun 的测试运行器可以在不修改代码的情况下运行 Jest 测试套件。使用 `bun test` 代替 `npx jest` 或 `yarn test`。
 
 ```sh terminal icon="terminal"
 npx jest # [!code --]
@@ -14,12 +14,12 @@ bun test # [!code ++]
 
 ---
 
-通常不需要更改代码。
+你的测试文件通常可以直接运行。
 
-- Bun 会在内部重写来自 `@jest/globals` 的导入，使用 `bun:test` 的等效项。
-- 如果你依赖 Jest 注入 `test`、`expect` 等全局变量，Bun 也会这样做。
+- Bun 会在内部将从 `@jest/globals` 导入的内容重写为对应的 `bun:test` 内容。
+- 如果你依赖 Jest 注入 `test` 和 `expect` 等全局变量，Bun 也会执行相同的操作。
 
-但如果你更愿意切换到 `bun:test` 导入，也可以这样做。
+如果你更愿意直接从 `bun:test` 导入，请更新导入语句。
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "@jest/globals"; // [!code --]
@@ -28,9 +28,7 @@ import { test, expect } from "bun:test"; // [!code ++]
 
 ---
 
-从 Bun v1.2.19 开始，你可以通过一个三斜线指令启用全局测试函数的 **TypeScript 支持**。这使得从 Jest 迁移更加简单，因为你只需在整个项目中添加一次该指令：
-
-将此指令添加到项目中的 _任意一个文件_，例如：
+从 Bun v1.2.19 开始，三斜线指令可以为全局测试函数启用 **TypeScript 支持**。将它添加到项目中的_一个文件_，例如：
 
 - 项目根目录下的 `global.d.ts` 文件
 - 你的测试 `preload.ts` 设置文件（如果在 bunfig.toml 中使用了 `preload`）
@@ -42,7 +40,7 @@ import { test, expect } from "bun:test"; // [!code ++]
 
 ---
 
-添加后，项目中的所有测试文件将自动获得 Jest 全局变量的 TypeScript 支持：
+添加后，项目中的每个测试文件都会获得 Jest 全局函数的 TypeScript 支持：
 
 ```ts math.test.ts icon="/icons/typescript.svg"
 describe("my test suite", () => {
@@ -62,17 +60,11 @@ describe("my test suite", () => {
 
 ---
 
-Bun 实现了绝大多数 Jest 的匹配器，但兼容性尚未达到 100%。请参考完整的兼容性表：[文档 > 测试运行器 > 编写测试](/test/writing-tests#matchers)。
-
-一些显著缺失的功能：
-
-- `expect().toHaveReturned()`
+Bun 实现了 Jest 的大多数匹配器，但兼容性并非 100%。请参阅[编写测试](/test/writing-tests#matchers)中的兼容性表。
 
 ---
 
-如果你使用 `testEnvironment: "jsdom"` 在类似浏览器的环境中运行测试，应当遵循 [Bun 和 happy-dom 的 DOM 测试指南](/guides/test/happy-dom)，将浏览器 API 注入全局作用域。该指南依赖 [`happy-dom`](https://github.com/capricorn86/happy-dom)，它是 [`jsdom`](https://github.com/jsdom/jsdom) 的一个更轻量且更快速的替代方案。
-
-目前由于 jsdom 内部使用了 V8 API，无法在 Bun 中运行。其支持进展请追踪这里：[issue](https://github.com/oven-sh/bun/issues/3554)。
+如果你使用 `testEnvironment: "jsdom"` 在类似浏览器的环境中运行测试，请按照 [Bun 和 happy-dom 进行 DOM 测试](/guides/test/happy-dom)指南，将浏览器 API 注入全局作用域。该指南使用 [`happy-dom`](https://github.com/capricorn86/happy-dom)，这是 [`jsdom`](https://github.com/jsdom/jsdom) 的一个更轻量、更快速的替代方案。
 
 ```toml bunfig.toml icon="settings"
 [test]
@@ -97,7 +89,7 @@ bun test --coverage
 
 ---
 
-将 `testTimeout` 替换为 `--test-timeout` 命令行参数。
+将 `testTimeout` 替换为 `--timeout` CLI 标志。
 
 ```sh terminal icon="terminal"
 bun test --timeout 10000
@@ -105,21 +97,21 @@ bun test --timeout 10000
 
 ---
 
-使用 `bun test` 时，许多其他标志变得无关紧要或过时。
+许多其他 Jest 设置在 `bun test` 中并不适用。
 
-- `transform` — Bun 支持 TypeScript 和 JSX。其他文件类型可以通过 [插件](/runtime/plugins) 配置。
+- `transform` — Bun 支持 TypeScript 和 JSX。使用[插件](/runtime/plugins)配置其他文件类型。
 - `extensionsToTreatAsEsm`
-- `haste` — Bun 使用自有的内部源映射
-- `watchman`、`watchPlugins`、`watchPathIgnorePatterns` — 使用 `--watch` 可开启测试的监听模式
+- `haste` — Bun 使用自己的内部源映射
+- `watchman`、`watchPlugins`、`watchPathIgnorePatterns` — 使用 `--watch` 以监视模式运行测试
 - `verbose` — 在 [`bunfig.toml`](/runtime/bunfig#loglevel) 中设置 `logLevel: "debug"`
 
 ---
 
-未提及的设置则不被支持或无对应项。如果缺少重要功能，请[提交功能请求](https://github.com/oven-sh/bun)。
+此处未提及的设置不受支持或没有对应功能。如果缺少你需要的功能，请[提交功能请求](https://github.com/oven-sh/bun)。
 
 ---
 
 另见：
 
-- [将测试标记为待办](/guides/test/todo-tests)
-- [文档 > 测试运行器 > 编写测试](/test/writing-tests)
+- [将测试标记为待办事项](/guides/test/todo-tests)
+- [编写测试](/test/writing-tests)。

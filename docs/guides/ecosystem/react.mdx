@@ -4,7 +4,7 @@ sidebarTitle: React 与 Bun
 mode: center
 ---
 
-Bun 开箱即支持 `.jsx` 和 `.tsx` 文件。React 可与 Bun 配合使用。
+Bun 内置支持 `.jsx` 和 `.tsx` 文件。React 可以与 Bun 一起使用。
 
 使用 `bun init --react` 创建一个新的 React 应用。这会给你一个模板：把 React 应用和 API 服务器放在一个完整的全栈应用中。
 
@@ -26,7 +26,7 @@ bun start
 
 ### 热重载
 
-运行 `bun dev` 以开发模式启动应用。这会同时启动 API 服务器和支持热重载的 React 应用。
+运行 `bun dev` 以在开发模式下启动应用。这会启动 API 服务器和支持热重载的 React 应用。
 
 ### 全栈应用
 
@@ -34,19 +34,19 @@ bun start
 
 ### 静态站点
 
-运行 `bun run build` 可以将应用构建为静态站点。此操作会创建一个包含构建后的应用及所有资源的 `dist` 目录。
+运行 `bun run build` 将应用构建为静态站点。这会创建一个 `dist` 目录，其中包含构建后的应用及其资源。
 
 ```txt File Tree icon="folder-tree"
 ├── src/
-│   ├── index.tsx       # 带有 API 路由的服务器入口点
-│   ├── frontend.tsx    # 带有热模块替换（HMR）的 React 应用入口点
-│   ├── App.tsx         # 主要 React 组件
-│   ├── APITester.tsx   # 用于测试 API 接口的组件
+│   ├── index.ts        # 包含 API 路由的服务器入口点
+│   ├── frontend.tsx    # 带有 HMR 的 React 应用入口点
+│   ├── App.tsx         # 主要的 React 组件
+│   ├── APITester.tsx   # 用于测试 API 端点的组件
 │   ├── index.html      # HTML 模板
-│   ├── index.css       # 样式文件
+│   ├── index.css       # 样式
 │   └── *.svg           # 静态资源
-├── package.json        # 依赖和脚本
+├── package.json        # 依赖项和脚本
 ├── tsconfig.json       # TypeScript 配置
 ├── bunfig.toml         # Bun 配置
-└── bun.lock            # 锁文件
+└── bun.lock            # 锁定文件
 ```

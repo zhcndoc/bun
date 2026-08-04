@@ -62,6 +62,11 @@ bun run <文件或脚本>
   控制 <code>package.json</code> 脚本所用的 shell，支持 <code>bun</code> 或 <code>system</code>
 </ParamField>
 
+<ParamField path="--interactive" type="boolean">
+  打开兼容 Node.js 的 REPL（<code>node:repl</code>）。与 <code>-e</code> 结合使用时，会启动 REPL，然后执行脚本。在 <code>--interactive</code> 下，<code>-e</code> 是原始 JavaScript（与{" "}
+  <code>node -i -e</code> 的行为一致）；如需使用 TypeScript，请使用 <code>bun repl</code>。这与 <code>bun repl</code> 不同，后者是 Bun 的原生 REPL。
+</ParamField>
+
 <ParamField path="--smol" type="boolean">
   使用更少内存，但更频繁地进行垃圾回收
 </ParamField>
@@ -75,7 +80,7 @@ bun run <文件或脚本>
 </ParamField>
 
 <ParamField path="--throw-deprecation" type="boolean">
-  决定弃用警告是否导致错误
+  确定弃用警告是否会导致错误
 </ParamField>
 
 <ParamField path="--title" type="string">
@@ -83,7 +88,7 @@ bun run <文件或脚本>
 </ParamField>
 
 <ParamField path="--zero-fill-buffers" type="boolean">
-  强制 <code>Buffer.allocUnsafe(size)</code> 填充为零
+  强制将 <code>Buffer.allocUnsafe(size)</code> 创建的缓冲区填充为零
 </ParamField>
 
 <ParamField path="--no-addons" type="boolean">
@@ -215,7 +220,7 @@ bun run <文件或脚本>
 </ParamField>
 
 <ParamField path="--jsx-import-source" type="string" default="react">
-  声明用于导入 jsx 和 jsxs 工厂函数的模块标识符。默认：<code>react</code>
+  声明用于导入 jsx 和 jsxs 工厂函数的模块说明符。默认值：<code>react</code>
 </ParamField>
 
 <ParamField path="--jsx-runtime" type="string" default="automatic">
@@ -280,7 +285,7 @@ bun run <文件或脚本>
 </ParamField>
 
 <ParamField path="--cwd" type="string">
-  解析文件 &amp; 入口点的绝对路径。仅更改进程的当前工作目录
+  用于解析文件和入口点的绝对路径。此选项只会更改进程的 cwd
 </ParamField>
 
 <ParamField path="--config" type="string">

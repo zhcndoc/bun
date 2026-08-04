@@ -3,7 +3,7 @@ title: HTML 和静态站点
 description: 使用 Bun 的打包工具构建静态站点、落地页和 web 应用
 ---
 
-Bun 的打包工具对 HTML 拥有一级支持。可以零配置构建静态站点、落地页和 web 应用。只需将 Bun 指向你的 HTML 文件，其他一切交给它处理。
+Bun 的打包工具原生支持 HTML。无需任何配置即可构建静态站点、落地页和 Web 应用：将 HTML 文件交给 Bun，它就会打包该文件所引用的脚本、样式表和资源。
 
 ```html title="index.html" icon="file-code"
 <!doctype html>
@@ -31,20 +31,20 @@ ready in 6.62ms
 Press h + Enter to show shortcuts
 ```
 
-Bun 的开发服务器提供强大的功能且无需任何配置：
+无需配置时，Bun 的开发服务器提供：
 
-- **自动打包** - 打包并服务你的 HTML、JavaScript 和 CSS
-- **多入口支持** - 支持多个 HTML 入口点和通配符入口点
-- **现代 JavaScript** - 内置支持 TypeScript 和 JSX
-- **智能配置** - 读取 `tsconfig.json` 中的路径、JSX 选项、实验性装饰器等配置
-- **插件** - 支持 TailwindCSS 等插件
-- **ESM 与 CommonJS** - JavaScript、TypeScript 和 JSX 文件中可同时使用 ESM 和 CommonJS
-- **CSS 打包与压缩** - 打包 `<link>` 标签和 `@import` 语句中的 CSS
-- **资源管理** - 自动复制并哈希图片和资源；重写 JavaScript、CSS 和 HTML 中的资源路径
+- **自动打包** - 打包并提供你的 HTML、JavaScript 和 CSS
+- **多入口支持** - 处理多个 HTML 入口点和 glob 入口点
+- **现代 JavaScript** - 默认支持 TypeScript 和 JSX
+- **智能配置** - 读取 `tsconfig.json` 中的路径、JSX 选项和实验性装饰器配置
+- **插件** - 支持插件，包括 TailwindCSS
+- **ESM 和 CommonJS** - 在 JavaScript、TypeScript 和 JSX 文件中使用 ESM 和 CommonJS
+- **CSS 打包与压缩** - 打包来自 `<link>` 标签和 `@import` 语句的 CSS
+- **资源管理** - 复制并生成哈希化的图像和资源，同时重写 JavaScript、CSS 和 HTML 中的资源路径
 
 ## 单页应用 (SPA)
 
-当你传入一个单一 `.html` 文件给 Bun 时，Bun 会用这个文件作为所有路径的回退路由。这使得它非常适合使用客户端路由的单页应用：
+当你将一个 `.html` 文件传递给 Bun 时，Bun 会将其用作所有路径的回退路由。这适用于使用客户端路由的单页应用：
 
 ```bash terminal icon="terminal"
 bun index.html
@@ -57,7 +57,7 @@ ready in 6.62ms
 Press h + Enter to show shortcuts
 ```
 
-你的 React 或其他 SPA 将无需配置即可开箱即用。所有诸如 `/about`, `/users/123` 等路由都会返回同一个 HTML 文件，由客户端路由处理导航。
+你的 React 或其他 SPA 无需任何配置即可运行。像 `/about` 和 `/users/123` 这样的路由会提供同一个 HTML 文件，因此由你的客户端路由器处理导航。
 
 ```html title="index.html" icon="file-code"
 <!doctype html>
@@ -90,14 +90,14 @@ Routes:
 Press h + Enter to show shortcuts
 ```
 
-这将提供以下服务：
+这会提供：
 
 - `/` 路由对应 `index.html`
 - `/about` 路由对应 `about.html`
 
 ### 通配符模式
 
-要指定多个文件，可以使用以 `.html` 结尾的通配符模式：
+要指定多个文件，请使用以 `.html` 结尾的 glob 模式：
 
 ```bash terminal icon="terminal"
 bun ./**/*.html
@@ -115,7 +115,7 @@ Press h + Enter to show shortcuts
 
 ### 路径规范化
 
-基路径取所有文件最长的公共前缀。
+Bun 根据所有文件中最长的公共前缀选择基础路径。
 
 ```bash terminal icon="terminal"
 bun ./index.html ./about/index.html ./about/foo/index.html
@@ -134,21 +134,21 @@ Press h + Enter to show shortcuts
 
 ## JavaScript、TypeScript 和 JSX
 
-Bun 的转译器原生支持 JavaScript、TypeScript 和 JSX。你可以在 Bun 中了解更多关于加载器的内容。
+Bun 的转译器原生支持 JavaScript、TypeScript 和 JSX。请参阅[加载器](/bundler/loaders)。
 
 <Note>Bun 的转译器也在运行时使用。</Note>
 
 ### ES 模块与 CommonJS
 
-你可以在 JavaScript、TypeScript 和 JSX 文件中使用 ESM 和 CJS。Bun 会自动处理转译和打包。
+您可以在 JavaScript、TypeScript 和 JSX 文件中使用 ESM 和 CommonJS。Bun 会自动转译并打包它们。
 
 无需预先构建或单独优化步骤，全程同步完成。
 
-了解更多 Bun 中的模块解析。
+请参阅[模块解析](/runtime/module-resolution)。
 
 ## CSS
 
-Bun 的 CSS 解析器同样原生实现（大约 58,000 行 Zig 代码）。
+Bun 的 CSS 解析器也是原生实现的（约 70,000 行 Rust 代码）。
 
 它也是一个 CSS 打包器。你可以在 CSS 文件中使用 `@import` 导入其他 CSS 文件。
 
@@ -186,15 +186,13 @@ body {
 
 ### CSS 中引用本地资源
 
-你可以在 CSS 文件中引用本地资源。
-
 ```css styles.css icon="file-code"
 body {
   background-image: url("./logo.png");
 }
 ```
 
-这会将 `./logo.png` 复制到输出目录，并在 CSS 文件中重写路径以包含内容哈希。
+Bun 会将 `./logo.png` 复制到输出目录，并重写 CSS 文件中的路径以包含内容哈希。
 
 ```css styles.css icon="file-code"
 body {
@@ -204,14 +202,14 @@ body {
 
 ### 在 JavaScript 中导入 CSS
 
-要将 CSS 文件与 JavaScript 文件关联，可以在 JavaScript 中导入它。
+要将 CSS 文件与 JavaScript 文件关联，请在 JavaScript 文件中导入它。
 
 ```ts app.ts icon="/icons/typescript.svg"
 import "./styles.css";
 import "./more-styles.css";
 ```
 
-这将在输出目录中生成 `./app.css` 和 `./app.js`。所有从 JavaScript 导入的 CSS 文件都会被打包成每个入口点的单个 CSS 文件。如果从多个 JavaScript 文件导入了同一个 CSS 文件，它在输出中仅会包含一次。
+这会在输出目录中生成 `./app.css` 和 `./app.js`。从 JavaScript 导入的所有 CSS 文件都会被打包到每个入口点对应的单个 CSS 文件中。如果从多个 JavaScript 文件中导入同一个 CSS 文件，它在输出 CSS 文件中只会被包含一次。
 
 ## 插件
 
@@ -233,7 +231,7 @@ bun install --dev bun-plugin-tailwind
 plugins = ["bun-plugin-tailwind"]
 ```
 
-接着，在 HTML 中通过 `<link>` 标签、CSS 中的 `@import` 或 JavaScript 中导入引用 TailwindCSS。
+然后，在 HTML 中通过 `<link>` 标签、CSS 中的 `@import`，或 JavaScript 中的导入来引用 TailwindCSS。
 
 <Tabs>
   <Tab title="index.html">
@@ -260,11 +258,11 @@ plugins = ["bun-plugin-tailwind"]
   </Tab>
 </Tabs>
 
-<Info>三者只需其中一个即可，无需全部添加。</Info>
+<Info>只需要其中一种方式，无需全部使用。</Info>
 
 ## 内联环境变量
 
-Bun 可以在构建时将 JavaScript 和 TypeScript 文件中的 `process.env.*` 替换为实际的值。这对将配置（如 API URL 或功能开关）注入前端代码非常有用。
+Bun 可以在构建时将 JavaScript 和 TypeScript 中的 `process.env.*` 引用替换为其实际值。你可以使用此功能将 API URL 或功能标志等配置注入前端代码。
 
 ### 开发服务器（运行时）
 
@@ -337,7 +335,7 @@ console.log(`API URL: ${apiUrl}`);
 PUBLIC_API_URL=https://api.example.com bun build ./index.html --outdir=dist --env=PUBLIC_*
 ```
 
-打包输出将为：
+捆绑后的输出包含：
 
 ```js title="dist/app.js" icon="/icons/javascript.svg"
 const apiUrl = "https://api.example.com";
@@ -346,9 +344,7 @@ console.log(`API URL: ${apiUrl}`);
 
 ## 将浏览器控制台日志回显至终端
 
-Bun 的开发服务器支持将浏览器中的控制台日志流式传输到终端。
-
-要启用，传入 CLI 参数 `--console`。
+Bun 的开发服务器可以将浏览器中的控制台日志流式传输到终端。要启用此功能，请传入 `--console` CLI 标志。
 
 ```bash terminal icon="terminal"
 bun ./index.html --console
@@ -361,13 +357,13 @@ ready in 6.62ms
 Press h + Enter to show shortcuts
 ```
 
-每次调用 `console.log` 或 `console.error` 都会广播到启动服务器的终端。这对于在服务器运行同一终端查看浏览器错误非常有用，也适合监控终端输出的 AI 代理。
+每次调用 `console.log` 或 `console.error` 时，日志都会广播到启动服务器的终端，因此浏览器错误会显示在运行服务器的同一位置。这也有助于监视终端输出的 AI 代理。
 
-内部复用了热模块重载的现有 WebSocket 连接来发送日志。
+在内部，此功能会复用热模块替换（HMR）现有的 WebSocket 连接来发送日志。
 
 ## 在浏览器中编辑文件
 
-Bun 的前端开发服务器支持 Chrome DevTools 的自动工作区文件夹功能，可让你在浏览器中保存文件修改。
+Bun 的前端开发服务器支持 Chrome DevTools 中的自动工作区文件夹，因此你可以从浏览器保存对文件的编辑。
 
 ## 键盘快捷键
 
@@ -375,7 +371,7 @@ Bun 的前端开发服务器支持 Chrome DevTools 的自动工作区文件夹�
 
 - `o + Enter` - 在浏览器中打开
 - `c + Enter` - 清除控制台
-- `q + Enter` 或 `Ctrl+C` - 退出服务器
+- `q + Enter` 或 `Ctrl+C` - 退出服务器。
 
 ## 生产构建
 
@@ -399,18 +395,18 @@ Bun 的前端开发服务器支持 Chrome DevTools 的自动工作区文件夹�
 </Tabs>
 
 <Warning>
-  当前，插件仅支持通过 `Bun.build` 的 API 或通过前端开发服务器的 `bunfig.toml` 使用，还不支持 `bun build` CLI。
+  插件仅支持通过 `Bun.build` 的 API 使用，或通过带有前端开发服务器的 `bunfig.toml` 使用，不支持通过 `bun build` 的 CLI 使用。
 </Warning>
 
 ### 监听模式
 
-你可以运行 `bun build --watch` 自动监听文件变更并重建，非常适合库开发。
+运行 `bun build --watch` 以监听更改并自动重新构建。这非常适合库开发。
 
 <Info>你从未见过如此快速的监听模式。</Info>
 
 ## 插件 API
 
-需要更灵活的控制？可以通过 JavaScript API 配置打包器，并使用 Bun 内置的 `HTMLRewriter` 预处理 HTML。
+如需进行更多控制，可以通过 JavaScript API 配置打包器，并使用 Bun 内置的 `HTMLRewriter` 预处理 HTML。
 
 ```ts title="build.ts" icon="/icons/typescript.svg"
 await Bun.build({
@@ -457,16 +453,16 @@ Bun 自动处理所有常见的 Web 资源：
 - **媒体** (`<video>`, `<audio>`, `<source>`) 会复制并哈希
 - 任何带有指向本地文件 `href` 的 `<link>` 标签会被重写路径并哈希
 
-所有路径都以你的 HTML 文件为相对基准进行解析，因此你可以按自己的方式组织项目。
+Bun 会根据 HTML 文件解析所有路径，因此你可以按照任意方式组织项目。
 
 <Warning>
-**This is a work in progress**
-- Need more plugins
-- Need more configuration options for things like asset handling
-- Need a way to configure CORS, headers, etc.
+**此功能仍在开发中**
+- 需要更多插件
+- 需要更多配置选项，例如资源处理
+- 需要一种配置 CORS、请求头等内容的方式
 
-{/* todo: find the correct link to link to as this 404's and there isn't any similar files */}
-{/* If you want to submit a PR, most of the code is [here](https://github.com/oven-sh/bun/blob/main/src/runtime/api/bun/html-rewriter.ts). You could even copy paste that file into your project and use it as a starting point. */}
+{/* 待办：寻找正确的链接，因为此链接 404 并且没有类似文件 */}
+{/* 如果你想提交 PR，大部分代码在 [这里](https://github.com/oven-sh/bun/blob/main/src/runtime/api/bun/html-rewriter.ts)。你甚至可以将该文件复制到项目中作为起点。 */}
 
 {/* 待办：寻找正确的链接，因为此链接 404 并且没有类似文件 */}
 {/* 如果你想提交 PR，大部分代码在 [这里](https://github.com/oven-sh/bun/blob/main/src/bun.js/api/bun/html-rewriter.ts)。你甚至可以将该文件复制到项目中作为起点。 */}
@@ -474,7 +470,7 @@ Bun 自动处理所有常见的 Web 资源：
 
 ## 工作原理
 
-这是 Bun 对 JavaScript 中 HTML 导入支持的一个简单封装。
+这是对 Bun 在 JavaScript 中支持 [HTML 导入](/bundler/fullstack) 的一个小型封装。
 
 ## 单文件独立 HTML
 
@@ -488,6 +484,4 @@ bun build --compile --target=browser ./index.html --outdir=dist
 
 ## 给前端添加后端
 
-想给前端添加后端支持，可以使用 `Bun.serve` 的“routes”选项。
-
-详见全栈文档。
+要为前端添加后端，请使用 `Bun.serve` 中的 `routes` 选项。请参阅[全栈文档](/bundler/fullstack)。

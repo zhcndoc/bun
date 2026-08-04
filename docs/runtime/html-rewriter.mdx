@@ -3,13 +3,13 @@ title: HTMLRewriter
 description: 使用 Bun 的 HTMLRewriter 通过 CSS 选择器转换 HTML 文档
 ---
 
-HTMLRewriter 允许你使用 CSS 选择器转换 HTML 文档。它可用于 `Request`、`Response`，以及 `string`。Bun 的实现基于 Cloudflare 的 [lol-html](https://github.com/cloudflare/lol-html)。
+HTMLRewriter 使用 CSS 选择器转换 HTML 文档。它支持 `Response`、`string` 和 `ArrayBuffer` 输入。Bun 的实现基于 Cloudflare 的 [lol-html](https://github.com/cloudflare/lol-html)。
 
 ---
 
 ## 用法
 
-一个常见的使用场景是重写 HTML 内容中的 URL。以下示例将图片源和链接 URL 重写为 CDN 域名：
+一个常见的用例是在 HTML 内容中重写 URL：
 
 ```ts
 // 将所有图片替换为 rickroll
@@ -44,7 +44,7 @@ const result = rewriter.transform(html);
 console.log(result);
 ```
 
-此代码将所有图片替换为 Rick Astley 的缩略图，并将每个 `<img>` 包裹在一个链接中，生成的差异如下：
+重写器会将每张图片替换为 Rick Astley 的缩略图，并将每个 `<img>` 包裹在链接中，生成如下差异：
 
 {/* prettier-ignore */}
 ```html
@@ -66,11 +66,11 @@ console.log(result);
 </html>
 ```
 
-现在页面上的每张图片都会被 Rick Astley 的缩略图替换，点击任意图片都会跳转到[一个非常著名的视频](https://www.youtube.com/watch?v=dQw4w9WgXcQ)。
+现在点击任意图片都会跳转到[一段非常著名的视频](https://www.youtube.com/watch?v=dQw4w9WgXcQ)。
 
 ### 输入类型
 
-HTMLRewriter 可以转换来自多种来源的 HTML。输入类型会被自动识别和处理：
+HTMLRewriter 可以转换多种输入类型的 HTML：
 
 ```ts
 // 从 Response
@@ -82,18 +82,18 @@ rewriter.transform("<div>内容</div>");
 // 从 ArrayBuffer
 rewriter.transform(new TextEncoder().encode("<div>内容</div>").buffer);
 
-// 从 Blob
-rewriter.transform(new Blob(["<div>内容</div>"]));
+// 从 Blob（包装在 Response 中）
+rewriter.transform(new Response(new Blob(["<div>content</div>"])));
 
-// 从 File
-rewriter.transform(Bun.file("index.html"));
+// 从 File（包装在 Response 中）
+rewriter.transform(new Response(Bun.file("index.html")));
 ```
 
-请注意，Cloudflare Workers 中的 HTMLRewriter 仅支持 `Response` 对象。
+Cloudflare Workers 对 HTMLRewriter 的实现仅支持 `Response` 对象。
 
 ### 元素处理器
 
-`on(selector, handlers)` 方法让你为匹配 CSS 选择器的 HTML 元素注册处理器。解析时每个匹配元素都会调用对应处理器：
+`on(selector, handlers)` 方法会为匹配 CSS 选择器的 HTML 元素注册处理器。解析过程中，每个匹配的元素都会运行这些处理器：
 
 ```ts
 rewriter.on("div.content", {
@@ -113,7 +113,7 @@ rewriter.on("div.content", {
 });
 ```
 
-这些处理器支持异步，返回 Promise。注意异步操作会阻塞转换，直到完成：
+处理器可以是异步的，并返回一个 Promise。异步操作会阻塞转换，直到操作完成：
 
 ```ts
 rewriter.on("div", {
@@ -166,7 +166,7 @@ rewriter.on("*", handler);
 
 ### 元素操作
 
-元素提供多种操作方法，所有修改方法返回元素实例以支持链式调用：
+所有元素修改方法都会返回元素实例，因此可以链式调用：
 
 ```ts
 rewriter.on("div", {
@@ -221,7 +221,7 @@ rewriter.on("div", {
 
 ### 文本操作
 
-文本处理器提供文本操作方法，文本片段代表文本节点中一部分内容，并提供该部分的位置等信息：
+文本块表示文本内容的一部分，并报告其在文本节点中的位置：
 
 ```ts
 rewriter.on("p", {
@@ -245,7 +245,7 @@ rewriter.on("p", {
 
 ### 注释操作
 
-注释处理器允许操作注释节点，方法与文本节点类似：
+注释支持与文本节点类似的方法：
 
 ```ts
 rewriter.on("*", {
@@ -269,7 +269,7 @@ rewriter.on("*", {
 
 ### 文档级处理器
 
-`onDocument(handlers)` 方法允许处理文档级事件，这些事件发生于文档层面，而不是特定元素内：
+`onDocument(handlers)` 方法会为文档级别的事件注册处理器，而不是针对特定元素内部的事件：
 
 ```ts
 rewriter.onDocument({
@@ -302,20 +302,20 @@ rewriter.onDocument({
 - 转换 body，保持流式能力
 - 自动处理内容编码（如 gzip）
 - 转换后标记原始响应体为已使用
-- 头部被克隆到新响应上
+- 头部被克隆到新响应上。
 
 ## 错误处理
 
 HTMLRewriter 操作可能因多种情况抛出错误：
 
 - `on()` 方法中的选择器语法无效
-- 转换方法中 HTML 内容无效
-- 处理 Response 流时出现错误
+- 转换方法中的 HTML 内容无效
+- 处理 Response 正文时发生流错误
 - 内存分配失败
 - 输入类型无效（例如传入 Symbol）
-- 响应体已被使用错误
+- 正文已使用错误
 
-应当捕获并妥善处理错误：
+捕获并处理这些错误：
 
 ```ts
 try {

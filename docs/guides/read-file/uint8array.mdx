@@ -4,9 +4,9 @@ sidebarTitle: 读取到 Uint8Array
 mode: center
 ---
 
-`Bun.file()` 函数接受一个路径并返回一个 `BunFile` 实例。`BunFile` 类继承自 `Blob`，允许你以多种格式懒加载地读取文件。
+`Bun.file()` 函数接受一个路径并返回一个 `BunFile` 实例。`BunFile` 扩展了 `Blob`，因此你可以以多种格式延迟读取文件。
 
-要将文件读取到 `Uint8Array` 实例中，可以使用 `.bytes()` 方法获取 `BunFile` 的内容。
+要将文件读取到 `Uint8Array` 中，请使用 `.bytes()`。
 
 ```ts
 const path = "/path/to/package.json";
@@ -20,4 +20,4 @@ byteArray.length; // 字节数组的长度
 
 ---
 
-有关在 Bun 中使用 `Uint8Array` 和其他二进制数据格式的更多信息，请参阅 [API > 二进制数据 > 类型化数组](/runtime/binary-data#typedarray)。
+有关在 Bun 中使用 `Uint8Array` 和其他二进制数据格式的更多信息，请参阅[类型化数组](/runtime/binary-data#typedarray)。

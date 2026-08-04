@@ -12,7 +12,7 @@ mode: center
 
 ---
 
-要对我们的应用进行_容器化_，我们需要定义一个 `Dockerfile`。该文件包含初始化容器、复制本地项目文件、安装依赖并启动应用的一系列指令。
+要将应用程序_容器化_，请定义一个 `Dockerfile`。它列出了初始化容器、将本地项目文件复制到容器中、安装依赖以及启动应用程序所需的指令。
 
 ```docker Dockerfile icon="docker"
 # 使用官方的 Bun 镜像
@@ -57,7 +57,7 @@ ENTRYPOINT [ "bun", "run", "index.ts" ]
 
 ---
 
-现在您有了 Docker 镜像，我们来了解 `.dockerignore`，它的语法与 `.gitignore` 相同，这里您需要指定不应出现在 Docker 构建任一阶段的文件/目录。一个忽略文件示例如下：
+接下来，添加一个 `.dockerignore` 文件。它使用与 `.gitignore` 相同的语法，并列出 Docker 构建的每个阶段都要排除的文件和目录。例如：
 
 ```txt .dockerignore icon="docker"
 node_modules
@@ -79,9 +79,9 @@ coverage*
 
 ---
 
-接着我们用 `docker build` 将此 `Dockerfile` 转换为一个_Docker 镜像_，即一个包含应用运行所需全部依赖和配置的自包含模板。
+运行 `docker build`，将此 `Dockerfile` 转换为一个_Docker 镜像_，这是一个自包含的模板，其中包含运行应用程序所需的所有依赖和配置。
 
-`-t` 参数允许我们为镜像命名，`--pull` 告诉 Docker 自动下载基础镜像（`oven/bun`）的最新版本。第一次构建会较慢，因为需要下载所有基础镜像和依赖。
+`-t` 标志用于命名镜像，`--pull` 告诉 Docker 下载基础镜像（`oven/bun`）的最新版本。首次构建需要更长时间，因为 Docker 会下载所有基础镜像和依赖。
 
 ```bash terminal icon="terminal"
 docker build --pull -t bun-hello-world .
@@ -107,11 +107,9 @@ docker build --pull -t bun-hello-world .
 
 ---
 
-我们已经构建了一个新的_Docker 镜像_。现在用该镜像启动一个真正运行的_容器_。
+现在使用 `docker run` 从 `bun-hello-world` 镜像启动一个正在运行的_容器_。`-d` 标志会以_分离_模式运行容器，而 `-p 3000:3000` 会将容器的 3000 端口映射到计算机上的 3000 端口。
 
-使用 `docker run` 开启一个新容器，基于 `bun-hello-world` 镜像。容器将以_后台_模式 (`-d`) 运行，并将容器的 3000 端口映射到本地机器的 3000 端口 (`-p 3000:3000`)。
-
-`run` 命令输出一个代表_容器 ID_的字符串。
+`run` 命令会打印_容器 ID_。
 
 ```sh terminal icon="terminal"
 docker run -d -p 3000:3000 bun-hello-world
@@ -127,7 +125,7 @@ docker run -d -p 3000:3000 bun-hello-world
 
 ---
 
-要停止容器，使用 `docker stop <container-id>`。
+要停止容器，请运行 `docker stop <container-id>`。
 
 ```sh terminal icon="terminal"
 docker stop 7f03e212a15ede8644379bce11a13589f563d3909a9640446c5bbefce993678d
@@ -135,7 +133,7 @@ docker stop 7f03e212a15ede8644379bce11a13589f563d3909a9640446c5bbefce993678d
 
 ---
 
-若找不到容器 ID，可以用 `docker ps` 列出所有运行中的容器。
+如果找不到容器 ID，`docker ps` 会列出所有正在运行的容器。
 
 ```sh terminal icon="terminal"
 docker ps
@@ -148,4 +146,4 @@ CONTAINER ID        IMAGE               COMMAND                  CREATED        
 
 ---
 
-就这样！更多高级用法请参考 [Docker 文档](https://docs.docker.com/)。
+如需了解更高级的用法，请参阅 [Docker 文档](https://docs.docker.com/)。

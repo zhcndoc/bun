@@ -3,11 +3,11 @@ title: "Node.js 兼容性"
 description: "Bun 对 Node.js API、模块和全局变量的兼容状态"
 ---
 
-每天，Bun 离实现 100% 的 Node.js API 兼容性更进一步。今天，诸如 Next.js、Express 等流行框架，以及面向 Node 的数百万个 `npm` 包都能与 Bun 配合使用。为确保兼容性，我们在 Bun 的每次发布之前，都会运行来自 Node.js 测试套件的成千上万项测试。
+Bun 每天都在向实现 100% 的 Node.js API 兼容性迈进。Next.js、Express 等热门框架，以及数百万个面向 Node.js 的 `npm` 包，都可以在 Bun 中运行。为确保兼容性，我们会在每次发布 Bun 之前，运行 Node.js 测试套件中的数千项测试。
 
-**如果某个包在 Node.js 中可用，但在 Bun 中不可用，我们将其视为 Bun 的 bug。** 请[提交问题](https://bun.com/issues)，我们会进行修复。
+**如果某个包在 Node.js 中可以运行，但在 Bun 中无法运行，我们会将其视为 Bun 的 bug。** [提交问题](https://bun.com/issues)，我们会修复它。
 
-本页面会定期更新，以反映最新版本 Bun 的兼容状态。以下信息反映了 Bun 与 _Node.js v23_ 的兼容性。
+此页面会定期更新，反映 Bun 与 _Node.js v23_ 兼容性的最新状态。
 
 ## 内置 Node.js 模块
 
@@ -45,11 +45,11 @@ description: "Bun 对 Node.js API、模块和全局变量的兼容状态"
 
 ### [`node:http`](https://nodejs.org/api/http.html)
 
-🟢 完全实现。当前传出客户端请求体是缓冲的，而非流式的。
+🟢 完全实现。传出的客户端请求正文会被缓冲，而不是进行流式传输。
 
 ### [`node:https`](https://nodejs.org/api/https.html)
 
-🟢 API 已实现，但 `Agent` 还未完全使用。
+🟢 API 已实现，但并不总是使用 `Agent`。
 
 ### [`node:os`](https://nodejs.org/api/os.html)
 
@@ -81,7 +81,7 @@ description: "Bun 对 Node.js API、模块和全局变量的兼容状态"
 
 ### [`node:timers`](https://nodejs.org/api/timers.html)
 
-🟢 推荐直接使用全局的 `setTimeout` 等函数。
+🟢 请改用全局的 `setTimeout` 及相关函数。
 
 ### [`node:tty`](https://nodejs.org/api/tty.html)
 
@@ -97,7 +97,7 @@ description: "Bun 对 Node.js API、模块和全局变量的兼容状态"
 
 ### [`node:async_hooks`](https://nodejs.org/api/async_hooks.html)
 
-🟡 实现了 `AsyncLocalStorage` 和 `AsyncResource`。v8 的 promise 钩子未调用，且其使用被 [强烈不建议](https://nodejs.org/docs/latest/api/async_hooks.html#async-hooks)。
+🟡 `AsyncLocalStorage` 和 `AsyncResource` 已实现。不会调用 V8 promise 钩子，强烈不建议使用它（[详见此处](https://nodejs.org/docs/latest/api/async_hooks.html#async-hooks)）。
 
 ### [`node:child_process`](https://nodejs.org/api/child_process.html)
 
@@ -105,7 +105,7 @@ description: "Bun 对 Node.js API、模块和全局变量的兼容状态"
 
 ### [`node:cluster`](https://nodejs.org/api/cluster.html)
 
-🟡 句柄和文件描述符不能在工作线程间传递，这意味着多进程 HTTP 请求负载均衡目前仅在 Linux 平台通过 `SO_REUSEPORT` 支持。其他部分已实现，但未经过严格测试。
+🟡 句柄和文件描述符无法在工作进程之间传递，因此仅在 Linux 上支持跨进程对 HTTP 请求进行负载均衡（通过 `SO_REUSEPORT`）。除此之外已实现，但尚未经过充分测试。
 
 ### [`node:crypto`](https://nodejs.org/api/crypto.html)
 
@@ -117,11 +117,11 @@ description: "Bun 对 Node.js API、模块和全局变量的兼容状态"
 
 ### [`node:http2`](https://nodejs.org/api/http2.html)
 
-🟡 已实现客户端和服务端（gRPC 测试套件通过率为 95.25%）。缺少 `options.allowHTTP1`、`options.enableConnectProtocol`、ALTSVC 扩展和 `http2stream.pushStream`。
+🟡 客户端和服务器均已实现（gRPC 测试套件通过率为 95.25%）。
 
 ### [`node:module`](https://nodejs.org/api/module.html)
 
-🟡 缺少 `syncBuiltinESMExports`、`Module#load()`。支持对 ESM 和 CJS 模块覆盖 `require.cache`。`module._extensions`、`module._pathCache`、`module._cache` 是无操作。`module.register` 未实现，推荐暂时用 [`Bun.plugin`](/runtime/plugins)。
+🟡 缺少 `syncBuiltinESMExports`、`Module#load()`。支持为 ESM 和 CJS 模块覆盖 `require.cache`。`module._extensions`、`module._pathCache`、`module._cache` 均为空操作。`module.register` 尚未实现；我们建议改用 [`Bun.plugin`](/runtime/plugins)。
 
 ### [`node:net`](https://nodejs.org/api/net.html)
 
@@ -129,7 +129,7 @@ description: "Bun 对 Node.js API、模块和全局变量的兼容状态"
 
 ### [`node:perf_hooks`](https://nodejs.org/api/perf_hooks.html)
 
-🟡 API 已实现，但 Node.js 测试套件尚未全部通过。
+🟡 API 已实现，但该模块的 Node.js 测试套件无法通过。
 
 ### [`node:process`](https://nodejs.org/api/process.html)
 
@@ -153,7 +153,7 @@ description: "Bun 对 Node.js API、模块和全局变量的兼容状态"
 
 ### [`node:vm`](https://nodejs.org/api/vm.html)
 
-🟡 核心功能和 ES 模块已实现，包括 `vm.Script`、`vm.createContext`、`vm.runInContext`、`vm.runInNewContext`、`vm.runInThisContext`、`vm.compileFunction`、`vm.isContext`、`vm.Module`、`vm.SourceTextModule`、`vm.SyntheticModule` 以及 `importModuleDynamically` 支持。选项如 `timeout` 和 `breakOnSigint` 完全支持。缺少 `vm.measureMemory` 和部分 `cachedData` 功能。
+🟡 核心功能和 ES 模块均已实现，包括 `vm.Script`、`vm.createContext`、`vm.runInContext`、`vm.runInNewContext`、`vm.runInThisContext`、`vm.compileFunction`、`vm.isContext`、`vm.Module`、`vm.SourceTextModule`、`vm.SyntheticModule` 以及对 `importModuleDynamically` 的支持。`timeout` 和 `breakOnSigint` 等选项均获完整支持。
 
 ### [`node:wasi`](https://nodejs.org/api/wasi.html)
 
@@ -165,27 +165,27 @@ description: "Bun 对 Node.js API、模块和全局变量的兼容状态"
 
 ### [`node:inspector`](https://nodejs.org/api/inspector.html)
 
-🔴 未实现。
+🟡 部分实现。支持 `Profiler` API（`Profiler.enable`、`Profiler.disable`、`Profiler.start`、`Profiler.stop`、`Profiler.setSamplingInterval`）。其他 inspector API 尚未实现。
 
 ### [`node:repl`](https://nodejs.org/api/repl.html)
 
-🔴 未实现。
+🟡 大部分已实现。`bun --interactive` 会启动兼容 Node.js 的 REPL。结果预览（需要基于 V8 inspector 的无副作用求值）、`useGlobal: true` 模式下对 `let`/`const`/`class` 绑定的制表符补全，以及部分 V8 特有的错误消息措辞存在差异。
 
 ### [`node:sqlite`](https://nodejs.org/api/sqlite.html)
 
-🔴 未实现。
+🟢 完全实现。`backup()` 会同步运行，并在复制期间阻塞事件循环（Node 会在工作线程上运行该操作）。作为数据库路径的 `Buffer`/`Uint8Array` 必须是有效的 UTF-8（Node 会直接传递原始字节；Bun 会对非 UTF-8 内容拒绝并返回 `ERR_INVALID_ARG_VALUE`）。在 macOS 上，Bun 使用系统的 `libsqlite3.dylib`；`loadExtension()`（以及在较旧的 macOS 版本上，`createSession()`/`applyChangeset()`）需要完整的 SQLite 构建版本——请在打开数据库前调用 `require("bun:sqlite").Database.setCustomSQLite(path)`。
 
 ### [`node:test`](https://nodejs.org/api/test.html)
 
-🟡 部分实现。缺少模拟（mocks）、快照（snapshots）和定时器。建议使用 [`bun:test`](/test)。
+🟡 部分实现。当测试文件在 `bun test` 下运行时，进程内 API 可用：测试、测试套件、子测试、钩子、`t.plan()`、`t.assert`、`assert.register()`、`t.waitFor()`、`getTestContext()` 以及 `t.mock`（函数/方法/获取器/设置器/属性模拟和模拟计时器）。缺少 `run()`、`node:test/reporters`、快照测试、`mock.module()`、代码覆盖率、`--test-only`、测试级别的 `signal`/`t.signal` 中止功能，以及 Node 的 `--test` CLI 运行模式。`test.only()` / `{only: true}` 可接受，但不会进行筛选。`concurrency` 会经过验证，但子测试始终串行运行。请改用 [`bun:test`](/test)。
 
 ### [`node:trace_events`](https://nodejs.org/api/tracing.html)
 
-🔴 未实现。
+🟢 完全实现。
 
 ## Node.js 全局变量
 
-下表列出了 Node.js 实现的所有全局变量以及 Bun 当前的兼容状态。
+以下列表涵盖 Node.js 实现的所有全局变量，以及 Bun 对每个全局变量的兼容性状态。
 
 ### [`AbortController`](https://developer.mozilla.org/en-US/docs/Web/API/AbortController)
 
@@ -297,7 +297,7 @@ description: "Bun 对 Node.js API、模块和全局变量的兼容状态"
 
 ### [`global`](https://nodejs.org/api/globals.html#global)
 
-🟢 已实现。它是包含全局命名空间中所有对象的对象。一般很少直接引用，因为其内容可直接使用，无需额外前缀，例如使用 `__dirname` 而非 `global.__dirname`。
+🟢 已实现。`global` 是一个包含全局命名空间中所有对象的对象。它很少被直接引用，因为其中的内容无需前缀即可使用，例如使用 `__dirname`，而不是 `global.__dirname`。
 
 ### [`globalThis`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/globalThis)
 
@@ -353,7 +353,7 @@ description: "Bun 对 Node.js API、模块和全局变量的兼容状态"
 
 ### [`process`](https://nodejs.org/api/process.html)
 
-🟡 大部分已实现。`process.binding`（Node.js 内部绑定，部分包依赖）部分实现。`process.title` 在 macOS 和 Linux 上目前无操作。`getActiveResourcesInfo`、`setActiveResourcesInfo`、`getActiveResources` 和 `setSourceMapsEnabled` 是存根。新接口如 `process.loadEnvFile` 和 `process.getBuiltinModule` 尚未实现。
+🟡 大部分已实现。`process.binding`（某些软件包依赖的 Node.js 内部绑定）已部分实现。`process.title` 在 macOS 和 Linux 上不起作用。`getActiveResourcesInfo`、`setActiveResourcesInfo`、`getActiveResources` 和 `setSourceMapsEnabled` 为空实现。较新的 API（如 `process.loadEnvFile`）尚未实现。
 
 ### [`queueMicrotask()`](https://developer.mozilla.org/en-US/docs/Web/API/queueMicrotask)
 

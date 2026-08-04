@@ -12,7 +12,7 @@ bun add zod
 
 ---
 
-这会将该包添加到 `package.json` 中的 `dependencies`。默认情况下，会使用 `^` 版本范围说明符，表示接受任何未来的次版本或补丁版本。
+这会将该包添加到 `package.json` 中的 `dependencies`。默认情况下，Bun 使用 `^` 范围说明符，该说明符接受未来的次要版本和补丁版本。
 
 ```json package.json icon="file-json"
 {
@@ -24,7 +24,7 @@ bun add zod
 
 ---
 
-要“固定”到包的确切版本，使用 `--exact`。这会将包添加到 `dependencies`，但不带 `^`，将项目固定到你安装的确切版本。
+要将项目固定为所安装的确切版本，请使用 `--exact`。这会在不带 `^` 的情况下将该包添加到 `dependencies`。
 
 ```sh terminal icon="terminal"
 bun add zod --exact
@@ -41,4 +41,4 @@ bun add zod@next
 
 ---
 
-完整的 Bun 包管理器文档请参阅 [文档 > 包管理器](/pm/cli/install)。
+请参阅 [`bun install`](/pm/cli/install)。

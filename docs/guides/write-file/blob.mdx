@@ -4,9 +4,7 @@ sidebarTitle: 写入 Blob
 mode: center
 ---
 
-这段代码将一个 `Blob` 写入磁盘上的指定路径。
-
-它使用快速的 [`Bun.write()`](/runtime/file-io#writing-files-bun-write) API 高效地写入数据。第一个参数是一个 _目标位置_，例如绝对路径或 `BunFile` 实例。第二个参数是要写入的 _数据_。
+使用 [`Bun.write()`](/runtime/file-io#writing-files-bun-write) 将 `Blob` 写入磁盘。第一个参数是_目标位置_，例如绝对路径或 `BunFile` 实例。第二个参数是要写入的_数据_。
 
 ```ts
 const path = "/path/to/file.txt";
@@ -27,4 +25,4 @@ await Bun.write(path, data);
 
 ---
 
-完整的 `Bun.write()` 文档请参见 [文档 > API > 文件 I/O](/runtime/file-io#writing-files-bun-write)。
+请参阅 [`Bun.write()`](/runtime/file-io#writing-files-bun-write)。

@@ -15,7 +15,7 @@ await proc.exited;
 
 ---
 
-第二个参数接受一个配置对象。
+第二个参数是一个配置对象。
 
 ```ts
 const proc = Bun.spawn(["echo", "Hello, world!"], {
@@ -29,7 +29,7 @@ const proc = Bun.spawn(["echo", "Hello, world!"], {
 
 ---
 
-默认情况下，子进程的 `stdout` 可以通过 `proc.stdout` 作为 `ReadableStream` 来读取。
+默认情况下，`proc.stdout` 是子进程 `stdout` 的 `ReadableStream`。
 
 ```ts
 const proc = Bun.spawn(["echo", "hello"]);
@@ -40,4 +40,4 @@ output; // => "hello\n"
 
 ---
 
-完整文档请参见 [文档 > API > 子进程](/runtime/child-process)。
+参阅[子进程](/runtime/child-process)。

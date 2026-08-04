@@ -6,7 +6,7 @@ mode: center
 
 [AWS Lambda](https://aws.amazon.com/lambda/) 是一项无服务器计算服务，允许您无需配置或管理服务器即可运行代码。
 
-在本指南中，我们将使用 `Dockerfile` 将 Bun HTTP 服务器部署到 AWS Lambda。
+本指南使用 `Dockerfile` 将 Bun HTTP 服务器部署到 AWS Lambda。
 
 <Note>
 	继续之前，请确保您已经具备：
@@ -21,8 +21,8 @@ mode: center
 ---
 
 <Steps>
-	<Step title="创建一个新的 Dockerfile">
-		确保您处于项目目录下，然后在项目根目录创建一个新的 `Dockerfile`。此文件包含初始化容器、将本地项目文件复制到容器、安装依赖以及启动应用的指令。
+	<Step title="创建新的 Dockerfile">
+		在项目根目录中创建一个新的 `Dockerfile`。此文件包含初始化容器、将本地项目文件复制到容器中、安装依赖项以及启动应用的指令。
 
     	```docker Dockerfile icon="docker"
     	# 使用官方 AWS Lambda 适配器镜像来处理 Lambda 运行时
@@ -56,10 +56,10 @@ mode: center
     	<Note>
     		确保启动命令对应您的应用入口点。如果您在 `package.json` 中有启动脚本，也可以使用 `CMD ["bun", "run", "start"]`。
 
-    		该镜像会在容器内使用 Bun 安装依赖并运行您的应用。如果您的应用没有依赖，可以省略 `RUN bun install --production --frozen-lockfile` 这行。
+    		如果您的应用没有依赖项，可以省略 `RUN bun install --production --frozen-lockfile` 这一行。
     	</Note>
 
-    	在项目根目录创建一个新的 `.dockerignore` 文件，里面列出应从容器镜像中 _排除_ 的文件或目录，例如 `node_modules`。这样可以让构建更快且更小：
+    	在项目根目录中创建一个新的 `.dockerignore` 文件。它列出了要从容器镜像中_排除_的文件和目录，例如 `node_modules`，这样可以让构建更快、镜像更小：
 
     	```docker .dockerignore icon="Docker"
     	node_modules
@@ -75,7 +75,7 @@ mode: center
     	```
     </Step>
     <Step title="构建 Docker 镜像">
-    	确保您处于包含 `Dockerfile` 的目录，然后构建 Docker 镜像。本例中，我们将镜像命名为 `bun-lambda-demo`，并标记为 `latest`。
+    	确保您位于包含 `Dockerfile` 的目录中，然后构建 Docker 镜像。本示例将镜像命名为 `bun-lambda-demo`，并将标签设置为 `latest`。
 
     	```bash terminal icon="terminal"
     	# cd /path/to/your/app
@@ -83,11 +83,11 @@ mode: center
     	```
     </Step>
     <Step title="创建 ECR 仓库">
-    	要将镜像推送到 AWS Lambda，首先需要创建一个 [ECR 仓库](https://aws.amazon.com/ecr/)。
+    	推送镜像之前，请创建一个用于存放镜像的 [ECR 仓库](https://aws.amazon.com/ecr/)。
 
-    	运行以下命令将会：
-    	- 在 `us-east-1` 区域创建一个名为 `bun-lambda-demo` 的 ECR 仓库
-    	- 获取仓库 URI，并将其导出为环境变量（可选，但便于接下来的步骤）
+    	以下命令：
+    	- 在 `us-east-1` 区域创建名为 `bun-lambda-demo` 的 ECR 仓库
+    	- 将仓库 URI 导出为环境变量。这是可选的，但可以简化后续步骤。
 
     	```bash terminal icon="terminal"
     	export ECR_URI=$(aws ecr create-repository --repository-name bun-lambda-demo --region us-east-1 --query 'repository.repositoryUri' --output text)
@@ -98,9 +98,9 @@ mode: center
     	```
 
     	<Note>
-    		如果您使用 IAM Identity Center (SSO) 或为 AWS CLI 配置了多个 profile，需要为 AWS CLI 命令添加 `--profile` 参数。
+    		如果您使用 IAM Identity Center（SSO），或已为 AWS CLI 配置 profile，请在 AWS CLI 命令中添加 `--profile` 参数。
 
-    		例如，若您的 profile 名为 `my-sso-app`，则使用 `--profile my-sso-app`。您可通过 `aws configure list-profiles` 查看可用的 profile。
+    		例如，如果您的 profile 名称为 `my-sso-app`，请使用 `--profile my-sso-app`。运行 `aws configure list-profiles` 可查看可用的 profile。
 
     		```bash terminal icon="terminal"
     		export ECR_URI=$(aws ecr create-repository --repository-name bun-lambda-demo --region us-east-1 --profile my-sso-app --query 'repository.repositoryUri' --output text)
@@ -129,8 +129,8 @@ mode: center
     	</Note>
 
     </Step>
-    <Step title="为 Docker 镜像打标签并推送到 ECR 仓库">
-    	确保您处于包含 `Dockerfile` 的目录下，然后对 Docker 镜像使用 ECR 仓库的 URI 打标签。
+    <Step title="标记 Docker 镜像并将其推送到 ECR 仓库">
+    	确保您位于包含 `Dockerfile` 的目录中，然后使用 ECR 仓库 URI 为 Docker 镜像添加标签。
 
     	```bash terminal icon="terminal"
     	docker tag bun-lambda-demo:latest ${ECR_URI}:latest
@@ -145,7 +145,7 @@ mode: center
     <Step title="创建 AWS Lambda 函数">
     	打开 **AWS 控制台** > **Lambda** > [**创建函数**](https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/create/function?intent=authorFromImage) > 选择 **容器映像**
 
-    	<Warning>请确认您选择了正确的区域，该链接默认为 `us-east-1`。</Warning>
+    	<Warning>确保您选择了正确的区域。此 URL 默认为 `us-east-1`。</Warning>
 
     	<Frame>
     	![创建函数](/images/guides/lambda1.png)
@@ -154,20 +154,20 @@ mode: center
     	为函数命名，例如 `my-bun-function`。
     </Step>
     <Step title="选择容器映像">
-    	然后，前往 **容器映像 URI** 部分，点击 **浏览映像**。选择刚才推送到 ECR 仓库的映像。
+    	前往 **容器映像 URI** 部分，然后点击 **浏览映像**。选择您推送到 ECR 仓库的镜像。
 
     	<Frame>
     	![选择容器仓库](/images/guides/lambda2.png)
     	</Frame>
 
-    	接着选择 `latest` 标签的映像，点击 **选择映像**。
+    	然后选择 `latest` 镜像并点击 **选择映像**。
 
     	<Frame>
     	![选择容器映像](/images/guides/lambda3.png)
     	</Frame>
     </Step>
     <Step title="配置函数">
-    	要获取函数的公共 URL，需要前往 **附加配置** > **网络** > **函数 URL**。
+    	要获取函数的公共 URL，请前往 **其他配置** > **网络** > **函数 URL**。
 
     	将其设置为 **启用**，认证类型选择 **NONE**。
 
@@ -176,7 +176,7 @@ mode: center
     	</Frame>
     </Step>
     <Step title="创建函数">
-    	点击页面底部的 **创建函数**，函数即被创建。
+    	点击页面底部的 **创建函数**。
 
     	<Frame>
     		![创建函数](/images/guides/lambda6.png)
@@ -184,14 +184,14 @@ mode: center
 
     </Step>
     <Step title="获取函数 URL">
-    	函数创建完成后，您会被重定向到函数页面，在 **“函数 URL”** 部分可以看到函数的 URL。
+    	函数创建完成后，您会被重定向到其页面。函数 URL 位于 **“函数 URL”** 部分。
 
     	<Frame>
     		![函数 URL](/images/guides/lambda5.png)
     	</Frame>
     </Step>
     <Step title="测试函数">
-    	🥳 您的应用已上线！要测试函数，您可以前往 **测试** 标签页，或直接调用函数 URL。
+    	您的应用现在已经上线。要测试该函数，可以前往 **测试** 选项卡，或直接调用函数 URL。
 
     	```bash terminal icon="terminal"
     	curl -X GET https://[your-function-id].lambda-url.us-east-1.on.aws/

@@ -3,17 +3,17 @@ title: TypeScript
 description: 在 Bun 中使用 TypeScript，包括类型定义和编译器选项
 ---
 
-要安装 Bun 内置 API 的 TypeScript 类型定义，请安装 `@types/bun`。
+要获取 Bun 内置 API 的 TypeScript 类型定义，请安装 `@types/bun`。
 
 ```zsh terminal icon="terminal"
 bun add -d @types/bun # 开发依赖
 ```
 
-此时，你应该能够在 TypeScript 文件中引用全局的 `Bun`，而编辑器不会报错。
+现在，你可以在 TypeScript 文件中引用 `Bun` 全局变量，编辑器不会再报错。
 
 ## 推荐的 `compilerOptions`
 
-Bun 支持顶层 await、JSX 以及带扩展名的 `.ts` 导入，而这些是 TypeScript 默认不允许的。下面是一个针对 Bun 项目的推荐 `compilerOptions` 配置，方便你使用这些特性且不会看到 TypeScript 的编译警告。
+Bun 支持顶层 await、JSX 以及带有 `.ts` 扩展名的导入，而 TypeScript 默认不允许这些特性。在 Bun 项目中使用以下 `compilerOptions`，这样 TypeScript 就不会针对这些特性发出警告。
 
 ```json tsconfig.json icon="file-json"
 {
@@ -48,7 +48,7 @@ Bun 支持顶层 await、JSX 以及带扩展名的 `.ts` 导入，而这些是 T
 }
 ```
 
-如果你在一个新目录运行 `bun init`，这个 `tsconfig.json` 会自动为你生成。（更严格的标志默认是禁用的。）
+在新目录中运行 `bun init` 会为你生成此 `tsconfig.json` 文件。
 
 ```sh terminal icon="terminal"
 bun init
@@ -56,4 +56,4 @@ bun init
 
 ## TypeScript 6 和 7
 
-如果你使用的是 TypeScript 6.0 或更高版本，还需要在 `compilerOptions` 中添加 `"types": ["bun"]`。详情请参见 [TypeScript 6 和 7](/typescript-6)。
+如果你使用的是 TypeScript 6.0 或更高版本，还需要在 `compilerOptions` 中添加 `"types": ["bun"]`。请参阅[TypeScript 6 和 7](/typescript-6)。

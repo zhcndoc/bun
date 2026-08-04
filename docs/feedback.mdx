@@ -4,67 +4,67 @@ description: 分享反馈、错误报告和功能请求
 mode: center
 ---
 
-无论您是发现了一个 bug，有性能问题，还是只是想建议改进，以下是如何提交有帮助的问题：
+以下是如何为错误、性能问题或功能请求提交一份有帮助的问题报告：
 
-<Callout icon="discord">一般问题请加入我们的 [Discord](https://bun.com/discord)。</Callout>
+<Callout icon="discord">如有一般性问题，请加入 [Discord](https://bun.com/discord)。</Callout>
 
 ## 报告问题
 
 <Steps>
 	<Step title="升级 Bun">
-		尝试使用 `bun upgrade` 升级 Bun 至最新版。这样可能无需提交问题就能解决您的问题。
+		使用 `bun upgrade` 将 Bun 升级到最新版本。这可能会在无需提交问题的情况下解决您的问题。
 
     	```bash terminal icon="terminal"
     	bun upgrade
     	```
 
-    	您也可以尝试最新的 canary 版本，它包含了尚未发布稳定版的最新更改和 bug 修复。
+    	您也可以尝试最新的 Canary 版本，其中包含尚未进入稳定版本的更改和 Bug 修复。
 
     	```bash terminal icon="terminal"
     	bun upgrade --canary
 
-    	# 若想切回稳定版
+    	# 恢复到稳定版本
     	bun upgrade --stable
     	```
 
     	如果升级后问题仍然存在，请继续下一步。
     </Step>
     <Step title="查看已有问题">
-    	先花点时间确认该问题是否已经被报告。如果已经有报告，请不要再新开一个，这样节省大家的时间，也能帮助我们更快地修复问题。
+    	在提交新问题之前，请检查该问题是否已经有人报告过。这样可以为所有人节省时间，并帮助我们专注于修复问题。
 
     	- 🔍 [**搜索已有问题**](https://github.com/oven-sh/bun/issues)
     	- 💬 [**查看讨论区**](https://github.com/oven-sh/bun/discussions)
 
     	如果找到相关问题，请添加一个 👍 表情或评论补充细节，而不是开新帖。
     </Step>
-    <Step title="提交问题">
-    	如果没有人报告该问题，请创建新问题或建议改进。
+    <Step title="报告问题">
+    	如果还没有人报告该问题，请提交一个新问题或提出改进建议。
 
     	- 🐞 [**报告 Bug**](https://github.com/oven-sh/bun/issues/new?template=2-bug-report.yml)
     	- ⚡ [**建议改进**](https://github.com/oven-sh/bun/issues/new?template=4-feature-request.yml)
 
     	请尽可能提供详细信息，包括：
     	- 清晰简洁的标题
-    	- 代码示例或复现步骤
-    	- 您使用的 Bun 版本（运行 `bun --version`）
-    	- 详细的描述（发生了什么，您期望发生什么，以及实际发生了什么）
-    	- 您使用的操作系统及版本
+    	- 代码示例或重现问题的步骤
+    	- 您正在使用的 Bun 版本（运行 `bun --version`）
+    	- 问题描述（您预期发生的情况以及实际发生的情况）
+    	- 您正在使用的操作系统及其版本
     		<Note>
-    			- MacOS 和 Linux：复制 `uname -mprs` 的输出
-    		  - Windows：在 powershell 控制台复制该命令的输出：
+    			- 对于 macOS 和 Linux：复制 `uname -mprs` 的输出
+    		  - 对于 Windows：在 PowerShell 控制台中复制以下命令的输出：
     				`"$([Environment]::OSVersion | ForEach-Object VersionString) $(if ([Environment]::Is64BitOperatingSystem) { "x64" } else { "x86" })"`
     		</Note>
     </Step>
 
 </Steps>
 
-Bun 团队会审核问题并尽快回复您！
+Bun 团队会审核该问题，并尽快回复您。
 
 ---
 
 ## 使用 `bun feedback`
 
-另外，您也可以使用 `bun feedback` 直接向 Bun 团队反馈意见、报告 bug 和提出功能请求。
+`bun feedback` 可将反馈、错误报告和功能请求直接发送给 Bun 团队。
 
 ```bash terminal icon="terminal"
 bun feedback "喜欢这个新版本！"
@@ -72,4 +72,4 @@ bun feedback report.txt details.log
 echo "请补充 X 的文档" | bun feedback --email you@example.com
 ```
 
-您可以通过文本参数、文件路径或管道输入来提供反馈。
+将反馈作为文本参数、文件路径或管道输入传递。

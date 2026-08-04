@@ -4,7 +4,7 @@ sidebarTitle: 使用迭代器流式传输
 mode: center
 ---
 
-在 Bun 中，[`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) 对象可以接受异步生成器函数作为其主体。这允许你在数据可用时将其流式传输到客户端，而无需等待整个响应准备完毕。
+在 Bun 中，[`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) 接受异步生成器函数作为其 body，因此你可以在数据可用时将其流式传输给客户端，而不必等待整个响应准备就绪。
 
 ```ts stream-iterator.ts icon="/icons/typescript.svg"
 Bun.serve({

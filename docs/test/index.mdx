@@ -5,7 +5,7 @@ description: "Bun 的快速内置 Jest 兼容测试运行器，支持 TypeScript
 
 import Test from "/snippets/cli/test.mdx";
 
-Bun 搭载了一个快速的内置 Jest 兼容测试运行器。测试在 Bun 运行时执行，并支持以下功能。
+Bun 自带一个快速且与 Jest 兼容的测试运行器。测试在 Bun 运行时中执行，并支持以下功能。
 
 - TypeScript 和 JSX
 - 生命周期钩子
@@ -24,7 +24,7 @@ Bun 搭载了一个快速的内置 Jest 兼容测试运行器。测试在 Bun �
 bun test
 ```
 
-测试使用 JavaScript 或 TypeScript 编写，采用类似 Jest 的 API。完整文档请参阅[编写测试](/test/writing-tests)。
+测试使用 JavaScript 或 TypeScript 编写，并采用类似 Jest 的 API。请参阅[编写测试](/test/writing-tests)。
 
 ```ts math.test.ts icon="/icons/typescript.svg"
 import { expect, test } from "bun:test";
@@ -36,12 +36,12 @@ test("2 + 2", () => {
 
 测试运行器会递归搜索工作目录中符合以下模式的文件：
 
-- `*.test.{js|jsx|ts|tsx}`
-- `*_test.{js|jsx|ts|tsx}`
-- `*.spec.{js|jsx|ts|tsx}`
-- `*_spec.{js|jsx|ts|tsx}`
+- `*.test.{js|jsx|ts|tsx|mjs|cjs|mts|cts}`
+- `*_test.{js|jsx|ts|tsx|mjs|cjs|mts|cts}`
+- `*.spec.{js|jsx|ts|tsx|mjs|cjs|mts|cts}`
+- `*_spec.{js|jsx|ts|tsx|mjs|cjs|mts|cts}`
 
-你可以通过向 `bun test` 传入额外的位置参数来筛选要运行的 _测试文件_。路径匹配任一筛选条件的测试文件都会被执行。通常，这些筛选条件是文件或目录名；目前尚不支持 glob 模式。
+若要筛选要运行的_测试文件_，请向 `bun test` 传递其他位置参数。路径与任一筛选条件匹配的测试文件都会运行。筛选条件通常是文件名或目录名；目前尚不支持 glob 模式。
 
 ```bash terminal icon="terminal"
 bun test <filter> <filter> ...
@@ -60,7 +60,7 @@ bun test --test-name-pattern addition
 bun test ./test/specific-file.test.ts
 ```
 
-测试运行器在单一进程中运行所有测试。它会加载所有 `--preload` 脚本（详见[生命周期](/test/lifecycle)），然后运行全部测试。如果测试失败，运行器会以非零退出码退出。
+测试运行器会在单个进程中运行所有测试。它会加载所有 `--preload` 脚本（请参阅[生命周期](/test/lifecycle)），然后运行所有测试。如果测试失败，测试运行器会以非零退出代码退出。
 
 ## CI/CD 集成
 
@@ -68,7 +68,7 @@ bun test ./test/specific-file.test.ts
 
 ### GitHub Actions
 
-`bun test` 会自动检测是否在 GitHub Actions 中运行，且会直接向控制台输出 GitHub Actions 注释。
+`bun test` 会自动检测其是否在 GitHub Actions 中运行，并直接向控制台输出 GitHub Actions 注释。
 
 无需额外配置，只需在工作流程中安装 `bun` 并运行 `bun test`。
 
@@ -92,23 +92,21 @@ jobs:
         run: bun test
 ```
 
-随后，就会看到 GitHub Actions 注释。
-
 ### JUnit XML 报告（GitLab 等）
 
-要结合 JUnit XML 报告器使用 `bun test`，可以搭配 `--reporter=junit` 和 `--reporter-outfile`：
+要写入 JUnit XML 报告，请将 `--reporter=junit` 与 `--reporter-outfile` 一起传入。
 
 ```sh terminal icon="terminal"
 bun test --reporter=junit --reporter-outfile=./bun.xml
 ```
 
-这会继续像往常一样输出到 stdout/stderr，且在测试运行结束时写入指定路径的 JUnit XML 报告。
+`bun test` 仍会像往常一样写入 stdout/stderr，并在运行结束时将 JUnit XML 报告写入指定路径。
 
 JUnit XML 是 CI/CD 管道中报告测试结果的流行格式。
 
 ## 超时设置
 
-使用 `--timeout` 标志指定每个测试的超时时间（毫秒）。若测试超时，则判为失败。默认值为 `5000`。
+使用 `--timeout` 标志以毫秒为单位指定_每个测试_的超时时间。如果测试超时，则会被标记为失败。默认值为 `5000`。
 
 ```bash terminal icon="terminal"
 # 默认值是 5000
@@ -117,7 +115,7 @@ bun test --timeout 20
 
 ## 并发测试执行
 
-默认情况下，Bun 在每个测试文件内顺序执行所有测试。你可以启用并发执行，让异步测试并行运行，这能显著加速测试套件中的独立测试。
+默认情况下，Bun 会在每个测试文件中按顺序运行所有测试。并发执行会并行运行异步测试，从而加快包含相互独立测试的测试套件。
 
 ### `--concurrent` 标志
 
@@ -127,7 +125,7 @@ bun test --timeout 20
 bun test --concurrent
 ```
 
-启用该标志时，所有测试将并行运行，除非显式加上 `test.serial` 标记。
+启用此标志后，除非测试标记为 `test.serial`，否则所有测试都会并行运行。
 
 ### `--max-concurrency` 标志
 
@@ -230,7 +228,7 @@ retry = 3
 
 ## 重新运行测试
 
-使用 `--rerun-each` 标志让每个测试运行多次，有助于检测不稳定或非确定性的测试失败。
+使用 `--rerun-each` 标志多次运行每个测试。这有助于发现不稳定或非确定性的测试失败。
 
 ```sh terminal icon="terminal"
 bun test --rerun-each 100
@@ -244,7 +242,7 @@ bun test --rerun-each 100
 bun test --randomize
 ```
 
-启用 `--randomize` 时，随机种子会显示在测试摘要中：
+使用 `--randomize` 时，用于随机化的种子会显示在测试摘要中：
 
 ```sh terminal icon="terminal"
 bun test --randomize
@@ -260,18 +258,18 @@ Ran 10 tests across 2 files. [50.00ms]
 
 ### 使用 `--seed` 实现可复现的随机顺序
 
-用 `--seed` 标志指定随机种子，以便调试顺序依赖失败时复现相同测试顺序。
+使用 `--seed` 标志指定随机化种子，以便在调试依赖执行顺序的失败测试时复现相同的测试顺序。
 
 ```sh terminal icon="terminal"
 # 复现之前的随机运行顺序
 bun test --seed 123456
 ```
 
-`--seed` 标志隐含启用 `--randomize`，因此无需同时指定两者。使用相同种子值总是产生相同的测试执行顺序，使调试间歇性失败更为简单。
+`--seed` 标志会隐式启用 `--randomize`，因此无需同时指定这两个标志。相同的种子始终会产生相同的测试执行顺序。
 
 ## 失败即停止 `--bail`
 
-使用 `--bail` 标志，在达到指定失败次数后提前中止测试运行。默认情况下，Bun 会执行全部测试并报告所有失败，但在 CI 环境中，提前终止可减少 CPU 资源占用。
+使用 `--bail` 标志，在测试失败达到指定次数后中止测试运行。默认情况下，Bun 会运行所有测试并报告所有失败，但在 CI 中，提前停止测试并减少 CPU 使用量可能更为合适。
 
 ```sh terminal icon="terminal"
 # 发生 1 次失败即停止
@@ -283,7 +281,7 @@ bun test --bail=10
 
 ## 监视模式
 
-类似于 `bun run`，你可以传入 `--watch` 标志，让 `bun test` 监控文件变化并重新运行测试。
+与 `bun run` 类似，`bun test` 接受 `--watch` 标志，以监视更改并重新运行测试。
 
 ```bash terminal icon="terminal"
 bun test --watch
@@ -300,13 +298,13 @@ Bun 支持以下生命周期钩子：
 | `afterEach`    | 每个测试结束后执行             |
 | `afterAll`     | 所有测试完成后执行一次         |
 
-这些钩子可在测试文件中定义，或放在通过 `--preload` 预加载的单独文件中。
+在测试文件中定义钩子，或在使用 `--preload` 标志预加载的单独文件中定义钩子。
 
 ```sh terminal icon="terminal"
 bun test --preload ./setup.ts
 ```
 
-完整文档见[测试 > 生命周期](/test/lifecycle)。
+请参阅[生命周期](/test/lifecycle)。
 
 ## 模拟
 
@@ -324,7 +322,7 @@ test("random", () => {
 });
 ```
 
-另外，也可使用 `jest.fn()`，其行为相同。
+或者使用 `jest.fn()`；其行为完全相同。
 
 ```ts title="math.test.ts" icon="/icons/typescript.svg"
 import { test, expect, mock } from "bun:test"; // [!code --]
@@ -334,7 +332,7 @@ const random = mock(() => Math.random()); // [!code --]
 const random = jest.fn(() => Math.random()); // [!code ++]
 ```
 
-完整文档见[测试 > 模拟](/test/mocks)。
+请参阅[模拟](/test/mocks)。
 
 ## 快照测试
 
@@ -349,13 +347,13 @@ test("snapshot", () => {
 });
 ```
 
-要更新快照，使用 `--update-snapshots` 标志。
+要更新快照，请使用 `--update-snapshots` 标志。
 
 ```sh terminal icon="terminal"
 bun test --update-snapshots
 ```
 
-完整文档见[测试 > 快照](/test/snapshots)。
+请参阅[快照](/test/snapshots)。
 
 ## UI 与 DOM 测试
 
@@ -363,9 +361,9 @@ Bun 兼容流行的 UI 测试库：
 
 - [HappyDOM](https://github.com/capricorn86/happy-dom)
 - [DOM Testing Library](https://testing-library.com/docs/dom-testing-library/intro/)
-- [React Testing Library](https://testing-library.com/docs/react-testing-library/intro)
+- [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
 
-完整文档见[测试 > DOM 测试](/test/dom)。
+请参阅 [DOM 测试](/test/dom)。
 
 ## 性能
 
@@ -375,7 +373,7 @@ Bun 的测试运行器非常快速。
 
 ## AI 代理集成
 
-在使用 Bun 的测试运行器和 AI 编码助手时，你可以开启更安静的输出模式，以提高可读性，减少上下文噪音。此功能在保留重要失败信息的同时，最小化测试输出的详尽程度。
+当你将 Bun 的测试运行器与 AI 编程助手结合使用时，可以启用更安静的输出，在保留失败详情的同时去除其余噪音。
 
 ### 环境变量
 
@@ -399,8 +397,6 @@ CLAUDECODE=1 bun test
 
 # 仍显示失败和摘要，隐藏通过测试的详细输出
 ```
-
-此功能特别适合 AI 辅助开发流程，在减少输出量的同时保持对失败测试的可见性，提高上下文效率。
 
 ---
 

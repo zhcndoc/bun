@@ -5,44 +5,43 @@ description: Bun 的 Bindgen
 
 <Note>本文档面向 Bun 的维护者和贡献者，描述内部实现细节。</Note>
 
-这个在 2024 年 12 月引入代码库的新绑定生成器，会扫描 `*.bind.ts` 文件以查找函数和类的定义，并生成 JavaScript 与原生代码之间的胶水代码以实现互操作。
+绑定生成器会扫描 `*.bind.ts` 文件，以查找函数和类定义，并生成用于 JavaScript 与原生代码互操作的胶水代码。
 
-目前还有其他代码生成器和系统实现类似功能，以下这些将最终被完全淘汰并由此生成器取代：
+还有其他代码生成器和系统可以实现类似功能；以下这些最终都会被逐步淘汰，转而采用此生成器：
 
 - “Classes generator”，转换 `*.classes.ts` 用于自定义类。
 - “JS2Native”，允许从 `src/js` 到原生代码的临时调用。
 
-## 在 Zig 中创建 JS 函数
+## 在 Rust 中创建 JS 函数
 
-定义一个简单函数实现文件，比如 `add`
+给定一个实现函数的文件，例如 `add`：
 
-```zig src/jsc/math.zig
-pub fn add(global: *jsc.JSGlobalObject, a: i32, b: i32) !i32 {
-    return std.math.add(i32, a, b) catch {
-        // 绑定函数可以返回 `error.OutOfMemory` 和 `error.JSError`。
-        // 其他如来自 `std.math.add` 的 `error.Overflow` 必须转换。
-        // 注意错误提示要明确。
-        return global.throwPretty("整数相加时溢出", .{});
-    };
+```rust src/jsc/bindgen_test.rs
+use crate::{JSGlobalObject, JsResult};
+use crate::r#gen::bindgen_test as generated;
+
+pub fn add(global: &JSGlobalObject, a: i32, b: i32) -> JsResult<i32> {
+    match a.checked_add(b) {
+        Some(v) => Ok(v),
+        None => {
+            // 绑定函数可以直接传播内存不足和 JS 异常；
+            // 其他失败（例如此处的整数溢出）必须转换为抛出的错误。记得提供描述性信息。
+            Err(global.throw_pretty(format_args!("Integer overflow while adding")))
+        }
+    }
 }
-
-const gen = bun.gen.math; // "math" 为此文件的基本名
-
-const std = @import("std");
-const bun = @import("bun");
-const jsc = bun.jsc;
 ```
 
-然后用 `.bind.ts` 文件描述 API schema。绑定文件位置与 Zig 文件并列。
+然后使用 `.bind.ts` 文件描述 API 模式。绑定文件位于 Rust 文件旁边。
 
-```ts src/jsc/math.bind.ts icon="/icons/typescript.svg"
-import { t, fn } from "bindgen";
+```ts src/jsc/bindgen_test.bind.ts icon="/icons/typescript.svg"
+import { fn, t } from "bindgen";
 
 export const add = fn({
   args: {
     global: t.globalObject,
     a: t.i32,
-    b: t.i32.default(1),
+    b: t.i32.default(-1),
   },
   ret: t.i32,
 });
@@ -55,31 +54,44 @@ export const add = fn({
  * 如果未提供参数则抛出异常。
  * 对超出范围的数字使用模运算进行环绕。
  */
-declare function add(a: number, b: number = 1): number;
+declare function add(a: number, b: number = -1): number;
 ```
 
-代码生成器会提供 `bun.gen.math.jsAdd`，它是原生函数实现。传递给 JavaScript 时，使用 `bun.gen.math.createAddCallback(global)`。`src/js/` 下的 JS 文件可以用 `$bindgenFn("math.bind.ts", "add")` 来获取该实现句柄。
+代码生成器会生成一个 C++ thunk，用于验证和强制转换 JS 参数，然后调用 Rust 实现。在 Rust 端，生成的模块可通过 `crate::r#gen::<basename>` 访问（对于 `bindgen_test.bind.ts`，即 `crate::r#gen::bindgen_test`）。要构造一个包装原生实现的 `JSFunction`，请使用 `generated::create_add_callback(global)`：
+
+```rust
+use crate::r#gen::bindgen_test as generated;
+
+let js_fn: JSValue = generated::create_add_callback(global);
+```
+
+在 `src/js/` 中的 JS 文件里，`$bindgenFn("bindgen_test.bind.ts", "add")` 会返回一个指向该实现的句柄。
+
+导出的 bindgen 函数在 Rust 端会使用 snake_case 命名
+（`requiredAndOptionalArg` → `required_and_optional_arg`），生成的回调构造函数也遵循相同的命名约定
+（`create_required_and_optional_arg_callback`）。
 
 ## 字符串
 
-接收字符串的类型有 [`t.DOMString`](https://webidl.spec.whatwg.org/#idl-DOMString)、[`t.ByteString`](https://webidl.spec.whatwg.org/#idl-ByteString) 和 [`t.USVString`](https://webidl.spec.whatwg.org/#idl-USVString)，它们直接映射到各自的 WebIDL 对应类型，转换逻辑略有不同。Bindgen 会在所有情况下将 BunString 传给原生代码。
+要接收字符串，请使用 [`t.DOMString`](https://webidl.spec.whatwg.org/#idl-DOMString)、[`t.ByteString`](https://webidl.spec.whatwg.org/#idl-ByteString) 或 [`t.USVString`](https://webidl.spec.whatwg.org/#idl-USVString)。这些类型直接对应于它们在 WebIDL 中的对应类型，并且具有略有不同的转换逻辑。在所有情况下，Bindgen 都会将 `bun_core::String` 传递给原生代码。
 
 不确定时，使用 DOMString。
 
-`t.UTF8String` 可以代替 `t.DOMString`，但是会调用 `bun.String.toUTF8`。原生回调将获得传入的 `[]const u8`（WTF-8 编码数据），函数返回后释放该数据。
+`t.UTF8String` 可以替代 `t.DOMString`，但会立即转换为 UTF-8。
+原生回调会接收一个 `&[u8]` 切片（WTF-8 数据），并在函数返回后释放。
 
-来自 WebIDL 规范的简要说明：
+WebIDL 规范要点：
 
-- ByteString 仅能包含有效的 latin1 字符。虽然 bun.String 很可能已是 8 位格式，但不能假设一定如此。
-- USVString 不会包含无效的代理对，即文本能够正确用 UTF-8 表示。
-- DOMString 最宽松，同时也是最推荐的方案。
+- ByteString 只能包含有效的 latin1 字符。不能假定 `bun_core::String` 已经是 8 位格式，但这种情况极有可能。
+- USVString 不包含无效的代理对，因此其文本可以正确地表示为 UTF-8。
+- DOMString 的限制最少，同时也是最推荐的策略。
 
 ## 函数变体
 
-`variants` 可以指定多个变体（也叫重载）。
+`variants` 键声明函数的多个变体（也称为重载）。
 
-```ts src/jsc/math.bind.ts icon="/icons/typescript.svg"
-import { t, fn } from "bindgen";
+```ts
+import { fn, t } from "bindgen";
 
 export const action = fn({
   variants: [
@@ -99,35 +111,33 @@ export const action = fn({
 });
 ```
 
-在 Zig 中，每个变体会有一个编号，基于 schema 中定义的顺序。
+每个变体都会获得一个带编号的 Rust 函数：
 
-```zig
-fn action1(a: i32) i32 {
-  return a;
+```rust
+pub fn action1(a: i32) -> i32 {
+    a
 }
 
-fn action2(a: bun.String) bun.String {
-  return a;
+pub fn action2(a: bun_core::String) -> bun_core::String {
+    a
 }
 ```
 
 ## `t.dictionary`
 
-`dictionary` 是 JavaScript 对象的定义，通常用于函数的输入参数。对于函数输出，通常声明一个类类型更聪明，可以添加方法和解构功能。
+`dictionary` 描述一个 JavaScript 对象，通常用作函数输入。对于函数输出，建议使用类类型，以便添加方法并支持解构。
 
 ## 枚举
 
-使用 [WebIDL 的枚举类型](https://webidl.spec.whatwg.org/#idl-enums)，可以使用：
+`t.stringEnum` 创建一个 [WebIDL 枚举](https://webidl.spec.whatwg.org/#idl-enums)，并为其生成一个新的枚举类型。
 
-- `t.stringEnum`：创建并代码生成一个新的枚举类型。
-- `t.zigEnum`：基于已有代码库内的 Zig 枚举派生一个 bindgen 类型。
-
-`fmt.zig` / `bun:internal-for-testing` 中使用 `stringEnum` 的示例：
+以下是 `fmt_jsc.bind.ts` / `bun:internal-for-testing` 中 `stringEnum` 的示例：
 
 ```ts
-export const Formatter = t.stringEnum("highlight-javascript", "escape-powershell");
+export const Formatter = t.stringEnum("highlight-javascript", "highlight-javascript-redacted", "escape-powershell");
 
 export const fmtString = fn({
+  implNamespace: "js_bindings",
   args: {
     global: t.globalObject,
     code: t.UTF8String,
@@ -137,36 +147,77 @@ export const fmtString = fn({
 });
 ```
 
-WebIDL 强烈建议使用 kebab-case（连接符命名）作为枚举值，以保持与现有 Web API 的一致性。
+在 Rust 端，该枚举对应为一个 `#[repr(u8)]` 枚举。Bindgen
+在生成 C++ `enum class` 之前，会对 `t.stringEnum` 的值按字母顺序进行**排序**，因此判别值必须与生成的头文件顺序匹配，而不是 `.bind.ts` 中的声明顺序：
 
-### 从 Zig 代码派生枚举
+```rust
+pub mod js_bindings {
+    #[repr(u8)]
+    #[derive(Copy, Clone, Eq, PartialEq)]
+    pub enum Formatter {
+        EscapePowershell = 0,
+        HighlightJavascript = 1,
+        HighlightJavascriptRedacted = 2,
+    }
 
-TODO: zigEnum
+    pub fn fmt_string(
+        global: &JSGlobalObject,
+        code: &[u8],
+        formatter_id: Formatter,
+    ) -> JsResult<bun_core::String> {
+        // ...
+    }
+}
+```
+
+WebIDL 强烈建议枚举值使用 kebab-case，以与现有 Web API 保持一致。
+
+## `implNamespace`
+
+在 `fn({...})` 上设置 `implNamespace: "foo"` 会将生成的调用路由到
+`crate::<basename>::foo::fn_name`，而不是 `crate::<basename>::fn_name`。使用此选项可将相关的绑定实现归入一个子模块中。
 
 ## `t.oneOf`
 
-`oneOf` 是两个或以上类型的联合。在 Zig 中表示为 `union(enum)`。
-
-TODO：
+`oneOf` 是两个或多个类型的联合体。它表示为一个 Rust
+`enum`，每种成员类型对应一个变体。
 
 ## 属性
 
-有一组属性可链式调用到 `t.*` 类型上。所有类型共有：
+属性可以链式附加到 `t.*` 类型上。对于所有类型：
 
 - `.required`（仅用于字典参数）
 - `.optional`（仅用于函数参数）
 - `.default(T)`
 
-当值为可选时，会被转换为 Zig 的可选类型。
+当值为 `.optional` 时，它会被转换为 Rust 的 `Option<T>`：
 
-根据类型不同，可用的属性更多。查看自动补全中的类型定义以获取更多详情。注意上述三个属性只能选一个，且必须写在末尾。
+```ts
+export const requiredAndOptionalArg = fn({
+  args: {
+    a: t.boolean,
+    b: t.usize.optional,
+    c: t.i32.enforceRange(0, 100).default(42),
+    d: t.u8.optional,
+  },
+  ret: t.i32,
+});
+```
+
+```rust
+pub fn required_and_optional_arg(a: bool, b: Option<usize>, c: i32, d: Option<u8>) -> i32 {
+    // ...
+}
+```
+
+根据类型的不同，还提供了更多属性。详情请参阅自动补全中的类型定义。这三个属性中只能应用一个，并且必须最后应用。
 
 ### 整数属性
 
-整型类型允许用 `clamp` 或 `enforceRange` 自定义溢出行为
+整数类型可以使用 `clamp` 或 `enforceRange` 来自定义溢出行为：
 
 ```ts
-import { t, fn } from "bindgen";
+import { fn, t } from "bindgen";
 
 export const add = fn({
   args: {
@@ -177,31 +228,31 @@ export const add = fn({
     b: t.u16,
     // 限制在任意范围，带默认值
     c: t.i32.enforceRange(0, 1000).default(5),
-    // 限制在任意范围，或为 null
+    // 限制在任意范围，或为 None
     d: t.u16.clamp(0, 10).optional,
   },
   ret: t.i32,
 });
 ```
 
-还有各种 Node.js 验证函数，如 `validateInteger`、`validateNumber` 等。实现 Node.js API 时应使用这些函数，以保证错误信息与 Node.js 完全一致。
+Node.js 验证器函数（例如 `validateInteger` 和 `validateNumber`）也可用。在实现 Node.js API 时使用这些函数，可以使错误消息与 Node 完全一致。
 
-与 WebIDL 的 `enforceRange` 不同， Node.js 的 `validate*` 函数对输入更严格。例如，Node 的数字验证会检查 `typeof value === 'number'`，而 WebIDL 使用 `ToNumber` 进行有损转换。
+与源自 WebIDL 的 `enforceRange` 不同，`validate*` 函数对其接受的输入限制更加严格。例如，Node 的数值验证器会检查 `typeof value === 'number'`，而 WebIDL 使用 `ToNumber` 进行有损转换。
 
 ```ts
-import { t, fn } from "bindgen";
+import { fn, t } from "bindgen";
 
 export const add = fn({
   args: {
     global: t.globalObject,
     // 非数字则抛出
     a: t.f64.validateNumber(),
-    // i32 范围有效
-    a: t.i32.validateInt32(),
-    // f64，且在安全整数范围内
-    b: t.f64.validateInteger(),
-    // f64，在指定范围内
-    c: t.f64.validateNumber(-10000, 10000),
+    // 在 i32 范围内有效
+    b: t.i32.validateInt32(),
+    // 在安全整数范围内的 f64
+    c: t.f64.validateInteger(),
+    // 在给定范围内的 f64
+    d: t.f64.validateNumber(-10000, 10000),
   },
   ret: t.i32,
 });
@@ -209,7 +260,7 @@ export const add = fn({
 
 ## 回调
 
-TODO
+TODO。
 
 ## 类
 

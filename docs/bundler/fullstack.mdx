@@ -58,16 +58,14 @@ bun run app.ts
 
 ### 将 HTML 导入作为路由
 
-Web 以 HTML 开始，Bun 的全栈开发服务器也是如此。
-
-要指定前端入口点，请将 HTML 文件导入到你的 JavaScript/TypeScript/TSX/JSX 文件中。
+要为前端指定入口点，请将 HTML 文件导入 JavaScript/TypeScript/TSX/JSX 文件。
 
 ```ts title="app.ts" icon="/icons/typescript.svg"
 import dashboard from "./dashboard.html";
 import homepage from "./index.html";
 ```
 
-这些 HTML 文件被用作 Bun 开发服务器中的路由，传递给 `Bun.serve()`。
+将导入的 HTML 文件作为路由传递给 `Bun.serve()`。
 
 ```ts title="app.ts" icon="/icons/typescript.svg"
 Bun.serve({
@@ -92,7 +90,7 @@ Bun.serve({
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Home</title>
+    <title>首页</title>
     <link rel="stylesheet" href="./reset.css" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -110,7 +108,7 @@ Bun.serve({
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Home</title>
+    <title>首页</title>
     <link rel="stylesheet" href="/index-[hash].css" />
   </head>
   <body>
@@ -205,19 +203,16 @@ Bun.serve({
 
 ### 开发模式功能
 
-当 `development` 为 `true` 时，Bun 会：
+当 `development` 为 `true` 时，Bun：
 
-- 在响应中包含 SourceMap 头，方便调试工具显示原始源码
+- 在响应中包含 SourceMap 标头，以便开发者工具显示原始源代码
 - 禁用代码压缩
 - 每次请求 `.html` 文件时重新打包资源
-- 启用热模块重载（除非设置 `hmr: false`）
-- 将浏览器中的控制台日志回显到终端
+- 启用热模块重载（除非设置了 `hmr: false`）
 
 ### 高级开发配置
 
-`Bun.serve()` 支持将浏览器中的控制台日志回显到终端。
-
-要启用此功能，在 `Bun.serve()` 的开发模式对象中传递 `console: true`。
+要将浏览器中的控制台日志回显到终端，请在 `Bun.serve()` 的 `development` 对象中传入 `console: true`。
 
 ```ts title="src/backend.ts" icon="/icons/typescript.svg"
 import homepage from "./index.html";
@@ -238,7 +233,7 @@ Bun.serve({
 });
 ```
 
-设置 `console: true` 后，Bun 会通过热模块重载的 WebSocket 连接将浏览器的日志流式传输到终端。
+Bun 通过现有的 HMR WebSocket 连接发送日志。
 
 ### 开发 vs 生产
 
@@ -253,17 +248,17 @@ Bun.serve({
 
 ## 生产模式
 
-热重载和 `development: true` 有助于快速迭代，但生产环境下你的服务器应尽可能快速且依赖尽可能少。
+热重载和 `development: true` 有助于快速迭代，但在生产环境中，你的服务器应尽可能快速，并尽量减少外部依赖。
 
 ### 预构建打包（推荐）
 
-从 Bun v1.2.17 开始，你可以使用 `Bun.build` 或 `bun build` 预先打包全栈应用。
+从 Bun v1.2.17 开始，你可以使用 `Bun.build` 或 `bun build` 提前打包完整的全栈应用。
 
 ```bash terminal icon="terminal"
 bun build --target=bun --production --outdir=dist ./src/index.ts
 ```
 
-当 Bun 的打包器检测到服务器端代码中导入 HTML 文件时，会将引用的 JS/TS/TSX/JSX 和 CSS 文件打包成一个 `Bun.serve()` 可用的清单对象。
+当 Bun 的打包器从服务器端代码中发现 HTML 导入时，它会将引用的 JavaScript/TypeScript/TSX/JSX 和 CSS 文件打包到一个清单对象中，供 `Bun.serve()` 用于提供资源。
 
 ```ts title="src/backend.ts" icon="/icons/typescript.svg"
 import { serve } from "bun";
@@ -276,12 +271,12 @@ serve({
 
 ### 运行时打包
 
-当构建步骤太复杂时，你可以在 `Bun.serve()` 设置 `development: false`。
+如果你不想添加构建步骤，可以在 `Bun.serve()` 中设置 `development: false`。
 
 这将：
 
-- 启用内存中缓存打包资源。首次请求 `.html` 文件时 Bun 自行打包，并缓存结果直到服务器重启。
-- 启用 `Cache-Control` 以及 `ETag` 头
+- 启用打包资源的内存缓存。Bun 会在首次请求 `.html` 文件时延迟打包资源，并将结果缓存到内存中，直到服务器重启。
+- 启用 `Cache-Control` 和 `ETag` 响应头
 - 压缩 JavaScript/TypeScript/TSX/JSX 文件
 
 ```ts title="src/backend.ts" icon="/icons/typescript.svg"
@@ -393,7 +388,7 @@ serve({
 
         // 返回响应
         return Response.json({
-          message: "Data processed",
+          message: "数据已处理",
           page: parseInt(page),
           authenticated: !!auth,
         });
@@ -411,7 +406,7 @@ Bun 的打包器插件在打包静态路由时同样支持。
 
 ### TailwindCSS 插件
 
-你可以通过安装 `tailwindcss` 包和 `bun-plugin-tailwind` 插件使用 TailwindCSS。
+要使用 TailwindCSS，请安装 `tailwindcss` 包和 `bun-plugin-tailwind` 插件。
 
 ```bash terminal icon="terminal"
 bun add tailwindcss bun-plugin-tailwind
@@ -422,8 +417,7 @@ bun add tailwindcss bun-plugin-tailwind
 plugins = ["bun-plugin-tailwind"]
 ```
 
-这将允许你在 HTML 和 CSS 文件中使用 TailwindCSS 实用程序类。  
-在项目中的某处导入 `tailwindcss`：
+现在，你可以在 HTML 和 CSS 文件中使用 TailwindCSS 工具类。在项目中的某个位置导入 `tailwindcss`：
 
 ```html title="index.html" icon="file-code"
 <!doctype html>
@@ -459,7 +453,7 @@ plugins = ["bun-plugin-tailwind"]
 
 ### 自定义插件
 
-任何导出有效打包器插件对象（基本包含 `name` 和 `setup` 字段）的 JS 文件或模块，都可以放入插件数组：
+任何导出有效打包器插件对象（包含 `name` 和 `setup` 字段的对象）的 JS 文件或模块都可以放置在 plugins 数组中：
 
 ```toml title="bunfig.toml" icon="settings"
 [serve.static]
@@ -486,16 +480,16 @@ const myPlugin: BunPlugin = {
 export default myPlugin;
 ```
 
-Bun 会延迟解析和加载每个插件，并使用它们打包你的路由。
+Bun 会延迟解析并加载每个插件，并使用它们来打包你的路由。
 
 <Note>
-  这当前写在 `bunfig.toml` 中，是为了在未来整合 `bun build` CLI 时能静态获知所用插件。这些插件可在 `Bun.build()` JS API
-  下工作，但 CLI 尚未支持。
+  插件位于 `bunfig.toml` 中，这样一来，`bun build` CLI 在支持插件后，就能静态确定正在使用哪些插件。
+  这些插件可在 `Bun.build()` 的 JS API 中使用，但目前还不能在 CLI 中使用。
 </Note>
 
 ## 内联环境变量
 
-Bun 可以在构建时将前端 JavaScript 和 TypeScript 中的 `process.env.*` 替换为实际值。在 `bunfig.toml` 中配置 `env` 选项：
+Bun 可以在构建时将前端 JavaScript 和 TypeScript 中的 `process.env.*` 引用替换为其值。在 `bunfig.toml` 中配置 `env` 选项：
 
 ```toml title="bunfig.toml" icon="settings"
 [serve.static]
@@ -511,7 +505,7 @@ env = "PUBLIC_*"  # 仅内联以 PUBLIC_ 开头的环境变量（推荐）
 
 </Note>
 
-详情及示例请参见 [HTML & 静态站点文档](/bundler/html-static#inline-environment-variables)。
+有关构建时配置和示例，请参阅 [HTML 和静态网站](/bundler/html-static#inline-environment-variables)。
 
 ## 工作原理
 
@@ -558,8 +552,6 @@ Bun 使用 `HTMLRewriter` 扫描 HTML 文件中的 `<script>` 和 `<link>` 标�
 
 ## 完整示例
 
-这是一个完整的全栈应用示例：
-
 ```ts title="server.ts" icon="/icons/typescript.svg"
 import { serve } from "bun";
 import { Database } from "bun:sqlite";
@@ -598,7 +590,7 @@ const server = serve({
 
           return Response.json(result, { status: 201 });
         } catch (error) {
-          return Response.json({ error: "Email already exists" }, { status: 400 });
+          return Response.json({ error: "邮箱已存在" }, { status: 400 });
         }
       },
     },
@@ -609,7 +601,7 @@ const server = serve({
         const user = db.query("SELECT * FROM users WHERE id = ?").get(id);
 
         if (!user) {
-          return Response.json({ error: "User not found" }, { status: 404 });
+          return Response.json({ error: "用户未找到" }, { status: 404 });
         }
 
         return Response.json(user);
@@ -620,7 +612,7 @@ const server = serve({
         const result = db.query("DELETE FROM users WHERE id = ?").run(id);
 
         if (result.changes === 0) {
-          return Response.json({ error: "User not found" }, { status: 404 });
+          return Response.json({ error: "用户未找到" }, { status: 404 });
         }
 
         return new Response(null, { status: 204 });
@@ -646,7 +638,7 @@ const server = serve({
 
   // 未匹配路由时回退
   fetch(req) {
-    return new Response("Not Found", { status: 404 });
+    return new Response("未找到", { status: 404 });
   },
 });
 
@@ -720,14 +712,14 @@ export function App() {
         alert(error.error);
       }
     } catch (error) {
-      alert("Failed to create user");
+      alert("创建用户失败");
     } finally {
       setLoading(false);
     }
   };
 
   const deleteUser = async (id: number) => {
-    if (!confirm("Are you sure?")) return;
+    if (!confirm("确定吗？")) return;
 
     try {
       const response = await fetch(`/api/users/${id}`, {
@@ -738,7 +730,7 @@ export function App() {
         await fetchUsers();
       }
     } catch (error) {
-      alert("Failed to delete user");
+      alert("删除用户失败");
     }
   };
 
@@ -999,7 +991,7 @@ FROM oven/bun:1 as base
 WORKDIR /usr/src/app
 
 # 安装依赖
-COPY package.json bun.lockb ./
+COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 
 # 复制源代码
@@ -1071,15 +1063,13 @@ export default function handler(req, res) {
 
 ### 当前限制
 
-- `bun build` CLI 尚未集成全栈应用
-- 未实现 API 路由自动发现
-- 未内置服务器端渲染（SSR）
+- 尚未实现 API 路由的自动发现
+- 未内置服务端渲染（SSR）
 
 ### 规划功能
 
-- 与 `bun build` CLI 集成
-- API 端点的基于文件的路由
+- 基于文件的 API 端点路由
 - 内置 SSR 支持
-- 增强的插件生态
+- 更完善的插件生态系统
 
-<Note>此部分仍在开发中。功能和 API 可能会随着 Bun 的发展而变动。</Note>
+<Note>这项工作仍在进行中。功能和 API 可能会发生变化。</Note>

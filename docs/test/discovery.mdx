@@ -3,36 +3,36 @@ title: "查找测试"
 description: "了解 Bun 的测试运行器如何发现和筛选项目中的测试文件"
 ---
 
-bun test 的文件发现机制决定了哪些文件会作为测试运行。理解其工作原理有助于你有效地组织测试文件。
+`bun test` 通过将文件路径与一组模式进行匹配，来决定将哪些文件作为测试运行。
 
 ## 默认发现逻辑
 
-默认情况下，`bun test` 会递归搜索项目目录中符合特定模式的文件：
+默认情况下，`bun test` 会递归搜索项目目录，查找匹配以下模式的文件：
 
-- `*.test.{js|jsx|ts|tsx}` - 以 `.test.js`、`.test.jsx`、`.test.ts` 或 `.test.tsx` 结尾的文件
-- `*_test.{js|jsx|ts|tsx}` - 以 `_test.js`、`_test.jsx`、`_test.ts` 或 `_test.tsx` 结尾的文件
-- `*.spec.{js|jsx|ts|tsx}` - 以 `.spec.js`、`.spec.jsx`、`.spec.ts` 或 `.spec.tsx` 结尾的文件
-- `*_spec.{js|jsx|ts|tsx}` - 以 `_spec.js`、`_spec.jsx`、`_spec.ts` 或 `_spec.tsx` 结尾的文件
+- `*.test.{js|jsx|ts|tsx|mjs|cjs|mts|cts}` - 以 `.test.js`、`.test.jsx`、`.test.ts`、`.test.tsx`、`.test.mjs`、`.test.cjs`、`.test.mts` 或 `.test.cts` 结尾的文件
+- `*_test.{js|jsx|ts|tsx|mjs|cjs|mts|cts}` - 以 `_test.js`、`_test.jsx`、`_test.ts`、`_test.tsx`、`_test.mjs`、`_test.cjs`、`_test.mts` 或 `_test.cts` 结尾的文件
+- `*.spec.{js|jsx|ts|tsx|mjs|cjs|mts|cts}` - 以 `.spec.js`、`.spec.jsx`、`.spec.ts`、`.spec.tsx`、`.spec.mjs`、`.spec.cjs`、`.spec.mts` 或 `.spec.cts` 结尾的文件
+- `*_spec.{js|jsx|ts|tsx|mjs|cjs|mts|cts}` - 以 `_spec.js`、`_spec.jsx`、`_spec.ts`、`_spec.tsx`、`_spec.mjs`、`_spec.cjs`、`_spec.mts` 或 `_spec.cts` 结尾的文件
 
 ## 排除项
 
-默认情况下，Bun 测试会忽略：
+默认情况下，`bun test` 会忽略：
 
 - `node_modules` 目录
 - 隐藏目录（以句点 `.` 开头的目录）
-- 没有 JavaScript 类扩展名的文件（基于可用的加载器）
+- 不具有类似 JavaScript 扩展名的文件（基于可用的[加载器](/bundler/loaders)）
 
 ## 自定义测试发现
 
 ### 位置参数作为过滤器
 
-你可以通过向 `bun test` 传递额外的位置参数来过滤运行的测试文件：
+要过滤要运行的测试文件，请向 `bun test` 传入额外的位置参数：
 
 ```bash terminal icon="terminal"
 bun test <filter> <filter> ...
 ```
 
-任何文件路径包含其中一个过滤器的测试文件都会被运行。这些过滤器是简单的子字符串匹配，而非通配符模式。
+任何路径包含其中一个过滤器的测试文件都会运行。过滤器是子字符串匹配，而不是 glob 模式。
 
 例如，运行 `utils` 目录下的所有测试：
 
@@ -40,7 +40,7 @@ bun test <filter> <filter> ...
 bun test utils
 ```
 
-这将匹配类似 `src/utils/string.test.ts` 和 `lib/utils/array_test.js` 的文件。
+这会匹配诸如 `src/utils/string.test.ts` 和 `lib/utils/array_test.js` 这样的文件。
 
 ### 指定精确文件路径
 
@@ -59,7 +59,7 @@ bun test ./test/specific-file.test.ts
 bun test --test-name-pattern addition
 ```
 
-该模式会匹配一个由测试名称和其所有父 `describe` 块标签按空格连接组成的字符串。例如，定义如下测试：
+该模式会与测试名称进行匹配，测试名称前会加上其所有父级 `describe` 块的标签，并以空格分隔。例如，定义如下的测试：
 
 ```ts title="math.test.ts" icon="/icons/typescript.svg"
 describe("Math", () => {
@@ -71,11 +71,11 @@ describe("Math", () => {
 });
 ```
 
-将匹配字符串 "Math operations should add correctly"。
+此测试会与字符串 `"Math operations should add correctly"` 进行匹配。
 
 ### 更改根目录
 
-默认情况下，Bun 从当前工作目录开始查找测试文件。你可以通过 `bunfig.toml` 中的 `root` 选项更改此目录：
+默认情况下，Bun 会从当前工作目录开始查找测试文件。可以在 `bunfig.toml` 中使用 `root` 选项进行更改：
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -84,7 +84,7 @@ root = "src"  # 仅扫描 src 目录下的测试
 
 ## 执行顺序
 
-测试的执行顺序如下：
+测试按以下顺序运行：
 
-1. 测试文件按顺序执行（非并行）
-2. 每个文件内的测试按照定义顺序顺序执行
+1. 测试文件按顺序运行（不并行）
+2. 在每个文件中，测试按定义顺序依次运行

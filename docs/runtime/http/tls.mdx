@@ -3,7 +3,7 @@ title: TLS
 description: 在 Bun.serve 中启用 TLS
 ---
 
-Bun 内置支持 TLS，由 [BoringSSL](https://boringssl.googlesource.com/boringssl) 提供支持。通过传入 `key` 和 `cert` 的值即可启用 TLS；两者均为必填。
+Bun 内置了 TLS 支持，由 [BoringSSL](https://boringssl.googlesource.com/boringssl) 提供支持。要启用 TLS，请同时传入 `key` 和 `cert`。
 
 ```ts
 Bun.serve({
@@ -14,7 +14,7 @@ Bun.serve({
 });
 ```
 
-`key` 和 `cert` 字段期望的是您的 TLS 密钥和证书的 _内容_，_而不是路径_。可以是字符串、`BunFile`、`TypedArray` 或 `Buffer`。
+`key` 和 `cert` 字段需要的是 TLS 密钥和证书的_内容_，而_不是证书文件的路径_。它们可以是字符串、`BunFile`、`TypedArray` 或 `Buffer`。
 
 ```ts
 Bun.serve({
@@ -43,7 +43,7 @@ Bun.serve({
 
 ### CA 证书
 
-可选地，您可以通过传入 `ca` 的值来自定义受信任的 CA 证书。默认情况下，服务器信任由 Mozilla 筛选的知名 CA 列表。当指定了 `ca` 后，Mozilla 列表将被覆盖。
+传入 `ca` 可以覆盖受信任的 CA 证书。默认情况下，服务器信任由 Mozilla 整理的知名 CA 列表；设置 `ca` 后将替换该列表。
 
 ```ts
 Bun.serve({

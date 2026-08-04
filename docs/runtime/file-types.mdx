@@ -3,13 +3,13 @@ title: "文件类型"
 description: "Bun 的打包器和运行时支持的文件类型和加载器"
 ---
 
-Bun 打包器开箱即用实现了一套默认加载器。一般来说，打包器和运行时都支持相同的一组文件类型。
+Bun 打包器实现了一组默认加载器。一般来说，打包器和运行时支持相同的文件类型集合。
 
 `.js` `.cjs` `.mjs` `.mts` `.cts` `.ts` `.tsx` `.jsx` `.css` `.json` `.jsonc` `.json5` `.toml` `.yaml` `.yml` `.txt` `.wasm` `.node` `.html` `.sh`
 
-Bun 使用文件扩展名来确定应使用哪个内置_加载器_解析文件。每个加载器都有一个名称，如 `js`、`tsx` 或 `json`。这些名称在构建扩展 Bun 的自定义加载器的[插件](/bundler/plugins)时使用。
+Bun 使用文件扩展名来选择解析文件的内置 _加载器_。每个加载器都有一个名称，例如 `js`、`tsx` 或 `json`。在构建扩展 Bun 功能的[插件](/bundler/plugins)时，会使用这些名称。
 
-你可以显式指定使用哪个加载器，通过 `'type'` 导入属性。
+若要显式指定加载器，请使用 `type` 导入属性。
 
 ```ts
 import my_toml from "./my_file" with { type: "toml" };
@@ -25,13 +25,13 @@ const { default: my_toml } = await import("./my_file", { with: { type: "toml" } 
 
 **JavaScript**。`.cjs` 和 `.mjs` 的默认加载器。
 
-解析代码并应用一套默认的转换，如死代码消除和摇树优化。注意 Bun 目前不尝试转换旧版本语法。
+解析代码并应用一组默认转换，例如死代码消除和树摇。Bun 不会向下转换语法。
 
 ### `jsx`
 
 **JavaScript + JSX**。`.js` 和 `.jsx` 的默认加载器。
 
-与 `js` 加载器相同，但支持 JSX 语法。默认情况下，JSX 会转换为普通的 JavaScript；具体转换方式取决于你 `tsconfig.json` 中的 `jsx*` 编译选项。详见 TypeScript 文档的 [JSX 部分](https://www.typescriptlang.org/docs/handbook/jsx.html)。
+与 `js` 加载器相同，但支持 JSX 语法。默认情况下，JSX 会向下转换为普通 JavaScript；具体细节取决于 `tsconfig.json` 中的 `jsx*` 编译器选项。请参阅 TypeScript 关于 [JSX](https://www.typescriptlang.org/docs/handbook/jsx.html) 的文档。
 
 ### `ts`
 
@@ -64,7 +64,7 @@ var pkg = {
 pkg.name;
 ```
 
-如果将 `.json` 文件作为入口传递给打包器，它会被转换成一个 `.js` 模块，`export default` 解析后的对象。
+如果将 `.json` 文件作为打包器的入口点传入，它会被转换为一个 `export default` 解析后对象的 `.js` 模块。
 
 <CodeGroup>
 
@@ -90,7 +90,7 @@ export default {
 
 **带注释的 JSON 加载器**。`.jsonc` 的默认加载器。
 
-支持带注释的 JSONC 文件直接导入。Bun 解析时会移除注释和尾随逗号。
+JSONC（带注释的 JSON）文件可以直接导入。Bun 会解析这些文件，并移除注释和尾随逗号。
 
 ```ts
 import config from "./config.jsonc";
@@ -113,7 +113,7 @@ var config = {
 
 **TOML 加载器**。`.toml` 的默认加载器。
 
-TOML 文件可以直接导入。Bun 使用其快速的原生 TOML 解析器进行解析。
+TOML 文件可以直接导入。Bun 使用其快速的原生 TOML 解析器解析这些文件。
 
 ```ts
 import config from "./bunfig.toml";
@@ -133,7 +133,7 @@ var config = {
 config.logLevel;
 ```
 
-如果 `.toml` 文件作为入口被传递，它会被转换成一个 `.js` 模块，`export default` 解析后的对象。
+如果将 `.toml` 文件作为入口点传入，它会被转换为一个 `export default` 解析后对象的 `.js` 模块。
 
 <CodeGroup>
 
@@ -157,7 +157,7 @@ export default {
 
 **YAML 加载器**。`.yaml` 和 `.yml` 的默认加载器。
 
-YAML 文件可以直接导入。Bun 使用其快速的原生 YAML 解析器进行解析。
+YAML 文件可以直接导入。Bun 使用其快速的原生 YAML 解析器解析这些文件。
 
 ```ts
 import config from "./config.yaml";
@@ -177,7 +177,7 @@ var config = {
 };
 ```
 
-如果 `.yaml` 或 `.yml` 文件作为入口被传递，它会被转换成一个 `.js` 模块，`export default` 解析后的对象。
+如果将 `.yaml` 或 `.yml` 文件作为入口点传入，它会被转换为一个 `export default` 解析后对象的 `.js` 模块。
 
 <CodeGroup>
 
@@ -199,35 +199,35 @@ export default {
 
 ### `json5`
 
-**JSON5 loader**. Default for `.json5`.
+**JSON5 加载器**。`.json5` 的默认加载器。
 
-JSON5 files can be directly imported. Bun will parse them with its fast native JSON5 parser. JSON5 is a superset of JSON that supports comments, trailing commas, unquoted keys, single-quoted strings, and more.
+JSON5 文件可以直接导入。Bun 使用其快速的原生 JSON5 解析器解析这些文件。JSON5 是 JSON 的超集，增加了注释、尾随逗号、未加引号的键、单引号字符串等特性。
 
 ```ts
 import config from "./config.json5";
 console.log(config);
 
-// via import attribute:
+// 通过导入属性：
 import data from "./data.txt" with { type: "json5" };
 ```
 
-During bundling, the parsed JSON5 is inlined into the bundle as a JavaScript object.
+打包时，解析后的 JSON5 会以内联的 JavaScript 对象形式嵌入包中。
 
 ```ts
 var config = {
   name: "my-app",
   version: "1.0.0",
-  // ...other fields
+  // ...其他字段
 };
 ```
 
-If a `.json5` file is passed as an entrypoint, it will be converted to a `.js` module that `export default`s the parsed object.
+如果将 `.json5` 文件作为入口点传入，它会被转换为一个 `export default` 解析后对象的 `.js` 模块。
 
 <CodeGroup>
 
 ```json5 Input
 {
-  // Configuration
+  // 配置
   name: "John Doe",
   age: 35,
   email: "johndoe@example.com",
@@ -248,7 +248,7 @@ export default {
 
 **文本加载器**。`.txt` 的默认加载器。
 
-文本文件内容会被读取，并作为字符串内联到包中。文本文件可以直接导入，文件会被读取并以字符串形式返回。
+文本文件可以直接导入。文件会被读取并作为字符串返回。
 
 ```ts
 import contents from "./file.txt";
@@ -266,7 +266,7 @@ var contents = `Hello, world!`;
 console.log(contents);
 ```
 
-如果 `.txt` 文件作为入口被传递，会被转换成一个 `.js` 模块，`export default` 文件内容。
+如果将 `.txt` 文件作为入口点传入，它会被转换为一个 `export default` 文件内容的 `.js` 模块。
 
 <CodeGroup>
 
@@ -297,7 +297,7 @@ console.log(addon);
 
 **SQLite 加载器**。`with { "type": "sqlite" }` 导入属性。
 
-运行时和打包时都支持直接导入 SQLite 数据库文件，内部通过 [`bun:sqlite`](/runtime/sqlite) 加载。
+在运行时和打包器中，SQLite 数据库可以直接导入。数据库通过 [`bun:sqlite`](/runtime/sqlite) 加载。
 
 ```ts
 import db from "./my.db" with { type: "sqlite" };
@@ -305,7 +305,7 @@ import db from "./my.db" with { type: "sqlite" };
 
 仅当 `target` 为 `bun` 时支持。
 
-默认情况下，数据库文件不会被打包进最终文件（保持外部），方便你在其他地方加载数据库。
+默认情况下，数据库位于包外部：磁盘上的数据库文件不会被打包到最终输出中，因此你可以使用在其他位置加载的数据库。
 
 你可以通过 `"embed"` 属性改变这个行为：
 
@@ -320,12 +320,12 @@ import db from "./my.db" with { type: "sqlite", embed: "true" };
 
 ### `html`
 
-HTML 加载器处理 HTML 文件并打包所有引用的资源。功能包括：
+`html` 加载器会处理 HTML 文件并打包所有引用的资源。它：
 
 - 打包并哈希引用的 JavaScript 文件（`<script src="...">`）
 - 打包并哈希引用的 CSS 文件（`<link rel="stylesheet" href="...">`）
-- 对引用的图片进行哈希（`<img src="...">`）
-- 保留外部 URL（默认保留以 `http://` 或 `https://` 开头的链接）
+- 哈希引用的图像（`<img src="...">`）
+- 保留外部 URL（默认情况下，任何以 `http://` 或 `https://` 开头的 URL）
 
 示例，假设有如下 HTML 文件：
 
@@ -344,7 +344,7 @@ HTML 加载器处理 HTML 文件并打包所有引用的资源。功能包括：
 
 </CodeGroup>
 
-输出将是一个新的 HTML 文件，包含打包好的资源：
+Bun 会输出一个包含已打包资源的新 HTML 文件：
 
 <CodeGroup>
 
@@ -361,15 +361,13 @@ HTML 加载器处理 HTML 文件并打包所有引用的资源。功能包括：
 
 </CodeGroup>
 
-内部使用 [`lol-html`](https://github.com/cloudflare/lol-html) 来提取 script 和 link 标签作为入口，其他资源作为外部资源。
+该加载器使用 [`lol-html`](https://github.com/cloudflare/lol-html) 将 script 和 link 标签提取为入口点，并将其他资源作为外部资源处理。
 
-当前支持的选择器列表：
+选择器列表如下：
 
 - `audio[src]`
-- `iframe[src]`
 - `img[src]`
 - `img[srcset]`
-- `link:not([rel~='stylesheet']):not([rel~='modulepreload']):not([rel~='manifest']):not([rel~='icon']):not([rel~='apple-touch-icon'])[href]`
 - `link[as='font'][href], link[type^='font/'][href]`
 - `link[as='image'][href]`
 - `link[as='style'][href]`
@@ -408,13 +406,13 @@ CSS 文件可以直接导入。这主要用于[全栈应用](/bundler/html-stati
 import "./styles.css";
 ```
 
-导入不会返回任何值，只产生副作用。
+导入不会返回任何值；它仅用于其副作用。
 
 ### `sh` 加载器
 
 **Bun Shell 加载器**。`.sh` 文件的默认加载器。
 
-此加载器用于解析 [Bun Shell](/runtime/shell) 脚本。仅支持在 Bun 本身启动时使用，打包器或运行时不支持。
+此加载器解析 [Bun Shell](/runtime/shell) 脚本。它仅在启动 Bun 本身时受支持，因此在打包器或运行时中不可用。
 
 ```sh
 bun run ./script.sh
@@ -431,26 +429,26 @@ import logo from "./logo.svg";
 console.log(logo);
 ```
 
-_运行时_，Bun 会检查 `logo.svg` 文件是否存在，并将其转换成该文件在磁盘上的绝对路径。
+_在运行时_，Bun 会检查 `logo.svg` 文件是否存在，并将导入解析为磁盘上的绝对路径。
 
 ```bash
 bun run logo.ts
 /path/to/project/logo.svg
 ```
 
-_打包时_，行为略有不同。文件会被原样复制到 `outdir`，导入解析为指向复制文件的相对路径。
+_在打包器中_，文件会原样复制到 `outdir`，导入会解析为指向所复制文件的相对路径。
 
 ```ts Output
 var logo = "./logo.svg";
 console.log(logo);
 ```
 
-如果指定了 `publicPath`，导入会使用该值作为前缀，构造绝对路径/URL。
+如果设置了 `publicPath`，导入会使用其值作为前缀来构造绝对路径/URL。
 
-| 公共路径                     | 解析后导入路径                  |
-| ---------------------------- | ------------------------------ |
-| `""`（默认）                 | `/logo.svg`                    |
-| `"/assets"`                  | `/assets/logo.svg`             |
+| 公共路径                     | 解析后的导入                     |
+| ---------------------------- | -------------------------------- |
+| `""`（默认）                 | `./logo.svg`                     |
+| `"/assets/"`                 | `/assets/logo.svg`               |
 | `"https://cdn.example.com/"` | `https://cdn.example.com/logo.svg` |
 
 <Note>
@@ -468,7 +466,7 @@ console.log(logo);
 // 无法找到模块 './logo.svg' 或其对应的类型声明。
 ```
 
-可在项目中任意位置创建一个 `*.d.ts` 文件（名字随意），内容如下：
+要解决此问题，请在项目中的任意位置创建一个 `*.d.ts` 文件（文件名任意），内容如下：
 
 ```ts
 declare module "*.svg" {

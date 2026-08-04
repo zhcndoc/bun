@@ -9,9 +9,7 @@ description: "学习如何在你的 Bun 测试中使用 setSystemTime 和 Jest �
 
 - `Date.now`
 - `new Date()`
-- `new Intl.DateTimeFormat().format()`
-
-<Note>目前定时器尚未受到影响，但可能会在未来的 Bun 版本中支持。</Note>
+- `new Intl.DateTimeFormat().format()`。
 
 ## setSystemTime
 
@@ -29,7 +27,7 @@ test("它是2020年", () => {
 });
 ```
 
-为了支持使用 Jest 的 `useFakeTimers` 和 `useRealTimers` 的已有测试，可以使用 `useFakeTimers` 和 `useRealTimers`：
+Jest 的 `useFakeTimers` 和 `useRealTimers` 也受支持，因此使用它们的现有测试可以继续正常运行：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 test("就像在 jest 中一样", () => {
@@ -56,10 +54,6 @@ test("与 jest 不同", () => {
 });
 ```
 
-<Warning>
-  **定时器** — 注意我们尚未实现内置的定时器模拟支持，但这在计划中。
-</Warning>
-
 ## 重置系统时间
 
 要重置系统时间，请调用 `setSystemTime` 并不传入参数：
@@ -81,7 +75,7 @@ test("曾经是2020年，只有一会儿。", () => {
 
 ## 使用 jest.now() 获取模拟时间
 
-当你使用模拟时间（通过 `setSystemTime` 或 `useFakeTimers`）时，可以使用 `jest.now()` 获取当前模拟的时间戳：
+当时间被模拟时（通过 `setSystemTime` 或 `useFakeTimers`），`jest.now()` 会返回当前模拟的时间戳：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect, jest } from "bun:test";
@@ -97,11 +91,11 @@ test("获取当前模拟时间", () => {
 });
 ```
 
-当你需要直接访问模拟时间而不创建新的 Date 对象时，这非常有用。
+使用它可以读取模拟时间，而无需创建新的 `Date` 对象。
 
 ## 设置时区
 
-默认情况下，所有 `bun test` 运行的时区均设为 UTC (`Etc/UTC`)，除非被覆盖。要更改时区，可以在运行 `bun test` 时传入 `$TZ` 环境变量：
+默认情况下，`bun test` 在 UTC (`Etc/UTC`) 时区运行。要更改时区，可以将 `TZ` 环境变量传递给 `bun test`：
 
 ```bash terminal icon="terminal"
 TZ=America/Los_Angeles bun test
@@ -126,4 +120,4 @@ test("欢迎来到纽约！", () => {
 });
 ```
 
-<Info>与 Jest 不同，你可以在运行时多次设置时区，并且可以生效。</Info>
+<Info>与 Jest 不同，你可以在运行时多次更改时区。</Info>

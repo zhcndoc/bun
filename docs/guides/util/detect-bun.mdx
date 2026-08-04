@@ -4,7 +4,7 @@ sidebarTitle: 检测 Bun
 mode: center
 ---
 
-检测代码何时在 Bun 中执行的推荐方式是检查 `process.versions.bun`。这在 JavaScript 和 TypeScript 中都适用，无需任何额外的类型定义。
+检查 `process.versions.bun`，以检测代码是否正在 Bun 中运行。此方法在 JavaScript 和 TypeScript 中均可使用，无需额外的类型定义。
 
 ```ts
 if (process.versions.bun) {
@@ -14,10 +14,10 @@ if (process.versions.bun) {
 
 ---
 
-另外，你也可以检查全局对象 `Bun` 是否存在。这类似于检查 `window` 变量是否存在以检测代码是否在浏览器中执行。
+或者，检查 `Bun` 全局变量，方式与检查 `window` 以检测浏览器环境相同。
 
 <Note>
-  除非安装了 `@types/bun`，否则此方法在 TypeScript 中会导致类型错误。你可以通过运行 `bun add -d @types/bun` 来安装它。
+  在 TypeScript 中，如果未安装 `@types/bun`，这会导致类型错误。使用 `bun add -d @types/bun` 进行安装。
 </Note>
 
 ```ts

@@ -5,7 +5,7 @@ description: Bun 提供了一组经过优化的 API 用于读取和写入文件�
 
 <Note>
 
-此页面记录的 `Bun.file` 和 `Bun.write` API 经过高度优化，代表了使用 Bun 执行文件系统任务的推荐方式。对于尚未通过 `Bun.file` 提供的操作，如 `mkdir` 或 `readdir`，可以使用 Bun 对 [`node:fs`](https://nodejs.org/api/fs.html) 模块的[几乎完整](/runtime/nodejs-compat#node-fs) 实现。
+本页介绍的 `Bun.file` 和 `Bun.write` API 经过高度优化，是在 Bun 中处理文件的推荐方式。对于它们未涵盖的操作，例如 `mkdir` 或 `readdir`，请使用 Bun 对 [`node:fs`](https://nodejs.org/api/fs.html) 模块的[近乎完整的实现](/runtime/nodejs-compat#node-fs)。
 
 </Note>
 
@@ -15,7 +15,7 @@ description: Bun 提供了一组经过优化的 API 用于读取和写入文件�
 
 `Bun.file(path): BunFile`
 
-使用函数 `Bun.file(path)` 创建一个 `BunFile` 实例。`BunFile` 代表一个惰性加载的文件；初始化时并不会真正从磁盘读取文件。
+使用 `Bun.file(path)` 函数创建一个 `BunFile` 实例。`BunFile` 表示一个延迟加载的文件；初始化它不会从磁盘读取文件。
 
 ```ts
 const foo = Bun.file("foo.txt"); // 相对于当前工作目录
@@ -28,14 +28,14 @@ foo.type; // MIME 类型
 ```ts
 const foo = Bun.file("foo.txt");
 
-await foo.text(); // 作为字符串的内容
-await foo.json(); // 作为 JSON 对象的内容
-await foo.stream(); // 作为 ReadableStream 的内容
-await foo.arrayBuffer(); // 作为 ArrayBuffer 的内容
-await foo.bytes(); // 作为 Uint8Array 的内容
+await foo.text(); // 内容作为字符串
+await foo.json(); // 内容作为 JSON 对象
+foo.stream(); // 内容作为 ReadableStream
+await foo.arrayBuffer(); // 内容作为 ArrayBuffer
+await foo.bytes(); // 内容作为 Uint8Array
 ```
 
-文件引用也可以通过数字 [文件描述符](https://en.wikipedia.org/wiki/File_descriptor) 或 `file://` URL 创建。
+你也可以从数字形式的[文件描述符](https://en.wikipedia.org/wiki/File_descriptor)或 `file://` URL 创建文件引用。
 
 ```ts
 Bun.file(1234);
@@ -51,7 +51,7 @@ notreal.type; // "text/plain;charset=utf-8"
 const exists = await notreal.exists(); // false
 ```
 
-默认 MIME 类型是 `text/plain;charset=utf-8`，但可以通过向 `Bun.file` 传递第二个参数覆盖它。
+默认 MIME 类型为 `text/plain;charset=utf-8`。通过向 `Bun.file` 传入第二个参数可以覆盖该类型。
 
 ```ts
 const notreal = Bun.file("notreal.json", { type: "application/json" });
@@ -68,7 +68,7 @@ Bun.stderr;
 
 ### 删除文件 (`file.delete()`)
 
-可以通过调用 `.delete()` 函数删除文件。
+调用 `.delete()` 删除文件。
 
 ```ts
 await Bun.file("logs.json").delete();
@@ -82,13 +82,13 @@ await Bun.file("logs.json").delete();
 
 `Bun.write` 是一个多功能工具，用于将各种类型的负载写入磁盘。
 
-第一个参数是目标 `destination`，可以是以下任意类型：
+第一个参数是 `destination`，可以是以下任意类型：
 
 - `string`：文件系统上的路径。使用 `"path"` 模块进行路径操作。
 - `URL`：`file://` 描述符。
 - `BunFile`：文件引用。
 
-第二个参数是要写入的数据。类型可以是：
+第二个参数是要写入的数据，可以是以下任意类型：
 
 - `string`
 - `Blob`（包括 `BunFile`）
@@ -96,7 +96,7 @@ await Bun.file("logs.json").delete();
 - `TypedArray`（如 `Uint8Array` 等）
 - `Response`
 
-所有可能的组合都使用当前平台上最快的系统调用处理。
+Bun 会针对每种组合，使用当前平台上可用的最快系统调用。
 
 <Accordion title="查看系统调用">
 
@@ -107,7 +107,7 @@ await Bun.file("logs.json").delete();
 | 管道                 | 管道           | splice                      | Linux    |
 | 终端                 | 文件           | sendfile                    | Linux    |
 | 终端                 | 终端           | sendfile                    | Linux    |
-| 套接字               | 文件或管道     | sendfile（如果是 http，非 https） | Linux    |
+| 套接字               | 文件或管道     | sendfile（如果是 http，则不是 https） | Linux    |
 | 文件（不存在）       | 文件（路径）   | clonefile                   | macOS    |
 | 文件（已存在）       | 文件           | fcopyfile                   | macOS    |
 | 文件                 | Blob 或字符串  | write                      | macOS    |
@@ -173,13 +173,13 @@ writer.write("那是最好的时代\n");
 writer.write("那是最坏的时代\n");
 ```
 
-这些数据块将在内部缓存。要将缓存写入磁盘，使用 `.flush()`。此方法返回已写入字节数。
+这些数据块会在内部进行缓冲。要将缓冲区刷新到磁盘，请使用 `.flush()`。该方法会返回已刷新的字节数。
 
 ```ts
 writer.flush(); // 将缓存写入磁盘
 ```
 
-当 `FileSink` 的 _高水位线_（内部缓存满）达到时，缓存也会自动刷新。可通过配置此参数来调整。
+当 `FileSink` 达到其_高水位标记_时，缓冲区也会自动刷新；也就是说，当其内部缓冲区已满时会自动刷新。你可以配置此值。
 
 ```ts
 const file = Bun.file("output.txt");
@@ -192,7 +192,7 @@ const writer = file.writer({ highWaterMark: 1024 * 1024 }); // 1MB
 writer.end();
 ```
 
-注意，默认情况下，`bun` 进程会保持运行，直到显式调用 `.end()` 关闭此 `FileSink`。如果要取消此行为，可以调用该实例的 `unref`。
+默认情况下，`bun` 进程会一直保持运行，直到使用 `.end()` 显式关闭此 `FileSink`。如果不想使用此行为，可以对实例调用 `"unref"`。
 
 ```ts
 writer.unref();
@@ -205,7 +205,7 @@ writer.ref();
 
 ## 目录操作
 
-Bun's implementation of `node:fs` is fast. Use `node:fs` for working with directories in Bun.
+Bun 对 `node:fs` 的实现速度很快。在 Bun 中使用 `node:fs` 处理目录。
 
 ### 读取目录（readdir）
 
@@ -263,7 +263,7 @@ bun ./cat.ts ./path-to-file
 
 在 Linux 上处理大文件时，速度是 GNU `cat` 的 2 倍。
 
-<Frame>![Cat 截图](/images/cat.jpg)</Frame>
+<Frame>![猫截图](/images/cat.jpg)</Frame>
 
 ---
 

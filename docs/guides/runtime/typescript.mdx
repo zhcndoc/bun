@@ -4,7 +4,7 @@ sidebarTitle: TypeScript 类型
 mode: center
 ---
 
-要在项目中安装 Bun 内置 API 的 TypeScript 定义，请安装 `@types/bun`。
+要为项目添加 Bun 内置 API 的 TypeScript 类型定义，请安装 `@types/bun`。
 
 ```sh terminal icon="terminal"
 bun add -d @types/bun # 开发依赖
@@ -12,7 +12,7 @@ bun add -d @types/bun # 开发依赖
 
 ---
 
-以下是 Bun 项目推荐的完整 `compilerOptions` 配置。有了这个 `tsconfig.json`，你可以使用顶层 await，带扩展名或无扩展名的导入，以及 JSX。
+以下是 Bun 项目推荐使用的完整 `compilerOptions` 配置。借助此 `tsconfig.json`，你可以使用顶层 await、带扩展名或不带扩展名的导入，以及 JSX。
 
 ```json tsconfig.json icon="file-json"
 {
@@ -49,8 +49,8 @@ bun add -d @types/bun # 开发依赖
 
 ---
 
-如果你使用的是 TypeScript 6.0 或更高版本，还需要在 `compilerOptions` 中添加 `"types": ["bun"]`。详情请参见 [TypeScript 6 和 7](/typescript-6)。
+如果你使用的是 TypeScript 6.0 或更高版本，还需要在 `compilerOptions` 中添加 `"types": ["bun"]`。详情请参阅 [TypeScript 6 和 7](/typescript-6)。
 
 ---
 
-有关 Bun 中 TypeScript 支持的完整指南，请参阅 [生态系统 > TypeScript](/runtime/typescript)。
+请参阅 [TypeScript](/runtime/typescript)。

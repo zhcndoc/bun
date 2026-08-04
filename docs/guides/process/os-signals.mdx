@@ -14,7 +14,7 @@ process.on("SIGINT", () => {
 
 ---
 
-如果你不知道应该监听哪个信号，可以监听 [`"beforeExit"`](https://nodejs.org/api/process.html#event-beforeexit) 和 [`"exit"`](https://nodejs.org/api/process.html#event-exit) 事件。
+如果你不知道要监听哪个信号，请监听 [`"beforeExit"`](https://nodejs.org/api/process.html#event-beforeexit) 和 [`"exit"`](https://nodejs.org/api/process.html#event-exit) 事件。
 
 ```ts
 process.on("beforeExit", code => {
@@ -28,4 +28,4 @@ process.on("exit", code => {
 
 ---
 
-更多实用工具请参见 [文档 > API > 工具](/runtime/utils)。
+有关更多实用工具，请参阅 [Utils](/runtime/utils)。

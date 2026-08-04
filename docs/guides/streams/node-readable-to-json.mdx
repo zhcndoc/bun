@@ -4,7 +4,7 @@ sidebarTitle: Readable 转 JSON
 mode: center
 ---
 
-要在 Bun 中将 Node.js 的 `Readable` 流转换为 JSON 对象，可以创建一个以该流作为主体的新 [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) 对象，然后使用 [`response.json()`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json) 将流读取为 JSON 对象。
+要在 Bun 中将 Node.js 的 `Readable` 流转换为 JSON 对象，请使用该流作为正文创建一个 [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)，然后调用 [`response.json()`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json)。
 
 ```ts
 import { Readable } from "stream";

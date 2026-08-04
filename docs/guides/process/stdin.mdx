@@ -4,7 +4,7 @@ sidebarTitle: 从 stdin 读取
 mode: center
 ---
 
-对于 CLI 工具来说，从 `stdin` 读取常常非常有用。在 Bun 中，`console` 对象是一个 `AsyncIterable`，它会产生来自 `stdin` 的行。
+在 Bun 中，`console` 对象是一个从 `stdin` 产生行的 `AsyncIterable`。
 
 ```ts index.ts icon="/icons/typescript.svg"
 const prompt = "Type something: ";
@@ -17,7 +17,7 @@ for await (const line of console) {
 
 ---
 
-运行此文件会得到一个永不结束的交互式提示，回显用户输入的内容。
+运行此文件会启动一个永不结束的交互式提示，并回显你输入的任何内容。
 
 ```sh terminal icon="terminal"
 bun run index.ts
@@ -32,9 +32,9 @@ You typed: hello again
 
 ---
 
-Bun 还通过 `Bun.stdin` 将 stdin 作为一个 `BunFile` 暴露出来。这对于对通过管道传入 `bun` 进程的大量输入进行增量读取非常有用。
+Bun 还将 `stdin` 作为 `BunFile`（即 `Bun.stdin`）提供。使用它可以增量读取通过管道传入 `bun` 进程的大型输入。
 
-无法保证读取的块是逐行分割的。
+数据块不保证按行拆分。
 
 ```ts stdin.ts icon="/icons/typescript.svg"
 for await (const chunk of Bun.stdin.stream()) {
@@ -47,7 +47,7 @@ for await (const chunk of Bun.stdin.stream()) {
 
 ---
 
-这会打印通过管道传入 `bun` 进程的输入。
+运行 `stdin.ts` 会输出通过管道传入的任何内容。
 
 ```sh terminal icon="terminal"
 echo "hello" | bun run stdin.ts
@@ -59,4 +59,4 @@ Chunk: hello
 
 ---
 
-更多实用工具请参见 [文档 > API > Utils](/runtime/utils)。
+请参阅[实用工具](/runtime/utils)以了解更多实用工具。

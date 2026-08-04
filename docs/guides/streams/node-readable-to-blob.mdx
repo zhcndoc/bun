@@ -4,7 +4,7 @@ sidebarTitle: Readable 转 Blob
 mode: center
 ---
 
-要在 Bun 中将 Node.js 的 `Readable` 流转换为 [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob)，可以使用该流作为主体创建一个新的 [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) 对象，然后使用 [`response.blob()`](https://developer.mozilla.org/en-US/docs/Web/API/Response/blob) 将流读取为 [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob)。
+要在 Bun 中将 Node.js `Readable` 流转换为 [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob)，请使用该流作为 body 创建一个 [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)，然后调用 [`response.blob()`](https://developer.mozilla.org/en-US/docs/Web/API/Response/blob)。
 
 ```ts
 import { Readable } from "stream";

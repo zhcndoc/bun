@@ -4,9 +4,9 @@ sidebarTitle: 简单服务器
 mode: center
 ---
 
-使用 [`Bun.serve`](/runtime/http/server) 启动一个简单的 WebSocket 服务器。
+使用 [`Bun.serve`](/runtime/http/server) 启动 WebSocket 服务器。
 
-在 `fetch` 中，我们尝试将传入的 `ws:` 或 `wss:` 请求升级为 WebSocket 连接。
+在 `fetch` 中，`server.upgrade()` 会尝试将传入的 `ws:` 或 `wss:` 请求升级为 WebSocket 连接。
 
 ```ts server.ts icon="/icons/typescript.svg"
 const server = Bun.serve({

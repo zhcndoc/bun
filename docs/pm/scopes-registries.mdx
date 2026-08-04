@@ -3,7 +3,7 @@ title: "作用域和注册表"
 description: "配置私有注册表和作用域包"
 ---
 
-默认注册表是 `registry.npmjs.org`。可以在 `bunfig.toml` 中全局配置：
+默认注册表是 `registry.npmjs.org`。要全局更改它，请在 `bunfig.toml` 中进行设置：
 
 ```toml bunfig.toml icon="settings"
 [install]
@@ -32,4 +32,4 @@ registry = "https://username:password@registry.npmjs.org"
 
 ### `.npmrc`
 
-Bun 也会读取 `.npmrc` 文件，[了解更多](/pm/npmrc)。
+Bun 也会读取 [`.npmrc`](/pm/npmrc) 文件。

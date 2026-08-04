@@ -4,7 +4,7 @@ sidebarTitle: "Buffer 转 ReadableStream"
 mode: center
 ---
 
-从 [`Buffer`](https://nodejs.org/api/buffer.html) 创建 [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) 的最简单方法是使用 `ReadableStream` 构造函数，并将整个数组作为一个数据块入队。对于较大的缓冲区，这种方法可能不理想，因为它没有将数据以较小的数据块进行“流式”处理。
+从 [`Buffer`](https://nodejs.org/api/buffer.html) 创建 [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) 的一种简单方法是使用 `ReadableStream` 构造函数，并将整个数组作为单个块加入队列。对于较大的缓冲区，这种方式可能并不理想，因为它不会以更小的块流式传输数据。
 
 ```ts
 const buf = Buffer.from("hello world");
@@ -18,7 +18,7 @@ const stream = new ReadableStream({
 
 ---
 
-为了以较小的数据块流式传输数据，首先从 `Buffer` 创建一个 `Blob` 实例。然后使用 [`Blob.stream()`](https://developer.mozilla.org/en-US/docs/Web/API/Blob/stream) 方法创建一个按指定大小分块流数据的 `ReadableStream`。
+要以更小的块流式传输数据，请先从 `Buffer` 创建一个 `Blob` 实例，然后使用 [`Blob.stream()`](https://developer.mozilla.org/en-US/docs/Web/API/Blob/stream) 创建一个 `ReadableStream`。
 
 ```ts
 const buf = Buffer.from("hello world");
@@ -28,7 +28,7 @@ const stream = blob.stream();
 
 ---
 
-可以通过向 `.stream()` 方法传入数字来设置块大小。
+向 `.stream()` 传入一个数字以设置块大小。
 
 ```ts
 const buf = Buffer.from("hello world");
@@ -40,4 +40,4 @@ const stream = blob.stream(1024);
 
 ---
 
-完整的关于使用 Bun 操作二进制数据的文档见 [Docs > API > Binary Data](/runtime/binary-data#conversion)。
+参见[二进制数据](/runtime/binary-data#conversion)。

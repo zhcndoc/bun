@@ -3,7 +3,7 @@ title: 安全扫描器 API
 description:
 ---
 
-Bun 的包管理器可以在安装前扫描包中的安全漏洞，帮助保护您的应用免受供应链攻击和已知漏洞的影响。
+Bun 的包管理器可以在安装软件包之前扫描它们，以捕获供应链攻击和已知漏洞。
 
 ---
 
@@ -16,12 +16,11 @@ Bun 的包管理器可以在安装前扫描包中的安全漏洞，帮助保护�
 scanner = "@oven/bun-security-scanner" # 示例名称，请替换为您扫描器的包名
 ```
 
-配置后，Bun 将会：
+配置扫描器后，Bun 将：
 
-- 在安装前扫描所有包
-- 显示安全警告和咨询
-- 如果发现严重漏洞，取消安装
-- 自动禁用安全相关的自动安装
+- 在安装前扫描所有软件包
+- 显示安全警告和公告
+- 如果发现致命公告，则取消安装
 
 ---
 
@@ -29,10 +28,9 @@ scanner = "@oven/bun-security-scanner" # 示例名称，请替换为您扫描器
 
 安全扫描器会在执行 `bun install`、`bun add` 及其他包操作时分析包。它们可以检测：
 
-- 已知的安全漏洞（CVE）
+- 已知安全漏洞（CVE）
 - 恶意包
-- 许可合规性问题
-- ……以及更多！
+- 许可证合规问题
 
 ### 安全级别
 
@@ -45,7 +43,7 @@ scanner = "@oven/bun-security-scanner" # 示例名称，请替换为您扫描器
 
 ## 使用预构建扫描器
 
-许多安全公司将 Bun 安全扫描器作为 npm 包发布，您可以立即安装并使用。
+Security companies publish Bun security scanners as npm packages.
 
 ### 安装扫描器
 
@@ -70,7 +68,7 @@ scanner = "@oven/bun-security-scanner" # 示例名称，请替换为您扫描器
 
 ### 企业配置
 
-一些企业级扫描器可能支持通过环境变量认证和/或配置：
+一些企业级扫描器通过环境变量获取身份验证信息和其他配置：
 
 ```bash terminal icon="terminal"
 # 例如可以放在 ~/.bashrc 中
@@ -80,15 +78,15 @@ export SECURITY_API_KEY="your-api-key"
 bun install
 ```
 
-请查阅您的安全扫描器文档，了解需要设置哪些环境变量以及是否需要额外配置。
+请查阅扫描器的文档，了解需要设置的环境变量以及其他必需的配置。
 
 ### 自定义扫描器开发
 
 完整的示例（含测试和 CI 配置）请查看官方模板：
-[github.com/oven-sh/security-scanner-template](https://github.com/oven-sh/security-scanner-template)
+[github.com/oven-sh/security-scanner-template](https://github.com/oven-sh/security-scanner-template)。
 
 ## 相关链接
 
 - [配置 (bunfig.toml)](/runtime/bunfig#install-security-scanner)
 - [包管理器](/installation)
-- [安全扫描器模板](https://github.com/oven-sh/security-scanner-template)
+- [安全扫描器模板](https://github.com/oven-sh/security-scanner-template)。

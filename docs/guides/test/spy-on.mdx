@@ -21,7 +21,7 @@ const spy = spyOn(leo, "sayHi");
 
 ---
 
-一旦创建了 spy，就可以用它来编写与方法调用相关的 `expect` 断言。
+创建监视器后，在 `expect` 断言中使用它来检查方法调用。
 
 {/* prettier-ignore */}
 ```ts
@@ -46,4 +46,4 @@ test("turtles", () => { // [!code ++]
 
 ---
 
-完整的 Bun 测试运行器模拟文档，请参见 [文档 > 测试运行器 > 模拟](/test/mocks)。
+请参阅[模拟](/test/mocks)。

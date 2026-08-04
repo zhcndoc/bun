@@ -7,15 +7,15 @@ Bun 的测试运行器可以很好地配合现有的组件和 DOM 测试库使�
 
 ## happy-dom
 
-对于为前端代码和组件编写无头测试，我们推荐使用 happy-dom。Happy DOM 用纯 JavaScript 实现了一整套完整的 HTML 和 DOM API，使得可以高保真地模拟浏览器环境。
+对于前端代码和组件的无头测试，我们推荐使用 happy-dom。它使用纯 JavaScript 实现了完整的 HTML 和 DOM API 集合，因此可以高度还原地模拟浏览器环境。
 
-开始使用前，请将 `@happy-dom/global-registrator` 包安装为开发依赖。
+将 `@happy-dom/global-registrator` 软件包作为开发依赖项安装。
 
 ```bash terminal icon="terminal"
 bun add -d @happy-dom/global-registrator
 ```
 
-我们将使用 Bun 的预加载功能，在运行测试之前注册 happy-dom 的全局变量。此步骤会使得像 `document` 这样的浏览器 API 在全局作用域中可用。在项目根目录下创建一个名为 `happydom.ts` 的文件，并添加以下代码：
+使用 Bun 的预加载功能，在测试运行前注册 happy-dom 全局变量，这样 `document` 等浏览器 API 就可以在全局作用域中使用。在项目根目录中创建名为 `happydom.ts` 的文件，并添加以下代码：
 
 ```ts title="happydom.ts" icon="/icons/typescript.svg"
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
@@ -30,7 +30,7 @@ GlobalRegistrator.register();
 preload = ["./happydom.ts"]
 ```
 
-这样在运行 `bun test` 时会执行 `happydom.ts`。现在你就可以编写使用浏览器 API（如 `document` 和 `window`）的测试了。
+`bun test` 现在会在测试之前执行 `happydom.ts`，因此测试可以使用 `document` 和 `window` 等浏览器 API。
 
 ```ts title="dom.test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
@@ -44,7 +44,7 @@ test("dom 测试", () => {
 
 ### TypeScript 支持
 
-根据你的 `tsconfig.json` 配置，以上代码中可能会出现“无法找到名称 'document'”的类型错误。为“注入”`document` 和其他浏览器 API 的类型，请在任意测试文件顶部添加以下三斜线指令。
+根据你的 `tsconfig.json` 配置，你可能会在上面的代码中看到 `"Cannot find name 'document'"` 类型错误。要加载 `document` 和其他浏览器 API 的类型，请将以下三斜线指令添加到任意测试文件的顶部。
 
 ```ts title="dom.test.ts" icon="/icons/typescript.svg"
 /// <reference lib="dom" />
@@ -58,7 +58,7 @@ test("dom 测试", () => {
 });
 ```
 
-让我们用 `bun test` 来运行此测试：
+使用 `bun test` 运行测试：
 
 ```bash terminal icon="terminal"
 bun test
@@ -70,15 +70,15 @@ bun test v1.3.3
 dom.test.ts:
 ✓ dom 测试 [0.82ms]
 
- 1 通过
- 0 失败
- 1 次 expect() 调用
-在 1 个文件中共运行了 1 个测试。总耗时 [125.00ms]
+ 1 pass
+ 0 fail
+ 1 expect() calls
+Ran 1 test across 1 file. [125.00ms]
 ```
 
-## React Testing Library
+## React 测试库
 
-Bun 与 React Testing Library 无缝配合，可用于测试 React 组件。按照上述方法配置好 happy-dom 后，你可以正常安装并使用 React Testing Library。
+Bun 支持使用 React Testing Library 测试 React 组件。按照前文所述设置 happy-dom 后，正常安装并使用 React Testing Library。
 
 ```bash terminal icon="terminal"
 bun add -d @testing-library/react @testing-library/jest-dom
@@ -96,8 +96,8 @@ function Button({ children }: { children: React.ReactNode }) {
 }
 
 test('渲染按钮', () => {
-  render(<Button>Click me</Button>);
-  expect(screen.getByRole('button')).toHaveTextContent('Click me');
+  render(<Button>点击我</Button>);
+  expect(screen.getByRole('button')).toHaveTextContent('点击我');
 });
 ```
 
@@ -105,7 +105,7 @@ test('渲染按钮', () => {
 
 ### 自定义元素
 
-你可以使用相同的配置来测试自定义元素和 Web 组件：
+使用相同的设置测试自定义元素和 Web 组件：
 
 ```ts title="custom-element.test.ts" icon="/icons/typescript.svg"
 /// <reference lib="dom" />
@@ -117,7 +117,7 @@ test("自定义元素", () => {
   class MyElement extends HTMLElement {
     constructor() {
       super();
-      this.innerHTML = "<p>Custom element content</p>";
+      this.innerHTML = "<p>自定义元素内容</p>";
     }
   }
 
@@ -126,7 +126,7 @@ test("自定义元素", () => {
   // 在测试中使用它
   document.body.innerHTML = "<my-element></my-element>";
   const element = document.querySelector("my-element");
-  expect(element?.innerHTML).toBe("<p>Custom element content</p>");
+  expect(element?.innerHTML).toBe("<p>自定义元素内容</p>");
 });
 ```
 
@@ -142,7 +142,7 @@ import { test, expect } from "bun:test";
 test("按钮点击事件", () => {
   let clicked = false;
 
-  document.body.innerHTML = '<button id="test-btn">Click me</button>';
+  document.body.innerHTML = '<button id="test-btn">点击我</button>';
   const button = document.getElementById("test-btn");
 
   button?.addEventListener("click", () => {
@@ -158,7 +158,7 @@ test("按钮点击事件", () => {
 
 ### 全局设置
 
-对于更复杂的 DOM 测试配置，你可以创建一个更完整的预加载文件：
+对于更复杂的设置，请创建一个同时注册全局模拟的预加载文件：
 
 ```ts title="test-setup.ts" icon="/icons/typescript.svg"
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
@@ -201,19 +201,19 @@ preload = ["./test-setup.ts"]
 
 ### 常见问题
 
-**TypeScript 对 DOM API 的错误**：确保在测试文件顶部包含 `/// <reference lib="dom" />` 指令。
+**DOM API 的 TypeScript 错误**：在测试文件顶部包含 `/// <reference lib="dom" />` 指令。
 
-**缺失全局变量**：确保 `@happy-dom/global-registrator` 已正确导入并在预加载文件中注册。
+**缺少全局变量**：检查 preload 文件是否导入并注册了 `@happy-dom/global-registrator`。
 
-**React 组件渲染问题**：确保已安装 `@testing-library/react`，且 happy-dom 配置正确。
+**React 组件渲染问题**：检查是否已安装 `@testing-library/react`，并确认 happy-dom 已完成设置。
 
 ### 性能考虑
 
-happy-dom 性能很快，但对于非常大的测试套件，你可能需要：
+happy-dom 速度很快，但对于非常大型的测试套件，你可能需要：
 
-- 使用 `beforeEach` 在测试间重置 DOM 状态
+- 使用 `beforeEach` 在测试之间重置 DOM 状态
 - 避免在单个测试中创建过多 DOM 元素
-- 考虑使用测试库中的 `cleanup` 函数
+- 使用测试库提供的 `cleanup` 函数
 
 ```ts title="test-setup.ts" icon="/icons/typescript.svg"
 import { afterEach } from "bun:test";

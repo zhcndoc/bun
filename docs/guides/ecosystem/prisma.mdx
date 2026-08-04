@@ -5,12 +5,12 @@ mode: center
 ---
 
 <Note>
-  **注意** — Prisma 的动态子命令加载系统目前需要同时安装 npm 和 Bun。这会影响某些 CLI 命令，比如 `prisma init`、`prisma migrate` 等。通过新的 `prisma-client` 生成器生成的代码可以完美兼容 Bun。
+  Prisma 的动态子命令加载要求在安装 Bun 的同时安装 npm。这会影响 `prisma init` 和 `prisma migrate` 等 CLI 命令。使用 `prisma-client` 生成器生成的代码可以与 Bun 一起使用。
 </Note>
 
 <Steps>
 	<Step title="创建新项目">
-		Prisma 可开箱即用支持 Bun。首先，创建一个目录并用 `bun init` 初始化。
+		创建一个目录，并使用 `bun init` 对其进行初始化。
 
     	```bash terminal icon="terminal"
     	mkdir prisma-app
@@ -28,14 +28,14 @@ mode: center
     	```
     </Step>
 
-    <Step title="用 SQLite 初始化 Prisma">
-    	我们将使用带有 `bunx` 的 Prisma CLI 初始化 schema 和迁移目录。为简化起见，我们使用内存 SQLite 数据库。
+    <Step title="使用 SQLite 初始化 Prisma">
+    	使用 `bunx` 运行 Prisma CLI，初始化 schema 和迁移目录。本指南使用内存中的 SQLite 数据库。
 
     	```bash terminal icon="terminal"
     	bunx --bun prisma init --datasource-provider sqlite
     	```
 
-    	这会创建一个基础 schema。我们需要将其更新为使用带 Bun 优化的新的无 Rust 客户端。打开 `prisma/schema.prisma` 并修改 generator 块，然后添加一个 `User` 模型。
+    	这会创建一个基本的 schema。打开 `prisma/schema.prisma`，更新生成器代码块，以便使用基于 `bun` 运行时的无 Rust 客户端，并添加一个 `User` 模型。
 
     	```prisma prisma/schema.prisma icon="/icons/ecosystem/prisma.svg"
     	  generator client {
@@ -59,9 +59,7 @@ mode: center
     </Step>
 
     <Step title="创建并运行数据库迁移">
-    	然后生成并运行初始迁移。
-
-    	这将生成一个位于 `prisma/migrations` 的 `.sql` 迁移文件，创建一个新的 SQLite 实例，并对该实例执行迁移。
+    	生成并运行初始迁移。这会将一个 `.sql` 迁移文件写入 `prisma/migrations`，创建一个新的 SQLite 数据库，并针对该数据库运行迁移。
 
     	```bash terminal icon="terminal"
     	 bunx --bun prisma migrate dev --name init
@@ -88,7 +86,7 @@ mode: center
     </Step>
 
     <Step title="生成 Prisma Client">
-    	如输出所示，每当执行新迁移时，Prisma 会重新生成 _Prisma 客户端_。客户端为数据库的读写提供完全类型化的 API。你也可以通过 Prisma CLI 手动重新生成客户端。
+    	如输出所示，每当你运行新的迁移时，Prisma 都会重新生成 _Prisma 客户端_。该客户端提供了一个完全类型化的 API，用于读取和写入数据库。你也可以使用 Prisma CLI 手动重新生成它。
 
     	```sh terminal icon="terminal"
     	bunx --bun prisma generate
@@ -96,7 +94,7 @@ mode: center
     </Step>
 
     <Step title="使用 LibSQL 初始化 Prisma Client">
-    	现在需要创建 Prisma 客户端实例。新建文件 `prisma/db.ts`，用 LibSQL 适配器初始化 PrismaClient。
+    	创建一个新的文件 `prisma/db.ts`，使用 LibSQL 适配器初始化 PrismaClient。
 
     	```ts prisma/db.ts icon="/icons/typescript.svg"
     	import { PrismaClient } from "./generated/client";
@@ -107,8 +105,8 @@ mode: center
     	```
     </Step>
 
-    <Step title="创建一个测试脚本">
-    	让我们编写一个脚本：创建一个新用户，然后统计数据库中用户的数量。
+    <Step title="创建测试脚本">
+    	编写一个脚本来创建新用户，然后统计数据库中的用户数量。
 
     	```ts index.ts icon="/icons/typescript.svg"
     	import { prisma } from "./prisma/db";
@@ -159,4 +157,4 @@ mode: center
 
 ---
 
-就这样！现在你已经用 Bun 配置好了 Prisma，接下来建议参考[官方 Prisma 文档](https://www.prisma.io/docs/orm/prisma-client)继续开发你的应用。
+现在已在 Bun 中完成 Prisma 的设置。在构建应用的过程中，请参阅 [Prisma 文档](https://www.prisma.io/docs/orm/prisma-client)。

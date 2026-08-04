@@ -8,7 +8,7 @@ mode: center
 
 ---
 
-使用 Testing Library 的前提是你需要安装 [Happy Dom](https://github.com/capricorn86/happy-dom)。（[查看 Bun 的 Happy DOM 指南获取更多信息](/guides/test/happy-dom)）。
+首先，安装 [Happy DOM](https://github.com/capricorn86/happy-dom)（请参阅 [Bun 的 Happy DOM 指南](/guides/test/happy-dom)）。
 
 ```sh terminal icon="terminal"
 bun add -D @happy-dom/global-registrator
@@ -16,7 +16,7 @@ bun add -D @happy-dom/global-registrator
 
 ---
 
-接下来你应当安装打算使用的 Testing Library 包。例如，如果你正在为 React 设置测试，你可以这样安装。你还需要安装 `@testing-library/jest-dom`，以便后续使用 matcher。
+接下来，安装你计划使用的 Testing Library 软件包，以及用于后文匹配器的 `@testing-library/jest-dom`。对于 React：
 
 ```sh terminal icon="terminal"
 bun add -D @testing-library/react @testing-library/dom @testing-library/jest-dom
@@ -24,7 +24,7 @@ bun add -D @testing-library/react @testing-library/dom @testing-library/jest-dom
 
 ---
 
-接下来你需要为 Happy DOM 和 Testing Library 创建预加载脚本。有关 Happy DOM 设置脚本的更多细节，请参阅 [Bun 的 Happy DOM 指南](/guides/test/happy-dom)。
+接下来，为 Happy DOM 和 Testing Library 创建预加载脚本。
 
 ```ts happydom.ts icon="/icons/typescript.svg"
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
@@ -34,7 +34,7 @@ GlobalRegistrator.register();
 
 ---
 
-对于 Testing Library，你需要使用 Testing Library 的 matcher 来扩展 Bun 的 `expect` 函数。可选地，为了更好地匹配像 Jest 这样的测试运行器的行为，你可能想在每个测试后运行清理操作。
+对于 Testing Library，使用其匹配器扩展 Bun 的 `expect` 函数。你还可以选择在每个测试后运行清理，以更好地匹配 Jest 等测试运行器的行为。
 
 ```ts testing-library.ts icon="/icons/typescript.svg"
 import { afterEach, expect } from "bun:test";
@@ -51,7 +51,7 @@ afterEach(() => {
 
 ---
 
-然后，将这些预加载脚本添加到你的 `bunfig.toml` 中（如果你愿意，也可以将所有内容放在单个 `preload.ts` 脚本里）。
+接下来，将这些预加载脚本添加到你的 `bunfig.toml` 中。你也可以将所有内容放在一个 `preload.ts` 脚本中。
 
 ```toml bunfig.toml icon="settings"
 [test]
@@ -60,7 +60,7 @@ preload = ["./happydom.ts", "./testing-library.ts"]
 
 ---
 
-如果你在使用 TypeScript，你还需要使用声明合并，以便在编辑器中显示新的 matcher 类型。为此，你需要创建一个类型声明文件，像这样扩展 `Matchers`。
+如果你使用 TypeScript，还需要进行声明合并，以便新的匹配器类型显示在编辑器中。创建一个扩展 `Matchers` 的类型声明文件。
 
 ```ts matchers.d.ts icon="/icons/typescript.svg"
 import { TestingLibraryMatchers } from "@testing-library/jest-dom/matchers";
@@ -74,7 +74,7 @@ declare module "bun:test" {
 
 ---
 
-现在你应该可以在测试中使用 Testing Library 了。
+现在，你可以在测试中使用 Testing Library。
 
 ```tsx myComponent.test.tsx icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
@@ -90,4 +90,4 @@ test("Can use Testing Library", () => {
 
 ---
 
-有关使用 Bun 编写浏览器测试的完整文档，请参阅 [Testing Library 文档](https://testing-library.com/)、[Happy DOM 仓库](https://github.com/capricorn86/happy-dom) 以及 [文档 > 测试运行器 > DOM](/test/dom)。
+请参阅 [Testing Library 文档](https://testing-library.com/)、[Happy DOM 仓库](https://github.com/capricorn86/happy-dom)以及 [DOM 测试](/test/dom)。

@@ -3,9 +3,9 @@ title: 宏
 description: 使用 Bun 宏在打包时运行 JavaScript 函数
 ---
 
-宏是一种在打包时运行 JavaScript 函数的机制。这些函数返回的值会被直接内联到你的打包文件中。
+宏是会在打包时运行的 JavaScript 函数。它们的返回值会直接内联到你的打包文件中。
 
-作为一个示例，考虑这个返回随机数的简单函数。
+作为一个简单示例，考虑下面这个返回随机数的函数。
 
 ```ts title="random.ts" icon="/icons/typescript.svg"
 export function random() {
@@ -13,7 +13,7 @@ export function random() {
 }
 ```
 
-这是一个常规文件中的常规函数，但你可以像下面这样把它用作宏：
+这是一个普通文件中的普通函数，但你可以将它用作宏：
 
 ```tsx title="cli.tsx" icon="/icons/typescript.svg"
 import { random } from "./random.ts" with { type: "macro" };
@@ -22,11 +22,10 @@ console.log(`你的随机数是 ${random()}`);
 ```
 
 <Note>
-  宏通过导入属性语法来标识。如果你之前没见过这种语法，它是 Stage 3 TC39 提案，
-  允许你给导入语句附加额外的元数据。
+  宏使用导入属性语法进行标记。这是一项处于第 3 阶段的 TC39 提案，用于向导入语句附加额外的元数据。
 </Note>
 
-现在我们用 `bun build` 来打包这个文件。打包后的文件将打印到标准输出。
+使用 `bun build` 打包该文件。打包后的文件会输出到 stdout。
 
 ```bash terminal icon="terminal"
 bun build ./cli.tsx
@@ -36,26 +35,26 @@ bun build ./cli.tsx
 console.log(`你的随机数是 ${0.6805550949689833}`);
 ```
 
-如你所见，`random` 函数的源码并没有出现在打包文件中。相反，它在打包时执行，函数调用(`random()`)被替换为函数的返回结果。由于源码永远不会被包含在打包文件里，宏可以安全地执行诸如读取数据库之类的特权操作。
+`random` 函数的源代码不会出现在打包文件中的任何位置。相反，它会在打包过程中运行，并且调用（`random()`）会被替换为其结果。由于源代码从未包含在打包文件中，因此宏可以安全地执行读取数据库等需要特权的操作。
 
 ## 何时使用宏
 
-如果你有多个为小任务写的一次性构建脚本，打包时执行代码会更易维护。宏与其它代码共存，和构建过程同步运行，自动并行化，如果失败，构建也会失败。
+对于那些原本需要编写一次性构建脚本来完成的小任务，在打包时执行代码可能更易于维护。它与其余代码共存，与其余构建过程一同运行，会自动并行执行，而且如果它失败，构建也会失败。
 
 不过，如果你发现自己在打包时运行大量代码，考虑改为运行服务器。
 
 ## 导入属性
 
-Bun 宏的导入语句使用以下方式注释：
+宏是带有以下注解之一的导入语句：
 
-- `with { type: 'macro' }` — 一种导入属性，Stage 3 ECMA Script 提案
-- `assert { type: 'macro' }` — 一种导入断言，导入属性的早期形式，现已废弃（但已被多个浏览器和运行时支持）
+- `with { type: 'macro' }` — 导入属性，一项处于第 3 阶段的 ECMAScript 提案
+- `assert { type: 'macro' }` — 导入断言，这是导入属性的早期形式，现已被弃用（但已得到许多浏览器和运行时的支持）
 
 ## 安全注意事项
 
-宏必须显式用 `{ type: "macro" }` 导入，才会在打包时执行。如果不调用这些宏导入，它们不会有任何效果，而普通的 JavaScript 导入可能会有副作用。
+必须使用 `{ type: "macro" }` 显式导入宏，才能在打包时运行。如果未调用这些宏导入，它们不会产生任何影响；这与可能产生副作用的常规 JavaScript 导入不同。
 
-可以通过向 Bun 传递 `--no-macros` 参数来完全禁用宏，这会产生如下构建错误：
+你可以使用 `--no-macros` 标志完全禁用宏。它会产生如下构建错误：
 
 ```
 error: Macros are disabled
@@ -85,7 +84,7 @@ macro();
 
 ## 导出条件 "macro"
 
-当向 npm 或其它包注册中心发布包含宏的库时，使用 `"macro"` 导出条件为宏环境专门提供一个版本。
+当将包含宏的库发布到 npm 或其他包注册表时，使用 `"macro"` 导出条件，为宏环境提供专用的包版本。
 
 ```json title="package.json" icon="file-json"
 {
@@ -106,19 +105,19 @@ import pkg from "my-package"; // 运行时导入
 import { macro } from "my-package" with { type: "macro" }; // 宏导入
 ```
 
-第一个导入会解析到 `./node_modules/my-package/index.js`，第二个导入会被 Bun 的打包器解析为 `./node_modules/my-package/index.macro.js`。
+第一个导入解析为 `./node_modules/my-package/index.js`；Bun 的打包器会将第二个导入解析为 `./node_modules/my-package/index.macro.js`。
 
 ## 执行
 
-当 Bun 的转译器遇到宏导入时，会使用 Bun 的 JavaScript 运行时在转译器内调用该函数，并将 JavaScript 返回值转换为 AST 节点。这些函数是在打包时调用，而非运行时。
+当 Bun 的转译器看到宏导入时，它会使用 Bun 的 JavaScript 运行时调用该函数，并将返回值转换为 AST 节点。
 
-宏在转译器的访问阶段同步执行——插件之前，生成 AST 之前。它们按导入顺序执行。转译器会等待宏执行完才继续。如果宏返回 Promise，转译器也会等待它完成。
+宏会在访问阶段由转译器同步运行，此时插件尚未运行，转译器也尚未生成 AST。宏按照导入顺序运行。转译器会等待每个宏完成后再继续，并等待宏返回的任何 Promise。
 
-Bun 的打包器是多线程的，因此宏会在多个 JavaScript “工作线程”中并行执行。
+Bun 的打包器是多线程的，因此宏会在多个生成的 JavaScript“工作线程”中并行执行。
 
 ## 死代码消除
 
-宏执行和内联后，打包器会执行死代码消除。举例，下面的宏：
+打包器会在运行并内联宏之后执行死代码消除。给定以下宏：
 
 ```ts title="returnFalse.ts" icon="/icons/typescript.svg"
 export function returnFalse() {
@@ -126,7 +125,7 @@ export function returnFalse() {
 }
 ```
 
-打包如下代码（启用语法压缩选项）会得到一个空包：
+……在启用 `minify` 语法选项的情况下，打包以下文件会生成一个空的 bundle。
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 import { returnFalse } from "./returnFalse.ts" with { type: "macro" };
@@ -138,7 +137,7 @@ if (returnFalse()) {
 
 ## 可序列化性
 
-Bun 的转译器需要能序列化宏的返回值，以便将其内联到 AST 中。所有兼容 JSON 的数据结构都支持：
+Bun 的转译器必须能够序列化宏的结果，以便将其内联到 AST 中。所有与 JSON 兼容的数据结构都受支持：
 
 ```ts title="macro.ts" icon="/icons/typescript.svg"
 export function getObject() {
@@ -150,7 +149,7 @@ export function getObject() {
 }
 ```
 
-宏可以是异步的，或返回 Promise 实例。Bun 的转译器会自动等待 Promise 并内联结果。
+宏可以是异步的，也可以返回 Promise 实例。Bun 的转译器会等待 Promise，并将结果内联。
 
 ```ts title="macro.ts" icon="/icons/typescript.svg"
 export async function getText() {
@@ -158,11 +157,10 @@ export async function getText() {
 }
 ```
 
-转译器为常见数据格式如 `Response`、`Blob`、`TypedArray` 实现了特殊序列化逻辑。
+转译器实现了特殊逻辑，用于序列化 `Response` 和 `Blob` 等常见数据格式。
 
-- **TypedArray**：解析为 base64 编码字符串。
-- **Response**：Bun 会读取 `Content-Type` 并据此序列化；比如 `application/json` 类型会自动解析为对象，`text/plain` 则内联为字符串。未知或未定义类型的 Response 会转为 base64 编码。
-- **Blob**：和 Response 一样，序列化依赖其 `type` 属性。
+- **Response**：Bun 会读取 `Content-Type` 并据此进行序列化；例如，类型为 `application/json` 的 Response 会被解析为对象，而 `text/plain` 会被内联为字符串。类型无法识别或未定义的 Response 会被编码为 base64。
+- **Blob**：与 Response 一样，序列化方式取决于 `type` 属性。
 
 `fetch` 返回的是 `Promise<Response>`，可以直接返回。
 
@@ -172,7 +170,7 @@ export function getObject() {
 }
 ```
 
-函数和大多数类的实例（除上述类）不可序列化。
+函数和大多数类的实例（之前列出的实例除外）都无法序列化。
 
 ```ts title="macro.ts" icon="/icons/typescript.svg"
 export function getText(url: string) {
@@ -197,7 +195,7 @@ export function howLong() {
 }
 ```
 
-如果 `foo` 的值在打包时已知（比如是常量或另一个宏的结果），则允许如下用法：
+但是，如果 `foo` 的值在打包时已知（例如，它是一个常量或另一个宏的结果），那么这种用法就是允许的：
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 import { getText } from "./getText.ts" with { type: "macro" };
@@ -235,7 +233,7 @@ export function getGitCommitHash() {
 }
 ```
 
-构建时，`getGitCommitHash` 被调用结果替换：
+构建时，`getGitCommitHash` 调用会被替换为调用该函数的结果：
 
 <CodeGroup>
 
@@ -257,7 +255,7 @@ console.log(`当前 Git 提交哈希是 3ee3259104e4507cf62c160f0ff5357ec4c7a7f8
 
 ### 在打包时执行 fetch() 请求
 
-这个示例中，我们使用 `fetch()` 进行 HTTP 请求，用 `HTMLRewriter` 解析 HTML 响应，并返回包含标题和 meta 标签的对象——这一切都在打包时完成。
+此示例使用 `fetch()` 发出 HTTP 请求，使用 `HTMLRewriter` 解析 HTML 响应，并在打包时返回一个包含标题和 meta 标签的对象。
 
 ```ts title="meta.ts" icon="/icons/typescript.svg"
 export async function extractMetaTags(url: string) {
@@ -285,7 +283,7 @@ export async function extractMetaTags(url: string) {
 }
 ```
 
-`extractMetaTags` 函数在打包时被函数调用结果替换。这意味着 fetch 请求发生在打包时，结果被内嵌到包里。由于不可达，抛出错误的分支也被消除。
+`extractMetaTags` 函数会在打包时被移除，并替换为函数调用的结果：fetch 请求会在打包时执行，结果会被嵌入到打包产物中。由于抛出错误的分支不可达，因此也会被移除。
 
 <CodeGroup>
 

@@ -4,7 +4,7 @@ sidebarTitle: 使用 Bun 的 HTTP 服务器
 mode: center
 ---
 
-这段代码启动了一个监听 `3000` 端口的 HTTP 服务器。它演示了基本的路由处理，包括多种常见响应，同时还处理来自标准表单或 JSON 的 POST 数据。
+此代码启动一个监听 `3000` 端口的 HTTP 服务器。它演示了使用常见响应进行基本路由处理，并处理来自标准表单或 JSON 格式的 POST 数据。
 
 详情请参见 [`Bun.serve`](/runtime/http/server)。
 
@@ -13,8 +13,8 @@ const server = Bun.serve({
   async fetch(req) {
     const path = new URL(req.url).pathname;
 
-    // 以 text/html 响应
-    if (path === "/") return new Response("欢迎使用 Bun！");
+    // 返回 text/plain
+    if (path === "/") return new Response("Welcome to Bun!");
 
     // 重定向
     if (path === "/abc") return Response.redirect("/source", 301);

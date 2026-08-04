@@ -5,11 +5,11 @@ description: 使用 Bun 内置的 Markdown API 解析并渲染 Markdown，支持
 
 <Callout type="note">**不稳定的 API** — 该 API 正在积极开发中，未来版本的 Bun 可能会发生变化。</Callout>
 
-Bun 包含一个用 Zig 编写的快速内置 Markdown 解析器。它支持 GitHub 风格的 Markdown (GFM) 扩展，并提供三种 API：
+Bun 内置了一个使用 Rust 编写的快速 Markdown 解析器。它支持 GitHub 风格 Markdown（GFM）扩展，并提供三个 API：
 
 - `Bun.markdown.html()` — 将 Markdown 渲染为 HTML 字符串
 - `Bun.markdown.render()` — 使用自定义回调渲染 Markdown 的每个元素
-- `Bun.markdown.react()` — 渲染 Markdown 为 React JSX 元素
+- `Bun.markdown.react()` — 将 Markdown 渲染为 React JSX 元素
 
 ---
 
@@ -50,23 +50,23 @@ const html = Bun.markdown.html("some markdown", {
 
 所有可用选项：
 
-| 选项                   | 默认值  | 描述                                                  |
-| ---------------------- | ------- | ----------------------------------------------------- |
-| `tables`               | `false` | GFM 表格                                              |
-| `strikethrough`        | `false` | GFM 删除线 (`~~text~~`)                               |
-| `tasklists`            | `false` | GFM 任务列表 (`- [x] item`)                           |
-| `autolinks`            | `false` | 启用自动链接 — 参见 [自动链接](#autolinks)            |
-| `headings`             | `false` | 启用标题 ID 和自动链接 — 参见 [标题 ID](#heading-ids) |
-| `hardSoftBreaks`       | `false` | 把软换行视为硬换行                                    |
-| `wikiLinks`            | `false` | 启用 `[[wiki links]]`                                 |
-| `underline`            | `false` | `__text__` 渲染为 `<u>` 而非 `<strong>`               |
-| `latexMath`            | `false` | 启用 `$inline$` 和 `$$display$$` 数学模式             |
-| `collapseWhitespace`   | `false` | 折叠文本中的空白                                      |
-| `permissiveAtxHeaders` | `false` | 允许 ATX 标题在 `#` 之后无空格                        |
-| `noIndentedCodeBlocks` | `false` | 禁用缩进代码块                                        |
-| `noHtmlBlocks`         | `false` | 禁用 HTML 块                                          |
-| `noHtmlSpans`          | `false` | 禁用内联 HTML                                         |
-| `tagFilter`            | `false` | 过滤不允许的 HTML 标签                                |
+| 选项                   | 默认值  | 描述                                                         |
+| ---------------------- | ------- | ------------------------------------------------------------ |
+| `tables`               | `true`  | GFM 表格                                                    |
+| `strikethrough`        | `true`  | GFM 删除线（`~~text~~`）                                    |
+| `tasklists`             | `true`  | GFM 任务列表（`- [x] item`）                                |
+| `autolinks`             | `false` | 启用自动链接——参见[自动链接](#自动链接)                     |
+| `headings`              | `false` | 标题 ID 和自动链接——参见[标题 ID](#标题-id)                 |
+| `hardSoftBreaks`        | `false` | 将软换行视为硬换行                                           |
+| `wikiLinks`             | `false` | 启用 `[[wiki links]]`                                        |
+| `underline`             | `false` | 将 `__text__` 渲染为 `<u>` 而不是 `<strong>`                |
+| `latexMath`             | `false` | 启用 `$inline$` 和 `$$display$$` 数学公式                  |
+| `collapseWhitespace`    | `false` | 合并文本中的空白                                             |
+| `permissiveAtxHeaders`  | `false` | 允许 `#` 后没有空格的 ATX 标题                               |
+| `noIndentedCodeBlocks`  | `false` | 禁用缩进代码块                                               |
+| `noHtmlBlocks`          | `false` | 禁用 HTML 块                                                 |
+| `noHtmlSpans`            | `false` | 禁用行内 HTML                                                 |
+| `tagFilter`             | `false` | 用于过滤不允许 HTML 标签的 GFM 标签过滤器                   |
 
 #### 自动链接
 
@@ -221,7 +221,7 @@ const ansi = Bun.markdown.render("# Hello\n\nThis is **bold** and *italic*", {
 const result = Bun.markdown.render("1. first\n   1. sub-a\n   2. sub-b\n2. second", {
   listItem: (children, { index, depth, ordered, start }) => {
     const n = (start ?? 1) + index;
-    // 1. 2. 3. at depth 0, a. b. c. at depth 1, i. ii. iii. at depth 2
+    // 深度 0 使用 1. 2. 3.，深度 1 使用 a. b. c.，深度 2 使用 i. ii. iii.
     const marker = !ordered
       ? "-"
       : depth === 0
@@ -231,7 +231,7 @@ const result = Bun.markdown.render("1. first\n   1. sub-a\n   2. sub-b\n2. secon
           : `${toRoman(n)}.`;
     return "  ".repeat(depth) + marker + " " + children.trimEnd() + "\n";
   },
-  // Prepend a newline so nested lists are separated from their parent item's text
+  // 添加换行符，使嵌套列表与其父列表项的文本分隔开
   list: children => "\n" + children,
 });
 // 1. first
@@ -253,7 +253,7 @@ const result = Bun.markdown.render("```js\nconsole.log('hi')\n```", {
 
 ### 解析器选项
 
-解析器选项作为第三个参数传入：
+将解析器选项作为单独的第三个参数传入：
 
 ```ts
 const result = Bun.markdown.render(
@@ -369,7 +369,7 @@ function Markdown({ text }: { text: string }) {
 
 ### 解析器选项
 
-所有[解析器选项](#options)作为第三个参数传入：
+将任意[解析器选项](#options)作为第三个参数传入：
 
 ```tsx
 const el = Bun.markdown.react("## Hello World", undefined, {

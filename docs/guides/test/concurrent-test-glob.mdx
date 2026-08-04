@@ -5,7 +5,7 @@ mode: center
 description: 设置通配符模式以决定来自哪些文件的哪些测试并行运行
 ---
 
-本指南演示如何使用 `concurrentTestGlob` 选项，基于文件命名模式有选择地并发运行测试。
+`bunfig.toml` 中的 `concurrentTestGlob` 选项会在文件名匹配通配符模式的文件中并发运行测试。
 
 ## 项目结构
 
@@ -23,7 +23,7 @@ my-project/
 
 ## 配置
 
-配置你的 `bunfig.toml`，使带有 "concurrent-" 前缀的测试文件并发运行：
+配置 `bunfig.toml`，以并发运行带有“concurrent-”前缀的测试文件：
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -35,7 +35,7 @@ concurrentTestGlob = "**/concurrent-*.test.ts"
 
 ### 单元测试（顺序执行）
 
-顺序测试适用于共享状态或有特定执行顺序需求的测试：
+共享状态或依赖执行顺序的测试应保持顺序执行：
 
 ```ts title="tests/unit/math.test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
@@ -102,33 +102,31 @@ bun test tests/integration
 
 ## 优点
 
-1. **逐步迁移**：通过重命名文件逐个迁移到并发测试
-2. **清晰的组织**：文件命名约定体现执行方式
-3. **性能提升**：集成测试并行执行更快
-4. **安全保障**：单元测试在需要时保持顺序执行
-5. **灵活性强**：通过重命名文件轻松更改执行方式
+1. **渐进式迁移**：一次重命名一个文件，将其迁移到并发执行
+2. **组织清晰**：文件名会告诉你该文件中的测试如何运行
+3. **性能提升**：独立的集成测试并行运行时完成得更快
+4. **安全性**：单元测试在需要时保持串行运行
 
 ## 迁移策略
 
 迁移现有测试到并发执行：
 
-1. **从独立的集成测试开始** — 通常这些测试不共享状态
-2. **重命名文件以匹配通配符模式**：`mv api.test.ts concurrent-api.test.ts`
-3. **确保测试仍然通过** — 运行 `bun test` 确认无竞态条件
-4. **监控共享状态问题** — 观察是否有不稳定测试或意外失败
-5. **逐步迁移稳定测试** — 不要急于全部迁移
+1. **从相互独立的集成测试开始** - 这些测试通常不会共享状态
+2. **重命名文件以匹配 glob 模式**：`mv api.test.ts concurrent-api.test.ts`
+3. **运行 `bun test`** - 检查竞态条件以及不稳定或意外的失败
+4. **逐个文件继续迁移稳定的测试**
 
 ## 建议
 
-- **使用描述性前缀**：如 `concurrent-`、`parallel-`、`async-`
-- **将相关的顺序测试放在一起**，保持同一目录
-- **用注释说明某些测试必须顺序执行的原因**
-- **在顺序文件中使用 `test.concurrent()` 实现细粒度控制**
-  （注意：在匹配 `concurrentTestGlob` 的文件中，普通 `test()` 即为并发执行）
+- **使用描述性前缀**：`concurrent-`、`parallel-`、`async-`
+- **将相关的顺序测试放在同一目录中**
+- **通过注释说明某些测试必须保持顺序执行的原因**
+- **在顺序执行的文件中使用 `test.concurrent()` 进行细粒度控制**
+  （在与 `concurrentTestGlob` 匹配的文件中，普通的 `test()` 已会并发运行）
 
 ## 多个模式
 
-你可以为不同测试类别指定多个模式：
+`concurrentTestGlob` 也接受多个模式：
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -139,8 +137,8 @@ concurrentTestGlob = [
 ]
 ```
 
-此配置将使匹配以下任一模式的测试并发执行：
+匹配任意这些模式的文件中的测试将并发运行：
 
 - 所有 `integration/` 目录下的测试
 - 所有 `e2e/` 目录下的测试
-- 项目中任意位置所有以 `concurrent-` 前缀命名的测试文件
+- 项目中任意位置所有以 `concurrent-` 前缀命名的测试文件。

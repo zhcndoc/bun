@@ -24,17 +24,18 @@ console.log(socket.port); // 41234
 
 ### 发送数据报
 
-指定要发送的数据，以及目标端口和地址。
+指定要发送的数据、目标端口和目标地址。
 
 ```ts
 socket.send("Hello, world!", 41234, "127.0.0.1");
 ```
 
-注意，地址必须是有效的 IP 地址 —— `send` 不执行 DNS 解析，因为它旨在用于低延迟操作。
+地址必须是有效的 IP 地址。`send` 不会执行 DNS
+解析，因为它旨在用于低延迟操作。
 
 ### 接收数据报
 
-创建套接字时，添加回调以指定接收数据包时应执行的操作：
+创建套接字时，添加一个 `data` 回调来处理传入的数据包：
 
 ```ts server.ts icon="/icons/typescript.svg"
 const server = await Bun.udpSocket({
@@ -52,9 +53,9 @@ client.send("Hello!", server.port, "127.0.0.1");
 
 ### 连接
 
-虽然 UDP 没有连接的概念，但许多 UDP 通信（尤其是作为客户端时）只涉及一个对等方。
-在这种情况下，将套接字“连接”到该对等方可能会带来好处，这指定了所有数据包发送的地址，
-并限制只接收来自该对等方的数据包。
+UDP 没有连接的概念，但许多 UDP 通信（尤其是客户端通信）只涉及一个对等方。
+在这种情况下，你可以将套接字连接到该对等方，这会为你发送的每个数据包设置目标地址，
+并将传入的数据包限制为仅接收来自该对等方的数据包。
 
 ```ts server.ts icon="/icons/typescript.svg"
 const server = await Bun.udpSocket({
@@ -76,15 +77,14 @@ const client = await Bun.udpSocket({
 client.send("Hello");
 ```
 
-由于连接是在操作系统层面实现的，你也可能观察到性能上的提升。
+连接在操作系统层面实现，因此也可以提升性能。
 
 ### 使用 `sendMany()` 一次发送多个数据包
 
-如果你想一次发送大量数据包，合并发送可以避免为每个包调用系统调用的开销。
-这可以通过 `sendMany()` API 实现：
+要在不为每个数据包执行一次系统调用的情况下发送大量数据包，可以使用 `sendMany()` 对它们进行批处理。
 
-对于未连接套接字，`sendMany` 接受一个数组作为唯一参数。每三项描述一个数据包：
-第一项是要发送的数据，第二项是目标端口，第三项是目标地址。
+对于未连接的套接字，`sendMany` 将数组作为唯一参数。数组中的每组三个元素描述一个数据包：
+要发送的数据、目标端口和目标地址。
 
 ```ts server.ts icon="/icons/typescript.svg"
 const socket = await Bun.udpSocket({});
@@ -93,7 +93,7 @@ const socket = await Bun.udpSocket({});
 socket.sendMany(["Hello", 41234, "127.0.0.1", "foo", 53, "1.1.1.1"]);
 ```
 
-With a connected socket, `sendMany` takes an array, where each element represents the data to be sent to the peer.
+对于已连接的套接字，`sendMany` 接收一个数组，数组中的每个元素都是要发送给对等方的数据。
 
 ```ts server.ts icon="/icons/typescript.svg"
 const socket = await Bun.udpSocket({
@@ -106,16 +106,15 @@ const socket = await Bun.udpSocket({
 socket.sendMany(["foo", "bar", "baz"]);
 ```
 
-`sendMany` 返回成功发送的数据包数。与 `send` 一样，`sendMany` 只接受有效的 IP 地址作为目标，
-因为它不执行 DNS 解析。
+`sendMany` 返回成功发送的数据包数量。与 `send` 一样，它只接受有效的 IP 地址
+作为目标地址，并且不会执行 DNS 解析。
 
 ### 处理背压
 
-可能会发生你发送的数据包无法放入操作系统的数据包缓冲区。当出现以下情况时，你可以检测到这种情况：
+你发送的数据包可能无法放入操作系统的数据包缓冲区。当出现以下情况时，你可以检测到这一点：
 
 - `send` 返回 `false`
-- `sendMany` 返回的数字小于你指定的数据包数量。在这种情况下，一旦套接字变得可写，
-  `drain` 套接字处理程序会被调用：
+- `sendMany` 返回的数字小于你指定的数据包数量。在这种情况下，套接字再次变为可写后，Bun 会调用一次 `drain` 套接字处理程序：
 
 ```ts
 const socket = await Bun.udpSocket({

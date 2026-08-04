@@ -1,5 +1,5 @@
 ---
-title: Spawn
+title: 生成
 description: 使用 `Bun.spawn` 或 `Bun.spawnSync` 创建子进程
 ---
 
@@ -12,7 +12,7 @@ const proc = Bun.spawn(["bun", "--version"]);
 console.log(await proc.exited); // 0
 ```
 
-`Bun.spawn` 的第二个参数是一个参数对象，用来配置子进程。
+`Bun.spawn` 的第二个参数是一个用于配置子进程的参数对象。
 
 ```ts
 const proc = Bun.spawn(["bun", "--version"], {
@@ -28,7 +28,7 @@ proc.pid; // 子进程的进程ID
 
 ## 输入流
 
-默认情况下，子进程的输入流是 `undefined`；可以通过 `stdin` 参数进行配置。
+默认情况下，子进程的输入流未定义；请使用 `stdin` 参数进行配置。
 
 ```ts
 const proc = Bun.spawn(["cat"], {
@@ -52,7 +52,7 @@ console.log(text); // "const input = "hello world".repeat(400); ..."
 | `Blob`                   | 使用 Blob 作为输入                                     |
 | `number`                 | 从给定文件描述符的文件读取                             |
 
-`"pipe"` 选项允许从父进程向子进程的输入流进行增量写入。
+使用 `"pipe"` 时，父进程可以向子进程的输入流增量写入数据。
 
 ```ts
 const proc = Bun.spawn(["cat"], {
@@ -73,7 +73,7 @@ proc.stdin.flush();
 proc.stdin.end();
 ```
 
-将一个 `ReadableStream` 传给 `stdin`，可以让你直接从 JavaScript 的 `ReadableStream` 向子进程输入流传输数据：
+将 `ReadableStream` 传递给 `stdin` 时，它会将数据直接通过管道传输到子进程的输入流：
 
 ```ts
 const stream = new ReadableStream({
@@ -95,7 +95,7 @@ console.log(output); // "Hello from ReadableStream!"
 
 ## 输出流
 
-你可以通过 `stdout` 和 `stderr` 属性读取子进程的输出。默认情况下它们是 `ReadableStream` 的实例。
+从 `stdout` 和 `stderr` 属性中读取子进程的输出。默认情况下，这些属性是 `ReadableStream` 的实例。
 
 ```ts
 const proc = Bun.spawn(["bun", "--version"]);
@@ -125,7 +125,7 @@ const proc = Bun.spawn(["bun", "--version"], {
 });
 ```
 
-为方便起见，`exited` 属性是一个在进程退出时解析的 `Promise`。
+`exited` 属性是一个 `Promise`，在进程退出时解析。
 
 ```ts index.ts icon="/icons/typescript.svg"
 const proc = Bun.spawn(["bun", "--version"]);
@@ -147,7 +147,7 @@ proc.kill(15); // 指定信号码
 proc.kill("SIGTERM"); // 指定信号名
 ```
 
-父进程 `bun` 在所有子进程退出前不会终止。使用 `proc.unref()` 可以将子进程与父进程分离。
+父 `bun` 进程不会终止，直到所有子进程都已退出。使用 `proc.unref()` 将子进程与父进程分离。
 
 ```ts index.ts icon="/icons/typescript.svg"
 const proc = Bun.spawn(["bun", "--version"]);
@@ -156,7 +156,7 @@ proc.unref();
 
 ## 资源使用
 
-进程退出后，你可以获取该进程的资源使用信息：
+进程退出后，`resourceUsage()` 会报告其资源使用情况：
 
 ```ts index.ts icon="/icons/typescript.svg"
 const proc = Bun.spawn(["bun", "--version"]);
@@ -187,7 +187,7 @@ controller.abort();
 
 ## 使用 timeout 和 killSignal
 
-你可以为子进程设置超时时间，超时后自动终止进程：
+将 `timeout` 设置为在经过指定的毫秒数后终止子进程：
 
 ```ts index.ts icon="/icons/typescript.svg"
 // 5秒后杀死进程
@@ -199,7 +199,7 @@ const proc = Bun.spawn({
 await proc.exited; // 5秒后解析
 ```
 
-默认情况下，超时进程会使用 `SIGTERM` 信号被杀死。你可以通过 `killSignal` 选项指定不同信号：
+默认情况下，Bun 会使用 `SIGTERM` 终止超时的进程。使用 `killSignal` 选项指定其他信号：
 
 ```ts index.ts icon="/icons/typescript.svg"
 // 5秒后使用 SIGKILL 杀死进程
@@ -214,10 +214,10 @@ const proc = Bun.spawn({
 
 ## 使用 maxBuffer
 
-对于 spawnSync，你可以限制输出的最大字节数，超过则杀死进程：
+对于 `Bun.spawnSync`，`maxBuffer` 限制进程在 Bun 将其终止前可以输出的字节数：
 
 ```ts index.ts icon="/icons/typescript.svg"
-// ‘yes’ 进程输出超过100字节后被杀死
+// “yes” 进程输出超过 100 字节后被终止
 const result = Bun.spawnSync({
   cmd: ["yes"], // Windows 下使用 ["bun", "exec", "yes"]
   maxBuffer: 100,
@@ -225,9 +225,12 @@ const result = Bun.spawnSync({
 // 进程退出
 ```
 
-## 进程间通信 (IPC)
+Bun 会在超过限制后立即停止读取，因此返回的输出只可能因那次超过限制的单次读取而超出
+`maxBuffer`，绝不会因为进程在终止生效前设法写入的内容而进一步超出。这与 Node.js 的行为一致。
 
-Bun 支持在两个 `bun` 进程间建立直接的进程间通信通道。要从被创建的 Bun 子进程接收消息，请指定 `ipc` 处理器。
+## 进程间通信（IPC）
+
+Bun 支持两个 `bun` 进程之间的直接进程间通信通道。要接收由 Bun 子进程发送的消息，请指定一个 `ipc` 处理器。
 
 ```ts parent.ts icon="/icons/typescript.svg"
 const child = Bun.spawn(["bun", "child.ts"], {
@@ -239,7 +242,7 @@ const child = Bun.spawn(["bun", "child.ts"], {
 });
 ```
 
-父进程可通过返回的 `Subprocess` 对象上的 `.send()` 方法向子进程发送消息。子进程在 `ipc` 处理器第二个参数中获得发送者引用。
+父进程通过返回的 `Subprocess` 实例上的 `.send()` 方法向子进程发送消息。`ipc` 处理器还会将发送消息的子进程作为第二个参数接收。
 
 ```ts parent.ts icon="/icons/typescript.svg"
 const childProc = Bun.spawn(["bun", "child.ts"], {
@@ -254,7 +257,7 @@ const childProc = Bun.spawn(["bun", "child.ts"], {
 childProc.send("I am your father"); // 父进程也可向子进程发送消息
 ```
 
-子进程可用 `process.send()` 向父进程发送消息，用 `process.on("message")` 接收消息。这与 Node.js 中 `child_process.fork()` 使用的 API 相同。
+子进程使用 `process.send()` 向父进程发送消息，并通过 `process.on("message")` 接收消息。这与 Node.js 中 `child_process.fork()` 使用的是同一套 API。
 
 ```ts child.ts
 process.send("Hello from child as string");
@@ -274,7 +277,7 @@ process.send("Hello from child as string");
 process.send({ message: "Hello from child as object" });
 ```
 
-`serialization` 选项控制两进程间通信的序列化格式：
+`serialization` 选项控制两个进程间通信的序列化格式：
 
 - `advanced`：（默认）消息使用 JSC 的 `serialize` API 序列化，支持克隆[所有 `structuredClone` 支持的类型](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm) ，但不支持对象所有权转移。
 - `json`：消息使用 `JSON.stringify` 和 `JSON.parse` 序列化，支持对象类型比 `advanced` 少。
@@ -287,7 +290,7 @@ childProc.disconnect();
 
 ### Bun 与 Node.js 之间的 IPC
 
-要在 `bun` 和 Node.js 进程间使用 IPC，请在 `Bun.spawn` 设置 `serialization: "json"`。这是因为 Node.js 和 Bun 使用不同的 JS 引擎及不同的对象序列化格式。
+要在 `bun` 和 Node.js 进程间使用 IPC，请在 `Bun.spawn` 中设置 `serialization: "json"`。这是因为 Node.js 和 Bun 使用不同的 JS 引擎及不同的对象序列化格式。
 
 ```js bun-node-ipc.js icon="file-code"
 if (typeof Bun !== "undefined") {
@@ -317,7 +320,7 @@ if (typeof Bun !== "undefined") {
 
 ## 终端（PTY）支持
 
-对于交互式终端应用，可以使用 `terminal` 选项为子进程附加伪终端（PTY）。这让子进程认为自己运行在真实终端中，启用彩色输出、光标移动和交互式提示等功能。
+对于交互式终端应用，使用 `terminal` 选项启动附加伪终端（PTY）的子进程。子进程会看到一个真实终端，从而支持彩色输出、光标移动和交互式提示。
 
 ```ts
 const proc = Bun.spawn(["bash"], {
@@ -350,14 +353,14 @@ proc.terminal.close();
 
 ### 终端选项
 
-| 选项     | 描述                                                                                                            | 默认值              |
-| -------- | ---------------------------------------------------------------------------------------------------------------- | ------------------- |
-| `cols`   | 列数                                                                                                            | `80`                |
-| `rows`   | 行数                                                                                                            | `24`                |
-| `name`   | PTY 配置的终端类型（通过 `env` 选项单独设置 `TERM` 环境变量）                                                   | `"xterm-256color"`  |
-| `data`   | 接收数据时回调 `(terminal, data) => void`                                                                      | —                   |
-| `exit`   | PTY 流关闭时回调（EOF 或错误）。`exitCode` 是 PTY 生命周期状态（0为EOF，1为错误），而非子进程退出码。使用 `proc.exited` 监听进程退出。 | —                   |
-| `drain`  | 可写流准备好接收更多数据时回调 `(terminal) => void`                                                             | —                   |
+| 选项    | 描述                                                                                                                                                              | 默认值             |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| `cols`  | 列数                                                                                                                                                              | `80`               |
+| `rows`  | 行数                                                                                                                                                              | `24`               |
+| `name`  | 用于 PTY 配置的终端类型（使用 `env` 选项单独设置 `TERM` 环境变量）                                                                                               | `"xterm-256color"` |
+| `data`  | 接收到数据时的回调 `(terminal, data) => void`                                                                                                                     | —                  |
+| `exit`  | PTY 流关闭时的回调（EOF 或错误）。`exitCode` 是 PTY 生命周期状态（0=EOF，1=错误），而不是子进程退出码。使用 `proc.exited` 获取进程退出状态。 | —                  |
+| `drain` | 准备好接收更多数据时的回调 `(terminal) => void`                                                                                                                   | —                  |
 
 ### 终端方法
 
@@ -383,7 +386,7 @@ proc.terminal.close();
 
 ### 可复用终端
 
-你可以独立创建一个终端对象并在多个子进程间重用：
+要通过同一个终端会话按顺序运行多个命令，可以独立创建终端，并在多个子进程之间复用：
 
 ```ts
 await using terminal = new Bun.Terminal({
@@ -412,24 +415,22 @@ await proc2.exited;
 - `exit` 回调在调用 `terminal.close()` 时触发，而非每个子进程退出时
 - 使用 `proc.exited` 侦测每个子进程退出
 
-这适合在同一终端会话中顺序运行多个命令。
-
 ### 平台差异
 
-`Bun.Terminal` 在 Linux 和 macOS 上使用 `openpty()`，在 Windows 上使用 ConPTY（`CreatePseudoConsole`）。核心行为——子进程看到的是 TTY、`write()` 会到达子进程的 stdin、子进程输出会到达 `data` 回调、`resize()` 会更新子进程视图——在所有平台上都相同。但有一些细节不同：
+`Bun.Terminal` 在 Linux 和 macOS 上使用 `openpty()`，在 Windows 上使用 ConPTY（`CreatePseudoConsole`）。核心行为在每个平台上都相同：子进程看到的是 TTY，`write()` 的内容会到达子进程的 stdin，子进程的输出会到达 `data` 回调，`resize()` 会更新子进程所看到的终端大小。但有一些细节存在差异：
 
-- **Windows 上没有 termios。** `inputFlags`、`outputFlags`、`localFlags` 和 `controlFlags` 始终读作 `0`，设置它们不会产生效果。`setRawMode()` 会记录该标志，但对子进程没有影响；子进程控制自己的控制台模式。
-- **Windows 上没有子进程时不会回显。** 在 POSIX 上，即使没有附加进程，内核行规程也会把 `write()` 输入回显到 `data` 回调。ConPTY 没有行规程；输入会被缓冲，等待下一个读取者。如果需要回显，请启动一个会回显的进程。
-- **ConPTY 会重新编码输出。** ConPTY 会将子进程输出渲染到虚拟屏幕，并发出描述结果的 VT 序列，因此 `data` 回调收到的是语义等价但字节不完全相同的转义序列。颜色和文本会保留；光标定位和重置序列可能会被重新排序或合并。ConPTY 还会在任何子进程输出之前发出一段短的 VT 初始化序列（`\x1b[?9001h\x1b[?1004h…`）。
-- **Windows 上输入 `\r` 不会被转换为 `\n`。** POSIX 的 `ICRNL` 会在输入时把回车映射为换行；ConPTY 会原样传递 `\r`。
-- **子进程中的 `process.on('SIGWINCH')` 在 ConPTY 下不会触发**，除非子进程以原始模式读取 stdin。`process.stdout.columns`/`rows` 会在 `resize()` 后更新。这是一个 libuv 限制，影响所有基于 libuv 的子进程（包括 Node.js）。
-- 在 Windows 11 24H2（build 26100）之前，`terminal.close()` 可能不会立即终止仍在运行的子进程，因为在这些版本上 [`ClosePseudoConsole`](https://learn.microsoft.com/en-us/windows/console/closepseudoconsole) 会阻塞，直到 conhost 将其输出通过管道刷新完毕。如果你需要在子进程运行时拆除环境，请先杀死附加的进程。
+- **Windows 上没有 termios。** `inputFlags`、`outputFlags`、`localFlags` 和 `controlFlags` 始终读取为 `0`，设置它们也不会产生任何效果。`setRawMode()` 会记录该标志，但不会影响子进程；子进程会自行控制其控制台模式。
+- **Windows 上没有子进程时不会回显。** 在 POSIX 系统上，即使没有附加进程，内核行规程也会将 `write()` 写入的内容回显到 `data` 回调。ConPTY 没有行规程；输入会被缓冲，等待下一个读取者。如果需要回显，请启动一个会回显输入的进程。
+- **ConPTY 会重新编码输出。** ConPTY 将子进程的输出渲染到虚拟屏幕，并发出描述结果的 VT 转义序列，因此 `data` 回调接收到的转义序列在语义上等价，但字节内容并不完全相同。颜色和文本会保留；光标定位和重置序列可能会被重新排序或合并。ConPTY 还会在任何子进程输出之前发出一段简短的 VT 初始化序列（`\x1b[?9001h\x1b[?1004h…`）。
+- **Windows 上的输入 `\r` 不会转换为 `\n`。** POSIX 的 `ICRNL` 会将输入中的回车符转换为换行符；ConPTY 会原样传递 `\r`。
+- **在 ConPTY 下，子进程中的 `process.on('SIGWINCH')` 不会触发**，除非子进程以原生模式读取 stdin。调用 `resize()` 后，`process.stdout.columns`/`rows` 仍会更新。这是 libuv 的限制，会影响任何基于 libuv 的子进程（包括 Node.js）。
+- 在 Windows 11 24H2（版本 26100）之前的系统上，`terminal.close()` 可能无法及时终止仍在运行的子进程，因为在这些版本中，[`ClosePseudoConsole`](https://learn.microsoft.com/en-us/windows/console/closepseudoconsole) 会阻塞，直到 conhost 通过管道刷新完其输出。如果需要在子进程仍在运行时拆除终端，请先终止附加的进程。
 
 ---
 
 ## 阻塞式 API (`Bun.spawnSync()`)
 
-Bun 提供了 `Bun.spawn` 的同步版本 `Bun.spawnSync`。这是一个阻塞 API，支持与 `Bun.spawn` 相同的输入和参数。它返回一个 `SyncSubprocess` 对象，与 `Subprocess` 有几点不同：
+`Bun.spawnSync` 是 `Bun.spawn` 的阻塞式等价 API。它支持相同的输入和参数，并返回一个 `SyncSubprocess` 对象，该对象在几个方面不同于 `Subprocess`。
 
 1. 含有表示进程是否以零退出码退出的 `success` 属性。
 2. `stdout` 和 `stderr` 是 `Buffer` 实例，而非 `ReadableStream`。
@@ -449,8 +450,7 @@ console.log(proc.stdout.toString());
 ## 性能基准
 
 <Note>
-  ⚡️ 底层，`Bun.spawn` 和 `Bun.spawnSync` 使用
-  [`posix_spawn(3)`](https://man7.org/linux/man-pages/man3/posix_spawn.3.html) 系统调用。
+  ⚡️ `Bun.spawn` 和 `Bun.spawnSync` 使用 [`posix_spawn(3)`](https://man7.org/linux/man-pages/man3/posix_spawn.3.html)。
 </Note>
 
 Bun 的 `spawnSync` 比 Node.js 的 `child_process` 模块快 60%。
@@ -485,9 +485,9 @@ spawnSync echo hi    1.47 ms/iter     (1.14 ms … 2.64 ms)   1.57 ms   2.37 ms 
 
 ## 参考
 
-下面是 Spawn API 及类型的参考。真实的类型中包含复杂泛型以根据 `Bun.spawn` 和 `Bun.spawnSync` 传入的选项严密类型化 `Subprocess` 流。完整细节参见 [bun.d.ts](https://github.com/oven-sh/bun/blob/main/packages/bun-types/bun.d.ts) 中的定义。
+以下是 Spawn API 和类型的参考。实际类型包含复杂的泛型，用于根据传递给 `Bun.spawn` 和 `Bun.spawnSync` 的选项，对 `Subprocess` 流进行强类型约束。完整详情请参阅 [bun.d.ts](https://github.com/oven-sh/bun/blob/main/packages/bun-types/bun.d.ts)。
 
-```ts See Typescript Definitions expandable
+```ts 查看可展开的 TypeScript 定义
 interface Bun {
   spawn(command: string[], options?: SpawnOptions.OptionsObject): Subprocess;
   spawnSync(command: string[], options?: SpawnOptions.OptionsObject): SyncSubprocess;
@@ -590,8 +590,6 @@ interface TerminalOptions {
 }
 
 interface Terminal extends AsyncDisposable {
-  readonly stdin: number;
-  readonly stdout: number;
   readonly closed: boolean;
   write(data: string | BufferSource): number;
   resize(cols: number, rows: number): void;

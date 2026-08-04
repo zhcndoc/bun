@@ -49,7 +49,7 @@ bun add <package> <@version>
 </ParamField>
 
 <ParamField path="--save" type="boolean" default="true">
-  保存至 <code>package.json</code>（默认开启）
+  保存到 <code>package.json</code>
 </ParamField>
 
 <ParamField path="--frozen-lockfile" type="boolean">
@@ -105,17 +105,18 @@ bun add <package> <@version>
 </ParamField>
 
 <ParamField path="--network-concurrency" type="number" default="48">
-  最大并发网络请求数（默认 48）
+  最大并发网络请求数
 </ParamField>
 
 ### 性能与资源
 
 <ParamField path="--backend" type="string" default="clonefile">
-  安装依赖的特定平台优化。可选值：<code>clonefile</code>（默认）、<code>hardlink</code>、<code>symlink</code>、<code>copyfile</code>
+  用于安装依赖的平台特定优化方式。可选值为 <code>clonefile</code>、<code>hardlink</code>、{" "}
+  <code>symlink</code> 或 <code>copyfile</code>
 </ParamField>
 
-<ParamField path="--concurrent-scripts" type="number" default="5">
-  生命周期脚本的最大并发任务数（默认 5）
+<ParamField path="--concurrent-scripts" type="number">
+  生命周期脚本的最大并发任务数（默认值：CPU 核心数的 2 倍）
 </ParamField>
 
 ### 缓存

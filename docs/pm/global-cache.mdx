@@ -3,7 +3,7 @@ title: "全局缓存"
 description: "Bun 如何在全局缓存中存储和管理包"
 ---
 
-所有从注册表下载的包都存储在全局缓存中，路径为 `~/.bun/install/cache`，或者环境变量 `BUN_INSTALL_CACHE_DIR` 定义的路径。它们存储在名为 `${name}@${version}` 的子目录中，因此可以缓存同一个包的多个版本。
+Bun 会将从注册表下载的每个包存储在 `~/.bun/install/cache` 的全局缓存中，或存储在由 `BUN_INSTALL_CACHE_DIR` 环境变量设置的路径中。包会存放在类似 `${name}@${version}` 的子目录中，因此同一个包的多个版本可以同时缓存。
 
 <Accordion title="配置缓存行为">
 
@@ -26,14 +26,14 @@ disableManifest = false
 
 ## 减少重复下载
 
-Bun 力求避免多次重复下载包。安装包时，如果缓存中已有符合 `package.json` 指定版本范围的版本，Bun 会使用缓存的包而不是重新下载。
+安装软件包时，如果缓存中已有 `package.json` 指定范围内的某个版本，Bun 会使用缓存中的副本，而不是再次下载。
 
-<Accordion title="安装细节">
-如果 semver 版本带有预发布后缀（如 `1.0.0-beta.0`）或构建后缀（如 `1.0.0+20220101`），则会用该值的哈希值替代，以减少因文件路径过长而导致的错误几率。
+<Accordion title="安装详情">
+如果 semver 版本带有预发布后缀（`1.0.0-beta.0`）或构建后缀（`1.0.0+20220101`），则会将其替换为该值的哈希值，以降低长文件路径导致错误的可能性。
 
-当存在 `node_modules` 目录时，安装前 Bun 会检查 `node_modules` 中是否包含所有预期且版本合适的包。如果满足，`bun install` 便完成。Bun 使用自定义 JSON 解析器，一旦找到 `"name"` 和 `"version"` 字段即停止解析。
+当 `node_modules` 文件夹存在时，Bun 会在安装前检查 `node_modules` 是否包含所有预期的软件包及其对应版本。如果是，则 `bun install` 完成。Bun 使用自定义 JSON 解析器，在找到 `"name"` 和 `"version"` 后立即停止解析。
 
-如果缺少包或者版本与 `package.json` 不兼容，Bun 会在缓存中查找兼容模块。如果找到，会安装到 `node_modules`。否则，将从注册表下载该包并安装。
+如果缺少某个软件包，或者其版本与 `package.json` 不兼容，Bun 会在缓存中检查是否存在兼容的模块。如果找到，则将其安装到 `node_modules` 中。否则，Bun 会从注册表下载该软件包，然后进行安装。
 
 </Accordion>
 
@@ -41,24 +41,24 @@ Bun 力求避免多次重复下载包。安装包时，如果缓存中已有符�
 
 ## 快速复制
 
-包一旦下载到缓存中，Bun 还需将这些文件复制到 `node_modules`。Bun 使用最快的系统调用来完成此操作。在 Linux 上使用硬链接；在 macOS 上使用 `clonefile`。
+当一个包下载到缓存后，Bun 仍然需要将这些文件复制到 `node_modules` 中。为此，它会使用可用的最快系统调用：在 Linux 上使用硬链接，在 macOS 上使用 `clonefile`。
 
 ---
 
 ## 节省磁盘空间
 
-由于在 Linux 和 Windows 上，Bun 使用硬链接“复制”模块到项目的 `node_modules` 目录，包的内容仅在磁盘上存在一个位置，大大减少了 `node_modules` 占用的磁盘空间。
+由于 Bun 在 Linux 和 Windows 上使用硬链接将模块“复制”到项目的 `node_modules` 目录中，因此软件包的内容在磁盘上只存在于一个位置，大幅减少了 `node_modules` 所占用的磁盘空间。
 
-该优势同样适用于 macOS，但存在例外。macOS 使用的是基于写时复制（copy-on-write）的 `clonefile`，这意味着它不会占用额外磁盘空间，但会计入驱动器限制。这种行为对于避免某些程序修改 `node_modules/*` 并影响其它安装非常有用。
+macOS 上也是如此，但有一个例外。Bun 在 macOS 上使用写时复制的 `clonefile`：克隆不会占用额外的磁盘空间，但会计入驱动器的容量限制。由于只有在写入时才会进行复制，因此在一个项目中修改 `node_modules/*` 不会影响其他安装。
 
 <Accordion title="安装策略">
-该行为可通过 `--backend` 标志配置，Bun 的所有包管理命令都会遵守该设置。
+使用 `--backend` 标志进行配置，Bun 的所有软件包管理命令都支持该标志。
 
 - **`hardlink`**：Linux 和 Windows 上的默认选项。
 - **`clonefile`**：macOS 上的默认选项。
-- **`clonefile_each_dir`**：类似于 `clonefile`，但对每个目录中每个文件分别进行克隆，仅在 macOS 上可用，性能通常低于 `clonefile`。
-- **`copyfile`**：当上述所有方法都失败时的后备选项，速度最慢。macOS 使用 `fcopyfile()`；Linux 使用 `copy_file_range()`。
-- **`symlink`**：目前仅用于 `file:`（以及未来的 `link:`）依赖。为避免无限循环，跳过对 `node_modules` 文件夹的符号链接。
+- **`clonefile_each_dir`**：类似于 `clonefile`，但它会在每个目录中分别克隆每个文件。此选项仅适用于 macOS，性能通常比 `clonefile` 更慢。
+- **`copyfile`**：上述选项全部失败时使用的后备方案。这是最慢的选项。在 macOS 上使用 `fcopyfile()`；在 Linux 上使用 `copy_file_range()`。
+- **`symlink`**：仅用于 `file:`（以及最终的 `link:`）依赖项。为防止无限循环，它会跳过创建 `node_modules` 文件夹的符号链接。
 
 如果使用 `--backend=symlink` 进行安装，Node.js 除非每个依赖包有自己的 `node_modules` 目录，或你传递 `--preserve-symlinks` 参数给 `node`，否则不会解析依赖的 `node_modules`。详见 [Node.js 文档中关于 `--preserve-symlinks`](https://nodejs.org/api/cli.html#--preserve-symlinks)。
 
@@ -67,6 +67,6 @@ bun install --backend symlink
 node --preserve-symlinks ./foo.js
 ```
 
-Bun 的运行时目前不支持等价于 `--preserve-symlinks` 的选项。
+Bun 的运行时同样支持 `--preserve-symlinks`。
 
 </Accordion>

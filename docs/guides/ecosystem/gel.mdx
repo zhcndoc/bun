@@ -4,7 +4,7 @@ sidebarTitle: Gel 与 Bun
 mode: center
 ---
 
-Gel（前身为 EdgeDB）是一款由 Postgres 支持的图关系数据库。它提供声明式模式语言、迁移系统和面向对象的查询语言，同时还支持原生 SQL 查询。它在数据库层面解决了对象关系映射问题，免去了在应用代码中使用 ORM 库的必要。
+Gel（原名 EdgeDB）是一个构建于 Postgres 之上的图关系数据库。它提供声明式模式语言、迁移系统和面向对象的查询语言，同时也支持原始 SQL 查询。它在数据库层解决了对象关系映射问题，因此你的应用代码不需要 ORM 库。
 
 ---
 
@@ -38,7 +38,7 @@ bun init -y
 
 ---
 
-我们将使用 Gel CLI 来为项目初始化一个 Gel 实例。这将在项目根目录创建一个 `gel.toml` 文件。
+使用 Gel CLI 为项目初始化一个 Gel 实例。`gel project init` 命令会在项目根目录中创建一个 `gel.toml` 文件。
 
 ```sh terminal icon="terminal"
 gel project init
@@ -71,7 +71,7 @@ gel project init
 
 ---
 
-为了确认数据库是否正在运行，我们打开一个 REPL 并运行查询。
+要检查数据库是否正在运行，请打开 REPL 并运行一个查询。
 
 ```sh terminal icon="terminal"
 gel
@@ -90,7 +90,7 @@ gel> \quit
 
 ---
 
-项目初始化完成后，我们可以定义一个模式。`gel project init` 命令已创建了一个 `dbschema/default.esdl` 文件用于保存我们的模式定义。
+接下来，定义一个模式。`gel project init` 命令已经创建了一个用于存放模式的 `dbschema/default.esdl` 文件。
 
 ```txt File Tree icon="folder-tree"
 dbschema
@@ -133,7 +133,7 @@ gel migrate
 
 ---
 
-应用模式后，我们通过 Gel 的 JavaScript 客户端库执行一些查询。安装客户端库和 Gel 的代码生成 CLI，创建一个 `seed.ts` 文件。
+应用模式后，使用 Gel 的 JavaScript 客户端库查询数据库。安装客户端库和 Gel 的代码生成 CLI，然后创建一个 `seed.ts` 文件。
 
 ```sh terminal icon="terminal"
 bun add gel
@@ -145,7 +145,7 @@ touch seed.ts
 
 将以下代码粘贴到 `seed.ts`。
 
-客户端会自动连接数据库。我们使用 `.execute()` 方法插入几部电影。这里使用 EdgeQL 的 `for` 表达式将多个插入操作合并为一个优化查询。
+客户端会自动连接到数据库。该脚本使用 `.execute()` 方法插入几部电影，并使用 EdgeQL 的 `for` 表达式将批量插入转换为单个查询。
 
 ```ts seed.ts icon="/icons/typescript.svg"
 import { createClient } from "gel";
@@ -188,7 +188,7 @@ bun run seed.ts
 
 ---
 
-Gel 为 TypeScript 提供了多种代码生成工具。为了类型安全地查询我们的新数据库，使用 `@gel/generate` 生成 EdgeQL 查询构建器。
+Gel 为 TypeScript 提供了多个代码生成工具。要针对已填充种子数据的数据库编写类型安全的查询，请使用 `@gel/generate` 生成 EdgeQL 查询构建器。
 
 ```sh terminal icon="terminal"
 bunx @gel/generate edgeql-js
@@ -213,7 +213,7 @@ bunx @gel/generate edgeql-js
 
 ---
 
-在 `index.ts` 中，我们可以从 `./dbschema/edgeql-js` 导入生成的查询构建器，并编写一个 select 查询。
+在 `index.ts` 中，从 `./dbschema/edgeql-js` 导入生成的查询构建器，并编写一个选择查询。
 
 ```ts index.ts icon="/icons/typescript.svg"
 import { createClient } from "gel";
@@ -234,7 +234,7 @@ results; // { title: string, releaseYear: number | null }[]
 
 ---
 
-运行该文件，可以看到我们插入的电影列表。
+使用 Bun 运行该文件，查看刚才插入的电影。
 
 ```sh terminal icon="terminal"
 bun run index.ts
@@ -257,4 +257,4 @@ bun run index.ts
 
 ---
 
-更多完整文档，请参考 [Gel 文档](https://docs.geldata.com/)。
+请参阅 [Gel 文档](https://docs.geldata.com/)。

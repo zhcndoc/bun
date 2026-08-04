@@ -8,7 +8,7 @@ Bun 内置了一个具有类似 Jest 的 `expect` API 的 [测试运行器](/tes
 
 ---
 
-要使用它，请在项目目录中运行 `bun test` 命令。测试运行器会递归搜索目录中所有符合以下模式的文件，并执行其中包含的测试。
+要使用它，请在项目目录中运行 `bun test`。测试运行器会递归搜索匹配以下模式的文件，并运行其中包含的测试。
 
 ```txt File Tree icon="folder-tree"
 *.test.{js|jsx|ts|tsx}
@@ -19,7 +19,7 @@ Bun 内置了一个具有类似 Jest 的 `expect` API 的 [测试运行器](/tes
 
 ---
 
-下面是一次典型测试运行的输出示例。在此案例中，有三个测试文件（`test.test.js`、`test2.test.js` 和 `test3.test.js`），每个文件包含两个测试（`add` 和 `multiply`）。
+以下是一次典型运行的输出：三个测试文件（`test.test.js`、`test2.test.js` 和 `test3.test.js`），每个文件包含两个测试（`add` 和 `multiply`）。
 
 ```sh terminal icon="terminal"
 bun test
@@ -46,7 +46,7 @@ Ran 6 tests across 3 files. [9.00ms]
 
 ---
 
-若只想运行特定测试文件，请向 `bun test` 传递一个位置参数。运行器只会执行路径中包含该参数的文件。
+若只运行特定的测试文件，请向 `bun test` 传入一个位置参数。运行器只会执行路径中包含该参数的文件。
 
 ```sh terminal icon="terminal"
 bun test test3
@@ -65,7 +65,7 @@ Ran 2 tests across 1 files. [15.00ms]
 
 ---
 
-所有测试都有一个名称，通过 `test` 函数的第一个参数定义。测试也可以使用 `describe` 进行分组。
+每个测试都有一个名称：即传递给 `test` 函数的第一个参数。还可以使用 `describe` 将测试分组到测试套件中。
 
 ```ts
 import { test, expect, describe } from "bun:test";
@@ -83,9 +83,9 @@ describe("math", () => {
 
 ---
 
-要根据名称过滤执行的测试，请使用 `-t`/`--test-name-pattern` 标志。
+要按名称筛选测试，请使用 `-t`/`--test-name-pattern` 标志。
 
-添加 `-t add` 将只运行名称中带有 “add” 的测试。此选项适用于通过 `test` 定义的测试名或通过 `describe` 定义的测试套件名。
+`-t add` 只会运行名称中包含 "add" 的测试。该模式会匹配使用 `test` 定义的测试名称，以及使用 `describe` 定义的测试套件名称。
 
 ```sh terminal icon="terminal"
 bun test -t add
@@ -94,23 +94,20 @@ bun test -t add
 ```txt
 test.test.js:
 ✓ add [1.79ms]
-» multiply
 
 test2.test.js:
 ✓ add [2.30ms]
-» multiply
 
 test3.test.js:
 ✓ add [0.32ms]
-» multiply
 
  3 pass
- 3 skip
+ 3 filtered out
  0 fail
  3 expect() calls
-Ran 6 tests across 3 files. [59.00ms]
+Ran 3 tests across 3 files. [59.00ms]
 ```
 
 ---
 
-完整的测试运行器文档请参阅 [文档 > 测试运行器](/test)。
+请参阅 [`bun test`](/test)。

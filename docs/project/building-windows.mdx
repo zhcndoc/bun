@@ -3,15 +3,13 @@ title: 在 Windows 上构建
 description: 在 Windows 上构建 Bun
 ---
 
-本文档介绍了在 Windows 上的构建流程。如果您遇到问题，请加入我们的 [Discord #contributing 频道](http://bun.com/discord) 寻求帮助。
-
-强烈建议使用 [PowerShell 7（`pwsh.exe`）](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4)，而非默认的 `powershell.exe`。
+请使用 [PowerShell 7 (`pwsh.exe`)](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4)，而不是默认的 `powershell.exe`。如果遇到问题，请在我们的 Discord 上的 [#contributing 频道](http://bun.com/discord) 中提问。
 
 ## 前置条件
 
 ### 启用脚本执行
 
-默认情况下，运行未验证脚本会被阻止。
+默认情况下，禁止运行未经验证的脚本。
 
 ```ps1
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Unrestricted
@@ -19,15 +17,15 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Unrestricted
 
 ### 系统依赖
 
-Bun 版本需为 v1.1 或更高。我们使用 Bun 来运行它自身的代码生成器。
+Bun v1.1 或更高版本。构建过程使用 Bun 运行其自身的代码生成器。
 
 ```ps1
 irm bun.sh/install.ps1 | iex
 ```
 
-安装带有“使用 C++ 的桌面开发”工作负载的 [Visual Studio](https://visualstudio.microsoft.com)。安装时请确保同时安装 Git（若系统尚未安装 Git for Windows）。
+[Visual Studio](https://visualstudio.microsoft.com)，并安装“使用 C++ 的桌面开发”工作负载。安装过程中，如果尚未安装适用于 Windows 的 Git，也请一并安装。
 
-Visual Studio 可以通过向导图形界面安装，或用 WinGet 命令安装：
+使用图形化向导安装 Visual Studio，或通过 WinGet 安装：
 
 ```ps1
 winget install "Visual Studio Community 2022" --override "--add Microsoft.VisualStudio.Workload.NativeDesktop Microsoft.VisualStudio.Component.Git " -s msstore
@@ -43,16 +41,14 @@ winget install "Visual Studio Community 2022" --override "--add Microsoft.Visual
 - Ruby
 - Node.js
 
-<Note>
-  `rust-toolchain.toml` 中固定的 Rust nightly 工具链会在首次构建时由 rustup 自动安装。
-</Note>
+<Note>rustup 会在首次构建时安装 `rust-toolchain.toml` 中固定的 Rust nightly 工具链。</Note>
 
 使用 [Scoop](https://scoop.sh) 来安装这些剩余工具。
 
 ```ps1 Scoop (x64)
 irm https://get.scoop.sh | iex
 scoop install nodejs-lts go rustup nasm ruby perl ccache
-# scoop 在同时安装 llvm 和其他工具时似乎存在 bug
+# Scoop 在同时安装 llvm 和其他工具时似乎存在 bug
 scoop install llvm@21.1.8
 ```
 
@@ -65,33 +61,31 @@ Start-Process -FilePath "$env:TEMP\LLVM-21.1.8-woa64.exe" -ArgumentList "/S" -Wa
 ```
 
 <Note>
-  请勿使用 WinGet 或其他包管理器安装这些工具，因为您可能会安装 Strawberry Perl，而不是更轻量的 Perl 版本。Strawberry
-  Perl 会安装许多其他工具到 `$Env:PATH`，这些工具会与 MSVC 冲突并导致构建失败。
+  不要使用 WinGet 或其他包管理器安装这些工具：你很可能会获得 Strawberry Perl，而不是更精简的 Perl 安装。Strawberry Perl 会向 `$Env:PATH` 添加许多其他实用工具，这些工具会与 MSVC 冲突并导致构建失败。
 </Note>
 
-如果你打算在本地构建 WebKit（可选，仅限 x64），你应该安装以下软件包：
+若要在本地构建 WebKit（可选，仅限 x64），请安装以下软件包：
 
 ```ps1 Scoop
 scoop install make cygwin python
 ```
 
-<Note>ARM64 构建不需要 Cygwin，因为 WebKit 已作为预编译二进制文件提供。</Note>
+<Note>ARM64 构建不需要 Cygwin，因为 WebKit 以预构建二进制文件的形式提供。</Note>
 
-从此处开始，**建议您使用已加载 `.\scripts\vs-shell.ps1` 的 PowerShell 终端**。该脚本可在 Bun 仓库中找到，并可通过执行以下命令加载：
+从现在开始，**请使用已加载 `.\scripts\vs-shell.ps1` 的 PowerShell 终端**。运行以下命令加载该脚本：
 
 ```ps1
 .\scripts\vs-shell.ps1
 ```
 
-您可以通过检测一个 MSVC 专用命令行工具（比如 `mt.exe`）来验证是否正确加载：
+要进行验证，请检查 `mt.exe` 等仅限 MSVC 的命令：
 
 ```ps1
 Get-Command mt
 ```
 
 <Note>
-  不建议将 `ninja` 或 `cmake` 安装到全局路径中，因为您可能会在未加载 `.\scripts\vs-shell.ps1` 的情况下构建
-  Bun，导致构建失败。
+  避免将 `ninja` / `cmake` 安装到全局路径中：否则你可能会在未加载 `.\scripts\vs-shell.ps1` 的情况下构建 Bun。
 </Note>
 
 ## 构建
@@ -103,28 +97,25 @@ bun run build
 ninja -Cbuild/debug
 ```
 
-如果成功，您会在 `build/debug` 文件夹中看到 `bun-debug.exe`。
+成功构建后，会将 `bun-debug.exe` 写入 `build/debug` 文件夹。
 
 ```ps1
 .\build\debug\bun-debug.exe --revision
 ```
 
-建议将此路径加入 `$Env:PATH`。最简便的办法是打开开始菜单，输入“Path”，然后进入环境变量菜单，将 `C:\.....\bun\build\debug` 添加到用户环境变量 `PATH`。之后重启编辑器（如果依旧未更新，则注销后重新登录）。
+将此文件夹添加到 `$Env:PATH`：打开“开始”菜单，输入“Path”，然后使用环境变量菜单，将 `C:\.....\bun\build\debug` 添加到用户环境变量 `PATH` 中。然后重新启动编辑器（如果仍未生效，请注销后重新登录）。
 
 ## 额外路径
 
-- WebKit 已提取到 `build/debug/cache/webkit/`
+- WebKit 已提取到 `build/debug/cache/webkit/`。
 
 ## 测试
 
-您可以使用 `bun test <路径>` 或封装脚本 `bun node:test <路径>` 运行测试套件。`bun node:test` 命令会在独立的 bun.exe 实例中运行每个测试文件，防止测试运行器崩溃影响整个测试套件。
+使用 `bun test <path>` 运行测试套件，或使用包装脚本 `bun node:test <path>`。`bun node:test` 命令会在 `bun.exe` 的单独实例中运行每个测试文件，因此测试运行器崩溃不会导致整个测试套件停止。
 
 ```ps1
-# 安装依赖
-bun i --cwd packages\bun-internal-test
-
-# 运行完整测试套件并带有报告器
-# package.json 中的 “test” 脚本默认使用 "build/debug/bun-debug.exe"
+# 使用报告器运行整个测试套件
+# package.json 脚本 "test" 默认使用 "build/debug/bun-debug.exe"
 bun run test
 
 # 运行单个测试文件：
@@ -136,22 +127,22 @@ bun-debug test "C:\bun\test\js\bun\resolve\import-meta.test.js"
 
 ### .rc 文件构建失败
 
-`llvm-rc.exe` 表现异常，请勿使用。请使用 `rc.exe`，确保您在 Visual Studio 的开发者终端中，并用 `rc /?` 检查是否为 “Microsoft Resource Compiler”。
+`llvm-rc.exe` 很奇怪；不要使用它。请改用 `rc.exe`：确保你处于 Visual Studio 开发人员终端中，并检查 `rc /?`，确认它是 `Microsoft Resource Compiler`。
 
 ### 输出写入失败 ‘bun-debug.exe’: 权限被拒绝
 
-如果 `bun-debug.exe` 已打开，就无法覆盖它。您很可能有一个正在运行的实例，也许是在 vscode 调试器中？
+`bun-debug.exe` 处于打开状态时无法覆盖它。你可能有一个正在运行的实例，也可能是在 VS Code 调试器中运行。
 
 ## 从 Linux 交叉编译
 
-Windows 二进制文件（x64 和 arm64）也可以在 Linux 主机上构建。该构建使用主机 LLVM 提供的 `clang-cl`、`lld-link`、`llvm-lib` 和 `llvm-rc`——它们是每个 LLVM 发行版的一部分——再加上一个用于头文件和导入库的 MSVC CRT/STL 与 Windows SDK 的 “xwin splat”。
+您也可以在 Linux 主机上构建 Windows 二进制文件（包括 x64 和 arm64）。构建会使用主机 LLVM 中的 `clang-cl`、`lld-link`、`llvm-lib` 和 `llvm-rc`（每个 LLVM 发行版都包含这些工具），以及用于提供头文件和导入库的 MSVC CRT/STL 与 Windows SDK 的“xwin splat”。
 
 ### 前置条件
 
-1. 与原生构建使用的相同 LLVM 版本（参见 `scripts/bootstrap.sh` 中的 `llvm_version_exact`），并确保可使用 `clang-cl`、`lld-link`、`llvm-lib` 和 `llvm-rc`。在 Debian/Ubuntu 上，`apt.llvm.org` 软件包提供了这些工具。
-2. `nasm`（仅 Windows x64 需要——BoringSSL 的 x64 汇编使用 NASM 语法）。
-3. Windows 目标的 Rust std（`rust-toolchain.toml` 中列出了这些目标；如果缺失，请执行 `rustup target add x86_64-pc-windows-msvc aarch64-pc-windows-msvc`）。
-4. 一个 Windows sysroot：一个 [xwin](https://github.com/Jake-Shadle/xwin) 的 splat，其中包含按 Visual Studio 安装布局展开的 MSVC CRT、Windows SDK 和 ATL。请注意，下载这些组件意味着您同意 Microsoft 适用于它们的许可条款。
+1. 与本机构建使用的相同 LLVM 版本（参见 `scripts/bootstrap.sh` 中的 `llvm_version_exact`），并确保已安装 `clang-cl`、`lld-link`、`llvm-lib` 和 `llvm-rc`。在 Debian/Ubuntu 上，`apt.llvm.org` 提供的程序包包含所有这些工具。
+2. `nasm`（仅 Windows x64 需要；BoringSSL 的 x64 汇编使用 NASM 语法）。
+3. Windows 目标所需的 Rust std（`rust-toolchain.toml` 中列出了这些目标；如果缺少，请运行 `rustup target add x86_64-pc-windows-msvc aarch64-pc-windows-msvc`）。
+4. Windows sysroot：一个包含 MSVC CRT、Windows SDK 和 ATL，并按照 Visual Studio 安装布局组织的 [xwin](https://github.com/Jake-Shadle/xwin) splat。下载这些组件即表示接受 Microsoft 针对这些组件的许可条款。
 
 ```bash
 cargo install xwin # 或下载一个发布版二进制文件
@@ -179,16 +170,16 @@ bun run build --profile=windows-x64-release
 bun run build --profile=windows-arm64-release
 ```
 
-输出会生成在 `build/debug-windows-x64/bun-debug.exe`、`build/release-windows-aarch64/bun-profile.exe` + `bun.exe` 等位置。等效的原始标志：`bun run build --os=windows --arch=aarch64`。
+输出文件位于 `build/debug-windows-x64/bun-debug.exe`、`build/release-windows-aarch64/bun-profile.exe` + `bun.exe` 等路径中。等效的原始参数为：`bun run build --os=windows --arch=aarch64`。
 
 交叉编译出的可执行文件不会在主机上运行（会跳过 `--revision` 冒烟测试），因此请在 Windows 机器上或在 Wine 下测试它们。
 
 ### LTO
 
-x64 release 交叉构建支持 ThinLTO，以及跨语言（Rust↔C++）LTO，CI 的 Windows x64 交叉构建通道默认启用它。若在本地使用，则需要显式开启：
+x64 Release 交叉构建支持带跨语言（Rust↔C++）LTO 的 ThinLTO。该功能默认关闭，需要显式启用：
 
 ```bash
 bun run build --profile=windows-x64-release --lto=on
 ```
 
-这会用 `-flto=thin` 编译 bun 的 C/C++，让 rustc 输出 LLVM bitcode（`-Clinker-plugin-lto`），拉取 `bun-webkit-windows-amd64-lto` 的 ThinLTO 预构建产物，并使用 rustc 自带的 `lld-link` 将所有内容链接起来（其 LLVM 足够新，能够读取两个编译器生成的 bitcode）。arm64 不支持 LTO（没有 `-lto` 的 WebKit 预构建产物——LLVM 的 CodeView emitter 在 LTO 代码生成期间无法处理 ARM64 NEON tuple 寄存器），`--baseline` 也不支持。
+`--lto=on` 会使用 `-flto=thin` 编译 Bun 的 C/C++ 代码，使 rustc 生成 LLVM bitcode（`-Clinker-plugin-lto`），拉取 `bun-webkit-windows-amd64-lto` ThinLTO 预构建版本，并使用 rustc 自带的 `lld-link` 链接所有内容（其 LLVM 版本足够新，可以读取两种编译器生成的 bitcode）。arm64 不支持 LTO（没有 `-lto` WebKit 预构建版本：在 LTO 代码生成期间，LLVM 的 CodeView 发射器无法处理 ARM64 NEON 元组寄存器），`--baseline` 也不支持 LTO。

@@ -4,7 +4,7 @@ sidebarTitle: "Uint8Array 转 Buffer"
 mode: center
 ---
 
-[`Buffer`](https://nodejs.org/api/buffer.html) 类扩展了 [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array)，增加了许多附加方法。使用 `Buffer.from()` 可以从 `Uint8Array` 创建一个 `Buffer` 实例。
+[`Buffer`](https://nodejs.org/api/buffer.html) 类通过额外的方法扩展了 [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array)。使用 `Buffer.from()` 从 `Uint8Array` 创建一个 `Buffer` 实例。
 
 ```ts
 const arr: Uint8Array = ...
@@ -13,4 +13,4 @@ const buf = Buffer.from(arr);
 
 ---
 
-完整的二进制数据操作文档请参阅 [文档 > API > 二进制数据](/runtime/binary-data#conversion)。
+请参阅[二进制数据](/runtime/binary-data#conversion)。

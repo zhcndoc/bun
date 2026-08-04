@@ -29,7 +29,7 @@ glob.match("index.ts"); // => true
 glob.match("index.js"); // => false
 ```
 
-`Glob` 是一个实现以下接口的类：
+`Glob` 类实现了以下接口：
 
 ```ts
 class Glob {
@@ -120,7 +120,7 @@ glob.match("baz.ts"); // => true
 glob.match("bat.ts"); // => false
 ```
 
-你可以使用字符范围（例如 `[0-9]`、`[a-z]`）以及取反操作符 `^` 或 `!` 来匹配不包含括号内字符的任意字符（例如 `[^ab]`、`[!a-z]`）
+你可以使用字符范围（例如 `[0-9]`、`[a-z]`），以及否定运算符 `^` 或 `!` 来匹配除括号中字符之外的任意字符（例如 `[^ab]`、`[!a-z]`）。
 
 ```ts
 const glob = new Glob("ba[a-z][0-9][^4-9].ts");
@@ -141,7 +141,7 @@ glob.match("c.ts"); // => true
 glob.match("d.ts"); // => false
 ```
 
-这些匹配模式可以深度嵌套（最多 10 层），并且包含以上任意通配符。
+这些模式最多可以嵌套 10 层，并且可以包含前面介绍的任意通配符。
 
 ### `!` - 在模式开头表示取反
 
@@ -178,4 +178,4 @@ const filtered = await promises.glob("**/*", {
 这三个函数均支持：
 
 - 作为第一个参数的模式数组
-- 用于过滤结果的 `exclude` 选项
+- 用于过滤结果的 `exclude` 选项。

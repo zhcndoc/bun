@@ -4,18 +4,18 @@ sidebarTitle: 读取标准输出
 mode: center
 ---
 
-使用 [`Bun.spawn()`](/runtime/child-process) 时，可以通过 `proc.stdout` 将子进程的标准输出作为 `ReadableStream` 来消费。
+当你使用 [`Bun.spawn()`](/runtime/child-process) 创建子进程时，`proc.stdout` 是一个包含子进程 `stdout` 的 `ReadableStream`。
 
 ```ts
 const proc = Bun.spawn(["echo", "hello"]);
 
 const output = await proc.stdout.text();
-output; // => "hello"
+output; // => "hello\n"
 ```
 
 ---
 
-如果想将子进程的标准输出直接重定向到父进程的标准输出，可以设置为 "inherit"。
+如果要将子进程的 `stdout` 直接传输到父进程的 `stdout`，请将 `stdout` 选项设置为 `"inherit"`。
 
 ```ts
 const proc = Bun.spawn(["echo", "hello"], {
@@ -25,4 +25,4 @@ const proc = Bun.spawn(["echo", "hello"], {
 
 ---
 
-完整文档请参见 [文档 > API > 子进程](/runtime/child-process)。
+请参阅[子进程](/runtime/child-process)。

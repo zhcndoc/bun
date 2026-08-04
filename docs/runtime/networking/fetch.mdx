@@ -9,7 +9,7 @@ Bun 也实现了 `node:http`，但通常推荐使用 `fetch`。
 
 ## 发送 HTTP 请求
 
-要发送 HTTP 请求，使用 `fetch`
+要发送 HTTP 请求，请使用 `fetch`：
 
 ```ts
 const response = await fetch("http://example.com");
@@ -47,11 +47,11 @@ const response = await fetch("http://example.com", {
 });
 ```
 
-`body` 可以是字符串、`FormData` 对象、`ArrayBuffer`、`Blob` 等更多类型。更多信息请参考 [MDN 文档](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#setting_a_body)。
+`body` 可以是字符串、`FormData` 对象、`ArrayBuffer`、`Blob` 或 [MDN 文档](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#setting_a_body)中列出的其他请求体类型。
 
 ### 代理请求
 
-要代理请求，传入一个带有 `proxy` 属性的 URL 字符串：
+要代理请求，传入一个对象，并将 `proxy` 属性设置为 URL 字符串、`URL` 实例，或将其设置为一个 `url` 为字符串或 `URL` 的对象：
 
 ```ts
 const response = await fetch("http://example.com", {
@@ -59,7 +59,7 @@ const response = await fetch("http://example.com", {
 });
 ```
 
-你也可以用对象格式发送自定义的代理请求头：
+要向代理服务器发送自定义请求头，请传入一个对象：
 
 ```ts
 const response = await fetch("http://example.com", {
@@ -121,7 +121,7 @@ for await (const chunk of response.body) {
 }
 ```
 
-你也可以直接访问 `ReadableStream` 对象。
+你也可以直接访问 `ReadableStream`。
 
 ```ts
 const response = await fetch("http://example.com");
@@ -154,9 +154,9 @@ const response = await fetch("http://example.com", {
 
 使用 HTTP(S) 协议时的流式传输要点：
 
-- 数据直接流式传输到网络，而不需要将整个请求体缓存在内存中
-- 如果连接丢失，流会被取消
-- 除非流大小已知，否则不会自动设置 `Content-Length` 头
+- 数据会直接流式传输到网络，而不会将整个请求体缓存在内存中
+- 如果连接断开，流会被取消
+- 除非流的大小已知，否则不会自动设置 `Content-Length` 头
 
 使用 S3 时：
 
@@ -219,7 +219,7 @@ await fetch("https://example.com", {
 
 #### 自定义 TLS 验证
 
-要定制 TLS 验证，使用 `tls` 的 `checkServerIdentity` 选项：
+要自定义 TLS 验证，请在 `tls` 中使用 `checkServerIdentity` 选项：
 
 ```ts
 await fetch("https://example.com", {
@@ -231,7 +231,7 @@ await fetch("https://example.com", {
 });
 ```
 
-这与 Node 中 `net` 模块的工作方式类似。
+此选项类似于 Node 的 `tls` 模块中的同名选项。
 
 #### 禁用 TLS 验证
 
@@ -245,7 +245,7 @@ await fetch("https://example.com", {
 });
 ```
 
-这在使用自签名证书时避免 SSL 错误时尤其有用，但会关闭 TLS 验证，应谨慎使用。
+这可以避免使用自签名证书时出现 SSL 错误，但会禁用 TLS 验证，因此请谨慎使用。
 
 ### 请求选项
 
@@ -287,9 +287,9 @@ const response = await fetch("s3://my-bucket/path/to/object", {
 });
 ```
 
-注意：使用 S3 时，只有 PUT 和 POST 方法支持请求体。上传时，Bun 会自动为流式请求体使用分块上传。
+使用 S3 时，只有 PUT 和 POST 方法支持请求体。对于上传，Bun 会自动对流式请求体使用分块上传。
 
-更多关于 Bun 的 S3 支持请查看 [S3](/runtime/s3) 文档。
+请参阅 [S3](/runtime/s3) 文档。
 
 #### 本地文件 URL - `file://`
 
@@ -331,10 +331,10 @@ const response = await fetch(url);
 
 Bun 的 fetch 实现包含多个特定错误场景：
 
-- 使用 GET/HEAD 方法时带请求体会抛出错误（这是 fetch API 的预期行为）
+- 对 GET/HEAD 方法使用请求体会抛出错误（这是 fetch API 的预期行为）
 - 同时使用 `proxy` 和 `unix` 选项会抛出错误
-- 当 `rejectUnauthorized` 为 true（或未定义）时，TLS 证书验证失败
-- S3 操作可能抛出与身份验证或权限相关的特定错误
+- 当 `rejectUnauthorized` 为 `true`（或未定义）时，TLS 证书验证失败
+- S3 操作可能会抛出与身份验证或权限相关的特定错误
 
 ### Content-Type 处理
 
@@ -345,7 +345,7 @@ Bun 的 fetch 实现包含多个特定错误场景：
 
 ## 调试
 
-为了方便调试，你可以给 `fetch` 传入 `verbose: true`：
+要进行调试，请将 `verbose: true` 传递给 `fetch`：
 
 ```ts
 const response = await fetch("http://example.com", {
@@ -353,7 +353,7 @@ const response = await fetch("http://example.com", {
 });
 ```
 
-这将把请求和响应头打印到终端：
+这会将请求和响应标头打印到终端：
 
 ```sh
 [fetch] > HTTP/1.1 GET http://example.com/
@@ -378,21 +378,17 @@ const response = await fetch("http://example.com", {
 [fetch] < Content-Length: 648
 ```
 
-注意：`verbose: boolean` 不是 Web 标准 `fetch` API 的一部分，仅针对 Bun 特有。
+`verbose: boolean` 是 Bun 特有的扩展，不属于 Web 标准的 `fetch` API。
 
 ## 性能
 
-HTTP 请求发送前，必须完成 DNS 查找。这一步可能耗时较长，尤其当 DNS 服务器缓慢或网络差时。
+在发送 HTTP 请求之前，Bun 必须解析 DNS、连接 TCP 套接字，有时还要完成 TLS 握手。每个步骤都需要时间，尤其是在 DNS 服务器速度较慢或网络连接质量较差时。请求完成后，读取响应体同样需要时间和内存。
 
-DNS 查找后，必须连接 TCP 套接字，且可能进行 TLS 握手。这也可能耗费显著时间。
-
-请求完成后，读取响应体也可能花费大量时间和内存。
-
-在各个阶段，Bun 提供了 API 以帮助你优化应用性能。
+Bun 提供了用于优化这些步骤的 API。
 
 ### DNS 预读取
 
-要预读取 DNS 条目，可以使用 `dns.prefetch` API。当你知道将要连接某个主机且想避免初始 DNS 查找时，此 API 非常有用。
+当你知道即将连接某个主机，并希望避免初始 DNS 查询时，可以使用 `dns.prefetch`。
 
 ```ts
 import { dns } from "bun";
@@ -402,13 +398,13 @@ dns.prefetch("bun.com");
 
 #### DNS 缓存
 
-默认情况下，Bun 会将 DNS 查询的结果缓存并去重，缓存时长最多 30 秒。你可以通过调用 `dns.getCacheStats()` 查看缓存状态。
+默认情况下，Bun 会在内存中缓存并去重 DNS 查询，最长缓存 30 秒。`dns.getCacheStats()` 会返回缓存统计信息。
 
-想了解更多关于 Bun 中的 DNS 缓存，请参阅 [DNS 缓存](/runtime/networking/dns) 文档。
+参见 [DNS 缓存](/runtime/networking/dns)。
 
 ### 预连接到主机
 
-要预连接到主机，可以使用 `fetch.preconnect` API。当你知道将很快要连接某个主机并希望提前开始 DNS 查找、TCP 建连和 TLS 握手时，此 API 非常有用。
+`fetch.preconnect` 会在你准备向某个主机发送请求之前，启动 DNS 查询、TCP 套接字连接和 TLS 握手。
 
 ```ts
 import { fetch } from "bun";
@@ -416,44 +412,42 @@ import { fetch } from "bun";
 fetch.preconnect("https://bun.com");
 ```
 
-注意：紧跟着调用 `fetch.preconnect` 马上发起 `fetch` 请求不会更快。预连接仅在你知道将很快连接某主机，但尚未准备好发起请求时生效。
+在 `fetch.preconnect` 后立即调用 `fetch` 并不会让请求更快。只有在确定主机和发送请求之间存在时间间隔时，预连接才能发挥作用。
 
 #### 启动时预连接
 
-要在启动时预连接某主机，可以传入 `--fetch-preconnect` 参数：
+要在启动时预连接到某个主机，请传入 `--fetch-preconnect`：
 
 ```sh
 bun --fetch-preconnect https://bun.com ./my-script.ts
 ```
 
-这有点类似 HTML 中的 `<link rel="preconnect">`。
-
-该功能尚未在 Windows 上实现。如果你希望在 Windows 上使用该功能，请提交 issue，方便我们实现支持。
+`--fetch-preconnect` 类似于 HTML 中的 `<link rel="preconnect">`。Windows 尚未实现此功能；如果你需要在 Windows 上使用，请提交 issue。
 
 ### 连接池与 HTTP 长连接
 
-Bun 会自动复用到同一主机的连接。这称为连接池。它可以显著减少建立连接所需的时间。连接池默认启用。
+Bun 会自动复用连接到同一主机的连接。这称为**连接池**，可以显著减少建立连接所需的时间。
 
 #### 同时连接数限制
 
-默认情况下，Bun 限制最大同时进行的 `fetch` 请求数量为 256。这样做有几个原因：
+默认情况下，Bun 将同时进行的 `fetch` 请求数限制为 256，原因有二：
 
 - 改善系统整体稳定性。操作系统对同时打开的 TCP 套接字数有上限，通常在几千左右。接近该限制时，会导致整台电脑异常，应用挂起或崩溃。
 - 鼓励 HTTP Keep-Alive 的连接复用。对于短时 HTTP 请求，最慢的步骤往往是初次连接。连接复用可节省大量时间。
 
-当超过限制时，请求会排队，等前一个请求完成后立即发出。
+超过限制后，请求会进入队列，并在下一个请求结束后立即发送。
 
-你可以通过环境变量 `BUN_CONFIG_MAX_HTTP_REQUESTS` 增加最大同时连接数：
+要提高该限制，请设置 `BUN_CONFIG_MAX_HTTP_REQUESTS` 环境变量：
 
 ```sh
 BUN_CONFIG_MAX_HTTP_REQUESTS=512 bun ./my-script.ts
 ```
 
-此限制的最大值当前设置为 65,336。考虑到最大端口号为 65,535，单台电脑很难超过此限制。
+该限制的最大值为 65,535。最大端口号也是 65,535，因此单台计算机很难超过这一限制。
 
 ### 响应体缓冲
 
-Bun 对响应体读取的性能进行了高度优化。读取响应体速度最快的方法是使用以下任一方法：
+读取响应体最快的方式是使用以下方法之一：
 
 - `response.text(): Promise<string>`
 - `response.json(): Promise<any>`
@@ -472,13 +466,13 @@ await write("output.txt", response);
 
 ### 实现细节
 
-- 连接池默认启用，但每个请求可通过 `keepalive: false` 禁用。同样，设置 `"Connection: close"` 头也会禁用长连接。
-- 大文件上传会在特定条件下利用操作系统的 `sendfile` 系统调用优化：
+- 默认启用连接池，但可以通过 `keepalive: false` 或 `"Connection: close"` 请求头针对单个请求禁用。
+- 在特定条件下，大文件上传会使用操作系统的 `sendfile` 系统调用进行优化：
   - 文件必须大于 32KB
   - 请求不能使用代理
-  - 在 macOS 上，仅常规文件（非管道、套接字或设备）支持 `sendfile`
-  - 若条件不满足，或使用了 S3/流式上传，则回退到内存读取文件
-  - 此优化对 HTTP（非 HTTPS）请求特别有效，可直接将文件从内核发往网络栈
-- S3 操作自动处理请求签名和合并认证头
+  - 在 macOS 上，只有普通文件（不包括管道、套接字或设备）可以使用 `sendfile`
+  - 不满足这些条件，或使用 S3/流式上传时，Bun 会改为将文件读入内存
+  - 对于 HTTP（而非 HTTPS）请求，这项优化尤其有效，因为文件可以直接从内核发送到网络协议栈
+- S3 操作会自动处理请求签名并合并身份验证请求头
 
-注意：许多功能是 Bun 针对标准 fetch API 的特定扩展。
+其中许多功能是 Bun 针对标准 fetch API 提供的专属扩展。

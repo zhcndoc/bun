@@ -4,7 +4,7 @@ sidebarTitle: 监听 CTRL+C
 mode: center
 ---
 
-`ctrl+c` 快捷键会向正在运行的进程发送一个 _中断信号_。该信号可以通过监听 `SIGINT` 事件来捕获。如果你想关闭进程，必须显式调用 `process.exit()`。
+`ctrl+c` 快捷键会向正在运行的进程发送_中断信号_。通过监听 `SIGINT` 事件来拦截它。要关闭进程，必须显式调用 `process.exit()`。
 
 ```ts process.ts icon="/icons/typescript.svg"
 process.on("SIGINT", () => {
@@ -15,4 +15,4 @@ process.on("SIGINT", () => {
 
 ---
 
-更多实用工具请参见 [文档 > API > Utils](/runtime/utils)。
+有关更多实用工具，请参阅 [Utils](/runtime/utils)。

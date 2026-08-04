@@ -5,15 +5,15 @@ description: 通过运行时 API 和打包工具集成，使用 Bun 内置对 JS
 
 在 Bun 中，JSON5 与 JSON、TOML 和 YAML 一样，是一等公民。你可以：
 
-- 使用 `Bun.JSON5.parse` 和 `Bun.JSON5.stringify` 解析和序列化 JSON5
-- 在运行时以模块形式 `import` 和 `require` JSON5 文件（支持热重载和监视模式）
-- 通过 Bun 的打包工具在前端应用中 `import` 和 `require` JSON5 文件
+- 使用 `Bun.JSON5.parse` 和 `Bun.JSON5.stringify` 解析和字符串化 JSON5
+- 在运行时将 JSON5 文件作为模块 `import` 和 `require`（包括热重载和监视模式支持）
+- 在前端应用中使用 Bun 的打包工具 `import` 和 `require` JSON5 文件
 
 ---
 
 ## 兼容性
 
-Bun 的 JSON5 解析器通过了官方 [JSON5 测试套件](https://github.com/json5/json5-tests) 100% 的测试。解析器使用 Zig 编写以实现最佳性能。你可以查看我们的 [翻译测试套件](https://github.com/oven-sh/bun/blob/main/test/js/bun/json5/json5-test-suite.test.ts) 查看每个测试用例。
+Bun 的 JSON5 解析器使用 Rust 编写，并通过了 [官方 JSON5 测试套件](https://github.com/json5/json5-tests)中的 100% 测试。[翻译后的测试套件](https://github.com/oven-sh/bun/blob/main/test/js/bun/json5/json5-test-suite.test.ts)列出了每个测试用例。
 
 ---
 
@@ -49,14 +49,14 @@ console.log(data);
 
 JSON5 是基于 ECMAScript 5.1 语法的 JSON 超集。它支持：
 
-- **注释**：单行注释 (`//`) 和多行注释 (`/* */`)
-- **尾随逗号**：对象和数组中允许
-- **未加引号的键**：有效的 ECMAScript 5.1 标识符可以用作键
-- **单引号字符串**：除了双引号字符串外支持单引号
-- **多行字符串**：使用反斜杠换行
+- **注释**：单行（`//`）和多行（`/* */`）
+- **尾随逗号**：对象和数组中
+- **未加引号的键**：任何有效的 ECMAScript 5.1 标识符
+- **单引号字符串**：除了双引号字符串之外
+- **多行字符串**：使用反斜杠进行换行延续
 - **十六进制数**：`0xFF`
-- **数字前后的小数点**：`.5` 和 `5.`
-- **无限大和 NaN**：正负无穷和非数字值
+- **前导和尾随小数点**：`.5` 和 `5.`
+- **Infinity 和 NaN**：正数和负数
 - **显式加号**：`+42`
 
 ```ts
@@ -196,7 +196,7 @@ console.log(features.rateLimit); // true
 
 ### CommonJS
 
-JSON5 文件同样可以在 CommonJS 中通过 require 引入：
+也可以在 CommonJS 中使用 `require` 导入 JSON5 文件：
 
 ```ts app.ts icon="/icons/typescript.svg"
 const config = require("./config.json5");
@@ -210,7 +210,7 @@ const { database, features } = require("./config.json5");
 
 ## JSON5 热重载
 
-当使用 `bun --hot` 运行你的应用时，JSON5 文件的变动会自动被检测并重载：
+当你使用 `bun --hot` 运行应用程序时，Bun 会在 JSON5 文件发生更改时重新加载它们：
 
 ```json5 config.json5
 {
@@ -250,17 +250,17 @@ bun --hot server.ts
 
 ## 打包工具集成
 
-当你导入 JSON5 文件并使用 Bun 打包时，JSON5 会在构建时被解析，并作为 JavaScript 模块包含：
+使用 Bun 进行打包时，导入的 JSON5 文件会在构建时解析，并作为 JavaScript 模块包含在内：
 
 ```bash terminal icon="terminal"
 bun build app.ts --outdir=dist
 ```
 
-这意味着：
+在构建时解析意味着：
 
-- 生产环境零运行时 JSON5 解析开销
-- 更小的包体积
-- 对未使用属性支持摇树优化（命名导入）
+- 生产环境中无需承担运行时 JSON5 解析开销
+- 更小的打包体积
+- 对未使用的属性进行摇树优化（命名导入）
 
 ### 动态导入
 

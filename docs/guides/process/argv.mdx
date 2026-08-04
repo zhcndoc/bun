@@ -19,14 +19,12 @@ bun run cli.ts --flag1 --flag2 value
 ```
 
 ```txt
-[ '/path/to/bun', '/path/to/cli.ts', '--flag1', '--flag2', 'value' ]
+[ "/path/to/bun", "/path/to/cli.ts", "--flag1", "--flag2", "value" ]
 ```
 
 ---
 
-要将 `argv` 解析为更有用的格式，可以使用 `util.parseArgs`。
-
-示例：
+要将 `argv` 解析为更实用的格式，请使用 `util.parseArgs`。
 
 ```ts cli.ts icon="/icons/typescript.svg"
 import { parseArgs } from "util";
@@ -51,14 +49,14 @@ console.log(positionals);
 
 ---
 
-然后输出：
+使用相同的参数运行 `cli.ts`，会输出解析后的值。
 
 ```sh terminal icon="terminal"
 bun run cli.ts --flag1 --flag2 value
 ```
 
 ```txt
-{
+[Object: null prototype] {
   flag1: true,
   flag2: "value",
 }

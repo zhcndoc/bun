@@ -3,7 +3,7 @@ title: "生命周期钩子"
 description: "了解如何在 Bun 测试中使用 beforeAll、beforeEach、afterEach 和 afterAll 生命周期钩子"
 ---
 
-测试运行器支持以下生命周期钩子。这对于加载测试夹具、模拟数据以及配置测试环境非常有用。
+测试运行器支持以下生命周期钩子。使用它们加载测试装置、模拟数据并配置测试环境。
 
 | 钩子               | 描述                                                         |
 | ------------------ | ------------------------------------------------------------ |
@@ -134,7 +134,7 @@ afterAll(() => {
 bun test --preload ./setup.ts
 ```
 
-为了避免每次运行测试时都输入 `--preload`，可以将其添加到你的 `bunfig.toml`：
+为避免每次运行测试时都输入 `--preload`，请将其添加到 `bunfig.toml` 中：
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -239,7 +239,7 @@ test("异步测试", async () => {
 
 ## 嵌套钩子
 
-钩子可以嵌套，并会以适当顺序运行：
+钩子可以嵌套。它们按以下顺序运行：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { describe, beforeAll, beforeEach, afterEach, afterAll, test } from "bun:test";
@@ -283,7 +283,7 @@ describe("外层 describe", () => {
 
 ## 错误处理
 
-如果生命周期钩子抛出错误，将影响测试执行：
+如果 `beforeAll` 钩子抛出错误，其作用域内的所有测试都会被跳过：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { beforeAll, test } from "bun:test";
@@ -298,7 +298,7 @@ test("此测试将被跳过", () => {
 });
 ```
 
-更好的错误处理方式：
+要记录设置失败并仍然使测试套件失败：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { beforeAll, test, expect } from "bun:test";

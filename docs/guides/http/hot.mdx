@@ -4,7 +4,7 @@ sidebarTitle: 热重载 HTTP 服务器
 mode: center
 ---
 
-Bun 支持 [`--hot`](/runtime/watch-mode#hot-mode) 标志来启用热重载运行文件。当任何模块或文件发生变化时，Bun 会重新运行该文件。
+[`--hot`](/runtime/watch-mode#hot-mode) 标志会在启用热重载的情况下运行文件。当任何模块或文件发生更改时，Bun 会重新运行该文件。
 
 ```sh terminal icon="terminal"
 bun --hot run index.ts
@@ -15,7 +15,7 @@ bun --hot run index.ts
 Bun 会检测你是否正在使用 `Bun.serve()` 运行 HTTP 服务器。当源文件更改时，它会重新加载你的 fetch 处理函数，_而不会_ 重启 `bun` 进程。这让热重载几乎是瞬时完成的。
 
 <Note>
-请注意，这并不会刷新你浏览器中的页面。
+热重载不会重新加载浏览器中的页面。
 </Note>
  
 ```ts index.ts icon="/icons/typescript.svg"

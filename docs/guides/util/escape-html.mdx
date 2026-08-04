@@ -4,7 +4,7 @@ sidebarTitle: 转义 HTML
 mode: center
 ---
 
-`Bun.escapeHTML()` 工具可用于转义字符串中的 HTML 字符。以下字符将被替换。
+`Bun.escapeHTML()` 会转义字符串中的 HTML 字符。它会进行以下替换。
 
 - `"` 变为 `"&quot;"`
 - `&` 变为 `"&amp;"`
@@ -12,13 +12,13 @@ mode: center
 - `<` 变为 `"&lt;"`
 - `>` 变为 `"&gt;"`
 
-该函数针对大输入进行了优化。非字符串类型会先转换为字符串再进行转义。
+此函数针对大输入进行了优化。非字符串值会先转换为字符串，然后再进行转义。
 
 ```ts
 Bun.escapeHTML("<script>alert('Hello World!')</script>");
-// &lt;script&gt;alert(&#x27;Hello World!&#x27;)&lt;&#x2F;script&gt;
+// &lt;script&gt;alert(&#x27;Hello World!&#x27;)&lt;/script&gt;
 ```
 
 ---
 
-更多实用工具请参见 [文档 > API > Utils](/runtime/utils)。
+参见[工具](/runtime/utils)。

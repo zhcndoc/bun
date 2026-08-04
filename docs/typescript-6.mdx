@@ -21,7 +21,7 @@ TypeScript 6.0 改变了类型定义的发现方式。如果你升级了 TypeScr
 }
 ```
 
-这告诉 TypeScript 从 `@types/bun` 加载类型定义。如果你使用其他 `@types/*` 包，也请一并包含：
+`types` 数组告诉 TypeScript 从 `@types/bun` 加载类型定义。如果你使用其他 `@types/*` 包，也要将它们包含在内：
 
 ```jsonc tsconfig.json icon="file-json"
 {

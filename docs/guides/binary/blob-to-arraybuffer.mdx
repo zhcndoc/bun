@@ -4,7 +4,7 @@ sidebarTitle: "Blob 转 ArrayBuffer"
 mode: center
 ---
 
-[`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) 类提供了多种方法以不同格式使用其内容，其中包括 `.arrayBuffer()`。
+[`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) 类提供了多种方法，可以以不同格式读取其内容，其中包括 `.arrayBuffer()`。
 
 ```ts
 const blob = new Blob(["hello world"]);
@@ -13,4 +13,4 @@ const buf = await blob.arrayBuffer();
 
 ---
 
-请参见 [文档 > API > 二进制数据](/runtime/binary-data#conversion) 获取关于使用 Bun 操作二进制数据的完整文档。
+请参阅[二进制数据](/runtime/binary-data#conversion)。

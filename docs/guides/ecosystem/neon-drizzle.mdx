@@ -4,9 +4,9 @@ sidebarTitle: 使用 Bun 的 Neon Drizzle
 mode: center
 ---
 
-[Neon](https://neon.tech/) 是一个完全托管的无服务器 Postgres，它将计算和存储分离，提供自动扩展、分支和无底洞存储等功能。Neon 可以直接通过 Bun 使用 `@neondatabase/serverless` 驱动，或者通过像 `Drizzle` 这样的 ORM 来使用。
+[Neon](https://neon.tech/) 是一款完全托管的无服务器 Postgres，通过分离计算和存储，提供自动扩缩容、分支和无限存储等功能。你可以直接通过 `@neondatabase/serverless` 驱动在 Bun 中使用 Neon，也可以通过 Drizzle 等 ORM 使用。
 
-Drizzle ORM 同时支持类似 SQL 的“查询构建器”API 和类似 ORM 的 [Queries API](https://orm.drizzle.team/docs/rqb)。首先创建一个项目目录，使用 `bun init` 初始化该目录，并安装 Drizzle 和 [Neon 无服务器驱动](https://github.com/neondatabase/serverless/)。
+Drizzle ORM 同时支持类似 SQL 的“查询构建器”API 和类似 ORM 的 [Queries API](https://orm.drizzle.team/docs/rqb)。首先创建一个项目目录，使用 `bun init` 初始化，然后安装 Drizzle 和 [Neon 无服务器驱动](https://github.com/neondatabase/serverless/)。
 
 ```sh terminal icon="terminal"
 mkdir bun-drizzle-neon
@@ -26,7 +26,7 @@ DATABASE_URL=postgresql://usertitle:password@ep-adj-noun-guid.us-east-1.aws.neon
 
 ---
 
-我们将使用 Neon 无服务器驱动连接 Neon 数据库，并用 Drizzle 包装为一个数据库实例。
+在 `db.ts` 中，使用 Neon 无服务器驱动连接到 Neon 数据库，并将其包装在 Drizzle 数据库实例中。
 
 ```ts db.ts icon="/icons/typescript.svg"
 import { neon } from "@neondatabase/serverless";
@@ -70,7 +70,7 @@ bun run index.ts
 
 ---
 
-我们可以使用 Drizzle ORM 的原语定义数据库架构。创建一个 `schema.ts` 文件，并添加以下代码。
+使用 Drizzle ORM 的基础组件为数据库定义架构。创建一个 `schema.ts` 文件，并添加以下代码。
 
 ```ts schema.ts icon="/icons/typescript.svg"
 import { pgTable, integer, serial, text, timestamp } from "drizzle-orm/pg-core";
@@ -85,7 +85,7 @@ export const authors = pgTable("authors", {
 
 ---
 
-然后使用 `drizzle-kit` CLI 生成初始的 SQL 迁移文件。
+然后使用 `drizzle-kit` CLI 生成初始 SQL 迁移。
 
 ```sh
 bunx drizzle-kit generate --dialect postgresql --schema ./schema.ts --out ./drizzle
@@ -93,9 +93,9 @@ bunx drizzle-kit generate --dialect postgresql --schema ./schema.ts --out ./driz
 
 ---
 
-这将在项目中创建一个名为 `drizzle` 的新目录，包含 `.sql` 迁移文件和 `meta` 目录。
+该命令会创建一个 `drizzle` 目录，其中包含一个 `.sql` 迁移文件和一个 `meta` 目录。
 
-```txt File Tree icon="folder-tree"
+```txt 文件树 icon="folder-tree"
 drizzle
 ├── 0000_aspiring_post.sql
 └── meta
@@ -105,7 +105,7 @@ drizzle
 
 ---
 
-我们可以使用 `migrate.ts` 脚本来执行这些迁移。该脚本会创建一个到 Neon 数据库的新连接，并执行 `drizzle` 目录中所有未执行的迁移。
+使用 `migrate.ts` 脚本执行这些迁移。该脚本会打开与 Neon 数据库的新连接，并执行 `drizzle` 目录中所有尚未执行的迁移。
 
 ```ts migrate.ts
 import { db } from "./db";
@@ -126,7 +126,7 @@ main();
 
 ---
 
-可以用 `bun` 运行此脚本来执行迁移。
+使用 `bun` 运行该脚本。
 
 ```sh terminal icon="terminal"
 bun run migrate.ts
@@ -138,7 +138,7 @@ Migration completed
 
 ---
 
-现在，我们可以为数据库添加一些数据。创建一个 `seed.ts` 文件，内容如下。
+现在向数据库中添加一些数据。创建一个 `seed.ts` 文件，并添加以下内容。
 
 ```ts seed.ts icon="/icons/typescript.svg"
 import { db } from "./db";
@@ -188,7 +188,7 @@ Seeding completed
 
 ---
 
-现在我们已经有了带有架构和示例数据的数据库，可以使用 Drizzle 进行查询。将 `index.ts` 的内容替换为以下代码。
+数据库现在已经拥有架构和示例数据。将 `index.ts` 的内容替换为以下代码，即可使用 Drizzle 查询数据库。
 
 ```ts index.ts icon="/icons/typescript.svg"
 import * as schema from "./schema";
@@ -200,7 +200,7 @@ console.log(result);
 
 ---
 
-接着运行该文件。你应该看到我们插入的三位作者信息。
+然后运行该文件。它会打印出你插入的三位作者。
 
 ```sh terminal icon="terminal"
 bun run index.ts
@@ -231,4 +231,4 @@ bun run index.ts
 
 本示例使用了 Neon 无服务器驱动的基于 HTTP 的 SQL 功能。Neon 的无服务器驱动还提供 `Client` 和 `Pool` 构造器，以支持会话、交互式事务和兼容 node-postgres。详见 [Neon 文档](https://neon.tech/docs/serverless/serverless-driver) 获取完整介绍。
 
-更多关于 Drizzle ORM 的使用文档，请参考 [Drizzle 官网](https://orm.drizzle.team/docs/overview)。
+请参阅 [Drizzle 网站](https://orm.drizzle.team/docs/overview) 获取完整文档。

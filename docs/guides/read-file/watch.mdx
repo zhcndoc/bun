@@ -6,7 +6,7 @@ mode: center
 
 Bun 实现了 `node:fs` 模块，包括用于监听文件系统变化的 `fs.watch` 函数。
 
-以下代码块监听当前目录中文件的变化。默认情况下，此操作是**浅层**的，意味着对子目录中文件的变化将不会被检测到。
+以下代码会监听当前目录中文件的变化。默认情况下，监听是_浅层的_：不会检测子目录中文件的变化。
 
 ```ts
 import { watch } from "fs";
@@ -18,7 +18,7 @@ const watcher = watch(import.meta.dir, (event, filename) => {
 
 ---
 
-要监听子目录中的变化，请向 `fs.watch` 传递 `recursive: true` 选项。
+要监听子目录中的变化，请将 `recursive: true` 选项传递给 `fs.watch`。
 
 ```ts
 import { watch } from "fs";
@@ -30,7 +30,7 @@ const watcher = watch(import.meta.dir, { recursive: true }, (event, relativePath
 
 ---
 
-使用 `node:fs/promises` 模块，可以使用 `for await...of` 来监听变化，而非使用回调函数。
+使用 `node:fs/promises` 模块时，可以使用 `for await...of` 代替回调来监听变化。
 
 ```ts
 import { watch } from "fs/promises";

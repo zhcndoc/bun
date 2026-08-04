@@ -10,7 +10,7 @@ Bun 会读取你 `tsconfig.json` 文件中的 `paths` 字段以重新写入导�
 {
   "compilerOptions": {
     "paths": {
-      "my-custom-name": ["zod"],
+      "my-custom-name": ["./node_modules/zod"],
       "@components/*": ["./src/components/*"]
     }
   }
@@ -19,7 +19,7 @@ Bun 会读取你 `tsconfig.json` 文件中的 `paths` 字段以重新写入导�
 
 ---
 
-根据上述 `tsconfig.json`，以下导入语句将被重写：
+使用此 `tsconfig.json` 后，以下导入路径会被重新写入：
 
 ```ts tsconfig.ts icon="/icons/typescript.svg"
 import { z } from "my-custom-name"; // 从 "zod" 导入
@@ -28,4 +28,4 @@ import { Button } from "@components/Button"; // 从 "./src/components/Button" �
 
 ---
 
-有关在 Bun 中使用 TypeScript 的更多信息，请参见[文档 > 运行时 > TypeScript](/runtime/typescript)。
+请参阅 [TypeScript](/runtime/typescript)。

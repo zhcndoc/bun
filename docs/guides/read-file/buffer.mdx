@@ -1,12 +1,12 @@
 ---
-title: 读取文件到 Buffer
+title: 将文件读取到 Buffer
 sidebarTitle: 读取到 Buffer
 mode: center
 ---
 
-`Bun.file()` 函数接受一个路径并返回一个 `BunFile` 实例。`BunFile` 类继承自 `Blob`，允许你以多种格式懒加载读取文件。
+`Bun.file()` 函数接受一个路径并返回一个 `BunFile` 实例。`BunFile` 扩展了 `Blob`，因此你可以使用多种格式按需读取文件。
 
-要将文件读取到一个 `Buffer` 实例，首先使用 `.arrayBuffer()` 将文件作为 `ArrayBuffer` 读取，然后用 `Buffer.from()` 从该 `ArrayBuffer` 创建一个 `Buffer`。
+要将文件读取到 `Buffer` 中，请使用 `.arrayBuffer()` 将其读取为 `ArrayBuffer`，然后将结果传递给 `Buffer.from()`。
 
 ```ts index.ts icon="/icons/typescript.svg"
 const path = "/path/to/package.json";
@@ -18,4 +18,4 @@ const buffer = Buffer.from(arrbuf);
 
 ---
 
-有关在 Bun 中使用 `Buffer` 及其他二进制数据格式的更多信息，请参阅 [二进制数据 > Buffer](/runtime/binary-data#buffer)。
+有关在 Bun 中使用 `Buffer` 和其他二进制数据格式的更多信息，请参阅 [Buffer](/runtime/binary-data#buffer)。

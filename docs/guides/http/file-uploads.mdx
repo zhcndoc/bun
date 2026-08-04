@@ -4,7 +4,7 @@ sidebarTitle: 使用 FormData 通过 HTTP 上传文件
 mode: center
 ---
 
-要通过 HTTP 使用 Bun 上传文件，请使用 [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) API。我们先从一个提供 HTML 网页表单的 HTTP 服务器开始。
+要通过 HTTP 使用 Bun 上传文件，请使用 [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) API。首先，创建一个提供 HTML 表单的 HTTP 服务器。
 
 ```ts index.ts icon="/icons/typescript.svg"
 const server = Bun.serve({
@@ -29,20 +29,20 @@ console.log(`Listening on http://localhost:${server.port}`);
 
 ---
 
-我们可以在另一个文件 `index.html` 中定义我们的 HTML 表单。
+在另一个文件 `index.html` 中定义 HTML 表单。
 
 ```html index.html icon="file-code"
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Form</title>
+    <title>表单</title>
   </head>
   <body>
     <form action="/action" method="post" enctype="multipart/form-data">
-      <input type="text" name="name" placeholder="Name" />
+      <input type="text" name="name" placeholder="姓名" />
       <input type="file" name="profilePicture" />
-      <input type="submit" value="Submit" />
+      <input type="submit" value="提交" />
     </form>
   </body>
 </html>
@@ -50,7 +50,7 @@ console.log(`Listening on http://localhost:${server.port}`);
 
 ---
 
-此时，我们可以运行服务器并访问 [`localhost:4000`](http://localhost:4000) 来查看我们的表单。
+运行服务器并访问 [`localhost:4000`](http://localhost:4000) 查看表单。
 
 ```bash
 bun run index.ts
@@ -59,11 +59,11 @@ Listening on http://localhost:4000
 
 ---
 
-我们的表单会向 `/action` 端点发送包含表单数据的 `POST` 请求。让我们在服务器端处理该请求。
+表单会将表单数据通过 `POST` 请求发送到 `/action` 端点。在服务器中处理该请求。
 
-首先，我们使用传入 `Request` 对象上的 [`.formData()`](https://developer.mozilla.org/en-US/docs/Web/API/Request/formData) 方法异步解析其内容为 `FormData` 实例。然后，我们可以使用 [`.get()`](https://developer.mozilla.org/en-US/docs/Web/API/FormData/get) 方法提取 `name` 和 `profilePicture` 字段的值。其中 `name` 是一个 `string`，`profilePicture` 是一个 `Blob`。
+首先，在传入的 `Request` 上调用 [`.formData()`](https://developer.mozilla.org/en-US/docs/Web/API/Request/formData)，以异步地将其内容解析为 `FormData` 实例。然后使用 [`.get()`](https://developer.mozilla.org/en-US/docs/Web/API/FormData/get) 提取 `name` 和 `profilePicture` 字段；`name` 是一个 `string`，而 `profilePicture` 是一个 `Blob`。
 
-最后，我们使用 [`Bun.write()`](/runtime/file-io#writing-files-bun-write) 将 `Blob` 写入磁盘。
+最后，使用 [`Bun.write()`](/runtime/file-io#writing-files-bun-write) 将 `Blob` 写入磁盘。
 
 {/* prettier-ignore */}
 ```ts index.ts icon="/icons/typescript.svg"

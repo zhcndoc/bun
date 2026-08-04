@@ -3,9 +3,9 @@ title: "bun --filter"
 description: "使用 --filter 标志在 monorepo 中按模式选择包"
 ---
 
-`--filter`（或 `-F`）标志用于在 monorepo 中按模式选择包。模式可以用于匹配包名或包路径，支持完整的全局匹配语法。
+`--filter`（或 `-F`）标志可按模式选择 monorepo 中的包。模式可以匹配包名称或包路径，并支持完整的 glob 语法。
 
-目前 `--filter` 被 `bun install` 和 `bun outdated` 支持，也可以用来一次运行多个包的脚本。
+`bun install` 和 `bun outdated` 支持 `--filter`，你还可以使用它同时在多个包中运行脚本。
 
 ---
 
@@ -13,19 +13,17 @@ description: "使用 --filter 标志在 monorepo 中按模式选择包"
 
 ### 包名 `--filter <pattern>`
 
-名称模式基于 `package.json` 中指定的包名选择包。例如，如果你有包 `pkg-a`、`pkg-b` 和 `other`，你可以使用 `*` 匹配所有包，使用 `pkg*` 仅匹配 `pkg-a` 和 `pkg-b`，还可以通过完整包名匹配特定包。
+名称模式根据 `package.json` 中的 `name` 字段选择包。例如，如果有包 `pkg-a`、`pkg-b` 和 `other`，可以使用 `*` 匹配所有包，使用 `pkg*` 仅匹配 `pkg-a` 和 `pkg-b`，也可以使用包的完整名称匹配指定包。
 
 ### 包路径 `--filter ./<glob>`
 
-路径模式以 `./` 开头来指定，将选择所有匹配该模式的目录中的包。例如，要匹配 `packages` 目录下所有子目录中的包，可以使用 `--filter './packages/**'`。要匹配位于 `packages/foo` 的包，则使用 `--filter ./packages/foo`。
+路径模式以 `./` 开头，并选择目录中匹配该模式的所有包。例如，要匹配 `packages` 子目录中的所有包，请使用 `--filter './packages/**'`。要匹配 `packages/foo` 中的包，请使用 `--filter ./packages/foo`。
 
 ---
 
 ## `bun install` 和 `bun outdated`
 
-`bun install` 和 `bun outdated` 都支持 `--filter` 标志。
-
-`bun install` 默认会为 monorepo 中所有包安装依赖。要为特定包安装依赖，可以使用 `--filter`。
+默认情况下，`bun install` 会为 monorepo 中的每个包安装依赖。要为特定包安装依赖，请使用 `--filter`。
 
 假设一个 monorepo，工作区有 `./packages` 下的 `pkg-a`、`pkg-b` 和 `pkg-c`：
 
@@ -40,7 +38,7 @@ bun install --filter './packages/*'
 bun install --filter '!./' --filter './packages/*'
 ```
 
-类似地，`bun outdated` 会显示 monorepo 中所有包的过期依赖，`--filter` 可以限制命令只作用于部分包：
+同样，`bun outdated` 会显示 monorepo 中所有包的过期依赖，而 `--filter` 会将命令限制为其中的部分包：
 
 ```bash terminal icon="terminal"
 # 显示名称以 `pkg-` 开头的工作区的过期依赖
@@ -50,7 +48,7 @@ bun outdated --filter 'pkg-*'
 bun outdated --filter './'
 ```
 
-有关以上命令的更多信息，请参见 [`bun install`](/pm/cli/install) 和 [`bun outdated`](/pm/cli/outdated)。
+请参阅 [`bun install`](/pm/cli/install) 和 [`bun outdated`](/pm/cli/outdated)。
 
 ---
 
@@ -62,7 +60,7 @@ bun outdated --filter './'
 bun --filter <pattern> <script>
 ```
 
-假设你有一个 monorepo，包含两个包：`packages/api` 和 `packages/frontend`，它们都带有一个会启动本地开发服务器的 `dev` 脚本。通常你需要打开两个终端标签页，进入每个包目录分别运行 `bun dev`：
+假设你有一个包含两个包的 monorepo：`packages/api` 和 `packages/frontend`，它们都有一个用于启动本地开发服务器的 `dev` 脚本。通常，你需要打开两个终端标签页，分别切换到每个包的目录，然后运行 `bun dev`：
 
 ```bash terminal icon="terminal"
 cd packages/api
@@ -79,13 +77,13 @@ bun dev
 bun --filter '*' dev
 ```
 
-两个命令将会并行运行，你会看到一个漂亮的终端界面显示各自的输出：
+两个脚本会并行运行，终端 UI 会显示它们各自的输出：
 
-<Frame>![Terminal Output](https://github.com/oven-sh/bun/assets/48869301/2a103e42-9921-4c33-948f-a1ad6e6bac71)</Frame>
+<Frame>![终端输出](https://github.com/oven-sh/bun/assets/48869301/2a103e42-9921-4c33-948f-a1ad6e6bac71)</Frame>
 
 ### 在工作区中运行脚本
 
-过滤器会遵循你的[工作区配置](/pm/workspaces)：如果你的 `package.json` 指定了哪些包属于工作区，则 `--filter` 只会限制在这些包内。另外，在工作区中你可以使用 `--filter` 来运行位于任何地方的包中的脚本：
+过滤器遵循你的[工作区配置](/pm/workspaces)：如果你的 `package.json` 指定了哪些包属于工作区，`--filter` 只会匹配这些包。在工作区中，`--filter` 还可以运行位于工作区任意位置的包中的脚本：
 
 ```bash terminal icon="terminal"
 # 包结构
@@ -117,10 +115,10 @@ bun run --parallel --no-exit-on-error --filter '*' test
 bun run --parallel --filter '*' build lint
 ```
 
-每行输出前都会带有包名和脚本名的前缀（例如 `pkg-a:build | ...`）。如果没有使用 `--filter`/`--workspaces`，前缀仅是脚本名（例如 `build | ...`）。当包的 `package.json` 中没有 `name` 字段时，将使用相对于工作区根目录的路径代替。
+每行输出都会以包名和脚本名称作为前缀（`pkg-a:build | ...`）。不使用 `--filter`/`--workspaces` 时，前缀仅为脚本名称（`build | ...`）。当某个包的 `package.json` 没有 `name` 字段时，Bun 会改用相对于工作区根目录的路径。
 
 使用 `--if-present` 与 `--workspaces` 一起，可跳过没有指定脚本的包，而不报错。
 
 ### 依赖顺序
 
-Bun 在运行脚本时会尊重包的依赖顺序。假设你的工作区中包 `foo` 依赖包 `bar`，两者都带有 `build` 脚本。当你运行 `bun --filter '*' build`，你会发现 `foo` 只有在 `bar` 完成后才开始运行。
+Bun 会在运行脚本时遵循包的依赖顺序。假设你有一个包 `foo`，它依赖于工作区中的另一个包 `bar`，并且两者都有一个 `build` 脚本。当你运行 `bun --filter '*' build` 时，只有在 `bar` 完成后，`foo` 才会开始运行。

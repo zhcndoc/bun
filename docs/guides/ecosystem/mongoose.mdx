@@ -4,7 +4,7 @@ sidebarTitle: Mongoose 与 Bun
 mode: center
 ---
 
-MongoDB 和 Mongoose 可以直接与 Bun 一起使用。本指南假设你已经安装并运行了 MongoDB，且它作为后台进程/服务运行在你的开发机器上。详情请参见[此指南](https://www.mongodb.com/docs/manual/installation/)。
+MongoDB 和 Mongoose 无需额外配置即可与 Bun 一起使用。本指南假设你已经安装了 MongoDB，并将其作为后台进程或服务运行在开发机器上。详情请参阅 [MongoDB 安装指南](https://www.mongodb.com/docs/manual/installation/)。
 
 ---
 
@@ -26,7 +26,7 @@ bun add mongoose
 
 ---
 
-在 `schema.ts` 中，我们将声明并导出一个 `Animal` 模型。
+在 `schema.ts` 中声明并导出一个 `Animal` 模型。
 
 ```ts schema.ts icon="/icons/typescript.svg"
 import * as mongoose from "mongoose";
@@ -51,7 +51,7 @@ export const Animal = mongoose.model("Animal", animalSchema);
 
 ---
 
-现在从 `index.ts` 中导入 `Animal`，连接 MongoDB，并向数据库添加数据。
+在 `index.ts` 中导入 `Animal`，连接到 MongoDB，并向数据库中添加一些数据。
 
 ```ts index.ts icon="/icons/typescript.svg"
 import * as mongoose from "mongoose";
@@ -77,7 +77,7 @@ await mongoose.disconnect();
 
 ---
 
-使用 `bun run` 运行它。
+使用 `bun run` 运行该文件。
 
 ```bash terminal icon="terminal"
 bun run index.ts
@@ -89,4 +89,4 @@ Moo!
 
 ---
 
-这是一个使用 TypeScript 和 Bun 配合 Mongoose 的入门示例。在你构建应用的过程中，请参考官方的 [MongoDB](https://www.mongodb.com/docs) 和 [Mongoose](https://mongoosejs.com/docs/) 站点以获取完整文档。
+在构建应用程序时，请参阅官方的 [MongoDB](https://www.mongodb.com/docs) 和 [Mongoose](https://mongoosejs.com/docs/) 文档。

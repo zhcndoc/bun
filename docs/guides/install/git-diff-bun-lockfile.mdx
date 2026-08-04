@@ -5,7 +5,7 @@ mode: center
 ---
 
 <Note>
-  Bun v1.1.39 引入了 `bun.lock`，一种 JSONC 格式的锁文件。`bun.lock` 是可读的且无需配置即可被 git diff，比对时对性能无影响。在 1.2.0 及以上版本中，它是新项目默认使用的格式。 [**了解更多。**](/pm/lockfile#text-based-lockfile)
+  Bun v1.1.39 引入了 `bun.lock`，这是一种 JSONC 格式的锁文件。`bun.lock` 具有良好的可读性，无需配置即可进行 git 差异比较，且不会影响性能。在 1.2.0 及更高版本中，它是新项目的默认格式。请参阅[锁文件文档](/pm/lockfile#text-based-lockfile)。
 </Note>
 
 ---
@@ -18,7 +18,7 @@ mode: center
 
 ---
 
-然后通过以下命令将内容添加到本地 git 配置中：
+然后将以下内容添加到你的本地 git 配置中：
 
 ```sh terminal icon="terminal"
 git config diff.lockb.textconv bun
@@ -27,7 +27,7 @@ git config diff.lockb.binary true
 
 ---
 
-若要全局配置 git 比较 Bun 的锁文件，请使用以下命令添加到全局 git 配置：
+要为每个仓库配置此功能，请将以下内容添加到你的全局 git 配置中：
 
 ```sh terminal icon="terminal"
 git config --global diff.lockb.textconv bun
@@ -38,9 +38,7 @@ git config --global diff.lockb.binary true
 
 ## 工作原理
 
-为何这样设置生效：
+- `textconv` 告诉 git 在进行差异比较前对文件运行 bun
+- `binary` 告诉 git 将文件视为二进制文件（这样它就不会尝试逐行比较）
 
-- `textconv` 告诉 git 在进行差异比较前先运行 bun 来处理文件
-- `binary` 告诉 git 将该文件视作二进制（避免逐行比较）
-
-在 Bun 中，你可以执行 Bun 的锁文件（`bun ./bun.lockb`）来生成该锁文件的可读版本，`git diff` 随后即可利用此实现可读的差异比较。
+在锁文件上运行 Bun（`bun ./bun.lockb`）会打印出其人类可读的版本，然后由 `git diff` 对其进行差异比较。

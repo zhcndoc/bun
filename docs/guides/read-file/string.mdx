@@ -4,19 +4,19 @@ sidebarTitle: 作为字符串读取
 mode: center
 ---
 
-`Bun.file()` 函数接受一个路径并返回一个 `BunFile` 实例。`BunFile` 类继承自 `Blob`，允许你以多种格式懒惰地读取文件。使用 `.text()` 以字符串形式读取文件内容。
+`Bun.file()` 函数接受一个路径并返回一个 `BunFile` 实例。`BunFile` 扩展自 `Blob`，因此你可以使用多种格式延迟读取文件。使用 `.text()` 将内容读取为字符串。
 
 ```ts
 const path = "/path/to/file.txt";
 const file = Bun.file(path);
 
 const text = await file.text();
-// string
+// 字符串
 ```
 
 ---
 
-任何相对路径都会相对于项目根目录（包含最近的 `package.json` 文件的目录）进行解析。
+Bun 从当前工作目录解析相对路径。
 
 ```ts
 const path = "./file.txt";

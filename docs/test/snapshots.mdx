@@ -3,7 +3,7 @@ title: "快照测试"
 description: "学习如何在 Bun 中使用快照测试，在测试运行之间保存并比较输出"
 ---
 
-快照测试保存一个值的输出，并与未来的测试运行进行比较。这对于 UI 组件、复杂对象或任何需要保持一致的输出特别有用。
+快照测试会保存某个值的输出，并将其与未来测试运行中的输出进行比较。它适用于 UI 组件、复杂对象，或任何需要保持一致的输出。
 
 ## 基本快照
 
@@ -17,11 +17,11 @@ test("snap", () => {
 });
 ```
 
-首次运行此测试时，传递给 `expect` 的参数会被序列化并写入与测试文件同级的 `__snapshots__` 目录下的特殊快照文件中。
+第一次运行此测试时，Bun 会将传递给 `expect` 的参数序列化，并将其写入测试文件旁 `__snapshots__` 目录中的快照文件。
 
 ### 快照文件
 
-运行上述测试后，Bun 会创建：
+第一次运行后，Bun 会创建：
 
 ```text title="目录结构" icon="file-directory"
 your-project/
@@ -33,30 +33,26 @@ your-project/
 快照文件内容如下：
 
 ```ts title="__snapshots__/snap.test.ts.snap" icon="file-code"
-// Bun Snapshot v1, https://bun.com/docs/test/snapshots
+// Bun 快照版本 1，https://bun.sh/docs/test/snapshots
 
 exports[`snap 1`] = `"foo"`;
 ```
 
-后续运行时，传入的值会与磁盘上的快照进行对比。
+在之后的运行中，Bun 会将参数与磁盘上的快照进行比较。
 
 ## 更新快照
 
-可以使用以下命令重新生成快照：
+使用以下命令重新生成快照：
 
 ```bash terminal icon="terminal"
 bun test --update-snapshots
 ```
 
-这在以下情况有用：
-
-- 你有意更改了输出
-- 你添加了新的快照测试
-- 预期输出确实发生了变化
+当你有意更改了输出或添加了新的快照测试时，请执行此操作。
 
 ## 内联快照
 
-对于较小的值，可以使用 `.toMatchInlineSnapshot()` 进行内联快照。这些快照直接存储在测试文件中：
+对于较小的值，请使用 `.toMatchInlineSnapshot()`。内联快照会直接存储在测试文件中：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
@@ -83,16 +79,14 @@ test("inline snapshot", () => {
 
 ### 使用内联快照步骤
 
-1. 编写包含 `.toMatchInlineSnapshot()` 的测试
-2. 运行测试一次
-3. Bun 会自动更新测试文件，插入快照
-4. 后续运行时，值会与内联快照比较
-
-内联快照特别适合用于小而简单的值，方便在测试文件中直接查看预期输出。
+1. 使用 `.toMatchInlineSnapshot()` 编写测试
+2. 运行一次测试
+3. Bun 会自动使用快照更新你的测试文件
+4. 后续运行时，Bun 会将该值与内联快照进行比较
 
 ## 错误快照
 
-你也可以使用 `.toThrowErrorMatchingSnapshot()` 和 `.toThrowErrorMatchingInlineSnapshot()` 来快照错误消息：
+你还可以使用 `.toThrowErrorMatchingSnapshot()` 和 `.toThrowErrorMatchingInlineSnapshot()` 对错误消息进行快照：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
@@ -190,7 +184,7 @@ test("report generation", () => {
 
 ## React 组件快照
 
-快照对 React 组件特别有用：
+快照非常适合 React 组件：
 
 ```tsx title="test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
@@ -230,7 +224,7 @@ test("snapshot with dynamic values", () => {
 });
 ```
 
-快照将保存为：
+快照文件存储：
 
 ```txt title="快照文件" icon="file-code"
 exports[`snapshot with dynamic values 1`] = `
@@ -240,29 +234,6 @@ exports[`snapshot with dynamic values 1`] = `
   "name": "John",
 }
 `;
-```
-
-## 自定义序列化器
-
-你可以自定义对象在快照中的序列化方式：
-
-```ts title="test.ts" icon="/icons/typescript.svg"
-import { test, expect } from "bun:test";
-
-// Date 对象的自定义序列化器
-expect.addSnapshotSerializer({
-  test: val => val instanceof Date,
-  serialize: val => `"${val.toISOString()}"`,
-});
-
-test("custom serializer", () => {
-  const event = {
-    name: "Meeting",
-    date: new Date("2024-01-01T10:00:00Z"),
-  };
-
-  expect(event).toMatchSnapshot();
-});
 ```
 
 ## 最佳实践
@@ -366,17 +337,6 @@ bun test --update-snapshots
 git add __snapshots__/
 git commit -m "Update snapshots after UI changes"
 ```
-
-### 清理未使用的快照
-
-Bun 会提示未使用的快照：
-
-```txt title="警告" icon="warning"
-Warning: 1 unused snapshot found:
-  my-test.test.ts.snap: "old test that no longer exists 1"
-```
-
-通过删除快照文件中的对应快照或使用可用的清理标志运行测试来移除未使用的快照。
 
 ### 组织大型快照文件
 

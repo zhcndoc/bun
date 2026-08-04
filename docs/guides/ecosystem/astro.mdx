@@ -4,7 +4,7 @@ sidebarTitle: "Astro 与 Bun"
 mode: center
 ---
 
-使用 `bun create astro` 初始化一个全新的 Astro 应用。`create-astro` 包会检测你是否使用了 `bunx`，并自动使用 `bun` 安装依赖。
+使用 `bun create astro` 初始化一个全新的 Astro 应用。`create-astro` 包会检测你是否正在使用 `bunx`，并使用 `bun` 安装依赖。
 
 ```sh terminal icon="terminal"
 bun create astro
@@ -56,7 +56,7 @@ bun create astro
 
 使用 `bunx` 启动开发服务器。
 
-默认情况下，Bun 会用 Node.js 运行开发服务器。若想改用 Bun 运行时，请使用 `--bun` 标志。
+默认情况下，Bun 使用 Node.js 运行开发服务器。若要改用 Bun 运行时，请传递 `--bun` 标志。
 
 ```sh terminal icon="terminal"
 bunx --bun astro dev
@@ -71,7 +71,7 @@ bunx --bun astro dev
 
 ---
 
-用浏览器打开 [http://localhost:4321](http://localhost:4321) 查看效果。Astro 会在你编辑源文件时热重载你的应用。
+在浏览器中打开 [http://localhost:4321](http://localhost:4321) 查看结果。编辑源文件时，Astro 会热重载应用。
 
 <Frame>
   <img src="https://i.imgur.com/Dswiu6w.png" caption="一个运行于 Bun 上的 Astro v3 入门应用" />
@@ -79,4 +79,4 @@ bunx --bun astro dev
 
 ---
 
-请参考 [Astro 文档](https://docs.astro.build/en/getting-started/) 获得完整说明。
+查看 [Astro 文档](https://docs.astro.build/en/getting-started/)。

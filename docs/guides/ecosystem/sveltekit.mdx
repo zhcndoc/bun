@@ -4,7 +4,7 @@ sidebarTitle: "SvelteKit 与 Bun"
 mode: center
 ---
 
-使用 `sv create my-app` 通过 SvelteKit CLI 创建一个 SvelteKit 项目。根据提示选择模板并设置开发环境。
+使用 `sv create my-app` 通过 SvelteKit CLI 创建 SvelteKit 项目。根据提示选择模板并设置开发环境。
 
 ```sh terminal icon="terminal"
 bunx sv create my-app
@@ -46,11 +46,11 @@ bunx sv create my-app
 
 ---
 
-项目初始化完成后，进入新项目目录。由于依赖已安装，无需运行 `bun install`。
+项目初始化后，使用 `cd` 进入新项目。依赖项已经安装，因此无需运行 `bun install`。
 
 然后使用 `bun --bun run dev` 启动开发服务器。
 
-如果想用 Node.js 而非 Bun 运行开发服务器，可以省略 `--bun` 标志。
+若要使用 Node.js 而不是 Bun 运行开发服务器，请省略 `--bun` 标志。
 
 ```sh terminal icon="terminal"
 cd my-app
@@ -78,15 +78,13 @@ bun --bun run dev
 
 ---
 
-编辑并保存 `src/routes/+page.svelte` 后，你的改动会在浏览器中热重载显示。
+编辑并保存 `src/routes/+page.svelte`，你的更改将会在浏览器中热重载。
 
 ---
 
-要构建生产版本，需要添加合适的 SvelteKit 适配器。当前推荐
+要构建生产版本，需要使用 SvelteKit 适配器。我们推荐使用 `svelte-adapter-bun`；使用 `bun add -D svelte-adapter-bun` 安装它。
 
-`bun add -D svelte-adapter-bun`。
-
-然后，对你的 `svelte.config.js` 做如下修改。
+然后对 `svelte.config.js` 做出以下更改。
 
 ```js svelte.config.js icon="file-code"
 import adapter from "@sveltejs/adapter-auto"; // [!code --]

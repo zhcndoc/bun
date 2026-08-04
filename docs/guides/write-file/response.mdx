@@ -4,9 +4,9 @@ sidebarTitle: 写入响应
 mode: center
 ---
 
-此代码片段将一个 `Response` 写入指定路径的磁盘。Bun 会根据响应的 `Content-Type` 头来消费 `Response` 的主体内容。
+使用 [`Bun.write()`](/runtime/file-io#writing-files-bun-write) 将 `Response` 写入磁盘。`Response` 的主体会被写入目标位置。
 
-它使用快速的 [`Bun.write()`](/runtime/file-io#writing-files-bun-write) API 高效地将数据写入磁盘。第一个参数是一个 _目标_，比如绝对路径或 `BunFile` 实例。第二个参数是要写入的 _数据_。
+第一个参数是_目标位置_，例如绝对路径或 `BunFile` 实例。第二个参数是要写入的_数据_。
 
 ```ts
 const result = await fetch("https://bun.com");
@@ -16,4 +16,4 @@ await Bun.write(path, result);
 
 ---
 
-完整的 `Bun.write()` 文档请查看[文档 > API > 文件 I/O](/runtime/file-io#writing-files-bun-write)。
+请参阅 [`Bun.write()`](/runtime/file-io#writing-files-bun-write)。

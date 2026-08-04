@@ -5,18 +5,18 @@ description: Bun 的打包工具内置支持带有现代特性的 CSS
 
 Bun 的打包工具内置支持 CSS，具有以下功能：
 
-- 转译现代/未来特性以兼容所有浏览器（包括厂商前缀）
+- 将现代/未来特性转换为可在所有浏览器上运行的代码（包括添加厂商前缀）
 - 压缩
 - CSS 模块
-- Tailwind（通过原生打包插件）
+- Tailwind（通过原生打包工具插件）
 
 ## 转译
 
-Bun 的 CSS 打包工具让你可以使用现代/未来的 CSS 特性，而不必担心浏览器兼容性 —— 这都要归功于其默认启用的转译和厂商前缀功能。
+默认启用转译和厂商前缀处理，因此你可以使用现代及未来的 CSS 特性，而无需担心浏览器兼容性。
 
-Bun 的 CSS 解析器和打包工具是 LightningCSS 从 Rust 到 Zig 的直接移植，打包方法则受 esbuild 启发。转译器将现代 CSS 语法转换为适用于各种浏览器的向后兼容等价物。
+Bun 的 CSS 解析器和打包器直接移植自 LightningCSS，其打包方式受 esbuild 启发。转译器会将现代 CSS 语法转换为向后兼容的等效写法，使其能够在各种浏览器中正常运行。
 
-<Note>特别感谢 LightningCSS 和 esbuild 的作者们的出色工作。</Note>
+<Note>感谢 LightningCSS 和 esbuild 的作者所做的工作。</Note>
 
 ## 浏览器兼容性
 
@@ -32,7 +32,7 @@ Bun 的 CSS 解析器和打包工具是 LightningCSS 从 Rust 到 Zig 的直接�
 
 ### 嵌套
 
-CSS 嵌套规范允许你通过将选择器嵌套在彼此内部来编写更简洁、更直观的样式表。你无需在整个 CSS 文件中重复父选择器，可以直接在父块内书写子样式。
+借助 CSS 嵌套，你可以直接在父级代码块中编写子级样式，而无需在 CSS 文件中重复父级选择器。
 
 ```scss title="styles.css" icon="file-code"
 /* 使用嵌套 */
@@ -70,7 +70,7 @@ Bun 的 CSS 打包工具会自动将此嵌套语法转换成传统的扁平 CSS�
 }
 ```
 
-你也可以在选择器内嵌套媒体查询和其他 at 规则，避免重复选择器模式：
+你还可以在选择器中嵌套媒体查询和其他 at 规则：
 
 ```scss title="styles.css" icon="file-code"
 .responsive-element {
@@ -98,7 +98,7 @@ Bun 的 CSS 打包工具会自动将此嵌套语法转换成传统的扁平 CSS�
 
 ### 颜色混合
 
-The `color-mix()` function blends two colors together according to a specified ratio in a chosen color space. Use it to create color variations without manually calculating the resulting values.
+`color-mix()` 函数会在所选色彩空间中按给定比例混合两种颜色。使用它可以创建颜色变体，而无需自行计算结果值。
 
 ```scss title="styles.css" icon="file-code"
 .button {
@@ -125,11 +125,9 @@ Bun 的 CSS 打包工具会在构建时评估这些颜色混合（当所有颜�
 }
 ```
 
-此功能特别适合创建程序推导的颜色系统，如色调、色深和强调色，无需预处理器或自定义工具。
-
 ### 相对颜色
 
-CSS allows you to modify individual components of a color using relative color syntax. Create color variations by adjusting specific attributes like lightness, saturation, or individual channels without having to recalculate the entire color.
+相对颜色语法可以修改现有颜色的单个组成部分。无需重新计算整个颜色，即可调整亮度、饱和度或单独的颜色通道。
 
 ```css title="styles.css" icon="file-code"
 .theme-color {
@@ -150,11 +148,11 @@ Bun 的 CSS 打包工具会在构建时计算这些相对颜色修改（不使�
 }
 ```
 
-这种方式非常适用于主题生成、创建无障碍颜色变体或基于数学关系构建颜色刻度，而非硬编码每个值。
+可将其用于主题生成、无障碍颜色变体，或根据基础颜色生成颜色阶，而不是为每个值硬编码。
 
 ### LAB 颜色
 
-现代 CSS 支持 LAB、LCH、OKLAB 和 OKLCH 等感知均匀色彩空间，相较于传统 RGB 有显著优势。这些色彩空间能表示超出标准 RGB 色域的颜色，带来更鲜明和视觉一致的设计。
+现代 CSS 支持感知均匀的颜色空间 LAB、LCH、OKLAB 和 OKLCH，它们可以表示超出标准 RGB 色域的颜色。
 
 ```css title="styles.css" icon="file-code"
 .vibrant-element {
@@ -166,7 +164,7 @@ Bun 的 CSS 打包工具会在构建时计算这些相对颜色修改（不使�
 }
 ```
 
-Bun 的 CSS 打包工具会自动将这些高级色彩格式转换为向后兼容的备选方案，以支持尚未实现的浏览器：
+Bun 的 CSS 打包器会将这些颜色格式转换为向后兼容的替代方案，以支持不支持这些格式的浏览器：
 
 ```css title="styles.css" icon="file-code"
 .vibrant-element {
@@ -182,11 +180,9 @@ Bun 的 CSS 打包工具会自动将这些高级色彩格式转换为向后兼�
 }
 ```
 
-此分层方法确保所有浏览器间获得最佳色彩渲染，同时让你在设计中使用最新的色彩技术。
+### 颜色函数
 
-### color 函数
-
-`color()` 函数提供了一种标准化方式，使用各种预定义色彩空间来指定颜色，拓展了传统 RGB 空间以外的设计选项。这样可访问更宽广的色域，创造更鲜艳的设计。
+`color()` 函数可以在传统 RGB 之外的预定义色彩空间中指定颜色，让你能够使用更宽的色域。
 
 ```css title="styles.css" icon="file-code"
 .vivid-element {
@@ -198,7 +194,7 @@ Bun 的 CSS 打包工具会自动将这些高级色彩格式转换为向后兼�
 }
 ```
 
-对于尚不支持这些高级色彩函数的浏览器，Bun 的 CSS 打包工具会提供合适的 RGB 备选：
+对于不支持这些色彩空间的浏览器，Bun 的 CSS 打包器会添加 RGB 备选值：
 
 ```css title="styles.css" icon="file-code"
 .vivid-element {
@@ -212,11 +208,9 @@ Bun 的 CSS 打包工具会自动将这些高级色彩格式转换为向后兼�
 }
 ```
 
-该功能让你立即使用现代色彩空间，同时保证设计在所有浏览器上均可正常使用，支持浏览器显示最佳色彩，其他浏览器显示合理近似值。
-
 ### HWB 颜色
 
-The HWB (Hue, Whiteness, Blackness) color model expresses colors based on how much white or black is mixed with a pure hue. Many designers find this approach more natural for creating color variations compared to manipulating RGB or HSL values.
+HWB（色相、白度、黑度）颜色模型基于纯色相中混合了多少白色或黑色来表示颜色。与 RGB 或 HSL 值相比，使用这种方式可以更直接地创建浅色和深色变体。
 
 ```css title="styles.css" icon="file-code"
 .easy-theming {
@@ -234,7 +228,7 @@ The HWB (Hue, Whiteness, Blackness) color model expresses colors based on how mu
 }
 ```
 
-Bun 的 CSS 打包工具会自动将 HWB 颜色转换为兼容所有浏览器的 RGB：
+Bun 的 CSS 打包器会将 HWB 颜色转换为 RGB，以兼容所有浏览器：
 
 ```css title="styles.css" icon="file-code"
 .easy-theming {
@@ -245,11 +239,9 @@ Bun 的 CSS 打包工具会自动将 HWB 颜色转换为兼容所有浏览器的
 }
 ```
 
-The HWB model is well-suited for creating systematic color variations for design systems, providing a more direct approach to creating consistent tints and shades than working with RGB or HSL values.
-
 ### 颜色表示法
 
-Modern CSS has introduced more concise ways to express colors. Space-separated color syntax eliminates the need for commas in RGB and HSL values, while hex colors with alpha channels provide a compact way to specify transparency.
+现代 CSS 支持使用空格分隔的 RGB 和 HSL 值（不带逗号），以及带 alpha 通道的十六进制颜色。
 
 ```css title="styles.css" icon="file-code"
 .modern-styling {
@@ -267,7 +259,7 @@ Modern CSS has introduced more concise ways to express colors. Space-separated c
 }
 ```
 
-Bun 的 CSS 打包工具自动将这些现代颜色格式转为兼容旧版浏览器的格式：
+Bun 的 CSS 打包器会将这些格式转换为旧版浏览器支持的格式：
 
 ```css title="styles.css" icon="file-code"
 .modern-styling {
@@ -284,11 +276,9 @@ Bun 的 CSS 打包工具自动将这些现代颜色格式转为兼容旧版浏�
 }
 ```
 
-这一转换过程让你编写更简洁现代的 CSS，同时确保样式在所有浏览器中正常工作。
-
 ### light-dark() 颜色函数
 
-The `light-dark()` function implements color schemes that respect the user's system preference without requiring media queries. This function accepts two color values and automatically selects the appropriate one based on the current color scheme context.
+`light-dark()` 函数接受两种颜色，并根据当前颜色方案应用其中一种，使样式无需使用媒体查询即可遵循用户的系统偏好。
 
 ```css title="styles.css" icon="file-code"
 :root {
@@ -313,46 +303,44 @@ The `light-dark()` function implements color schemes that respect the user's sys
 }
 ```
 
-对于尚不支持本特性的浏览器，Bun 的 CSS 打包工具将其转换为使用 CSS 变量及适当回退的写法：
+对于不支持 `light-dark()` 的浏览器，Bun 的 CSS 打包器会将其转换为带有回退值的 CSS 变量：
 
 ```css title="styles.css" icon="file-code"
 :root {
-  --lightningcss-light: initial;
-  --lightningcss-dark: ;
+  --buncss-light: initial;
+  --buncss-dark: ;
   color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --lightningcss-light: ;
-    --lightningcss-dark: initial;
+    --buncss-light: ;
+    --buncss-dark: initial;
   }
 }
 
 .light-theme {
-  --lightningcss-light: initial;
-  --lightningcss-dark: ;
+  --buncss-light: initial;
+  --buncss-dark: ;
   color-scheme: light;
 }
 
 .dark-theme {
-  --lightningcss-light: ;
-  --lightningcss-dark: initial;
+  --buncss-light: ;
+  --buncss-dark: initial;
   color-scheme: dark;
 }
 
 .themed-component {
-  background-color: var(--lightningcss-light, #ffffff) var(--lightningcss-dark, #121212);
-  color: var(--lightningcss-light, #333333) var(--lightningcss-dark, #eeeeee);
-  border-color: var(--lightningcss-light, #dddddd) var(--lightningcss-dark, #555555);
+  background-color: var(--buncss-light, #ffffff) var(--buncss-dark, #121212);
+  color: var(--buncss-light, #333333) var(--buncss-dark, #eeeeee);
+  border-color: var(--buncss-light, #dddddd) var(--buncss-dark, #555555);
 }
 ```
 
-此方法让你无需复制样式或编写复杂媒体查询，即可优雅地处理明暗主题，同时兼容尚不原生支持此功能的浏览器。
-
 ### 逻辑属性
 
-CSS 逻辑属性允许你根据文档的书写模式和文本方向定义布局、间距及尺寸，而非物理屏幕方向。对于创建自动适配不同书写系统的国际化布局至关重要。
+CSS 逻辑属性根据文档的书写模式和文本方向，而不是屏幕的物理方向来定义布局、间距和尺寸，因此布局可以适应不同的书写系统。
 
 ```css title="styles.css" icon="file-code"
 .multilingual-component {
@@ -371,7 +359,7 @@ CSS 逻辑属性允许你根据文档的书写模式和文本方向定义布局�
 }
 ```
 
-对于不完全支持逻辑属性的浏览器，Bun 的 CSS 打包工具会将其编译为带适当方向调整的物理属性：
+对于不完全支持逻辑属性的浏览器，Bun 的 CSS 打包器会针对每种文本方向将其编译为物理属性：
 
 ```css title="styles.css" icon="file-code"
 /* 左到右语言 */
@@ -395,11 +383,11 @@ CSS 逻辑属性允许你根据文档的书写模式和文本方向定义布局�
 }
 ```
 
-若不支持 `:dir()` 选择器，还会自动生成额外回退，确保布局跨所有浏览器和书写系统正常。此举简化了国际化设计的创建过程，同时兼容旧版浏览器。
+如果不支持 `:dir()` 选择器，Bun 会生成额外的回退方案。
 
 ### :dir() 选择器
 
-The `:dir()` pseudo-class selector allows you to style elements based on their text direction (RTL or LTR), letting you create direction-aware designs without JavaScript. This selector matches elements based on their directionality as determined by the document or explicit direction attributes.
+`:dir()` 伪类根据元素的文本方向（RTL 或 LTR）设置样式，该方向由文档或显式的 direction 属性决定。使用它可以编写无需 JavaScript 的方向感知样式。
 
 ```css title="styles.css" icon="file-code"
 /* 根据文本方向应用不同样式 */
@@ -421,7 +409,7 @@ The `:dir()` pseudo-class selector allows you to style elements based on their t
 }
 ```
 
-对于尚不支持 `:dir()` 选择器的浏览器，Bun 的 CSS 打包工具将其转换为支持更广的 `:lang()` 选择器并添加适当语言映射：
+对于不支持 `:dir()` 选择器的浏览器，Bun 的 CSS 打包器会将其转换为兼容性更广的 `:lang()` 选择器，并使用适当的语言映射：
 
 ```css title="styles.css" icon="file-code"
 /* 作为回退转换为基于语言的选择器 */
@@ -442,11 +430,11 @@ The `:dir()` pseudo-class selector allows you to style elements based on their t
 }
 ```
 
-此转换允许你编写方向感知的 CSS，确保在不支持 `:dir()` 的浏览器中也能可靠工作。如多参数 `:lang()` 不被支持，工具会自动生成进一步回退。
+如果不支持向 `:lang()` 传入多个参数，Bun 会生成进一步的回退方案。
 
-### :lang() 选择器
+### `:lang()` 选择器
 
-The `:lang()` pseudo-class selector targets elements based on the language they're in, enabling language-specific styling. Modern CSS supports passing multiple language codes to `:lang()`, letting you group language-specific rules more efficiently.
+`:lang()` 伪类根据元素的语言定位元素。要为相关语言组合规则，可以向单个 `:lang()` 传入多个语言代码。
 
 ```css title="styles.css" icon="file-code"
 /* 针对中日韩语言的排版调整 */
@@ -465,7 +453,7 @@ blockquote:lang(de, nl, da, sv) {
 }
 ```
 
-对于不支持多参数 `:lang()` 的浏览器，Bun 的 CSS 打包工具将其转换为使用 `:is()` 选择器以保持相同行为：
+对于不支持在 `:lang()` 选择器中使用多个参数的浏览器，Bun 的 CSS 打包器会将此语法转换为行为相同的 `:is()` 选择器：
 
 ```css title="styles.css" icon="file-code"
 /* 使用 :is() 组合多个语言以提高兼容 */
@@ -483,11 +471,11 @@ blockquote:is(:lang(de), :lang(nl), :lang(da), :lang(sv)) {
 }
 ```
 
-如有需要，Bun 可提供额外的 `:is()` 回退，确保语言特定样式跨所有浏览器正常工作。这种方案简化带有不同语言组排版和样式规则的国际化设计。
+如果需要，Bun 还可以为 `:is()` 生成额外的回退方案。
 
 ### :is() 选择器
 
-`:is()` 伪类函数（前称 `:matches()`）允许你通过组合多个选择器书写更简洁且可读的选择器。其接受选择器列表作为参数，只要其中任意选择器匹配即生效，显著减少 CSS 书写重复。
+`:is()` 伪类函数（之前称为 `:matches()`）接收一个选择器列表，如果列表中的任意选择器匹配，则匹配成功。
 
 ```css title="styles.css" icon="file-code"
 /* 不用分别写这些 */
@@ -543,12 +531,12 @@ blockquote:is(:lang(de), :lang(nl), :lang(da), :lang(sv)) {
 ```
 
 <Warning>
-  厂商前缀版本相比标准化的 `:is()` 选择器存在一定限制，尤其在复杂选择器中。Bun 会智能处理这些限制，仅在能正确工作的情况下使用前缀版本。
+  与标准化的 `:is()` 选择器相比，带厂商前缀的版本存在一些限制，尤其是在处理复杂选择器时。Bun 只会在带前缀的版本能够正常工作时使用它们。
 </Warning>
 
 ### :not() 选择器
 
-`:not()` 伪类允许你排除匹配指定选择器的元素。现代版本支持多个参数，允许你用更简洁的选择器排除多种模式。
+`:not()` 伪类会排除匹配某个选择器的元素。现代版本支持多个参数，可以通过一个 `:not()` 排除多种模式。
 
 ```css title="styles.css" icon="file-code"
 /* 选择所有按钮，排除主按钮和次按钮 */
@@ -563,7 +551,7 @@ h2:not(.sidebar *, footer *) {
 }
 ```
 
-对于不支持多参数 `:not()` 的浏览器，Bun 的 CSS 打包工具将该语法转换成兼容版本，并保留相同行为：
+对于不支持 `:not()` 中多个参数的浏览器，Bun 的 CSS 打包器会将此语法转换为行为相同且兼容性更好的形式：
 
 ```css title="styles.css" icon="file-code"
 /* 转换为使用带 :is() 的 :not() */
@@ -577,7 +565,7 @@ h2:not(:is(.sidebar *, footer *)) {
 }
 ```
 
-如果 `:is()` 不被支持，Bun 会生成进一步回退：
+如果不支持 `:is()`，Bun 会生成进一步的回退：
 
 ```css title="styles.css" icon="file-code"
 /* 额外回退以确保最大兼容 */
@@ -597,11 +585,11 @@ button:not(:is(.primary, .secondary)) {
 }
 ```
 
-此转换确保否定选择器在各浏览器间正常工作，同时保持正确优先级和原选择器行为。
+转换后的选择器保留了原始选择器的优先级和行为。
 
 ### 数学函数
 
-CSS 现在包含丰富的数学函数，允许你直接在样式表中执行复杂计算。这包括标准数学函数 (`round()`、`mod()`、`rem()`、`abs()`、`sign()`)、三角函数 (`sin()`、`cos()`、`tan()`、`asin()`、`acos()`、`atan()`、`atan2()`) 以及指数函数 (`pow()`、`sqrt()`、`exp()`、`log()`、`hypot()`)。
+CSS 包含标准数学函数（`round()`、`mod()`、`rem()`、`abs()`、`sign()`）、三角函数（`sin()`、`cos()`、`tan()`、`asin()`、`acos()`、`atan()`、`atan2()`）以及指数函数（`pow()`、`sqrt()`、`exp()`、`log()`、`hypot()`）。
 
 ```css title="styles.css" icon="file-code"
 .dynamic-sizing {
@@ -620,7 +608,7 @@ CSS 现在包含丰富的数学函数，允许你直接在样式表中执行复�
 }
 ```
 
-Bun 的 CSS 打包工具会在构建时对所有已知常量（非变量）求值，生成优化的输出：
+当所有值都是已知常量（而非变量）时，Bun 的 CSS 打包器会在构建时计算这些表达式：
 
 ```css title="styles.css" icon="file-code"
 .dynamic-sizing {
@@ -632,11 +620,9 @@ Bun 的 CSS 打包工具会在构建时对所有已知常量（非变量）求�
 }
 ```
 
-此方式让你能以更具表现力和可维护性的数学关系编写 CSS，然后编译为优化的值，实现最高浏览器兼容性和性能。
-
 ### 媒体查询范围
 
-Modern CSS supports range syntax for media queries, allowing you to specify breakpoints using comparison operators like `<`, `>`, `<=`, and `>=` instead of the more verbose `min-` and `max-` prefixes. This syntax is more readable and matches how you typically think about values and ranges.
+媒体查询范围语法使用比较运算符（`<`、`>`、`<=`、`>=`）表示断点，而不是使用更冗长的 `min-` 和 `max-` 前缀。
 
 ```css title="styles.css" icon="file-code"
 /* 比较运算符的现代写法 */
@@ -661,7 +647,7 @@ Modern CSS supports range syntax for media queries, allowing you to specify brea
 }
 ```
 
-Bun 的 CSS 打包工具会将这些现代范围查询转换为传统媒体查询语法，确保兼容所有浏览器：
+Bun 的 CSS 打包器会将范围查询转换为传统的媒体查询语法，以兼容所有浏览器：
 
 ```css title="styles.css" icon="file-code"
 /* 转换为传统 min/max 语法 */
@@ -684,11 +670,9 @@ Bun 的 CSS 打包工具会将这些现代范围查询转换为传统媒体查�
 }
 ```
 
-This lets you write more readable media queries while ensuring your stylesheets work correctly across all browsers, including those that don't support the modern range syntax.
-
 ### 简写属性
 
-CSS 引入了多个现代简写属性，提升代码可读性和可维护性。Bun 的 CSS 打包工具确保这些便捷简写在所有浏览器上可用，必要时转成长写属性。
+CSS 引入了几种将多个长属性组合在一起的简写属性。
 
 ```css title="styles.css" icon="file-code"
 /* 对齐简写 */
@@ -724,7 +708,7 @@ CSS 引入了多个现代简写属性，提升代码可读性和可维护性。B
 }
 ```
 
-对于不支持这些现代简写的浏览器，Bun 会转换为对应的长写组件属性：
+对于不支持这些简写属性的浏览器，Bun 会将它们转换为对应的组件长属性：
 
 ```css title="styles.css" icon="file-code"
 .flex-container {
@@ -761,11 +745,9 @@ CSS 引入了多个现代简写属性，提升代码可读性和可维护性。B
 }
 ```
 
-该转换确保样式表既保持简洁现代，又兼容最广浏览器。
+### 双位置渐变
 
-### 双点位置渐变
-
-双点位置渐变语法是现代 CSS 特性，通过在渐变中相邻的两个位置指定相同颜色，创建硬色阶过渡。适合制作条纹、色带及多色设计。
+双位置渐变语法会在两个相邻位置指定相同的颜色，从而创建硬色标：产生锐利的过渡，而不是平滑的渐变。它适用于条纹、色带以及其他多色设计。
 
 ```css title="styles.css" icon="file-code"
 .striped-background {
@@ -794,7 +776,7 @@ CSS 引入了多个现代简写属性，提升代码可读性和可维护性。B
 }
 ```
 
-对于不支持该语法的浏览器，Bun 的 CSS 打包工具自动转换为传统格式，复制颜色停点：
+对于不支持此语法的浏览器，Bun 的 CSS 打包器会通过复制颜色标记，将其转换为传统格式：
 
 ```css title="styles.css" icon="file-code"
 .striped-background {
@@ -825,11 +807,9 @@ CSS 引入了多个现代简写属性，提升代码可读性和可维护性。B
 }
 ```
 
-此转换让你在源代码使用更简洁的双定位语法，同时确保渐变在所有浏览器正常显示。
-
 ### system-ui 字体
 
-`system-ui` 通用字体族让你使用设备的原生 UI 字体，创造与操作系统更为融合的界面外观。无需为每个平台指定不同字体堆栈即可达到更原生的感觉。
+`system-ui` 通用字体系列使用设备的原生 UI 字体。
 
 ```css title="styles.css" icon="file-code"
 .native-interface {
@@ -843,7 +823,7 @@ CSS 引入了多个现代简写属性，提升代码可读性和可维护性。B
 }
 ```
 
-对于不支持 `system-ui` 的浏览器，Bun 的 CSS 打包工具自动扩展为跨平台的综合字体堆栈：
+对于不支持 `system-ui` 的浏览器，Bun 的 CSS 打包器会将其扩展为跨平台字体堆栈：
 
 ```css title="styles.css" icon="file-code"
 .native-interface {
@@ -876,20 +856,20 @@ CSS 引入了多个现代简写属性，提升代码可读性和可维护性。B
 }
 ```
 
-此方案让你只用简单写 `system-ui`，但确保界面在所有操作系统和浏览器上都适当适配。扩展字体堆栈包含适合 macOS/iOS、Windows、Android、Linux 的系统字体及旧浏览器回退。
+扩展后的字体堆栈包含适用于 macOS/iOS、Windows、Android 和 Linux 的系统字体，以及针对旧版浏览器的回退字体。
 
 ## CSS 模块
 
-除常规 CSS 外，Bun 的打包工具还支持打包 CSS 模块，具有如下特性：
+Bun 的打包器还支持 CSS 模块，具有以下功能：
 
-- 零配置自动检测 CSS 模块文件（`.module.css`）
+- 无需配置即可检测 CSS 模块文件（`.module.css`）
 - 组合（`composes` 属性）
-- 在 JSX/TSX 中导入 CSS 模块
-- 对 CSS 模块错误用法给予警告/错误提示
+- 将 CSS 模块导入 JSX/TSX
+- 针对 CSS 模块无效用法的警告/错误
 
-CSS 模块是采用 `.module.css` 扩展名的 CSS 文件，其中所有类名和动画都限定于文件内，避免因 CSS 声明默认全局导致的类名冲突。
+CSS 模块是一种 CSS 文件（扩展名为 `.module.css`），其中所有类名和动画都限定在该文件的作用域内。这有助于避免类名冲突，因为 CSS 声明默认是全局作用域的。
 
-底层，Bun 的打包工具将局部作用域的类名转为唯一标识符。
+Bun 的打包器会将局部作用域的类名转换为唯一标识符。
 
 ### 快速入门
 
@@ -916,14 +896,14 @@ import otherStyles from "./other-styles.module.css";
 export default function App() {
   return (
     <>
-      <button className={styles.button}>Red button!</button>
-      <button className={otherStyles.button}>Blue button!</button>
+      <button className={styles.button}>红色按钮！</button>
+      <button className={otherStyles.button}>蓝色按钮！</button>
     </>
   );
 }
 ```
 
-导入的 `styles` 对象将包含所有类名及其唯一标识符：
+导入 CSS 模块会得到一个对象，该对象将每个类名映射到其唯一标识符：
 
 ```ts title="app.tsx" icon="/icons/typescript.svg"
 import styles from "./styles.module.css";
@@ -933,7 +913,7 @@ console.log(styles);
 console.log(otherStyles);
 ```
 
-输出将为：
+输出结果如下：
 
 ```ts title="app.tsx" icon="/icons/typescript.svg"
 {
@@ -945,11 +925,11 @@ console.log(otherStyles);
 }
 ```
 
-由此可见，每个文件的类名都是独一无二的，避免冲突！
+每个文件中的类名都是唯一的，因此不会发生冲突。
 
 ### 组合
 
-CSS 模块允许你组合类选择器，实现样式规则的复用。
+CSS 模块可以将类选择器组合在一起，以便在多个类之间复用样式规则。
 
 例如：
 
@@ -964,7 +944,7 @@ CSS 模块允许你组合类选择器，实现样式规则的复用。
 }
 ```
 
-等同于写：
+这与以下写法相同：
 
 ```css title="styles.module.css" icon="file-code"
 .button {
@@ -977,7 +957,7 @@ CSS 模块允许你组合类选择器，实现样式规则的复用。
 }
 ```
 
-使用 `composes` 有几点规则要注意：
+使用 `composes` 时需要遵循以下两条规则：
 
 <Info>
   **组合规则：** 
@@ -1016,7 +996,8 @@ CSS 模块允许你组合类选择器，实现样式规则的复用。
 ```
 
 <Warning>
-组合来自不同文件的类时，请确保它们不包含相同的属性。
+从独立文件组合类时，请确保它们不包含相同的属性。
 
-CSS 模块规范指出，来自不同文件且属性冲突的组合行为未定义，导致输出可能不同且不可靠。
+CSS 模块规范规定，从独立文件中组合具有冲突属性的类属于未定义行为：输出结果可能有所不同，并且不可靠。
+
 </Warning>

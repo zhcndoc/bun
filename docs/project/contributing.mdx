@@ -5,21 +5,18 @@ description: 贡献给 Bun
 
 配置 Bun 的开发环境可能需要 10 到 30 分钟，具体取决于您的网络连接和计算机速度。您需要大约 10GB 的可用磁盘空间用于存储仓库和构建产物。
 
-如果您使用的是 Windows，请参考 [此指南](/project/building-windows)
+如果您使用的是 Windows，请参阅[构建 Windows](/project/building-windows)。
 
 ## 使用 Nix（可选方案）
 
-提供了一个 Nix flake 作为手动安装依赖的替代方案：
+该仓库包含一个 Nix flake，可作为手动安装依赖的替代方案：
 
 ```bash
 nix develop
-# 或显式使用纯净 shell
-# nix develop .#pure
-export CMAKE_SYSTEM_PROCESSOR=$(uname -m)
 bun bd
 ```
 
-这样可以在隔离且可复现的环境中提供所有依赖，无需 sudo。
+`nix develop` 会在无需 sudo 的情况下，在隔离且可复现的环境中提供所有依赖。
 
 ## 安装依赖（手动）
 
@@ -49,13 +46,13 @@ sudo zypper install go cmake ninja automake git icu rustup
 
 </CodeGroup>
 
-Bun 使用 Rust 编写，并且需要特定的 nightly 工具链（固定在 `rust-toolchain.toml` 中）。请通过 [rustup](https://rustup.rs) 安装 Rust，而不是使用发行版自带的 `rust`/`cargo` 包——构建脚本会使用 rustup 自动安装并更新固定的 nightly：
+Bun 使用 Rust 编写，需要特定的 nightly 工具链（已固定在 `rust-toolchain.toml` 中）。请使用 [rustup](https://rustup.rs) 安装 Rust，而不是使用发行版提供的 `rust`/`cargo` 软件包——构建脚本会使用 rustup 自动安装并更新已固定的 nightly 工具链：
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-开始之前，您需要已安装 Bun 的发布版本构建，因为我们使用自己的打包器来转译和压缩代码，以及用于代码生成脚本。
+开始之前，请安装 Bun 的发布版本：构建过程会使用 Bun 的打包器来转换和压缩代码，并运行代码生成脚本。
 
 <CodeGroup>
 
@@ -76,7 +73,7 @@ brew install bun
 
 ### 可选：安装 `ccache`
 
-ccache 用于缓存编译产物，大幅加速构建过程：
+`ccache` 会缓存编译产物，从而加快重新构建的速度：
 
 ```bash
 # macOS
@@ -95,11 +92,11 @@ sudo dnf install ccache
 sudo zypper install ccache
 ```
 
-构建脚本会自动检测并使用 `ccache`（如可用）。您可以通过 `ccache --show-stats` 查看缓存统计信息。
+如果 `ccache` 可用，构建脚本会自动检测并使用它。使用 `ccache --show-stats` 检查缓存统计信息。
 
 ## 安装 LLVM
 
-Bun 需要 LLVM 21.1.8（`clang` 是 LLVM 的一部分）。构建系统强制要求使用此版本——版本不匹配会导致运行时内存分配失败。在大多数情况下，你可以通过系统的包管理器安装 LLVM：
+Bun 需要 LLVM 21.1.8（`clang` 是 LLVM 的一部分）。构建系统会强制使用此版本：版本不匹配会导致运行时内存分配失败。在大多数情况下，您可以通过系统包管理器安装 LLVM：
 
 <CodeGroup>
 
@@ -126,7 +123,7 @@ sudo zypper install clang21 lld21 llvm21
 
 </CodeGroup>
 
-如果以上解决方案都不适用，您需要[手动](https://github.com/llvm/llvm-project/releases/tag/llvmorg-21.1.8)安装。
+如果这些方法都不起作用，请[手动安装](https://github.com/llvm/llvm-project/releases/tag/llvmorg-21.1.8)。
 
 请确保 Clang/LLVM 21 已添加到您的路径中：
 
@@ -152,18 +149,18 @@ export PATH="$PATH:/usr/lib/llvm21/bin"
 </CodeGroup>
 
 <Warning>
-  ⚠️ Ubuntu 发行版（版本 ≤ 20.04）可能需要单独安装 C++ 标准库。详情见[故障排查章节](#span-file-not-found-on-ubuntu)。
+⚠️ 在 Ubuntu \<= 20.04 上，您可能需要单独安装 C++ 标准库。请参阅[故障排除部分](#span-file-not-found-on-ubuntu)。
 </Warning>
 
 ## 构建 Bun
 
-克隆仓库后，运行以下命令构建。这可能需要一些时间，因为会克隆子模块和构建依赖。
+克隆仓库后，运行以下命令进行构建。此过程可能需要一段时间：它会下载并构建依赖项。
 
 ```bash
 bun run build
 ```
 
-生成的二进制文件位于 `./build/debug/bun-debug`。建议将其添加到您的 `$PATH` 中。验证构建是否成功，可以打印开发版 Bun 的版本号：
+二进制文件位于 `./build/debug/bun-debug`。建议将其添加到 `$PATH` 中。要验证构建是否成功，请输出其版本：
 
 ```bash
 build/debug/bun-debug --version
@@ -172,7 +169,7 @@ x.y.z_debug
 
 ## VSCode
 
-VSCode 是推荐用于 Bun 开发的 IDE，因为它已经完成配置。打开后，您可以运行 `Extensions: Show Recommended Extensions` 来安装 Rust 和 C++ 的推荐扩展。rust-analyzer 会自动获取工作区的 `Cargo.toml`；分析时会使用 `rust-toolchain.toml` 中固定的工具链，因此诊断结果与构建保持一致。
+VSCode 是用于开发 Bun 的推荐 IDE；仓库中已包含相应配置。打开仓库后，运行 `Extensions: Show Recommended Extensions` 以安装 Rust 和 C++ 的推荐扩展。rust-analyzer 会自动识别工作区中的 `Cargo.toml`，并使用 `rust-toolchain.toml` 中固定的工具链进行分析，因此诊断结果会与构建结果一致。
 
 如果您使用其他编辑器，请将 rust-analyzer（或编辑器的 Rust 插件）指向仓库根目录——Cargo 工作区和 `rust-toolchain.toml` 会自动被识别。
 
@@ -195,23 +192,21 @@ bun bd ./foo.ts
 完整的调试构建在 Rust 或 C++ 发生更改时可能需要几分钟；cargo 的增量编译会让后续仅 Rust 的重建快得多。如果您的开发流程是“改一行、保存、重建”，您仍然会在等待链接步骤上花费太多时间。相反：
 
 - 批量进行更改
-- 使用 `cargo check -p <crate>`（或对整个工作区使用 `bun run rust:check`）来在不链接的情况下检查 Rust 类型。`bun run watch` 会在每次保存时运行 `cargo check`。
-- 确保 rust-analyzer 正在运行以提供内联诊断（如果您使用 VSCode 并安装了推荐扩展，这应该可以直接工作）
-- 更倾向使用调试器（VSCode 中的 “CodeLLDB”）逐步执行代码。
-- 使用调试日志。`BUN_DEBUG_<scope>=1` 会为对应的 `declare_scope!(<scope>, ...)` / `scoped_log!(<scope>, ...)` 日志启用调试输出。您也可以设置 `BUN_DEBUG_QUIET_LOGS=1` 来禁用所有未显式启用的调试日志。要将调试日志输出到文件中，可使用 `BUN_DEBUG=<path-to-file>.log`。调试日志在发布构建中会被大量移除。
-- `src/js/\*\*.ts` 的更改几乎可以瞬间重建。单个 Rust crate 的更改和 C++ 更改都是增量的；只有最终链接步骤是不可避免的。
+- 使用 `cargo check -p <crate>`（或对整个工作区使用 `bun run rust:check`）在不链接的情况下对 Rust 更改进行类型检查。`bun run watch` 会在每次保存时运行 `cargo check`。
+- 确保 rust-analyzer 正在运行，以获取行内诊断信息（推荐的 VSCode 扩展集会自动完成设置）
+- 优先使用调试器（VSCode 中的“CodeLLDB”）逐步执行代码。
+- 使用调试日志。`BUN_DEBUG_<scope>=1` 会为相应的 `declare_scope!(<scope>, ...)` / `scoped_log!(<scope>, ...)` 日志启用调试记录。设置 `BUN_DEBUG_QUIET_LOGS=1` 可禁用所有未明确启用的调试日志。要将调试日志转储到文件中，请设置 `BUN_DEBUG=<path-to-file>.log`。发布构建会移除调试日志。
+- `src/js/**/*.ts` 的更改几乎会立即完成重建。单 crate 的 Rust 更改和 C++ 更改都支持增量构建；只有最终链接无法避免。
 
 ## 代码生成脚本
 
-Bun 构建过程中使用了多个代码生成脚本。这些脚本在相关文件改动时自动运行。
+当某些文件发生变化时，Bun 的构建流程会自动运行多个代码生成脚本：
 
-主要有：
-
-- `./src/codegen/generate-jssink.ts` -- 生成 `build/debug/codegen/JSSink.cpp`、`build/debug/codegen/JSSink.h`，它们实现了用于与 `ReadableStream` 交互的各种类。这也是 `FileSink`、`ArrayBufferSink`、`"type": "direct"` 流以及其他与流相关代码的内部实现方式。
-- `./src/codegen/generate-classes.ts` -- 为用 Rust 实现的 JavaScriptCore 类生成 Rust 和 C++ 绑定。在 `**/*.classes.ts` 文件中，我们定义各种类、方法、原型、getter/setter 等接口，代码生成器读取这些定义并生成实现 JavaScript 对象的样板代码，然后将其连接到 Rust。
-- `./src/codegen/cppbind.ts` -- 扫描 C++ 绑定中带有导出属性标记的函数，并为其生成自动化 Rust FFI 封装（`cpp.rs`）。
-- `./src/codegen/bundle-modules.ts` -- 将 `node:fs`、`bun:ffi` 等内置模块打包为可包含进最终二进制文件的文件。在开发模式下，这些内容可以在无需重建原生代码的情况下重新加载（您仍然需要运行 `bun run build`，但之后会重新从磁盘读取转译后的文件）。在发布构建中，它们会被嵌入到二进制文件中。
-- `./src/codegen/bundle-functions.ts` -- 将以 JavaScript/TypeScript 实现、可全局访问的函数打包，如 `ReadableStream`、`WritableStream` 等。它们的使用方式与内置模块类似，但输出更接近 WebKit/Safari 对 Safari 内置函数的实现方式，因此我们可以将 WebKit 中的实现直接复制过来作为起点。
+- `./src/codegen/generate-jssink.ts` -- 生成 `build/debug/codegen/JSSink.cpp`、`build/debug/codegen/JSSink.h`，用于实现与 `ReadableStream` 交互的各种类。这些代码是 `FileSink`、`ArrayBufferSink`、`"type": "direct"` 流以及其他流相关代码在内部的实现方式。
+- `./src/codegen/generate-classes.ts` -- 为用 Rust 实现的 JavaScriptCore 类生成 Rust 和 C++ 绑定。`**/*.classes.ts` 文件定义类、方法、原型以及 getter/setter 的接口；代码生成器读取这些接口，生成用于在 C++ 中实现 JavaScript 对象并将其与 Rust 连接起来的样板代码。
+- `./src/codegen/cppbind.ts` -- 扫描标记有导出属性的 C++ 绑定，并为它们生成自动的 Rust FFI 包装器（`cpp.rs`）。
+- `./src/codegen/bundle-modules.ts` -- 将 `node:fs`、`bun:ffi` 等内置模块打包到最终二进制文件所包含的文件中。在开发过程中，这些模块可以在不重新构建原生代码的情况下重新加载（仍然需要运行 `bun run build`，但之后它会重新从磁盘读取转译后的文件）。在发布版本中，这些模块会嵌入二进制文件。
+- `./src/codegen/bundle-functions.ts` -- 将用 JavaScript/TypeScript 实现的全局可访问函数（如 `ReadableStream` 和 `WritableStream`）打包。这些函数的使用方式与内置模块类似，但其输出更贴近 WebKit/Safari 对 Safari 内置函数的处理方式，因此可以将实现从 WebKit 复制粘贴过来作为起点。
 
 ## 修改 ESM 模块
 
@@ -225,13 +220,13 @@ Bun 构建过程中使用了多个代码生成脚本。这些脚本在相关文�
 bun run build:release
 ```
 
-生成的二进制位于 `./build/release/bun` 和 `./build/release/bun-profile`。
+二进制文件位于 `./build/release/bun` 和 `./build/release/bun-profile`。
 
 ### 从 Pull Request 下载发布版本构建
 
-为节省本地编译发布版的时间，我们提供了从 Pull Request 运行发布构建的方法。方便在合并前手动测试更改。
+你可以直接运行来自 Pull Request 的发布版本构建，而无需在本地构建，这对于在合并更改之前手动测试非常有用。
 
-运行 PR 的发布版，可以使用 `bun-pr` npm 包：
+使用 `bun-pr` npm 包：
 
 ```sh
 bunx bun-pr <pr-number>
@@ -240,13 +235,13 @@ bunx bun-pr "https://github.com/oven-sh/bun/pull/1234566"
 bunx bun-pr --asan <pr-number> # 仅限 Linux x64
 ```
 
-它会从 PR 的 GitHub Actions 构建产物下载发布版本并添加到 `$PATH`，命名为 `bun-${pr-number}`。然后可以用命令 `bun-${pr-number}` 运行：
+`bun-pr` 会从 Pull Request 的 GitHub Actions 构建产物中下载发布版本构建，并将其以 `bun-${pr-number}` 的名称添加到 `$PATH`，因此你可以直接运行它：
 
 ```sh
 bun-1234566 --version
 ```
 
-需要安装 `gh` CLI 以进行 GitHub 认证。
+你可能需要安装 `gh` CLI 才能通过 GitHub 身份验证。
 
 ### 从终端查看 CI 失败情况
 
@@ -266,13 +261,13 @@ bun run ci:find           # 打印构建编号（可与原始 `bk` 组合使用�
 
 [AddressSanitizer](https://en.wikipedia.org/wiki/AddressSanitizer) 有助于发现内存问题，并且在 Linux 和 macOS 上 Bun 的调试构建中默认启用。它覆盖 Rust 代码、C++ 绑定以及所有依赖项。这会让构建时间大约增加 2 倍；如果这影响到您的效率，您可以使用 `bun run build:debug:noasan` 禁用它（或者向 `scripts/build.ts` 传递 `--asan=off`），但通常我们建议您在两次构建之间批量完成更改。
 
-构建带 Address Sanitizer 的发布版，运行：
+要使用 AddressSanitizer 构建发布版本，请运行：
 
 ```bash
 bun run build:asan
 ```
 
-在 CI 中，我们至少有一个目标使用 Address Sanitizer 来运行测试套件。
+CI 会运行测试套件，其中至少有一个目标是使用 AddressSanitizer 构建的。
 
 ## 本地构建 WebKit + JSC 调试模式
 
@@ -282,8 +277,9 @@ bun run build:asan
 # 将 WebKit 克隆到 ./vendor/WebKit
 git clone https://github.com/oven-sh/WebKit vendor/WebKit
 
-# 检出 scripts/build/deps/webkit.ts 中 WEBKIT_VERSION 指定的提交哈希
-git -C vendor/WebKit checkout <commit_hash>
+# 检出 scripts/build/deps/webkit.ts 中 WEBKIT_VERSION 指定的版本
+# （可以是提交 SHA 或 autobuild-* 发布标签；两者都支持）
+bun sync-webkit-source
 
 # 构建 JSC 的调试版本，产物在 ./vendor/WebKit/WebKitBuild/Debug
 # 可选：用 `bun run jsc:build` 构建发布版
@@ -296,7 +292,7 @@ cmake --build vendor/WebKit/WebKitBuild/Debug --target jsc && rm vendor/WebKit/W
 bun run build:local
 ```
 
-使用 `bun run build:local` 时，Bun 会构建到 `./build/debug-local` 目录（非默认 `./build/debug`），需要修改以下位置：
+`bun run build:local` 会处理所有事务：配置 JSC、构建 JSC，以及构建 Bun。后续运行时，如果 WebKit 源代码发生变化，JSC 会进行增量重建。首次构建后，`ninja -Cbuild/debug-local` 也可以使用，并且会同时构建 Bun 和 JSC。
 
 - `src/js/builtins.d.ts` 第一行
 - `.clangd` 配置中的 `CompilationDatabase` 路径改为 `build/debug-local`
@@ -307,19 +303,23 @@ bun run build:local
 - `.clangd` 配置中的 `CompilationDatabase` 行应为 `CompilationDatabase: build/debug-local`
 - `.vscode/launch.json` 中，许多配置使用了 `./build/debug/`，请按需修改
 
-如果使用 JSC 调试构建且用 VSCode，务必运行 “C/C++: Select a Configuration” 以配置 IntelliSense 找到调试头文件。
+WebKit 文件夹（包括构建产物）大小超过 8GB。
 
-修改我们 [WebKit 仓库](https://github.com/oven-sh/WebKit) 的代码后，还需同步修改 `SetupWebKit.cmake` 中的提交哈希。
+如果你在 VSCode 中使用 JSC 调试版本，请运行 `C/C++: Select a Configuration` 命令，以便 IntelliSense 找到调试头文件。
 
-Note that if you make changes to our [WebKit fork](https://github.com/oven-sh/WebKit), you will also have to change `WEBKIT_VERSION` in `scripts/build/deps/webkit.ts` to point to the commit hash.
+如果你修改了 Bun 的 [WebKit fork](https://github.com/oven-sh/WebKit)，还必须修改 `scripts/build/deps/webkit.ts` 中的 `WEBKIT_VERSION`，使其指向你的提交哈希或发布标签。
 
 ### Ubuntu 上出现 'span' 文件未找到
 
 <Warning>⚠️ 以下说明针对 Ubuntu 特有的问题，其他 Linux 发行版一般不会遇到此类问题。</Warning>
 
-Clang 编译器默认使用 `libstdc++` 作为 C++ 标准库，这也是 GCC 默认提供的。虽然 Clang 可以链接 `libc++`，但需要显式传递 `-stdlib` 参数。
+<Warning>
+  ⚠️ 这些说明仅适用于 Ubuntu。在其他 Linux 发行版上通常不会遇到相同的问题。
+</Warning>
 
-Bun 依赖 C++20 特性，如 `std::span`，GCC 11 以下版本不支持。GCC 10 不支持所有 C++20 特性，因此运行 `make setup` 可能会报错：
+Clang 默认使用 `libstdc++`，这是由 GNU Compiler Collection（GCC）提供的 C++ 标准库实现。Clang 也可以改为链接 `libc++`，但这需要显式传递 `-stdlib` 标志。
+
+Bun 依赖 `std::span` 等 C++20 特性，而这些特性在低于 11 的 GCC 版本中不可用。因此，运行 `bun run build` 可能会失败，并出现以下错误：
 
 ```txt
 fatal error: 'span' file not found
@@ -327,7 +327,7 @@ fatal error: 'span' file not found
          ^~~~~~
 ```
 
-该错误可能出现在初次运行 `bun setup` 时，Clang 无法编译简单程序：
+首次运行 `bun run build` 时也可能出现此问题，此时 Clang 无法编译一个简单的程序：
 
 ```txt
 The C++ compiler
@@ -337,7 +337,7 @@ The C++ compiler
 is not able to compile a simple test program.
 ```
 
-解决方法是将 GCC 更新到 11。可以先检查发行版官方仓库是否有该版本，或添加第三方仓库。通用步骤：
+要修复此错误，请将 GCC 更新到 11 版本。你的发行版官方仓库中可能已提供该版本；否则，请添加提供 GCC 11 软件包的第三方仓库：
 
 ```bash
 sudo apt update
@@ -348,7 +348,7 @@ sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
 sudo apt install gcc-11 g++-11
 ```
 
-更新完成后，将 GCC 11 设置为默认：
+然后将 GCC 11 设置为默认编译器：
 
 ```bash
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100
@@ -373,16 +373,16 @@ xcode-select --install
 
 ### 找不到 `libatomic.a`
 
-Bun 默认静态链接 `libatomic`，因非所有系统都提供静态库。如果在没有静态 `libatomic` 的发行版上构建，可使用动态链接：
+Bun 默认静态链接 `libatomic`，因为并非所有系统都提供该库。如果你在没有静态版 libatomic 的发行版上构建，请使用以下命令启用动态链接：
 
 ```bash
-bun run build -DUSE_STATIC_LIBATOMIC=OFF
+bun run build --static-libatomic=off
 ```
 
 但这样构建的 Bun 可能无法在其他系统运行。
 
 ## 使用 bun-debug
 
-- 禁用日志：`BUN_DEBUG_QUIET_LOGS=1 bun-debug ...`（用于禁用所有调试日志）
-- 为特定范围启用日志：`BUN_DEBUG_EventLoop=1 bun-debug ...`（用于启用 `scoped_log!(EventLoop, ...)` 输出）
-- Bun 会转译它运行的每个文件，要查看调试构建中实际执行的源代码，请在 `/tmp/bun-debug-src/...path/to/file` 中查找，例如 `/home/bun/index.ts` 的转译版本会位于 `/tmp/bun-debug-src/home/bun/index.ts`
+- 禁用日志：`BUN_DEBUG_QUIET_LOGS=1 bun-debug ...`（禁用所有调试日志）
+- 为特定作用域启用日志：`BUN_DEBUG_EventLoop=1 bun-debug ...`（启用 `scoped_log!(EventLoop, ...)` 输出）
+- Bun 会转译它运行的每个文件。要在调试构建中查看实际执行的源代码，请在 `/tmp/bun-debug-src/...path/to/file` 中查找。例如，`/home/bun/index.ts` 的转译版本位于 `/tmp/bun-debug-src/home/bun/index.ts`

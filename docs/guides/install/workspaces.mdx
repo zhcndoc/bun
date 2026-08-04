@@ -4,13 +4,13 @@ sidebarTitle: Bun 的 Workspaces
 mode: center
 ---
 
-Bun 的包管理器支持 npm 的 `"workspaces"`。这允许你将代码库拆分成多个独立的“包”，它们位于同一个仓库中，可以相互依赖，并且（在可能的情况下）共享一个 `node_modules` 目录。
+Bun 的包管理器支持 npm 的 `"workspaces"`。Workspaces 将代码库拆分为位于同一仓库中的不同软件包，这些软件包可以相互依赖，并且（在可能的情况下）共享一个 `node_modules` 目录。
 
 克隆[这个示例项目](https://github.com/colinhacks/bun-workspaces)来尝试使用 workspaces。
 
 ---
 
-根目录的 `package.json` 不应包含任何 `"dependencies"`、`"devDependencies"` 等。每个独立的包都应该是自包含的，并声明自己的依赖。同样，通常会声明 `"private": true`，以避免意外将根包发布到 `npm` 上。
+根目录下的 `package.json` 不应包含 `"dependencies"`、`"devDependencies"` 或其他依赖字段。每个软件包都应自包含，并声明自己的依赖项。通常会声明 `"private": true`，以避免不小心将根软件包发布到 `npm`。
 
 ```json package.json icon="file-json"
 {
@@ -22,7 +22,7 @@ Bun 的包管理器支持 npm 的 `"workspaces"`。这允许你将代码库拆�
 
 ---
 
-通常会将所有包放在 `packages` 目录下。`package.json` 中的 `"workspaces"` 字段支持通配符模式，因此你可以使用 `packages/*` 来表示 `packages` 下的每个子目录都应被视为独立的 _package_（也称为 workspace）。
+通常会将所有软件包放在 `packages` 目录中。`package.json` 中的 `"workspaces"` 字段支持 glob 模式，因此 `packages/*` 会将 `packages` 下的每个子目录视为一个独立的 _软件包_（也称为 workspace）。
 
 ```txt File Tree icon="folder-tree"
 .
@@ -37,7 +37,7 @@ Bun 的包管理器支持 npm 的 `"workspaces"`。这允许你将代码库拆�
 
 ---
 
-要在 workspaces 之间添加依赖，使用 `"workspace:*"` 语法。这里我们把 `stuff-a` 添加为 `stuff-b` 的依赖。
+要在 workspaces 之间添加依赖，请使用 `"workspace:*"` 语法。以下示例将 `stuff-a` 添加为 `stuff-b` 的依赖项。
 
 ```json packages/stuff-b/package.json icon="file-json"
 {
@@ -58,7 +58,7 @@ bun install
 
 ---
 
-要向特定的 workspace 添加 npm 依赖，`cd` 到相应的目录，并像往常一样运行 `bun add` 命令。Bun 会检测到你处于 workspace 中，并根据需要提升（hoist）该依赖。
+要向特定 workspace 添加 npm 依赖项，请进入该目录并像平常一样运行 `bun add`。Bun 会检测到你位于 workspace 中，并根据需要将依赖项[提升](/pm/isolated-installs)。
 
 ```sh terminal icon="terminal"
 cd packages/stuff-a
@@ -67,4 +67,4 @@ bun add zod
 
 ---
 
-完整的 Bun 包管理器文档，请参见 [文档 > 包管理器](/pm/cli/install)。
+请参阅 [`bun install`](/pm/cli/install)。

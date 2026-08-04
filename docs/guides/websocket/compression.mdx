@@ -4,7 +4,7 @@ sidebarTitle: 启用压缩
 mode: center
 ---
 
-可以通过 `perMessageDeflate` 参数启用逐消息压缩。设置后，所有消息都会使用 [permessage-deflate](https://tools.ietf.org/html/rfc7692) WebSocket 扩展进行压缩。
+将 `perMessageDeflate` 参数设置为使用 [permessage-deflate](https://tools.ietf.org/html/rfc7692) WebSocket 扩展压缩所有消息。
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.serve({

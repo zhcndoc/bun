@@ -7,7 +7,7 @@ bun publish dist
 ### 发布选项
 
 <ParamField path="--access" type="string">
-  `--access` 标志用于设置将要发布包的访问级别。访问级别可以是 `public` 或 `restricted`。非作用域包始终是公开的，尝试使用 `--access restricted` 发布非作用域包会导致错误。
+  设置要发布的软件包的访问级别，可以是 `public` 或 `restricted`。无作用域的软件包始终是公开的；使用 `--access restricted` 发布无作用域的软件包会报错。
 
 ```sh terminal icon="terminal"
 bun publish --access public
@@ -44,8 +44,8 @@ bun publish --tag alpha
 
 </ParamField>
 
-<ParamField path="--dry-run=<val>" type="string">
-`--dry-run` 标志用于模拟发布过程，但不实际发布包。此功能适用于在不发布包的情况下验证发布包的内容。
+<ParamField path="--dry-run" type="boolean">
+模拟发布过程而不实际发布软件包，以便先验证其内容。
 
 ```sh
 bun publish --dry-run
@@ -59,28 +59,28 @@ bun publish --dry-run
 
 <ParamField path="--auth-type" type="string" default="web">
 
-如果你的 npm 账户启用了两步验证（2FA），`bun publish` 会提示输入一次性密码（OTP）。这可以通过浏览器或命令行完成。`--auth-type` 标志用于告知 npm 注册表你更倾向使用哪种方式。可选值为 `web` 和 `legacy`，默认是 `web`。
+如果你的 npm 账户启用了双因素身份验证（2FA），`bun publish` 会提示你输入一次性密码，你可以通过浏览器或 CLI 完成验证。`--auth-type` 用于告知 npm 注册表你偏好的验证方式：`web`（默认）或 `legacy`。
 
 ```sh terminal icon="terminal"
 bun publish --auth-type legacy
 ...
-This operation requires a one-time password.
-Enter OTP: 123456
+此操作需要一次性密码。
+输入 OTP：123456
 ...
 ```
 
 </ParamField>
 
-<ParamField path="--otp" type="string" default="web">
+<ParamField path="--otp" type="string">
 
-直接向命令行提供一次性密码。如果密码有效，在发布之前会跳过额外的一次性密码提示。例如：
+直接向 CLI 提供一次性密码。有效的密码可以跳过发布前额外的一次性密码提示。
 
 ```sh terminal icon="terminal"
 bun publish --otp 123456
 ```
 
 <Note>
-  `bun publish` 会尊重环境变量 `NPM_CONFIG_TOKEN`，可以在 Github Actions 或自动化工作流中使用。
+  `bun publish` 支持 `NPM_CONFIG_TOKEN` 环境变量，因此你可以从 GitHub Actions 或其他自动化工作流中发布。
 </Note>
 
 </ParamField>
@@ -145,7 +145,7 @@ bun publish --cafile ./ca-cert.pem
 </ParamField>
 
 <Note>
-  **生命周期脚本** — 当提供预构建的 tarball 时，生命周期脚本（如 prepublishOnly、prepack 等）不会执行。只有当 Bun 自己打包包时，才会运行脚本。
+  **生命周期脚本** — 发布预构建的 tarball 时，Bun 不会运行 `prepublishOnly` 和 `prepack` 等生命周期脚本；只有在 Bun 自行打包软件包时才会运行这些脚本。
 </Note>
 
 #### 文件管理
@@ -172,8 +172,8 @@ bun publish --cafile ./ca-cert.pem
   最大并发网络请求数
 </ParamField>
 
-<ParamField path="--concurrent-scripts" type="number" default="5">
-  最大并发生命周期脚本数
+<ParamField path="--concurrent-scripts" type="number">
+  最大并发生命周期脚本数（默认：CPU 核心数的 2 倍）
 </ParamField>
 
 #### 输出控制

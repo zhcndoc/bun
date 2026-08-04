@@ -1,13 +1,13 @@
 ---
 title: "编写测试"
-description: "学习如何使用 Bun 内置的 Jest 兼容 API 编写测试，支持异步测试、超时和各种测试修饰符"
+description: "使用 Bun 兼容 Jest 的 API 编写测试，包括异步测试、超时和测试修饰符"
 ---
 
-使用从内置模块 `bun:test` 导入的类似 Jest 的 API 来定义测试。长期来看，Bun 目标是实现完全的 Jest 兼容性；目前支持的 expect 匹配器集合有限。
+使用从内置 `bun:test` 模块导入的类似 Jest 的 API 定义测试。从长远来看，Bun 旨在完全兼容 Jest；目前仅支持有限的一组 `expect` 匹配器。
 
 ## 基本用法
 
-To define a test:
+定义测试：
 
 ```ts title="math.test.ts" icon="/icons/typescript.svg"
 import { expect, test } from "bun:test";
@@ -48,7 +48,7 @@ test("2 * 2", async () => {
 });
 ```
 
-或者使用 `done` 回调来标识测试完成。如果在测试定义中包含了 `done` 回调参数，必须调用它，否则测试将挂起。
+或者，使用 `done` 回调来表示完成。如果测试函数接收 `done` 参数，则必须调用它，否则测试会一直挂起。
 
 ```ts title="math.test.ts" icon="/icons/typescript.svg"
 import { expect, test } from "bun:test";
@@ -74,15 +74,15 @@ test("wat", async () => {
 }, 500); // 测试必须在 <500ms 内完成
 ```
 
-在 `bun:test` 中，测试超时会抛出不可捕获的异常，强制测试停止并判定失败。与此同时，测试中生成的任何子进程也会被杀死，以避免后台留下僵尸进程。
+在 `bun:test` 中，超时会抛出无法捕获的异常，以强制测试停止运行并失败。Bun 还会终止测试中生成的所有子进程，因此它们不会作为僵尸进程残留。
 
-如果未被此超时选项或 `jest.setDefaultTimeout()` 覆盖，每个测试的默认超时是 5000ms（5 秒）。
+如果未通过此超时选项或 `jest.setTimeout()` 覆盖，每个测试的默认超时时间为 5000ms（5 秒）。
 
 ## 重试和重复执行
 
 ### test.retry
 
-使用 `retry` 选项可在测试失败时自动重试。只要在指定的尝试次数内成功，测试即通过。适合不稳定、偶尔失败的测试。
+使用 `retry` 选项可在不稳定的测试失败时自动重试。测试在指定的尝试次数内成功即可通过。
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
 import { test } from "bun:test";
@@ -99,7 +99,7 @@ test(
 
 ### test.repeats
 
-使用 `repeats` 选项可无视测试结果，重复运行测试多次。只要有任一轮失败，即判定测试失败。适合检测不稳定测试或压力测试。注意，`repeats: N` 实际运行次数为 N+1（1次初始 + N次重复）。
+使用 `repeats` 选项可多次运行测试，而不论测试通过还是失败；如果任何一次迭代失败，测试就会失败。可使用此选项检测不稳定的测试或进行压力测试。`repeats: N` 总共运行测试 N+1 次（1 次初始运行 + N 次重复运行）。
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
 import { test } from "bun:test";
@@ -117,13 +117,13 @@ test(
 
 ### 🧟 僵尸进程清理器
 
-当测试超时且通过 `Bun.spawn`、`Bun.spawnSync` 或 `node:child_process` 生成的进程未被杀死时，Bun 会自动杀死它们并在控制台打印消息。防止超时测试后僵尸进程残留后台。
+当测试超时时，Bun 会终止其中通过 `Bun.spawn`、`Bun.spawnSync` 或 `node:child_process` 启动且仍在运行的所有进程，并向控制台记录一条消息。这可以防止僵尸进程在测试超时后继续残留。
 
 ## 测试修饰符
 
 ### test.skip
 
-使用 `test.skip` 跳过单个测试。跳过的测试不会被执行。
+使用 `test.skip` 跳过单个测试。这些测试不会运行。
 
 ```ts title="math.test.ts" icon="/icons/typescript.svg"
 import { expect, test } from "bun:test";
@@ -136,7 +136,7 @@ test.skip("wat", () => {
 
 ### test.todo
 
-使用 `test.todo` 标记测试为待办状态，这些测试不会被执行。
+使用 `test.todo` 将测试标记为待办事项。这些测试不会运行。
 
 ```ts title="math.test.ts" icon="/icons/typescript.svg"
 import { expect, test } from "bun:test";
@@ -146,7 +146,7 @@ test.todo("修复此处", () => {
 });
 ```
 
-要执行 todo 测试并找出哪些测试已通过，可使用 `bun test --todo`。
+要运行待办测试并找出其中通过的测试，请使用 `bun test --todo`。
 
 ```bash terminal icon="terminal"
 bun test --todo
@@ -162,11 +162,11 @@ my.test.ts:
  1 次 expect() 调用
 ```
 
-启用此参数时，失败的 todo 测试不会导致错误，但通过的 todo 测试将被标记为失败，方便你移除 todo 标记或修复测试。
+使用此标志时，失败的待办测试不会导致错误，但通过的待办测试会被标记为失败，以便你移除 todo 标记或修复测试。
 
 ### test.only
 
-运行特定测试或测试套件，使用 `test.only()` 或 `describe.only()`。
+要运行特定测试或测试套件，请使用 `test.only()` 或 `describe.only()`。
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
 import { test, describe } from "bun:test";
@@ -186,21 +186,15 @@ describe.only("仅此", () => {
 });
 ```
 
-以下命令只会执行测试 #2 和 #3。
+以下命令只运行测试 #2 和 #3。
 
 ```bash terminal icon="terminal"
 bun test --only
 ```
 
-以下命令会执行测试 #1、#2 和 #3。
-
-```bash terminal icon="terminal"
-bun test
-```
-
 ### test.if
 
-使用 `test.if()` 有条件地运行测试。当条件为真时运行。适用于仅在特定架构或操作系统上运行的测试。
+要有条件地运行测试，请使用 `test.if()`。当条件为真值时，测试才会运行。对于仅应在特定架构或操作系统上运行的测试，可以使用它。
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
 test.if(Math.random() > 0.5)("有一半概率运行", () => {
@@ -227,7 +221,7 @@ test.skipIf(macOS)("仅在非 macOS 运行", () => {
 
 ### test.todoIf
 
-条件标记测试为 TODO，使用 `test.todoIf()` 或 `describe.todoIf()`。切换 `skipIf` 或 `todoIf` 可区分“该目标无效”和“计划但未实现”的意图。
+要改为将测试标记为待办事项，请使用 `test.todoIf()` 或 `describe.todoIf()`。选择 `skipIf` 还是 `todoIf` 表明了不同意图：“对该目标无效”与“计划实现但尚未实现”。
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
 const macOS = process.platform === "darwin";
@@ -240,10 +234,10 @@ test.todoIf(macOS)("运行在 posix 系统上", () => {
 
 ### test.failing
 
-当你知道测试当前会失败，但想跟踪它并在它开始通过时获取通知，使用 `test.failing()`。该修饰符对测试结果取反：
+当你知道某个测试会失败，但希望跟踪它并在它开始通过时收到通知，请使用 `test.failing()`。这会反转测试结果：
 
-- 标有 `.failing()` 的失败测试会被视为通过
-- 标有 `.failing()` 的通过测试会失败（并提示该测试现在通过，应修复）
+- 标记了 `.failing()` 的失败测试会通过
+- 标记了 `.failing()` 的通过测试会失败，并显示它现在已经通过、应当进行修复的消息
 
 ```ts math.test.ts icon="/icons/typescript.svg"
 // 因测试故意失败，这里会通过
@@ -257,11 +251,11 @@ test.failing("修复了 bug", () => {
 });
 ```
 
-适合跟踪你计划以后修复的已知错误，或用于测试驱动开发。
+可以使用它跟踪计划稍后修复的已知 bug，或用于测试驱动开发。
 
-## 条件测试用于 describe 块
+## describe 块中的条件测试
 
-条件修饰符 `.if()`、`.skipIf()` 和 `.todoIf()` 也可以用于 describe 块，影响套件内的所有测试：
+条件修饰符 `.if()`、`.skipIf()` 和 `.todoIf()` 同样适用于 `describe` 块，会影响套件中的所有测试：
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
 const isMacOS = process.platform === "darwin";
@@ -309,7 +303,7 @@ test.each(cases)("%p + %p 应该是 %p", (a, b, expected) => {
 });
 ```
 
-也可以用 `describe.each` 创建针对每个测试用例运行一次的参数化套件：
+`describe.each` 创建一个参数化测试套件，每个测试用例运行一次：
 
 ```ts title="sum.test.ts" icon="/icons/typescript.svg"
 describe.each([
@@ -354,7 +348,7 @@ test.each([
 
 ### 格式化占位符
 
-The following options are available for formatting the test title:
+使用以下格式说明符来格式化测试标题：
 
 | 占位符  | 描述                   |
 | ------- | ---------------------- |
@@ -413,7 +407,7 @@ test("异步工作调用断言", async () => {
 });
 ```
 
-这对于异步测试尤其有用，确保你的断言真正执行了。
+这对于异步测试尤其有用，可以确保断言确实执行。
 
 ### expect.assertions(count)
 
@@ -436,9 +430,7 @@ Bun 包含用于测试 TypeScript 类型的 `expectTypeOf`，兼容 Vitest。
 
 ### expectTypeOf
 
-<Warning>
-  这些函数在运行时不执行任何操作 —— 你需要单独运行 TypeScript 来验证类型检查。
-</Warning>
+<Warning>这些函数在运行时不会执行任何操作。请单独运行 TypeScript 以验证类型检查。</Warning>
 
 `expectTypeOf` 函数提供类型级别的断言，由 TypeScript 的类型检查器检查。测试类型的方法：
 
@@ -472,11 +464,11 @@ expectTypeOf([1, 2, 3]).items.toBeNumber();
 expectTypeOf(Promise.resolve(42)).resolves.toBeNumber();
 ```
 
-完整的 `expectTypeOf` 匹配器文档请参考 [API 参考](https://bun.com/reference/bun/test/expectTypeOf)。
+有关 `expectTypeOf` 匹配器的完整文档，请参阅 [API 参考](https://bun.com/reference/bun/test/expectTypeOf)。
 
 ## 匹配器
 
-Bun 已实现以下匹配器。完全兼容 Jest 正在规划中；[进度跟踪](https://github.com/oven-sh/bun/issues/1825)。
+Bun 实现了以下匹配器。计划实现完整的 Jest 兼容性；请参阅[跟踪 issue](https://github.com/oven-sh/bun/issues/1825)。
 
 ### 基本匹配器
 
@@ -641,13 +633,13 @@ expect(response.status >= 200).toBe(true);
 test("无效输入应抛出错误", () => {
   expect(() => {
     validateEmail("not-an-email");
-  }).toThrow("Invalid email format");
+  }).toThrow("邮箱格式无效");
 });
 
 test("应处理异步错误", async () => {
   await expect(async () => {
     await fetchUser("invalid-id");
-  }).rejects.toThrow("User not found");
+  }).rejects.toThrow("未找到用户");
 });
 ```
 

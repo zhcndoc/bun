@@ -3,15 +3,15 @@ title: 加载器
 description: Bun 打包器和运行时内置加载器
 ---
 
-Bun 打包器开箱即用实现了一组默认加载器。
+Bun 打包器内置了一组加载器。
 
-> 通常规则是：**打包器和运行时都支持相同的一组文件类型。**
+> 一般来说：**打包器和运行时默认支持相同的文件类型。**
 
 `.js` `.cjs` `.mjs` `.mts` `.cts` `.ts` `.tsx` `.jsx` `.css` `.json` `.jsonc` `.toml` `.yaml` `.yml` `.txt` `.wasm` `.node` `.html` `.sh`
 
-Bun 使用文件扩展名来确定应该使用哪个内置加载器解析文件。每个加载器都有一个名称，比如 `js`、`tsx` 或 `json`。这些名称用于构建扩展 Bun 的自定义加载器插件时。
+Bun 使用文件扩展名来选择用于解析文件的内置加载器。每个加载器都有一个名称，例如 `js`、`tsx` 或 `json`。通过插件扩展 Bun 并添加自定义加载器时，需要引用这些名称。
 
-你可以使用 `'type'` 导入属性显式指定使用哪个加载器。
+要显式指定加载器，请使用 `'type'` 导入属性。
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 import my_toml from "./my_file" with { type: "toml" };
@@ -25,7 +25,7 @@ const { default: my_toml } = await import("./my_file", { with: { type: "toml" } 
 
 **JavaScript 加载器。** 默认用于 `.cjs` 和 `.mjs`。
 
-解析代码并应用一组默认转换，如死代码消除和摇树优化。注意目前 Bun 不尝试对语法进行向下转换。
+解析代码并应用一组默认转换，例如消除无效代码和摇树优化。Bun 不会向下转换语法。
 
 ---
 
@@ -33,7 +33,7 @@ const { default: my_toml } = await import("./my_file", { with: { type: "toml" } 
 
 **JavaScript + JSX 加载器。** 默认用于 `.js` 和 `.jsx`。
 
-与 `js` 加载器相同，但支持 JSX 语法。默认情况下，JSX 会被向下转换成普通 JavaScript；转换的具体方式依赖于你 `tsconfig.json` 中的 `jsx*` 编译选项。详情请参考 [TypeScript 关于 JSX 的文档](https://www.typescriptlang.org/tsconfig#jsx)。
+与 `js` 加载器相同，但支持 JSX 语法。默认情况下，JSX 会向下转换为普通 JavaScript；具体输出取决于 `tsconfig.json` 中的 `jsx*` 编译器选项。请参阅 [TypeScript JSX 文档](https://www.typescriptlang.org/tsconfig#jsx)。
 
 ---
 
@@ -75,11 +75,11 @@ const pkg = {
 pkg.name;
 ```
 
-如果 `.json` 文件作为打包入口传入，它会被转换成一个 `.js` 模块，`export default` 导出解析后的对象。
+如果将 `.json` 文件作为打包器的入口点传入，则会将其转换为一个通过 `export default` 导出解析后对象的 `.js` 模块。
 
 <CodeGroup>
 
-```json Input
+```json 输入
 {
   "name": "John Doe",
   "age": 35,
@@ -87,7 +87,7 @@ pkg.name;
 }
 ```
 
-```js Output
+```js 输出
 export default {
   name: "John Doe",
   age: 35,
@@ -103,7 +103,7 @@ export default {
 
 **含注释的 JSON（JSONC）加载器。** 默认用于 `.jsonc`。
 
-可以直接导入 JSONC（带注释的 JSON）文件。Bun 会解析并去除注释和尾随逗号。
+JSONC（带注释的 JSON）文件可以直接导入。Bun 会解析这些文件，并去除注释和尾随逗号。
 
 ```js
 import config from "./config.jsonc";
@@ -128,13 +128,13 @@ var config = {
 
 **TOML 加载器。** 默认用于 `.toml`。
 
-可以直接导入 TOML 文件。Bun 使用其快速的本地 TOML 解析器解析。
+TOML 文件可以直接导入。Bun 会使用其原生 TOML 解析器进行解析。
 
 ```js
 import config from "./bunfig.toml";
 config.logLevel; // => "debug"
 
-// 通过导入属性：
+// 使用导入属性：
 // import myCustomTOML from './my.config' with {type: "toml"};
 ```
 
@@ -148,17 +148,17 @@ var config = {
 config.logLevel;
 ```
 
-如果 `.toml` 文件作为打包入口传入，它会被转换成一个 `.js` 模块，`export default` 导出解析后的对象。
+如果将 `.toml` 文件作为入口点传入，则会将其转换为一个通过 `export default` 导出解析后对象的 `.js` 模块。
 
 <CodeGroup>
 
-```toml Input
+```toml 输入
 name = "John Doe"
 age = 35
 email = "johndoe@example.com"
 ```
 
-```js Output
+```js 输出
 export default {
   name: "John Doe",
   age: 35,
@@ -174,13 +174,13 @@ export default {
 
 **YAML 加载器。** 默认用于 `.yaml` 和 `.yml`。
 
-可以直接导入 YAML 文件。Bun 使用它快速的本地 YAML 解析器解析。
+YAML 文件可以直接导入。Bun 会使用其原生 YAML 解析器进行解析。
 
 ```js
 import config from "./config.yaml";
 console.log(config);
 
-// 通过导入属性：
+// 使用导入属性：
 import data from "./data.txt" with { type: "yaml" };
 ```
 
@@ -194,17 +194,17 @@ var config = {
 };
 ```
 
-如果 `.yaml` 或 `.yml` 文件作为打包入口传入，它会被转换成一个 `.js` 模块，`export default` 导出解析后的对象。
+如果将 `.yaml` 或 `.yml` 文件作为入口点传入，则会将其转换为一个通过 `export default` 导出解析后对象的 `.js` 模块。
 
 <CodeGroup>
 
-```yaml Input
+```yaml 输入
 name: John Doe
 age: 35
 email: johndoe@example.com
 ```
 
-```js Output
+```js 输出
 export default {
   name: "John Doe",
   age: 35,
@@ -220,14 +220,14 @@ export default {
 
 **文本加载器。** 默认用于 `.txt`。
 
-将文本文件内容读取并以内联字符串的形式插入包内。可以直接导入文本文件。文件内容会被读取并作为字符串返回。
+文本文件可以直接导入。文件会被读取并作为字符串返回。
 
 ```js
 import contents from "./file.txt";
 console.log(contents); // => "Hello, world!"
 
-// 导入 html 文件作为文本
-// 可以使用 "type" 属性覆盖默认加载器。
+// 将 html 文件作为文本导入
+// "type" 属性会覆盖默认加载器。
 import html from "./index.html" with { type: "text" };
 ```
 
@@ -238,15 +238,15 @@ var contents = `Hello, world!`;
 console.log(contents);
 ```
 
-如果 `.txt` 文件作为入口传入，会被转换成一个 `.js` 模块，`export default` 导出文件内容。
+如果将 `.txt` 文件作为入口点传入，则会将其转换为一个通过 `export default` 导出文件内容的 `.js` 模块。
 
 <CodeGroup>
 
-```txt Input
+```txt 输入
 Hello, world!
 ```
 
-```js Output
+```js 输出
 export default "Hello, world!";
 ```
 
@@ -265,7 +265,7 @@ import addon from "./addon.node";
 console.log(addon);
 ```
 
-<Note>在打包器中，`.node` 文件使用文件加载器处理。</Note>
+<Note>在打包器中，`.node` 文件会使用 `file` 加载器处理。</Note>
 
 ---
 
@@ -273,15 +273,15 @@ console.log(addon);
 
 **SQLite 加载器。** 需要使用 `with { "type": "sqlite" }` 导入属性。
 
-运行时和打包器中可以直接导入 SQLite 数据库文件。将使用 `bun:sqlite` 加载数据库。
+在运行时和打包器中，可以直接导入 SQLite 数据库。Bun 会使用 `bun:sqlite` 加载数据库。
 
 ```js
 import db from "./my.db" with { type: "sqlite" };
 ```
 
-<Warning>此功能仅在目标是 `bun` 时支持。</Warning>
+<Warning>`sqlite` 加载器仅在目标为 `bun` 时受支持。</Warning>
 
-默认情况下，数据库文件是包外部的（这样你可以在别处加载数据库），因此磁盘上的数据库文件不会打包进最终产物。
+默认情况下，磁盘上的数据库文件不会被打包到最终输出中；它会保持在包外部，因此你可以使用从其他位置加载的数据库。
 
 你可以使用 `"embed"` 属性改变此行为：
 
@@ -303,12 +303,12 @@ import db from "./my.db" with { type: "sqlite", embed: "true" };
 
 **HTML 加载器。** 默认用于 `.html`。
 
-`html` 加载器处理 HTML 文件，并打包所有引用的资源。它会：
+`html` 加载器会处理 HTML 文件，并打包其中引用的所有资源。它会：
 
 - 打包并哈希引用的 JavaScript 文件（`<script src="...">`）
 - 打包并哈希引用的 CSS 文件（`<link rel="stylesheet" href="...">`）
-- 哈希引用的图片（`<img src="...">`）
-- 保留外部 URL（默认以 `http://` 或 `https://` 开头的）
+- 为引用的图片生成哈希（`<img src="...">`）
+- 保留外部 URL（默认情况下，任何以 `http://` 或 `https://` 开头的 URL）
 
 例如，给定如下 HTML 文件：
 
@@ -323,7 +323,7 @@ import db from "./my.db" with { type: "sqlite", embed: "true" };
 </html>
 ```
 
-它将输出新的 HTML 文件，引用打包后的资源：
+Bun 会输出包含已打包资源的新 HTML 文件：
 
 ```html title="dist/index.html" icon="file-code"
 <!DOCTYPE html>
@@ -336,16 +336,14 @@ import db from "./my.db" with { type: "sqlite", embed: "true" };
 </html>
 ```
 
-其底层使用了 [`lol-html`](https://github.com/cloudflare/lol-html) 来提取脚本和链接标签作为入口点，其他资源视为外部资源。
+该加载器使用 [`lol-html`](https://github.com/cloudflare/lol-html) 将 script 和 link 标签提取为入口点，并将其他资源作为外部资源处理。
 
 <Accordion title="支持的 HTML 选择器列表">
-当前支持的选择器包括：
+选择器包括：
 
 - `audio[src]`
-- `iframe[src]`
 - `img[src]`
 - `img[srcset]`
-- `link:not([rel~='stylesheet']):not([rel~='modulepreload']):not([rel~='manifest']):not([rel~='icon']):not([rel~='apple-touch-icon'])[href]`
 - `link[as='font'][href], link[type^='font/'][href]`
 - `link[as='image'][href]`
 - `link[as='style'][href]`
@@ -368,9 +366,9 @@ import db from "./my.db" with { type: "sqlite", embed: "true" };
 
 `html` 加载器的行为取决于它的使用方式：
 
-- 静态构建：运行 `bun build ./index.html` 时，Bun 生成包含所有资源的静态站点，且资源已打包并哈希。
-- 运行时：运行 `bun run server.ts`（其中 `server.ts` 导入 HTML 文件）时，Bun 开发期间动态打包资源，支持热模块替换等功能。
-- 全栈构建：运行 `bun build --target=bun server.ts`（其中 `server.ts` 导入 HTML 文件）时，导入解析为清单对象，供 `Bun.serve` 高效地在生产环境提供预打包资源。
+- 静态构建：运行 `bun build ./index.html` 时，Bun 会生成一个包含所有已打包并哈希处理资源的静态网站。
+- 运行时：运行 `bun run server.ts` 时（其中 `server.ts` 导入了 HTML 文件），Bun 会在开发过程中即时打包资源，从而支持热模块替换等功能。
+- 全栈构建：运行 `bun build --target=bun server.ts` 时（其中 `server.ts` 导入了 HTML 文件），该导入会解析为一个清单对象，`Bun.serve` 会使用它在生产环境中提供预先打包的资源。
 
 </Note>
 
@@ -380,7 +378,7 @@ import db from "./my.db" with { type: "sqlite", embed: "true" };
 
 **CSS 加载器。** 默认用于 `.css`。
 
-可以直接导入 CSS 文件。打包器会解析并打包 CSS 文件，支持 `@import` 语句和 `url()` 引用。
+CSS 文件可以直接导入。打包器会解析并打包这些文件，处理 `@import` 语句和 `url()` 引用。
 
 ```js
 import "./styles.css";
@@ -400,7 +398,7 @@ import "./styles.css";
 
 **Bun Shell 加载器。** 默认用于 `.sh` 文件。
 
-此加载器用于解析 Bun Shell 脚本。仅在启动 Bun 本身时支持，因此在打包器或运行时不可用。
+该加载器会解析 Bun Shell 脚本。它仅在启动 Bun 本身时受支持，因此无法在打包器或运行时中使用。
 
 ```bash
 bun run ./script.sh
@@ -420,14 +418,14 @@ import logo from "./logo.svg";
 console.log(logo);
 ```
 
-在运行时，Bun 会检查 `logo.svg` 文件是否存在，并将其转换为该文件在磁盘上的绝对路径。
+在运行时，Bun 会检查 `logo.svg` 是否存在，并将导入解析为磁盘上的绝对路径。
 
 ```bash
 bun run logo.ts
 # 输出: /path/to/project/logo.svg
 ```
 
-在打包器中，情况略有不同。文件会原样复制到输出目录 `outdir`，导入解析为指向复制文件的相对路径。
+在打包器中，文件会原样复制到 `outdir`，导入则解析为指向所复制文件的相对路径。
 
 ```js
 // 输出
@@ -435,17 +433,12 @@ var logo = "./logo.svg";
 console.log(logo);
 ```
 
-如果为 `publicPath` 指定了值，导入会使用该值作为前缀，构造绝对路径或 URL。
+如果设置了 `publicPath`，导入会使用其值作为前缀，以构造绝对路径或 URL。
 
-| 公共路径                      | 解析导入                        |
-| ----------------------------- | ------------------------------- |
-| `""`（默认）                 | `/logo.svg`                     |
-| `"/assets"`                  | `/assets/logo.svg`              |
+| 公共路径                     | 解析后的导入                     |
+| ---------------------------- | -------------------------------- |
+| `""`（默认）                 | `./logo.svg`                     |
+| `"/assets/"`                 | `/assets/logo.svg`               |
 | `"https://cdn.example.com/"` | `https://cdn.example.com/logo.svg` |
 
-<Note>
-复制的文件位置和文件名由 `naming.asset` 的值决定。
-
-此加载器将文件原样复制到 `outdir`，复制文件名根据 `naming.asset` 决定。
-
-</Note>
+<Note>复制文件的位置和文件名由 `naming.asset` 的值决定。</Note>

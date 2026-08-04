@@ -5,7 +5,7 @@ description: 使用 `bun publish` 将包发布到 npm 注册表
 
 import Publish from "/snippets/cli/publish.mdx";
 
-`bun publish` 会自动将你的包打包成 tarball，去除 `package.json` 中的 catalog 和 workspace 协议（如有必要会解析版本），并发布到配置文件中指定的注册表。支持 `bunfig.toml` 和 `.npmrc` 文件。
+`bun publish` 会将你的包打包成 tarball，从 `package.json` 中移除 catalog 和 workspace 协议（必要时解析版本），并发布到配置文件中指定的 registry。支持 `bunfig.toml` 和 `.npmrc` 文件。
 
 ```sh terminal icon="terminal"
 ## 从当前工作目录发布包
@@ -32,7 +32,7 @@ Registry: http://localhost:4873/
  + publish-1@1.0.0
 ```
 
-或者，你也可以先用 `bun pm pack` 单独打包你的包，然后用 `bun publish` 指定输出的 tarball 路径进行发布。
+如需分别执行打包和发布，请运行 `bun pm pack`，然后将输出 tarball 的路径传递给 `bun publish`。
 
 ```sh terminal icon="terminal"
 bun pm pack
@@ -41,12 +41,12 @@ bun publish ./package.tgz
 ```
 
 <Note>
-  当提供 tarball 路径时，`bun publish` 不会执行生命周期脚本（`prepublishOnly/prepack/prepare/postpack/publish/postpublish`）。只有在由 `bun publish` 打包时才会执行脚本。
+  如果提供了 tarball 路径，`bun publish` 不会运行生命周期脚本（`prepublishOnly/prepack/prepare/postpack/publish/postpublish`）。只有在 `bun publish` 自行打包时才会运行这些脚本。
 </Note>
 
 ### `--access`
 
-`--access` 标志可用于设置发布包的访问级别。访问级别可以是 `public` 或 `restricted`。未作用域的包总是公开的，尝试使用 `--access restricted` 发布未作用域包将导致错误。
+`--access` 用于设置所发布包的访问级别，可以是 `public` 或 `restricted`。无作用域的包始终为公开包，使用 `--access restricted` 发布无作用域包会报错。
 
 ```sh terminal icon="terminal"
 bun publish --access public
@@ -64,7 +64,7 @@ bun publish --access public
 
 ### `--tag`
 
-设置发布的包版本的标签。默认标签为 `latest`。包的初始版本总是会被打上 `latest` 标签，且会额外打上指定的标签。
+设置所发布包版本的标签。默认标签为 `latest`。包的初始版本总是会被打上 `latest` 标签，且会额外打上指定的标签。
 
 ```sh terminal icon="terminal"
 bun publish --tag alpha
@@ -82,7 +82,7 @@ bun publish --tag alpha
 
 ### `--dry-run`
 
-`--dry-run` 标志可用于模拟发布过程，而不实际发布包。这对于验证发布包的内容很有用。
+`--dry-run` 会运行发布流程但不会发布包，因此你可以检查实际会发布哪些内容。
 
 ```sh terminal icon="terminal"
 bun publish --dry-run
@@ -98,30 +98,30 @@ bun publish --tolerate-republish
 
 ### `--gzip-level`
 
-指定打包时使用的 gzip 压缩等级。仅适用于无 tarball 路径参数的 `bun publish`。取值范围为 `0` 到 `9`（默认值为 `9`）。
+设置打包包时使用的 gzip 压缩级别，可设为 `0` 到 `9`（默认为 `9`）。仅适用于不带 tarball 路径参数的 `bun publish`。
 
 ### `--auth-type`
 
-如果你的 npm 账号启用了两步验证（2FA），`bun publish` 会提示输入一次性密码。该操作既可以通过浏览器，也可以通过 CLI 完成。`--auth-type` 标志用于告诉 npm 注册表你偏好的验证方式。可选值为 `web` 和 `legacy`，默认值是 `web`。
+如果你的 npm 账户启用了双因素认证，`bun publish` 会通过浏览器或 CLI 提示你输入一次性密码。`--auth-type` 用于告诉 npm registry 你偏好的验证方式：`web`（默认）或 `legacy`。
 
 ```sh terminal icon="terminal"
 bun publish --auth-type legacy
 ...
-This operation requires a one-time password.
-Enter OTP: 123456
+此操作需要一次性密码。
+输入 OTP：123456
 ...
 ```
 
 ### `--otp`
 
-直接向 CLI 提供一次性密码。如果密码有效，将跳过发布前的额外一次性密码提示。示例如下：
+直接向 CLI 提供一次性密码。如果密码有效，`bun publish` 会跳过发布前额外的一次性密码提示：
 
 ```sh terminal icon="terminal"
 bun publish --otp 123456
 ```
 
 <Note>
-  `bun publish` 支持 `NPM_CONFIG_TOKEN` 环境变量，可用于 github actions 或自动化工作流中的发布。
+  `bun publish` 支持使用 `NPM_CONFIG_TOKEN` 环境变量，这在通过 GitHub Actions 或其他自动化工作流发布时很有用。
 </Note>
 
 ---

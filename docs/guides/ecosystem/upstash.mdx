@@ -4,7 +4,7 @@ sidebarTitle: Bun 配合 Upstash
 mode: center
 ---
 
-[Upstash](https://upstash.com/) 是一个完全托管的 Redis 数据库即服务。Upstash 兼容 Redis® API，这意味着你可以使用 Bun 的原生 Redis 客户端连接你的 Upstash 数据库。
+[Upstash](https://upstash.com/) 是一项完全托管的 Redis 数据库服务。它兼容 Redis® API，因此你可以使用 Bun 原生的 Redis 客户端进行连接。
 
 <Note>所有 Upstash Redis 数据库默认启用 TLS。</Note>
 
@@ -12,7 +12,7 @@ mode: center
 
 <Steps>
   <Step title="创建一个新项目">
-    通过运行 `bun init` 创建一个新项目：
+    使用 `bun init` 创建一个新项目：
     
     ```sh terminal icon="terminal"
     bun init bun-upstash-redis
@@ -22,17 +22,15 @@ mode: center
   <Step title="创建一个 Upstash Redis 数据库">
     访问 [Upstash 控制台](https://console.upstash.com/) 并创建一个新的 Redis 数据库。完成[快速入门指南](https://upstash.com/docs/redis/overall/getstarted)后，你会看到数据库页面及其连接信息。
 
-    数据库页面显示两种连接方式；HTTP 和 TLS。对于 Bun 的 Redis 客户端，你需要使用 **TLS** 连接详情。该 URL 以 `rediss://` 开头。
+    数据库页面会显示两种连接方式：HTTP 和 TLS。对于 Bun 的 Redis 客户端，你需要使用 **TLS** 连接信息；URL 以 `rediss://` 开头。
 
     	<Frame>
     		![Upstash Redis 数据库页面](/images/guides/upstash-1.png)
     	</Frame>
 
   </Step>
-  <Step title="使用 Bun 的 Redis 客户端连接">
-		你可以通过设置环境变量，使用 Bun 默认的 `redis` 客户端连接 Upstash。
-
-    在你的 `.env` 文件中设置 `REDIS_URL` 环境变量，使用 Redis 端点（不是 REST URL）：
+  <Step title="使用 Bun 的 Redis 客户端进行连接">
+    在 `.env` 文件中使用 Redis 终端节点（而不是 REST URL）设置 `REDIS_URL` 环境变量：
 
     ```ini .env icon="settings"
     REDIS_URL=rediss://********@********.upstash.io:6379
@@ -47,7 +45,7 @@ mode: center
     await redis.set("counter", "0"); // [!code ++]
     ```
 
-    另外，你也可以通过 `RedisClient` 创建自定义客户端：
+    或者，使用 `RedisClient` 创建自定义客户端：
 
     ```ts index.ts icon="/icons/typescript.svg"
     import { RedisClient } from "bun";
@@ -57,7 +55,7 @@ mode: center
 
   </Step>
 	<Step title="使用 Redis 客户端">
-		现在你可以使用 Redis 客户端与 Upstash Redis 数据库交互：
+		使用 Redis 客户端读取和写入 Upstash 数据库中的键：
 
     	```ts index.ts icon="/icons/typescript.svg"
     	import { redis } from "bun";
@@ -81,7 +79,7 @@ mode: center
     	1
     	```
 
-    	Redis 客户端会自动在后台管理连接，无需手动连接或断开即可执行基本操作。
+    	Redis 客户端会自动处理连接。对于基本操作，你无需手动连接或断开连接。
     </Step>
 
 </Steps>

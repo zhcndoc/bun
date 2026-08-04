@@ -4,7 +4,7 @@ sidebarTitle: "Buffer 转字符串"
 mode: center
 ---
 
-[`Buffer`](https://nodejs.org/api/buffer.html) 类提供了内置的 `.toString()` 方法，用于将 `Buffer` 转换为字符串。
+[`Buffer`](https://nodejs.org/api/buffer.html) 类提供了一个 `.toString()` 方法，可将 `Buffer` 转换为字符串。
 
 ```ts
 const buf = Buffer.from("hello");
@@ -24,4 +24,4 @@ const str = buf.toString("utf8", 0, 5);
 
 ---
 
-请参见 [文档 > API > 二进制数据](/runtime/binary-data#conversion) ，了解使用 Bun 操作二进制数据的完整文档。
+请参阅[二进制数据](/runtime/binary-data#conversion)。

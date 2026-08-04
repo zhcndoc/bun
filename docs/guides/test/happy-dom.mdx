@@ -4,11 +4,11 @@ sidebarTitle: DOM 测试
 mode: center
 ---
 
-你可以使用 Bun 的测试运行器结合 [Happy DOM](https://github.com/capricorn86/happy-dom) 来编写和运行浏览器测试。Happy DOM 实现了浏览器 API（如 `document` 和 `location`）的模拟版本。
+使用 [Happy DOM](https://github.com/capricorn86/happy-dom) 和 Bun 的测试运行器编写浏览器测试。Happy DOM 实现了 `document` 和 `location` 等浏览器 API 的模拟版本。
 
 ---
 
-首先，安装 `happy-dom`。
+安装 `@happy-dom/global-registrator`。
 
 ```sh terminal icon="terminal"
 bun add -d @happy-dom/global-registrator
@@ -16,7 +16,7 @@ bun add -d @happy-dom/global-registrator
 
 ---
 
-该模块导出一个“注册器”，将模拟的浏览器 API 注入到全局作用域。
+此模块导出了一个“注册器”，可将模拟的浏览器 API 注入全局作用域。
 
 ```ts happydom.ts icon="/icons/typescript.svg"
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
@@ -26,9 +26,9 @@ GlobalRegistrator.register();
 
 ---
 
-我们需要确保该文件在任何测试文件执行之前运行。这就需要使用 Bun 内置的 [_preload_]() 功能。在项目根目录下创建 `bunfig.toml` 文件（如果尚不存在），并添加以下内容。
+此文件需要在所有测试文件之前运行。这正是 Bun 内置的 [_预加载_]() 选项的用途。在项目根目录中创建一个 `bunfig.toml` 文件（如果尚不存在），并添加以下内容。
 
-`./happydom.ts` 文件应包含上述注册代码。
+`./happydom.ts` 文件应包含上一步中的注册代码。
 
 ```toml bunfig.toml icon="settings"
 [test]
@@ -37,7 +37,7 @@ preload = "./happydom.ts"
 
 ---
 
-现在，在项目内运行 `bun test` 时会自动先执行 `happydom.ts`，我们就可以开始编写使用浏览器 API 的测试了。
+现在，`bun test` 会在测试文件之前执行 `happydom.ts`，因此你可以编写使用浏览器 API 的测试。
 
 ```ts dom.test.ts icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
@@ -51,7 +51,7 @@ test("set button text", () => {
 
 ---
 
-Happy DOM 配置正确后，此测试将按预期运行。
+注册 Happy DOM 后，测试即可通过。
 
 ```sh terminal icon="terminal"
 bun test
@@ -65,9 +65,9 @@ dom.test.ts:
  1 pass
  0 fail
  1 expect() calls
-Ran 1 tests across 1 files. 1 total [125.00ms]
+Ran 1 test across 1 file. [125.00ms]
 ```
 
 ---
 
-请参考 [Happy DOM 仓库](https://github.com/capricorn86/happy-dom) 以及 [文档 > 测试运行器 > DOM](/test/dom) 获取使用 Bun 编写浏览器测试的完整文档。
+请参阅 [Happy DOM 代码仓库](https://github.com/capricorn86/happy-dom) 和 [DOM 测试](/test/dom)。

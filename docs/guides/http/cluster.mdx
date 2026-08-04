@@ -1,13 +1,11 @@
 ---
 title: 启动 HTTP 服务器集群
-description: 通过 "reusePort" 选项并发运行多个 HTTP 服务器，实现多个进程共享同一端口
+description: 使用“reusePort”选项并发运行多个 HTTP 服务器，使多个进程共享同一端口
 sidebarTitle: 启动 HTTP 服务器集群
 mode: center
 ---
 
-要并发运行多个 HTTP 服务器，可以在 `Bun.serve()` 中使用 `reusePort` 选项，该选项允许多个进程共享同一个端口。
-
-这将自动在多个 Bun 实例之间负载均衡传入的请求。
+要并发运行多个 HTTP 服务器，请在 `Bun.serve()` 中使用 `reusePort` 选项。它可以让多个进程共享一个端口，并在这些进程之间对传入请求进行负载均衡。
 
 ```ts server.ts icon="/icons/typescript.svg"
 import { serve } from "bun";
@@ -32,12 +30,12 @@ serve({
 
 <Note>
   **仅限 Linux** &mdash; Windows 和 macOS 会忽略 `reusePort` 选项。这是操作系统对
-  `SO_REUSEPORT` 的限制，遗憾的是如此。
+  `SO_REUSEPORT` 的限制。
 </Note>
 
 保存文件后，在相同端口启动服务器。
 
-底层使用了 Linux 的 `SO_REUSEPORT` 和 `SO_REUSEADDR` 套接字选项，确保多个进程之间的公平负载均衡。 [了解有关 `SO_REUSEPORT` 和 `SO_REUSEADDR` 的更多信息](https://lwn.net/Articles/542629/)
+`reusePort` 使用 Linux 的 `SO_REUSEPORT` 和 `SO_REUSEADDR` 套接字选项，以确保在多个进程之间进行公平的负载均衡。[详细了解 `SO_REUSEPORT` 和 `SO_REUSEADDR`](https://lwn.net/Articles/542629/)
 
 ```ts cluster.ts icon="/icons/typescript.svg"
 import { spawn } from "bun";
@@ -66,4 +64,4 @@ process.on("exit", kill);
 
 ---
 
-Bun 也实现了 `node:cluster` 模块，但这是一个更快且更受限的替代方案。
+Bun 还实现了 `node:cluster` 模块；`reusePort` 是一种更快速但限制更多的替代方案。

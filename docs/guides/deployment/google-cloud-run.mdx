@@ -6,7 +6,7 @@ mode: center
 
 [Google Cloud Run](https://cloud.google.com/run) 是一个托管平台，用于部署和扩展无服务器应用。Google 会为您管理基础设施。
 
-在本指南中，我们将使用 `Dockerfile` 将 Bun HTTP 服务器部署到 Google Cloud Run。
+本指南使用 `Dockerfile` 将 Bun HTTP 服务器部署到 Google Cloud Run。
 
 <Note>
 	在继续之前，请确保您已经具备：
@@ -22,7 +22,7 @@ mode: center
 <Steps> 
 <Step title={<span>初始化 <code>gcloud</code>，选择或创建项目</span>}>
 
-确保您已经初始化了 Google Cloud CLI。该命令会让您登录，并提示选择已有项目或创建新项目。
+请确保您已经初始化 Google Cloud CLI。`gcloud init` 会让您登录，并提示您选择现有项目或创建新项目。
 
 有关 Google Cloud CLI 的更多帮助，请参见 [官方文档](https://docs.cloud.google.com/sdk/gcloud/reference/init)。
 
@@ -101,7 +101,7 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 ```
 
 <Note>  
-这些命令启用了 Cloud Run (`run.googleapis.com`) 和 Cloud Build (`cloudbuild.googleapis.com`)，这是从源码部署所必需的。Cloud Run 运行您的容器化应用，而 Cloud Build 负责构建和打包它。
+这些命令会启用 Cloud Run（`run.googleapis.com`）和 Cloud Build（`cloudbuild.googleapis.com`），从源码部署时需要使用这两个服务。Cloud Run 运行您的容器化应用，而 Cloud Build 负责构建和打包应用。
 
 IAM 绑定授予 Compute Engine 服务账户（`$PROJECT_NUMBER-compute@developer.gserviceaccount.com`）权限，代表您构建和部署镜像。
 
@@ -118,7 +118,7 @@ FROM oven/bun:latest
 # 复制 package.json 和 bun.lock 到容器
 COPY package.json bun.lock ./
 
-# Install the dependencies
+# 安装依赖
 RUN bun install --production --frozen-lockfile
 
 # 复制其余的应用文件到容器
@@ -131,11 +131,11 @@ CMD ["bun", "index.ts"]
 <Note>
   请确保启动命令对应您的应用入口点。如果您在 package.json 中有 start 脚本，也可以使用 `CMD ["bun", "run", "start"]`。
 
-此镜像会安装依赖并在容器内用 Bun 运行您的应用。如果应用没有依赖，可以省略 `RUN bun install --production --frozen-lockfile` 这一行。
+如果您的应用没有依赖项，可以省略 `RUN bun install --production --frozen-lockfile` 行。
 
 </Note>
 
-在项目根目录创建新的 `.dockerignore` 文件。该文件列出应 _排除_ 在容器镜像之外的文件和目录，比如 `node_modules`，这可以让构建更快更小：
+在项目根目录创建新的 `.dockerignore` 文件。该文件列出了要从容器镜像中_排除_的文件和目录，例如 `node_modules`，从而让构建更快、镜像更小：
 
 ```docker .dockerignore icon="Docker"
 node_modules
@@ -154,9 +154,7 @@ LICENSE
 <Step title="部署服务"> 
 确保您处在包含 `Dockerfile` 的目录中，然后直接从本地源码部署：
 
-<Note>
-  请将 `--region` 标志更新为您偏好的区域。您也可以省略此标志，在交互式提示中选择区域。
-</Note>
+<Note>请将 `--region` 标志更新为您偏好的区域，或者省略该标志以交互方式选择区域。</Note>
 
 ```bash terminal icon="terminal"
 gcloud run deploy my-bun-app --source . --region=us-west1 --allow-unauthenticated
@@ -184,7 +182,7 @@ gcloud run deploy my-bun-app --source . --region=us-west1 --allow-unauthenticate
 </Step>
 <Step title="访问您的在线应用">
 
-🎉 您的 Bun 应用现已上线！
+您的 Bun 应用现已上线。
 
 访问服务 URL（`https://my-bun-app-....us-west1.run.app`）确认一切正常。
 

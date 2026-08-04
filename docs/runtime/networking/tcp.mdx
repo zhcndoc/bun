@@ -1,13 +1,13 @@
 ---
 title: TCP
-description: 使用 Bun 的原生 TCP API 实现性能敏感的系统，如数据库客户端、游戏服务器，或任何需要通过 TCP（而非 HTTP）通信的应用
+description: 使用 Bun 原生 TCP API 实现数据库客户端、游戏服务器等对性能敏感的系统，或任何需要通过 TCP（而非 HTTP）进行通信的应用
 ---
 
-这是一个面向库作者和高级用例的低级 API。
+Bun 的 TCP API 属于底层 API，面向库作者和高级使用场景。
 
 ## 启动服务器（`Bun.listen()`）
 
-使用 `Bun.listen` 启动一个 TCP 服务器：
+使用 `Bun.listen` 启动 TCP 服务器：
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.listen({
@@ -25,7 +25,7 @@ Bun.listen({
 
 <Accordion title="为速度设计的 API">
 
-在 Bun 中，一组处理函数是在服务器级别声明一次，而不是像 Node.js 的 `EventEmitter` 或 web 标准的 `WebSocket` API 那样，为每个连接分配回调函数。
+在 Bun 中，你可以为每个服务器声明一组处理函数，而不是像 Node.js 的 `EventEmitter` 或符合 Web 标准的 `WebSocket` API 那样，为每个套接字分别分配回调。
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.listen({
@@ -45,7 +45,7 @@ Bun.listen({
 
 </Accordion>
 
-可以在 `open` 事件处理器中为每个连接附加上下文数据。
+在 `open` 处理函数中为套接字附加上下文数据。
 
 ```ts server.ts icon="/icons/typescript.svg"
 type SocketData = { sessionId: string };
@@ -95,7 +95,7 @@ Bun.listen({
 });
 ```
 
-`Bun.listen` 的返回值是符合 `TCPSocket` 接口的服务器实例。
+`Bun.listen` 返回一个符合 `TCPSocketListener` 接口的服务器。
 
 ```ts server.ts icon="/icons/typescript.svg"
 const server = Bun.listen({
@@ -114,7 +114,7 @@ server.unref();
 
 ## 创建连接（`Bun.connect()`）
 
-使用 `Bun.connect` 连接到 TCP 服务器。通过 `hostname` 和 `port` 指定目标服务器。TCP 客户端的处理器集与 `Bun.listen` 相同，另加几个客户端专用的处理器。
+使用 `Bun.connect` 连接到 TCP 服务器。通过 `hostname` 和 `port` 指定服务器。TCP 客户端可以定义与 `Bun.listen` 相同的一组处理器，此外还可以定义一些客户端专用的处理器。
 
 ```ts server.ts icon="/icons/typescript.svg"
 // 客户端
@@ -188,7 +188,7 @@ socket.reload({
 
 ## 缓冲
 
-当前，Bun 的 TCP 连接不会自动缓冲数据。对性能敏感的代码需要谨慎处理缓冲。例如，下面这样写：
+Bun 中的 TCP sockets 不会缓冲数据，因此对性能敏感的代码应自行缓冲写入。例如：
 
 ```ts
 socket.write("h");
@@ -204,7 +204,7 @@ socket.write("o");
 socket.write("hello");
 ```
 
-为简化此问题，可以使用 Bun 提供的 `ArrayBufferSink`，配合 `{stream: true}` 选项：
+要缓冲写入，请将 Bun 的 `ArrayBufferSink` 与 `{stream: true}` 选项结合使用：
 
 ```ts server.ts icon="/icons/typescript.svg"
 import { ArrayBufferSink } from "bun";

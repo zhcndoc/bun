@@ -4,9 +4,7 @@ sidebarTitle: 写字符串到文件
 mode: center
 ---
 
-此代码片段将字符串写入磁盘上的特定_绝对路径_。
-
-它使用高速的 [`Bun.write()`](/runtime/file-io#writing-files-bun-write) API 来高效地将数据写入磁盘。第一个参数是_目标路径_；第二个参数是要写入的_数据_。
+使用 [`Bun.write()`](/runtime/file-io#writing-files-bun-write) 将字符串写入磁盘上的_绝对路径_。第一个参数是_目标路径_；第二个参数是要写入的_数据_。
 
 ```ts
 const path = "/path/to/file.txt";
@@ -15,7 +13,7 @@ await Bun.write(path, "Lorem ipsum");
 
 ---
 
-任何相对路径都会相对于项目根目录（包含最近的 `package.json` 文件的目录）进行解析。
+Bun 会从当前工作目录解析相对路径。
 
 ```ts
 const path = "./file.txt";
@@ -24,7 +22,7 @@ await Bun.write(path, "Lorem ipsum");
 
 ---
 
-你可以传入一个 `BunFile` 作为目标。`Bun.write()` 会将数据写入其关联的路径。
+你可以将 `BunFile` 作为目标路径传入。`Bun.write()` 会将数据写入其关联的路径。
 
 ```ts
 const path = Bun.file("./file.txt");
@@ -43,4 +41,4 @@ const bytes = await Bun.write(path, "Lorem ipsum");
 
 ---
 
-完整的 `Bun.write()` 文档请参见 [文档 > API > 文件 I/O](/runtime/file-io#writing-files-bun-write)。
+请参阅 [`Bun.write()`](/runtime/file-io#writing-files-bun-write)。

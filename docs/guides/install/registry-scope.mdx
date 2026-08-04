@@ -4,7 +4,7 @@ sidebarTitle: 配置作用域注册表
 mode: center
 ---
 
-私有注册表可以通过 [`.npmrc`](/pm/npmrc) 或 [`bunfig.toml`](/runtime/bunfig#install-registry) 配置。两者均受支持，但我们推荐使用 **bunfig.toml** 以获得更高的灵活性和针对 Bun 的专用选项。
+你可以在 [`.npmrc`](/pm/npmrc) 或 [`bunfig.toml`](/runtime/bunfig#install-registry) 中配置私有注册表。两者都可以使用；我们推荐使用 `bunfig.toml`，因为它支持 Bun 特有的选项。
 
 要为特定的 npm 作用域配置注册表：
 
@@ -28,7 +28,7 @@ mode: center
 
 ---
 
-你的 `bunfig.toml` 可以引用环境变量。Bun 会自动从 `.env.local`、`.env.[NODE_ENV]` 和 `.env` 载入环境变量。更多信息请参见 [文档 > 环境变量](/runtime/environment-variables)。
+你的 `bunfig.toml` 可以引用环境变量。Bun 会自动从 `.env.local`、`.env.[NODE_ENV]` 和 `.env` 中加载环境变量。请参阅[环境变量](/runtime/environment-variables)。
 
 ```toml bunfig.toml icon="settings"
 [install.scopes]
@@ -37,4 +37,4 @@ mode: center
 
 ---
 
-完整的 Bun 包管理器文档请参见 [文档 > 包管理器](/pm/cli/install)。
+请参阅 [`bun install`](/pm/cli/install)。

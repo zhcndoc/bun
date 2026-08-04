@@ -3,20 +3,20 @@ title: "生命周期脚本"
 description: "Bun 如何安全地处理包的生命周期脚本"
 ---
 
-`npm` 上的包可以在其 `package.json` 文件中定义_生命周期脚本_。下面是一些最常见的脚本，但实际上还有[许多其他脚本](https://docs.npmjs.com/cli/v10/using-npm/scripts)。
+`npm` 上的软件包可以在其 `package.json` 中定义_生命周期脚本_。以下是其中一些最常见的脚本，还有[许多其他脚本](https://docs.npmjs.com/cli/v10/using-npm/scripts)：
 
 - `preinstall`：包安装前运行
 - `postinstall`：包安装后运行
 - `preuninstall`：包卸载前运行
 - `prepublishOnly`：包发布前运行
 
-这些脚本是任意的 shell 命令，包管理器会在适当的时候读取并执行它们。但是执行任意脚本存在潜在的安全风险，因此——与其他 `npm` 客户端不同——Bun 默认不执行任意的生命周期脚本。
+这些脚本是任意的 shell 命令，包管理器应在适当的时间运行它们。由于运行任意代码存在安全风险，与其他 `npm` 客户端不同，Bun 默认不会执行任意生命周期脚本。
 
 ---
 
 ## `postinstall`
 
-`postinstall` 脚本尤其重要。它被广泛用于构建或安装平台特定的二进制文件，这些包通常实现为[本地 Node.js 插件（native add-ons）](https://nodejs.org/api/addons.html)。例如，`node-sass` 是一个流行的包，使用 `postinstall` 来构建 Sass 的本地二进制文件。
+`postinstall` 脚本非常重要。它广泛用于为以 [Node.js 原生插件](https://nodejs.org/api/addons.html) 实现的软件包构建或安装特定于平台的二进制文件。例如，`node-sass` 使用 `postinstall` 为 Sass 构建原生二进制文件。
 
 ```json package.json icon="file-json"
 {
@@ -32,7 +32,7 @@ description: "Bun 如何安全地处理包的生命周期脚本"
 
 ## `trustedDependencies`
 
-Bun 采取“默认安全”的策略，而不是执行任意脚本。你可以将某些包添加到允许列表中，Bun 会为这些包执行生命周期脚本。要允许 Bun 执行特定包的生命周期脚本，只需在你的 `package.json` 中将该包名添加到 `trustedDependencies` 数组。
+Bun 采用“默认安全”策略：它只会为允许列表中的包运行生命周期脚本。要允许某个特定包的生命周期脚本，请将其名称添加到 `package.json` 中的 `trustedDependencies` 数组。
 
 ```json package.json icon="file-json"
 {
@@ -42,9 +42,9 @@ Bun 采取“默认安全”的策略，而不是执行任意脚本。你可以�
 }
 ```
 
-添加到 `trustedDependencies` 后，安装或重新安装该包。Bun 会读取此字段并运行对应包的生命周期脚本。
+将包添加到 `trustedDependencies` 后，安装或重新安装该包。Bun 会读取此字段并运行其生命周期脚本。
 
-一份经过筛选的、带有生命周期脚本的常见 npm 包列表默认是允许的。你可以在[这里](https://github.com/oven-sh/bun/blob/main/src/install/default-trusted-dependencies.txt)查看完整列表。
+默认情况下，系统允许一个精选的、包含生命周期脚本的常用 npm 包列表。请参阅[完整列表](https://github.com/oven-sh/bun/blob/main/src/install/default-trusted-dependencies.txt)。
 
 <Note>
   默认信任的依赖列表仅适用于从 npm 安装的包。对于来自其他来源的包（例如 `file:`、`link:`、`git:` 或 `github:` 依赖），即使包名匹配默认列表中的条目，也必须显式将其添加到 `trustedDependencies` 中才能运行它们的生命周期脚本。这样可以防止恶意包通过本地文件路径或 git 仓库伪装成受信任包。

@@ -12,7 +12,7 @@ bun add @types/bun --peer
 
 ---
 
-这将把该包添加到 `package.json` 中的 `peerDependencies`。
+这会将该包添加到 `package.json` 中的 `peerDependencies`。
 
 ```json package.json icon="file-json"
 {
@@ -24,7 +24,7 @@ bun add @types/bun --peer
 
 ---
 
-运行 `bun install` 会默认安装 peer 依赖，除非在 `peerDependenciesMeta` 中标记为可选。
+除非在 `peerDependenciesMeta` 中将 peer 依赖标记为可选，否则 `bun install` 默认会安装它们。
 
 {/* prettier-ignore */}
 ```json package.json icon="file-json"
@@ -42,4 +42,4 @@ bun add @types/bun --peer
 
 ---
 
-完整的 Bun 包管理器文档请参见 [Docs > Package manager](/pm/cli/install)。
+请参阅 [`bun install`](/pm/cli/install)。

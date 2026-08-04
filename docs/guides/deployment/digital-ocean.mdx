@@ -6,7 +6,7 @@ mode: center
 
 [DigitalOcean](https://www.digitalocean.com/) 是一个云平台，提供多种构建和部署应用的服务。
 
-在本指南中，我们将使用 `Dockerfile` 将 Bun HTTP 服务器部署到 DigitalOcean。
+本指南将使用 `Dockerfile` 将 Bun HTTP 服务器部署到 DigitalOcean。
 
 <Note>
 	继续之前，请确保您已经：
@@ -54,7 +54,7 @@ mode: center
     	</Frame>
     </Step>
     <Step title="创建新的 Dockerfile">
-    	确保你位于包含项目的目录，然后在项目根目录创建一个新的 `Dockerfile`。该文件包含初始化容器、将本地项目文件复制进去、安装依赖以及启动应用的指令。
+    	在项目根目录中创建一个新的 `Dockerfile`。此文件包含用于初始化容器、将本地项目文件复制到容器中、安装依赖项以及启动应用的指令。
 
     	```docker Dockerfile icon="docker"
     	# 使用官方 Bun 镜像运行应用
@@ -82,10 +82,10 @@ mode: center
     	<Note>
     		确保启动命令对应你的应用入口文件。如果你在 `package.json` 中配置了 start 脚本，也可以使用 `CMD ["bun", "run", "start"]`。
 
-    		该镜像会在容器内用 Bun 安装依赖并运行你的应用。如果你的应用没有依赖，可以省略 `RUN bun install --production --frozen-lockfile` 这一行。
+    		如果你的应用没有依赖项，可以省略 `RUN bun install --production --frozen-lockfile` 行。
     	</Note>
 
-    	在项目根目录创建一个新的 `.dockerignore` 文件。该文件用于排除不需要添加进镜像的文件和目录，比如 `node_modules`。这能让构建更快且镜像更小：
+    	在项目根目录中创建一个新的 `.dockerignore` 文件。该文件列出了要从容器镜像中_排除_的文件和目录，例如 `node_modules`，从而使构建更快、镜像更小：
 
     	```docker .dockerignore icon="Docker"
     	node_modules
@@ -111,7 +111,7 @@ mode: center
     	```
 
     	<Note>
-    		此命令使用你的 DigitalOcean 账号认证 Docker 与 DigitalOcean 注册表通信。若未执行此步骤，构建和推送操作会因 401 认证错误而失败。
+    		此命令使用你的 DigitalOcean 凭据对 Docker 进行身份验证，以访问 DigitalOcean 的注册表。如果不执行此步骤，构建和推送命令会因 401 身份验证错误而失败。
     	</Note>
     </Step>
     <Step title="构建并推送 Docker 镜像到 DigitalOcean 注册表">
@@ -122,7 +122,7 @@ mode: center
     	```
 
     	<Note>
-    		如果你的机器是 ARM 架构（如 M1/M2 Mac），必须使用 `docker buildx` 并指定 `--platform=linux/amd64` 以保证镜像与 DigitalOcean 基础设施兼容。直接使用 `docker build` 会生成 ARM64 镜像，DigitalOcean 上无法运行。
+    		如果你在 ARM Mac（M1/M2）上构建，必须使用带有 `--platform=linux/amd64` 的 `docker buildx`，以确保与 DigitalOcean 的基础设施兼容。使用不带 platform 标志的 `docker build` 会创建 ARM64 镜像，该镜像无法在 DigitalOcean 上运行。
     	</Note>
 
     	推送完成后，你应能在 [**DigitalOcean 注册表控制面板**](https://cloud.digitalocean.com/registry) 看到镜像：
@@ -132,7 +132,7 @@ mode: center
     	</Frame>
     </Step>
     <Step title="创建新的 DigitalOcean App Platform 项目">
-    	在 DigitalOcean 控制面板，进入 [**App Platform**](https://cloud.digitalocean.com/apps) > **创建应用**。我们可以直接从容器镜像创建项目。
+    	在 DigitalOcean 控制面板中，进入 [**App Platform**](https://cloud.digitalocean.com/apps) > **创建应用**。你可以直接从容器镜像创建项目。
 
     	<Frame>
     		![DigitalOcean App Platform 项目控制面板](/images/guides/digitalocean-3.png)
@@ -150,8 +150,8 @@ mode: center
     		![DigitalOcean App Platform 服务控制面板](/images/guides/digitalocean-6.png)
     	</Frame>
     </Step>
-    <Step title="访问你的在线应用">
-    	🥳 你的应用现已上线！应用创建完成后，你应该能在 App Platform 控制面板看到它及其公网 URL。
+    <Step title="访问已上线的应用">
+    	你的应用现在已经上线。应用创建完成后，你应该能在 App Platform 控制面板中看到它及其公共 URL。
 
     	<Frame>
     		![DigitalOcean App Platform 应用控制面板](/images/guides/digitalocean-5.png)

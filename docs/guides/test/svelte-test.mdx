@@ -4,7 +4,7 @@ sidebarTitle: 测试 Svelte
 mode: center
 ---
 
-Bun 的 [插件 API](/runtime/plugins) 允许你向项目添加自定义加载器。`bunfig.toml` 中的 `test.preload` 选项让你配置加载器在测试运行前启动。
+使用 Bun 的 [插件 API](/runtime/plugins) 为 `.svelte` 文件添加自定义加载器，并在 `bunfig.toml` 中使用 `test.preload` 选项，在测试运行前加载它。
 
 首先，安装 `@testing-library/svelte`、`svelte` 和 `@happy-dom/global-registrator`。
 
@@ -30,7 +30,7 @@ afterEach(async () => {
 });
 
 plugin({
-  title: "svelte loader",
+  name: "svelte loader",
   setup(builder) {
     builder.onLoad({ filter: /\.svelte(\?[^.]+)?$/ }, ({ path }) => {
       try {
@@ -56,7 +56,7 @@ plugin({
 
 ---
 
-在 `bunfig.toml` 中添加以下内容，告诉 Bun 预加载此插件，这样它会在测试运行前加载。
+将以下内容添加到 `bunfig.toml`，以便 Bun 在测试运行前预加载插件。
 
 ```toml bunfig.toml icon="settings"
 [test]
@@ -82,7 +82,7 @@ preload = ["./svelte-loader.ts"]
 
 ---
 
-现在你可以在测试中通过 `import` 或 `require` 引入 `*.svelte` 文件，它会将 Svelte 组件作为 JavaScript 模块加载。
+现在，你可以在测试中 `import` 或 `require` `*.svelte` 文件。Bun 会将每个 Svelte 组件作为 JavaScript 模块加载。
 
 ```ts hello-svelte.test.ts icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";

@@ -7,25 +7,22 @@ mode: center
 与其他 npm 客户端不同，Bun 不会为已安装的依赖执行任意的生命周期脚本，例如 `postinstall` 和 `node-gyp` 构建。这些脚本存在潜在的安全风险，因为它们可以在你的机器上执行任意代码。
 
 <Note>
-  Bun 包含一个默认的允许列表，列出了包含 `postinstall` 脚本且已知安全的流行包。你可以
-  在[这里](https://github.com/oven-sh/bun/blob/main/src/install/default-trusted-dependencies.txt)查看该列表。
-  该默认列表仅适用于从 npm 安装的包。对于来自其他来源的包（例如 `file:`、`link:`、`git:` 或 `github:` 依赖），
-  你必须显式地将它们添加到 `trustedDependencies` 中。
+  Bun 包含一个常用软件包的默认允许列表，这些软件包的 `postinstall` 脚本已知是安全的；请参阅[完整列表](https://github.com/oven-sh/bun/blob/main/src/install/default-trusted-dependencies.txt)。该列表仅适用于从 npm 安装的软件包。对于来自其他来源的软件包（例如 `file:`、`link:`、`git:` 或 `github:` 依赖），你必须将它们显式添加到 `trustedDependencies` 中。
 </Note>
 
 ---
 
-如果你遇到以下错误之一，很可能是你正在尝试使用一个需要 `postinstall` 脚本才能正常工作的包：
+如果你看到以下错误之一，那么你可能正在使用一个需要其 `postinstall` 脚本才能正常工作的​​软件包：
 
 - `error: could not determine executable to run for package`
 - `InvalidExe`
 
 ---
 
-要允许 Bun 对特定包执行生命周期脚本，请将该包添加到你 package.json 文件中的 `trustedDependencies`。你也可以通过运行命令 `bun pm trust <pkg>` 来自动完成此操作。
+要允许 Bun 为特定软件包执行生命周期脚本，请将该软件包添加到 `package.json` 中的 `trustedDependencies`。你可以运行 `bun pm trust <pkg>` 自动完成此操作。
 
 <Note>
-  请注意，这只允许对 `trustedDependencies` 中列出的特定包执行生命周期脚本，**不包括**该依赖包的依赖！
+  这只会为 `trustedDependencies` 中列出的特定软件包启用生命周期脚本，_不会_为该依赖的依赖启用生命周期脚本。
 </Note>
 
 ```json package.json icon="file-json"
@@ -38,7 +35,7 @@ mode: center
 
 ---
 
-添加完成后，运行全新安装。Bun 会重新安装你的依赖并正确执行安装。
+添加后，执行一次全新安装。Bun 会重新安装你的依赖，并运行该软件包的生命周期脚本。
 
 ```sh terminal icon="terminal"
 rm -rf node_modules
@@ -48,4 +45,4 @@ bun install
 
 ---
 
-完整的受信任依赖文档请参阅[文档 > 包管理器 > 受信任的依赖](/pm/lifecycle)。
+请参阅[受信任的依赖](/pm/lifecycle)。

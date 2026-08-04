@@ -13,7 +13,7 @@ bun build --compile ./path/to/entry.ts --outfile myapp
 
 ---
 
-列出你可用的签名身份。其中一个将作为你传递给 `codesign` 命令的签名身份。此命令需要 macOS。
+列出可用的签名身份。在后续步骤中，你将把其中一个传递给 `codesign`。此命令需要 macOS。
 
 ```sh terminal icon="terminal"
 security find-identity -v -p codesigning
@@ -58,4 +58,4 @@ codesign -vvv --verify ./myapp
 
 ---
 
-有关 macOS 代码签名的更多信息，请参阅 [Apple 的代码签名文档](https://developer.apple.com/documentation/security/code_signing_services)。有关使用 Bun 创建独立可执行文件的详细信息，请参阅 [Standalone Executables](/bundler/executables)。本指南要求 Bun 版本 1.2.4 或更新版本。
+有关 macOS 代码签名的更多信息，请参阅 [Apple 的代码签名文档](https://developer.apple.com/documentation/security/code_signing_services)。有关使用 Bun 创建独立可执行文件的详细信息，请参阅 [独立可执行文件](/bundler/executables)。本指南要求 Bun 版本 1.2.4 或更新版本。

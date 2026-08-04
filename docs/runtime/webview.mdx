@@ -33,7 +33,7 @@ const view = new Bun.WebView({
 });
 ```
 
-构造函数是同步的 — 它会立即返回，并在后台启动浏览器子进程。你第一次 `await` 的操作（`navigate()`、`evaluate()` 等）会等待浏览器准备就绪。
+构造函数是同步的——它会立即返回，并在后台启动浏览器子进程。你 `await` 的第一个操作（例如 `navigate()` 或 `evaluate()`）会等待浏览器准备就绪。
 
 如果你传入 `url`，那么在构造函数返回之前视图就会开始导航。等价于在下一行调用 `view.navigate(url)`。
 
@@ -97,17 +97,17 @@ Bun 会生成一个轻量的宿主子进程（`bun` 可执行文件本身，会�
 
 Bun 要么 **连接** 到一个已经运行的 Chrome（通过 WebSocket），要么 **生成** 一个无头 Chrome 子进程，并通过管道与它通信（`--remote-debugging-pipe`）。无论哪种方式，通信都使用 [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/)。
 
-Chrome 会在每个 Bun 进程中生成（或连接）一次。每个 `new Bun.WebView({ backend: "chrome" })` 会在这一个 Chrome 实例中通过 `Target.createTarget` 创建一个新的标签页。
+Chrome 会在每个 Bun 进程中生成（或连接）一次。每个 `new Bun.WebView({ backend: "chrome" })` 都会在该 Chrome 实例中通过 `Target.createTarget` 创建一个新标签页。
 
 #### 查找 Chrome 可执行文件
 
 当 Bun 需要生成 Chrome 时，它会按以下顺序搜索：
 
-1. 你传入的 `backend: { type: "chrome", path: "..." }` 中的 `path`
+1. 你在 `backend: { type: "chrome", path: "..." }` 中传入的 `path`
 2. `BUN_CHROME_PATH` 环境变量
-3. `$PATH`（`google-chrome-stable`, `google-chrome`, `chromium-browser`, `chromium`, `brave-browser`, `microsoft-edge`, `chrome`）
-4. 标准安装位置（`/Applications/Google Chrome.app`, `~/Applications/...`, `/usr/bin/...`, `/snap/bin/...` 等）
-5. Playwright 缓存（`~/Library/Caches/ms-playwright` 或 `~/.cache/ms-playwright`）中的 `chrome-headless-shell`
+3. `$PATH`（`google-chrome-stable`、`google-chrome`、`chromium-browser`、`chromium`、`brave-browser`、`microsoft-edge`、`chrome`）
+4. 标准安装位置（`/Applications/Google Chrome.app`、`~/Applications/...`、`/usr/bin/...`、`/snap/bin/...`）
+5. Playwright 的缓存目录（`~/Library/Caches/ms-playwright` 或 `~/.cache/ms-playwright`）中的 `chrome-headless-shell`
 
 如果找不到，会在构造函数中抛出。
 
@@ -115,7 +115,7 @@ Chrome 会在每个 Bun 进程中生成（或连接）一次。每个 `new Bun.W
 
 默认情况下，在生成之前，Bun 会通过从标准 profile 目录读取 `DevToolsActivePort` 文件来检查某个 Chrome 家族浏览器是否已经在运行并启用了远程调试。如果找到，Bun 会通过 WebSocket 连接到该浏览器，而不是再生成一个 — 你的视图会作为标签页打开在现有浏览器中。
 
-要在运行中的 Chrome 中启用远程调试，访问 `chrome://inspect/#remote-debugging` 并切换开关，或使用 `--remote-debugging-port=9222` 启动 Chrome。每次使用 `chrome://inspect` 开关连接到新的会话时，Chrome 都会在请求权限时提示。
+要在运行中的 Chrome 中启用远程调试，请访问 `chrome://inspect/#remote-debugging` 并打开开关，或者使用 `--remote-debugging-port=9222` 启动 Chrome。使用 `chrome://inspect` 开关时，Chrome 会在每次建立新连接时请求权限。
 
 要显式控制这一行为，请使用 `backend` 的对象形式：
 
@@ -166,7 +166,7 @@ new Bun.WebView({
 
 #### 子进程输出
 
-默认情况下会静默浏览器子进程的 stdout/stderr。特别是 Chrome 的 stderr 很“吵”（字体配置警告、GCM 注册、更新检查）。如果你想看到它（在 Chrome 静默崩溃时尤其有用），请这样转发：
+浏览器子进程的 stdout/stderr 默认会被静默处理。尤其是 Chrome，其 stderr 输出十分嘈杂（字体配置警告、GCM 注册、更新程序检查）。要查看这些输出 — 在 Chrome 静默崩溃时很有用 — 请传入 `"inherit"`：
 
 ```ts
 new Bun.WebView({
@@ -318,11 +318,11 @@ await view.click(150, 200, { clickCount: 2 }); // 双击
 await view.click(150, 200, { modifiers: ["Shift", "Meta"] });
 ```
 
-该 promise 会在页面处理完整的 `mousedown` → `mouseup` → `click` 序列之后才解析完成，包括任何 JavaScript 处理器。无需轮询 — 随后的 `evaluate()` 会看到结果。
+promise 会在页面处理完完整的 `mousedown` → `mouseup` → `click` 序列（包括任何 JavaScript 处理程序）后解析。无需轮询 — 后续的 `evaluate()` 可以看到结果。
 
 #### 通过选择器点击
 
-传入 CSS 选择器而不是坐标，Bun 会等待该元素变为**可操作（actionable）**，然后点击它的中心：
+传入 CSS 选择器而不是坐标，Bun 会等待元素变为**可操作**，然后点击其中心：
 
 ```ts
 await view.click("#submit");
@@ -363,9 +363,9 @@ await view.press("a", { modifiers: ["Meta"] }); // Cmd+A / Ctrl+A
 
 命名的虚拟按键：`Enter`、`Tab`、`Space`、`Backspace`、`Delete`、`Escape`、`ArrowLeft`、`ArrowRight`、`ArrowUp`、`ArrowDown`、`Home`、`End`、`PageUp`、`PageDown`。
 
-任意单字符（例如 `"a"`）结合 `modifiers` 会发送一个按键组合键（chord）。
+任意单个字符（例如 `"a"`）与 `modifiers` 组合使用时，会发送键盘组合键。
 
-在 WebKit 后端，大多数命名按键（不带修饰键）会映射到编辑命令（`DeleteBackward`、`MoveLeft`、`InsertNewline` 等），并在页面应用之后解析完成。`Escape`、`Space`，以及任何带修饰键的按键会回退到原始的 `keydown`/`keyup` 事件 — 这些事件会触发一个页面可观察到的 `keydown`，但没有“完成屏障”，所以如果你需要观察其效果，请在后面跟一个 `evaluate()`。
+在 WebKit 后端中，大多数命名按键（不带修饰键）会映射到 `DeleteBackward`、`MoveLeft` 和 `InsertNewline` 等编辑命令，并在页面应用这些命令后解析。`Escape`、`Space` 以及任何带修饰键的按键会回退为原始的 `keydown`/`keyup` 事件 — 页面可以观察到这些事件中的 `keydown`，但没有完成屏障，因此如果需要观察效果，请随后调用 `evaluate()`。
 
 修饰键名称：`"Shift"`、`"Control"`（或 `"Ctrl"`）、`"Alt"`（或 `"Option"`）、`"Meta"`（或 `"Cmd"` / `"Command"`）。
 
@@ -435,7 +435,8 @@ const view = new Bun.WebView({
 如果你不传 `console`，页面侧的控制台输出会被丢弃。
 
 <Note>
-  顺序保证：在你传给 `evaluate()` 的脚本内部执行的 `console.log(...)` 会在该 `evaluate()` promise 解析完成之前交付给你的处理器。两者会通过同一条 IPC 连接传输。
+  顺序保证：你传递给 `evaluate()` 的脚本中的 `console.log(...)` 会在该
+  `evaluate()` 完成之前到达你的处理器。两者通过同一个 IPC 连接传输。
 </Note>
 
 ---
@@ -513,17 +514,17 @@ Bun 会在进程退出时自动调用它，因此浏览器子进程不会在你�
 
 ### 事件循环行为
 
-浏览器子进程不会自行保持 Bun 的事件循环存活。只要存在打开的 `WebView` 且它还有未完成的操作（例如未 settle 的 `navigate()`、`evaluate()` 等），进程就会保持运行。你关闭最后一个视图 — 或最后一个待处理操作完成（settle）之后 — Bun 会自然退出。
+浏览器子进程本身**不会**让 Bun 的事件循环保持运行。打开的 `WebView` 仅会在存在待处理操作（例如尚未完成的 `navigate()` 或 `evaluate()`）时让进程保持运行。一旦你关闭最后一个视图，或最后一个待处理操作完成，Bun 就会自然退出。
 
 ### 子进程死亡
 
-如果浏览器子进程意外死亡（崩溃、OOM-kill、`SIGKILL`），则所有视图上的待处理 promise 都会以描述死亡原因的错误拒绝（例如 `"Chrome killed by signal 9"`、`"WebView host process died"` 等），并且对这些视图的后续操作会抛出异常。
+如果浏览器子进程意外终止（崩溃、因 OOM 被杀死、收到 `SIGKILL`），每个视图上的所有待处理 promise 都会拒绝，并附带描述其终止方式的错误（`"Chrome killed by signal 9"`、`"WebView host process died"`），而对这些视图的后续操作会抛出异常。
 
 ---
 
 ## 并发模型
 
-每个视图都有少量用于并发的独立“操作槽位”。同一种操作在任一时刻最多只有一个在飞行（in flight）：
+每个视图都有少量用于并发的独立“操作槽位”。同一种操作在任一时刻最多只有一个在执行：
 
 - 一个 `navigate()`（在 Chrome 后端与 `reload()`/`goBack()`/`goForward()` 共享）
 - 一个 `evaluate()`
@@ -531,7 +532,7 @@ Bun 会在进程退出时自动调用它，因此浏览器子进程不会在你�
 - 一个 `cdp()`（仅 Chrome）
 - 一个“简单”操作 — `click()`、`type()`、`press()`、`scroll()`、`scrollTo()`、`resize()`（以及 WebKit 后端的 `reload()`/`goBack()`/`goForward()`）共享此槽位
 
-当某个槽位已被占用时，在启动第二个该类型操作会同步抛出 `ERR_INVALID_STATE` — 不会排队。在实际使用中，直接对每次调用 `await` 即可。
+在操作槽位被占用时启动第二个操作会同步抛出 `ERR_INVALID_STATE` — 它**不会**排队。实际上，请对每次调用使用 `await`。
 
 不同视图之间的操作完全独立，并会并行运行 — 每个视图都有自己的渲染器进程。
 
@@ -574,24 +575,24 @@ Bun 会在进程退出时自动调用它，因此浏览器子进程不会在你�
 
 ### 实例方法
 
-| 方法                         | 返回值                                             | 描述                                                                                                     |
-| ---------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `navigate(url)`             | `Promise<void>`                                     | 加载一个 URL。会在主框架的 `load` 事件触发时解析完成。                                                 |
-| `evaluate(script)`          | `Promise<unknown>`                                  | 在页面中运行一个 JS 表达式，并返回其 JSON 序列化后的结果。                                           |
-| `screenshot(options?)`      | `Promise<Blob \| Buffer \| string \| {name, size}>` | 截取视口。见 [截图](#screenshots)。                                                                    |
-| `click(x, y, options?)`     | `Promise<void>`                                     | 在视口坐标处进行原生点击。                                                                           |
-| `click(selector, options?)` | `Promise<void>`                                     | 等待元素变为可操作，然后点击其中心。                                                               |
-| `type(text)`                | `Promise<void>`                                     | 通过 `InsertText` 编辑命令向聚焦元素插入文本。                                                     |
-| `press(key, options?)`      | `Promise<void>`                                     | 按下一个命名虚拟按键或单字符组合键。                                                                |
-| `scroll(dx, dy)`            | `Promise<void>`                                     | 在视口中心触发一个原生 `wheel` 事件。`dx`/`dy` 必须是有限值。                                   |
-| `scrollTo(selector, options?)` | `Promise<void>`                                 | 等待元素存在，然后调用 `scrollIntoView`。                                                           |
-| `resize(width, height)`     | `Promise<void>`                                     | 修改视口尺寸。每个维度 1-16384。                                                                   |
-| `goBack()`                  | `Promise<void>`                                     | 在会话历史中向后导航。在起点为无操作（no-op）。                                                   |
-| `goForward()`               | `Promise<void>`                                     | 在会话历史中向前导航。在终点为无操作（no-op）。                                                   |
-| `reload()`                  | `Promise<void>`                                     | 重新加载当前页面。                                                                                 |
-| `cdp(method, params?)`      | `Promise<unknown>`                                  | （仅 Chrome）向该标签页发送一个作用域限定的原始 CDP 命令。见 [原始 CDP](#cdp)。                         |
-| `addEventListener(type, fn)` | `void`                                              | 从 `EventTarget` 继承而来。对于 Chrome，`type` 可能是一个 CDP 事件名；`event.data` 是解析后的 `params`。 |
-| `close()`                   | `void`                                              | 销毁页面。拒绝所有待处理 promise。幂等。                                                         |
+| 方法                           | 返回值                                               | 描述                                                                                                         |
+| ------------------------------ | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `navigate(url)`                | `Promise<void>`                                       | 加载 URL。在主框架的 `load` 事件触发时解析。                                                                  |
+| `evaluate(script)`             | `Promise<unknown>`                                    | 在页面中运行 JS 表达式，并返回其经过 JSON 序列化的结果。                                                       |
+| `screenshot(options?)`         | `Promise<Blob \| Buffer \| string \| {name, size}>` | 截取视口。参见[屏幕截图](#screenshots)。                                                                       |
+| `click(x, y, options?)`        | `Promise<void>`                                       | 在视口坐标处执行原生点击。                                                                                    |
+| `click(selector, options?)`    | `Promise<void>`                                       | 等待元素可操作，然后点击其中心。                                                                              |
+| `type(text)`                   | `Promise<void>`                                       | 使用 `InsertText` 编辑命令将文本插入聚焦的元素。                                                              |
+| `press(key, options?)`         | `Promise<void>`                                       | 按下命名的虚拟按键或单字符组合键。                                                                            |
+| `scroll(dx, dy)`               | `Promise<void>`                                       | 在视口中心触发原生 `wheel` 事件。`dx`/`dy` 必须是有限值。                                                      |
+| `scrollTo(selector, options?)` | `Promise<void>`                                       | 等待元素存在，然后执行 `scrollIntoView`。                                                                     |
+| `resize(width, height)`        | `Promise<void>`                                       | 更改视口大小。每个维度的范围为 1-16384。                                                                     |
+| `goBack()`                     | `Promise<void>`                                       | 在会话历史记录中后退。在起始位置时不执行任何操作。                                                            |
+| `goForward()`                  | `Promise<void>`                                       | 在会话历史记录中前进。在末尾时不执行任何操作。                                                                |
+| `reload()`                     | `Promise<void>`                                       | 重新加载当前页面。                                                                                            |
+| `cdp(method, params?)`         | `Promise<unknown>`                                    | （仅限 Chrome）向此标签页发送原始 CDP 命令。参见[原始 CDP](#cdp)。                                             |
+| `addEventListener(type, fn)`   | `void`                                                | 继承自 `EventTarget`。使用 Chrome 时，`type` 可以是 CDP 事件名称；`event.data` 是经过解析的 `params`。       |
+| `close()`                      | `void`                                                | 销毁页面。拒绝待处理的 promise。幂等。                                                                        |
 
 #### `click()` 选项
 

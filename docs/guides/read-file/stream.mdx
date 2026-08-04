@@ -4,7 +4,7 @@ sidebarTitle: 以流读取
 mode: center
 ---
 
-`Bun.file()` 函数接受一个路径并返回一个 `BunFile` 实例。`BunFile` 类继承自 `Blob`，允许你以多种格式懒加载地读取文件。使用 `.stream()` 可以将文件作为 `ReadableStream` 逐步消费。
+`Bun.file()` 函数接受一个路径并返回一个 `BunFile` 实例。`BunFile` 扩展自 `Blob`，因此你可以使用多种格式延迟读取文件。使用 `.stream()` 以 `ReadableStream` 的形式逐步读取文件。
 
 ```ts
 const path = "/path/to/package.json";
@@ -15,7 +15,7 @@ const stream = file.stream();
 
 ---
 
-可将流的块作为 [异步可迭代对象](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_async_iterator_and_async_iterable_protocols) 使用 `for await` 进行消费。
+该流是一个[异步可迭代对象](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_async_iterator_and_async_iterable_protocols)，因此你可以使用 `for await` 读取其中的数据块。
 
 ```ts
 for await (const chunk of stream) {
@@ -25,4 +25,4 @@ for await (const chunk of stream) {
 
 ---
 
-有关在 Bun 中使用流的更多信息，请参阅[Streams](/runtime/streams)文档。
+有关在 Bun 中使用流的更多信息，请参阅[流](/runtime/streams)。

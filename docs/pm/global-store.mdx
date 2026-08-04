@@ -11,7 +11,7 @@ description: "只安装一次。每个项目都链接到同一份副本。"
 
 ## 启用
 
-全局虚拟存储**默认关闭**。它只适用于 isolated linker；hoisted linker 不会使用它。
+全局虚拟存储**默认关闭**。它仅适用于[隔离链接器](/pm/isolated-installs)；提升链接器不会使用它。
 
 要为某个项目启用它：
 
@@ -21,7 +21,7 @@ linker = "isolated"
 globalStore = true
 ```
 
-或者通过环境变量按次启用：
+或者通过环境变量在每次调用时启用：
 
 ```bash terminal icon="terminal"
 BUN_INSTALL_GLOBAL_STORE=1 bun install --linker isolated
@@ -29,9 +29,9 @@ BUN_INSTALL_GLOBAL_STORE=1 bun install --linker isolated
 
 要显式关闭它（默认行为），请设置 `globalStore = false` 或 `BUN_INSTALL_GLOBAL_STORE=0`。
 
-## Why it's fast
+## 为什么它很快
 
-之前的 isolated linker 会在每次安装时，对每个包都调用 `clonefileat()`（macOS）或 `link()`/`copyfile()`（其他平台），即使包缓存已经是热的，而缺失的只有 `node_modules`。对一个 1,400 包的 fixture 在 macOS 上进行热安装的分析显示，主线程有 **95.4 % 的时间都花在 `clonefileat` 里**：
+之前的隔离链接器会在每次安装时，对每个包都调用 `clonefileat()`（macOS）或 `link()`/`copyfile()`（其他平台），即使包缓存已经是热的，而缺失的只有 `node_modules`。对一个 1,400 包的测试 fixture 在 macOS 上进行热安装的分析显示，主线程有 **95.4 % 的时间都花在 `clonefileat` 里**：
 
 ```
 按栈顶排序（bun install --linker isolated，热缓存）：
@@ -48,11 +48,11 @@ APFS 上的 `clonefileat` 会持有一个全卷范围的内核锁，因此即使
 
 热态 CI 安装——锁文件存在、包缓存已热、每轮之间删除 `node_modules`——在一个 1,400 包的 React/webpack/Babel/jest fixture 上，Apple Silicon macOS，`hyperfine --warmup 3 --runs 10`：
 
-|                                          | wall time    | system time | `clonefileat` | total syscalls |
+|                                          | 墙钟时间    | 系统时间 | `clonefileat` | 系统调用总数 |
 | ---------------------------------------- | ------------ | ----------- | ------------- | -------------- |
 | `--linker hoisted`                       | 823.9 ms     | 477 ms      | 1,387         | 7,857          |
 | `--linker isolated`, `globalStore=false` | 840.9 ms     | 1,256 ms    | 1,387         | —              |
-| **`--linker isolated`, global store**    | **124.8 ms** | **94 ms**   | **0**         | **4,957**      |
+| **`--linker isolated`，全局存储**    | **124.8 ms** | **94 ms**   | **0**         | **4,957**      |
 
 比没有全局存储的同一 linker **快 6.6 倍**，比 hoisted **快 6.6 倍**。
 
@@ -64,15 +64,15 @@ APFS 上的 `clonefileat` 会持有一个全卷范围的内核锁，因此即使
 | ---------------------------------------- | -------------------------- | ---------------- |
 | `--linker hoisted`                       | 391 MB                     | —              |
 | `--linker isolated`, `globalStore=false` | 391 MB                     | —              |
-| **`--linker isolated`, global store**    | **约 5 MB 的符号链接**      | 391 MB 仅一份    |
+| **`--linker isolated`，全局存储**    | **约 5 MB 的符号链接**      | 391 MB 仅一份    |
 
 把同一个项目克隆五份，差别就是大约 2 GB 的重复包文件 versus 总计约 400 MB。盈亏平衡点是一个项目；从那之后，每增加一个检出、分支工作树或 CI 工作区都是免费的。
 
-### 真实世界 cold→warm
+### 真实世界冷态→热态
 
-克隆后的真实仓库在冷到热之间的耗时（macOS arm64）：
+克隆后的真实仓库从冷态到热态之间的耗时（macOS arm64）：
 
-| project                        | packages | cold   | warm       |
+| 项目                          | 包数量 | 冷态   | 热态       |
 | ------------------------------ | ------ | ------ | ---------- |
 | cal.com                        | ~3,580   | 37.4 s | **4.7 s**  |
 | remix                          | ~1,750   | 23.1 s | **2.0 s**  |
@@ -82,14 +82,14 @@ APFS 上的 `clonefileat` 会持有一个全卷范围的内核锁，因此即使
 
 ## 目录结构
 
-与 [isolated installs](/pm/isolated-installs#directory-structure) 相比，磁盘上的布局多加了一层间接层：
+与 [隔离安装](/pm/isolated-installs#directory-structure) 相比，磁盘上的布局多加了一层间接层：
 
 ```bash tree layout icon="list-tree"
 ~/.bun/install/cache/
 ├── react@18.3.1@@@1/                     # 包缓存（不变）
-│   └── ...package files...
+│   └── ...包文件...
 └── links/                                # 全局虚拟存储
-    └── react@18.3.1-5664d3cd670b3205/    # <storepath>-<entry hash>
+    └── react@18.3.1-5664d3cd670b3205/    # <存储路径>-<条目哈希>
         └── node_modules/
             ├── react/                    # 包文件（只创建一次）
             ├── loose-envify -> ../../loose-envify@1.4.0-ea24…/node_modules/loose-envify
@@ -98,13 +98,13 @@ APFS 上的 `clonefileat` 会持有一个全卷范围的内核锁，因此即使
 
 project/node_modules/
 ├── .bun/
-│   ├── node_modules/                     # 隐藏的 hoisted 层（每个项目）
+│   ├── node_modules/                     # 隐藏的提升层（每个项目）
 │   │   └── react -> ../react@18.3.1/node_modules/react
 │   └── react@18.3.1 -> ~/.bun/install/cache/links/react@18.3.1-5664d3cd670b3205
 └── react -> .bun/react@18.3.1/node_modules/react
 ```
 
-16 位十六进制的 `entry_hash` 后缀编码的是该条目的**已解析依赖闭包**：包自身的 store path 和 tarball 完整性，再加上它所链接到的每个依赖的哈希。两个项目如果把 `react@18.3.1` 解析到同一组传递版本，就共享同一个全局目录；如果某个项目把某个传递依赖解析到不同版本，就会得到一个单独的全局条目，其依赖符号链接会指向正确的同级项。参与依赖循环的包会共享一个基于整个强连通分量计算出的哈希，因此这个 key 不依赖于某个项目的依赖图最先碰到的是哪个成员。
+16 位十六进制的 `entry_hash` 后缀编码的是该条目的**已解析依赖闭包**：包自身的存储路径和 tarball 完整性，以及它所链接到的每个依赖的哈希。两个项目如果把 `react@18.3.1` 解析到同一组传递版本，就共享同一个全局目录；如果某个项目把某个传递依赖解析到不同版本，就会得到一个单独的全局条目，其依赖符号链接会指向正确的同级项。参与依赖循环的包会共享一个基于整个强连通分量计算出的哈希，因此这个键不依赖于某个项目的依赖图最先碰到的是哪个成员。
 
 ## 哪些内容保持项目本地
 
@@ -128,7 +128,7 @@ project/node_modules/
 
 实际中这只会影响**真正的幽灵依赖**：某个包 `require('helper')`，但它从未在 `dependencies`、`peerDependencies` 或 `peerDependenciesMeta` 中声明过这个东西。如果遇到这种情况，把 helper 加到消费方包的依赖里（这是正确修复方式），或者设置 `globalStore = false`。
 
-注意，[`publicHoistPattern`](/runtime/bunfig#install-publichoistpattern) 和 [`hoistPattern`](/runtime/bunfig#install-hoistpattern) 会提升到项目的 `node_modules`，而全局存储中的包无法访问那里。不过它们仍然可以用于从你自己的源代码中解析被提升的包。
+[`publicHoistPattern`](/runtime/bunfig#install-publichoistpattern) 和 [`hoistPattern`](/runtime/bunfig#install-hoistpattern) 会将依赖提升到项目的 `node_modules` 中，而全局存储中的包无法访问该目录。它们仍可用于从你自己的源代码中解析已提升的包。
 
 ### `node_modules` 大多是符号链接
 

@@ -33,15 +33,15 @@ for await (const chunk of stream) {
   console.log(chunk);
 }
 
-// hello
-// world
+// 你好
+// 世界
 ```
 
 ---
 
 ## 直接 `ReadableStream`
 
-Bun 实现了一个优化版本的 `ReadableStream`，避免了不必要的数据复制和队列管理逻辑。
+Bun 实现了一个经过优化的 `ReadableStream`，避免了不必要的数据复制和队列管理。
 
 在传统的 `ReadableStream` 中，数据块是被 _入队_ 的。每个数据块都会被复制到一个队列中，直到流准备好发送更多数据时才会被读取。
 
@@ -55,7 +55,7 @@ const stream = new ReadableStream({
 });
 ```
 
-而直接 `ReadableStream` 中，数据块会直接写入流中。不会有排队，也无需将数据块复制到内存中。`controller` 的 API 也做了相应更新，不使用 `.enqueue()`，而是调用 `.write`。
+使用直接 `ReadableStream` 时，数据块会直接写入流中。不会发生排队，也不需要将数据块复制到内存中。`controller` API 也反映了这一点：调用 `.write()` 而不是 `.enqueue()`。
 
 ```ts
 const stream = new ReadableStream({
@@ -71,27 +71,23 @@ const stream = new ReadableStream({
 
 ### 处理背压
 
-`controller.write()` 返回已写入的字节数。当目标端的内部缓冲区已满时（例如较慢的 HTTP 客户端），它会改为返回一个**负数**。数据块仍然会被接受——负返回值表示需要暂停并等待目标端将数据排空。
-
-要等待排空，请 `await controller.flush(true)`：
+`controller.write()` 返回已写入的字节数；当目标端的内部缓冲区已满时（例如，一个速度较慢的 HTTP 客户端），则返回一个**待处理的 `Promise<number>`**。无论哪种情况，数据块都会被接受；该 Promise 会在目标端完成排空后解析，因此只需对结果使用 `await` 即可：
 
 ```ts
 const stream = new ReadableStream({
   type: "direct",
   async pull(controller) {
     for (const chunk of chunks) {
-      const n = controller.write(chunk);
-      if (typeof n === "number" && n < 0) {
-        // 目标端已积压；在写入更多数据之前等待其排空
-        await controller.flush(true);
-      }
+      await controller.write(chunk);
     }
     controller.close();
   },
 });
 ```
 
-对于默认（非 `direct`）的 `ReadableStream` 和异步生成器响应体，Bun 会自动应用这种背压——当目标端积压时，生产者会暂停。
+`await controller.flush(true)` 与此等效，可以在写入返回 Promise 后使用。
+
+对于默认的（非 `direct`）`ReadableStream` 和异步生成器响应体，Bun 会自动应用这种背压机制——当目标端出现积压时，生产者会暂停。
 
 ---
 
@@ -123,7 +119,7 @@ const response = new Response({
 await response.text(); // "helloworld"
 ```
 
-如果你需要对流进行更细粒度的控制，`yield` 将返回直接的 ReadableStream 控制器。
+如需更精细地控制流，`yield` 会返回直接的 `ReadableStream` 控制器。
 
 ```ts
 const response = new Response({
@@ -183,7 +179,7 @@ sink.write(Buffer.from("lo").buffer);
 sink.end();
 ```
 
-一旦调用 `.end()`，就无法再向 `ArrayBufferSink` 写入数据。然而，在流缓冲的场景下，通常需要持续写入数据并定期调用 `.flush()` 将内容（例如写入到一个 `WritableStream`）。为支持此需求，可在构造时传入 `stream: true`。
+调用 `.end()` 后，无法再向 `ArrayBufferSink` 写入数据。但是，在缓冲流时，你可能希望继续写入数据，并定期调用 `.flush()` 刷新内容（例如写入 `WritableStream`）。要实现此功能，请向 `start` 方法传入 `stream: true`。
 
 ```ts
 const sink = new Bun.ArrayBufferSink();
@@ -195,15 +191,15 @@ sink.write("h");
 sink.write("e");
 sink.write("l");
 sink.flush();
-// ArrayBuffer(5) [ 108, 101, 108 ]
+// ArrayBuffer(3) [ 104, 101, 108 ]
 
 sink.write("l");
 sink.write("o");
 sink.flush();
-// ArrayBuffer(5) [ 108, 111 ]
+// ArrayBuffer(2) [ 108, 111 ]
 ```
 
-`.flush()` 方法返回缓冲数据（作为 `ArrayBuffer`，如果 `asUint8Array: true` 则返回 `Uint8Array`）并清空内部缓冲区。
+`.flush()` 方法会将缓冲的数据作为 `ArrayBuffer` 返回（如果设置了 `asUint8Array: true`，则返回 `Uint8Array`），并清空内部缓冲区。
 
 如果需要手动设置内部缓冲区的大小（以字节为单位），请传入 `highWaterMark`：
 
@@ -218,7 +214,7 @@ sink.start({
 
 ## 参考
 
-```ts See Typescript Definitions expandable
+```ts 查看可展开的 TypeScript 定义
 /**
  * 快速增量写入器，调用 end() 后生成 `ArrayBuffer`。
  */

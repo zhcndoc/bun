@@ -3,7 +3,7 @@ title: CSRF 防护
 description: 使用 Bun 的内置 API 生成和验证 CSRF 令牌
 ---
 
-Bun 通过 `Bun.CSRF` 提供了一个内置 API，用于生成和验证 [CSRF（跨站请求伪造）](https://owasp.org/www-community/attacks/csrf)令牌。令牌使用 HMAC 签名，并包含过期时间戳以限制令牌的有效期窗口。
+`Bun.CSRF` 生成并验证 [CSRF（跨站请求伪造）](https://owasp.org/www-community/attacks/csrf) 令牌。令牌使用 HMAC 签名，并包含过期时间戳。
 
 ```ts title="csrf.ts" icon="/icons/typescript.svg"
 // 生成一个与请求者会话绑定的令牌
@@ -35,12 +35,12 @@ const token = Bun.CSRF.generate("my-secret-key");
 - `secret`（string，可选）— 用于签署令牌的密钥。如果未提供，Bun 会生成一个随机的内存中默认密钥（每个线程唯一）。
 - `options`（object，可选）：
 
-| Option      | Type     | Default       | Description                                                                                                                                                     |
-| ----------- | -------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `expiresIn` | `number` | `86400000`    | 令牌过期前的毫秒数。默认是 24 小时。                                                                                                                             |
-| `encoding`  | `string` | `"base64url"` | 令牌编码格式：`"base64"`、`"base64url"` 或 `"hex"`。                                                                                                            |
-| `algorithm` | `string` | `"sha256"`    | HMAC 算法：`"sha256"`、`"sha384"`、`"sha512"`、`"sha512-256"`、`"blake2b256"` 或 `"blake2b512"`。                                                               |
-| `sessionId` | `string` | (none)        | 将令牌绑定到请求主体（会话 ID、用户 ID 或等效标识）。只有在 `verify()` 中传入相同的 `sessionId` 时，令牌才会验证通过。                                           |
+| 选项        | 类型     | 默认值        | 描述                                                                                                                                                    |
+| ----------- | -------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `expiresIn` | `number` | `86400000`    | 令牌过期前的毫秒数。默认为 24 小时。                                                                                                                    |
+| `encoding`  | `string` | `"base64url"` | 令牌编码格式：`"base64"`、`"base64url"` 或 `"hex"`。                                                                                                    |
+| `algorithm` | `string` | `"sha256"`    | HMAC 算法：`"sha256"`、`"sha384"`、`"sha512"`、`"sha512-256"`、`"blake2b256"` 或 `"blake2b512"`。                                                       |
+| `sessionId` | `string` | （无）        | 将令牌绑定到请求主体（会话 ID、用户 ID 或等效标识）。只有在向 `verify()` 传入相同的 `sessionId` 时，令牌才能通过验证。 |
 
 **返回：** `string` — 编码后的令牌。
 
@@ -74,13 +74,13 @@ const isValid = Bun.CSRF.verify(token, { secret: "my-secret-key" });
 - `token`（string，必需）— 要验证的令牌。
 - `options`（object，可选）：
 
-| Option      | Type     | Default       | Description                                                                                                                                                                                                          |
-| ----------- | -------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `secret`    | `string` | (auto)        | 用于签署令牌的密钥。如果未提供，则使用与 `generate()` 相同的内存默认密钥。                                                                                                                                        |
-| `maxAge`    | `number` | `86400000`    | 令牌的最大年龄（毫秒），独立于令牌自身的 `expiresIn`。                                                                                                                                                             |
-| `encoding`  | `string` | `"base64url"` | 必须与 `generate()` 中使用的编码一致。                                                                                                                                                                               |
-| `algorithm` | `string` | `"sha256"`    | 必须与 `generate()` 中使用的算法一致。                                                                                                                                                                              |
-| `sessionId` | `string` | (none)        | 必须与 `generate()` 中使用的 `sessionId` 一致。绑定到某一主体的令牌会对任何其他主体验证失败；而在生成时未提供 `sessionId` 的令牌，如果验证时提供了 `sessionId`，也会验证失败。 |
+| 选项        | 类型     | 默认值        | 描述                                                                                                                                                                                                            |
+| ----------- | -------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `secret`    | `string` | (自动)        | 用于签署令牌的密钥。如果未提供，则使用与 `generate()` 相同的内存默认密钥。                                                                                                                                       |
+| `maxAge`    | `number` | `86400000`    | 令牌的最大年龄（毫秒），独立于令牌自身的 `expiresIn`。                                                                                                                                                          |
+| `encoding`  | `string` | `"base64url"` | 必须与 `generate()` 中使用的编码一致。                                                                                                                                                                          |
+| `algorithm` | `string` | `"sha256"`    | 必须与 `generate()` 中使用的算法一致。                                                                                                                                                                         |
+| `sessionId` | `string` | (无)           | 必须与 `generate()` 中使用的 `sessionId` 一致。绑定到某一主体的令牌会对任何其他主体验证失败；而在生成时未提供 `sessionId` 的令牌，如果验证时提供了 `sessionId`，也会验证失败。 |
 
 **返回：** `boolean`
 
@@ -162,7 +162,7 @@ console.log(`监听于 ${server.url}`);
 
 ## 默认密钥
 
-如果在 `generate()` 和 `verify()` 中都省略 `secret` 参数，Bun 会使用每个线程生成一次的随机密钥。这对于单线程应用很方便，但在多台服务器、多个 Worker 之间或重启后无法工作。
+如果在 `generate()` 和 `verify()` 中都省略 `secret` 参数，Bun 将使用每个线程生成一次的随机密钥。这对于单线程应用程序很方便，但令牌无法跨服务器或工作线程验证，也无法在重启后验证。
 
 ```ts title="default-secret.ts" icon="/icons/typescript.svg"
 // 这两个调用在此运行时上下文中使用相同的每线程默认密钥。

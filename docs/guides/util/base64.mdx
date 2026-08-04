@@ -1,17 +1,52 @@
 ---
-title: 编码和解码 base64 字符串
+title: 编码和解码 base64 数据
 sidebarTitle: Base64 编码
 mode: center
 ---
 
-Bun 实现了 Web 标准的 [`atob`](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/atob) 和 [`btoa`](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/btoa) 函数，用于编码和解码 base64 字符串。
+在 Bun 中编码和解码 base64 数据时，优先使用 [`Uint8Array.prototype.toBase64()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/toBase64) 和 [`Uint8Array.fromBase64()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/fromBase64)。这些 API 直接处理字节，因此相比旧版的 `btoa()` 和 `atob()` 全局函数，它们更适合处理二进制数据。
 
 ```ts
-const data = "hello world";
-const encoded = btoa(data); // => "aGVsbG8gd29ybGQ="
-const decoded = atob(encoded); // => "hello world"
+const bytes = new Uint8Array([98, 117, 110]);
+const encoded = bytes.toBase64(); // => "YnVu"
+
+const decoded = Uint8Array.fromBase64(encoded);
+// => Uint8Array(3) [ 98, 117, 110 ]
 ```
+
+对于字符串，使用 [`TextEncoder`](https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder) 和 [`TextDecoder`](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder) 在 UTF-8 字节之间进行转换。
+
+```ts
+const bytes = new TextEncoder().encode("hello world");
+const encoded = bytes.toBase64(); // => "aGVsbG8gd29ybGQ="
+
+const decoded = Uint8Array.fromBase64(encoded);
+const text = new TextDecoder().decode(decoded); // => "hello world"
+```
+
+Node.js 的 `Buffer` 扩展自 `Uint8Array`，因此可以使用 `toBase64()` 对缓冲区进行编码，并将其传递给接受 `Uint8Array` 的 API。`Buffer` 还通过 `Buffer.from(encoded, "base64")` 提供与 Node.js 兼容的 base64 解码功能。
+
+```ts
+const encoded = Buffer.from("hello world").toBase64();
+// => "aGVsbG8gd29ybGQ="
+
+const bytes = Buffer.from(encoded, "base64");
+bytes instanceof Uint8Array; // => true
+
+const text = bytes.toString("utf8");
+// => "hello world"
+```
+
+<Warning>
+  旧版的 [`btoa()`](https://developer.mozilla.org/en-US/docs/Web/API/Window/btoa) 和 [`atob()`](https://developer.mozilla.org/en-US/docs/Web/API/Window/atob) API 仍然可用以保持兼容性，但它们处理的是二进制字符串，而不是字节数组。在新代码中应避免使用它们，尤其是在处理任意二进制数据或非 ASCII 文本时。
+
+```ts
+const encoded = btoa("bun"); // => "YnVu"
+const decoded = atob(encoded); // => "bun"
+```
+
+</Warning>
 
 ---
 
-请参见 [文档 > Web API](/runtime/web-apis)，了解 Bun 实现的 Web API 完整细节。
+请参阅 [Web API](/runtime/web-apis)。

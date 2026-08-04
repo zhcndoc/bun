@@ -5,7 +5,7 @@ description: 通过 npm、Homebrew、Docker 或官方脚本安装 Bun。
 
 ## 概述
 
-Bun 以单个无依赖的可执行文件形式发布。你可以通过脚本、包管理器或 Docker 在 macOS、Linux 和 Windows 上安装。
+Bun 以单个、无依赖的可执行文件形式提供。在 macOS、Linux 和 Windows 上，可以使用安装脚本、包管理器或 Docker 进行安装。
 
 <Tip>安装后，请使用 `bun --version` 和 `bun --revision` 进行验证。</Tip>
 
@@ -21,7 +21,7 @@ Bun 以单个无依赖的可执行文件形式发布。你可以通过脚本、�
 
     </CodeGroup>
     <Note>
-      **Linux 用户**：安装 Bun 需要 `unzip` 包。使用 `sudo apt install unzip` 安装 unzip 包。建议使用 5.6 或更高版本的内核；Bun 也可在更早的 3.10（RHEL 7）内核上运行，并会对较新的系统调用进行优雅降级。使用 `uname -r` 查看你的内核版本。
+      **Linux 用户**  安装 Bun 需要 `unzip` 软件包（`sudo apt install unzip`）。建议使用 5.6 或更高版本的内核；Bun 在旧至 3.10 版本的内核（RHEL 7）上也能运行，并会优雅地降级使用较新的系统调用。使用 `uname -r` 检查你的内核版本。
       </Note>
 
   </Tab>
@@ -38,7 +38,7 @@ Bun 以单个无依赖的可执行文件形式发布。你可以通过脚本、�
     </Warning>
 
 
-    如需支持和讨论，请加入我们的 [Discord](https://bun.com/discord) 上的 **#windows** 频道。
+    如需支持和交流，请加入 [Discord](https://bun.com/discord) 上的 **#windows** 频道。
 
   </Tab>
 
@@ -71,7 +71,7 @@ Bun 以单个无依赖的可执行文件形式发布。你可以通过脚本、�
 
     ### 镜像变体
 
-    还有针对不同操作系统的镜像变体：
+    Bun 还为不同的操作系统发布了镜像变体：
 
     ```bash Docker icon="docker"
     docker pull oven/bun:debian
@@ -136,7 +136,7 @@ bun --revision
         & "$env:USERPROFILE\.bun\bin\bun" --version
         ```
 
-        如果该命令运行成功，但 `bun --version` 无法识别，说明 bun 未添加到系统 PATH。解决方法是打开 PowerShell 窗口，并运行以下命令：
+        如果命令成功运行，但无法识别 `bun --version`，则说明 bun 不在系统的 PATH 中。要解决此问题，请打开 PowerShell 终端并运行以下命令：
 
         ```bash terminal icon="terminal"
         [System.Environment]::SetEnvironmentVariable(
@@ -148,7 +148,7 @@ bun --revision
 
         </Step>
         <Step title="重启你的终端">
-           运行命令后，重启终端并测试 `bun --version`
+           重启终端，然后使用 `bun --version` 进行测试。
 
           ```bash terminal icon="terminal"
           bun --version
@@ -195,7 +195,7 @@ bun upgrade --canary
 bun upgrade --stable
 ```
 
-Canary 版本适用于测试新功能和修复 bug，帮助 Bun 团队更快修复问题。Canary 版本会自动上传崩溃报告给 Bun 团队。
+使用 Canary 构建版本，可以在新功能和错误修复进入稳定版本之前进行测试。为了帮助 Bun 团队更快地修复错误，Canary 构建版本会自动上传崩溃报告。
 
 ---
 
@@ -306,7 +306,7 @@ Canary 版本适用于测试新功能和修复 bug，帮助 Bun 团队更快修�
 
 ## CPU 要求
 
-Bun 根据你使用的二进制文件对 CPU 有不同的要求：
+CPU 要求取决于你使用的二进制文件：
 
 <Tabs>
 	<Tab title="标准版本">
@@ -329,7 +329,10 @@ Bun 根据你使用的二进制文件对 CPU 有不同的要求：
 
 </Tabs>
 
-<Note>Bun 不支持低于 baseline 目标的 CPU，该目标要求支持 SSE4.2 指令集。macOS 也要求版本为 13.0 或更高。</Note>
+<Note>
+  Bun 不支持早于基线目标的 CPU，该目标要求支持 SSE4.2 扩展。Bun 要求 macOS 13.0
+  或更高版本。
+</Note>
 
 ---
 

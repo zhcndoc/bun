@@ -6,14 +6,14 @@ description: 通过 Bun 的运行时 API 和打包器集成使用内置的 YAML 
 在 Bun 中，YAML 与 JSON 和 TOML 同等重要。你可以：
 
 - 使用 `Bun.YAML.parse` 解析 YAML 字符串
-- 在运行时以模块形式 `import` 和 `require` YAML 文件（包括热重载和监听模式支持）
-- 通过 Bun 的打包器在前端应用中 `import` 和 `require` YAML 文件
+- 在运行时将 YAML 文件作为模块进行 `import` 和 `require`（包括热重载和 watch 模式支持）
+- 使用 Bun 的打包器在前端应用中 `import` 和 `require` YAML 文件
 
 ---
 
 ## 兼容性
 
-Bun 的 YAML 解析器目前通过了官方 YAML 测试套件超过 90% 的测试。我们正积极努力达到 100% 兼容，但现有实现已覆盖绝大多数实际使用场景。解析器使用 Zig 编写以获得最佳性能，并持续改进中。
+Bun 的 YAML 解析器使用 Rust 编写，通过了官方 YAML 测试套件中超过 90% 的测试，涵盖了绝大多数实际使用场景。我们正努力实现 100% 的规范兼容性。
 
 ---
 
@@ -127,7 +127,7 @@ try {
 
 ### ES 模块
 
-你可以直接将 YAML 文件导入为 ES 模块。YAML 内容会被解析，既作为默认导出，也提供命名导出：
+直接将 YAML 文件作为 ES 模块导入。Bun 会解析其内容，并将其同时作为默认导出和命名导出提供：
 
 ```yaml config.yaml
 database:
@@ -156,7 +156,7 @@ console.log(config.redis.port); // 6379
 
 #### 命名导入
 
-你可以将顶层 YAML 属性解构为命名导入：
+顶层 YAML 属性可作为命名导入使用：
 
 ```ts app.ts icon="/icons/typescript.svg"
 import { database, redis, features } from "./config.yaml";
@@ -182,7 +182,7 @@ if (features.rateLimit) {
 
 ### CommonJS
 
-YAML 文件也可以在 CommonJS 环境中通过 require 加载：
+你也可以在 CommonJS 中使用 `require` 导入 YAML 文件：
 
 ```ts app.ts icon="/icons/typescript.svg"
 const config = require("./config.yaml");
@@ -197,7 +197,7 @@ console.log(database.port); // 5432
 
 ## YAML 热重载
 
-Bun 支持的 YAML 最强大特性之一是热重载。当你使用 `bun --hot` 运行应用时，对 YAML 文件的修改会被自动检测并进行热刷新，无需关闭连接。
+当你使用 `bun --hot` 运行应用程序时，Bun 会检测 YAML 文件的更改，并在不关闭连接的情况下重新加载它们。
 
 ### 配置热重载示例
 
@@ -239,12 +239,7 @@ Bun.serve({
 bun --hot server.ts
 ```
 
-现在，修改 `config.yaml` 会立即在运行的应用中生效。非常适合：
-
-- 开发过程中的配置调整
-- 不重启测试不同设置
-- 配置变更时实时调试
-- 启用或关闭功能开关
+现在，当你修改 `config.yaml` 时，正在运行的应用程序会获取更改：你可以在开发过程中调整设置或切换功能标志，而无需重启应用程序。
 
 ---
 
@@ -252,7 +247,7 @@ bun --hot server.ts
 
 ### 基于环境的配置
 
-YAML 非常适合管理多环境配置：
+一个 YAML 文件可以保存多个环境的配置，并通过锚点共享默认值：
 
 ```yaml config.yaml
 defaults: &defaults
@@ -437,21 +432,21 @@ if (parseConfig(migrations).autoRun === "true") {
 
 ### 打包器集成
 
-当你导入 YAML 文件并用 Bun 打包时，YAML 会在构建时被解析并作为 JavaScript 模块包含：
+当你打包导入 YAML 文件的应用程序时，Bun 会在构建时解析 YAML，并将其作为 JavaScript 模块包含在内：
 
 ```bash terminal icon="terminal"
 bun build app.ts --outdir=dist
 ```
 
-这意味着：
+在构建时解析意味着：
 
-- 生产环境零运行时 YAML 解析开销
-- 更小的包体积
-- 支持未用配置的摇树优化（命名导入）
+- 生产环境中无需运行时解析 YAML
+- 更小的打包体积
+- 对未使用的配置进行摇树优化（命名导入）
 
 ### 动态导入
 
-YAML 文件可以动态导入，适合按需加载配置：
+动态导入 YAML 文件，按需加载配置：
 
 ```ts
 // 根据环境加载配置

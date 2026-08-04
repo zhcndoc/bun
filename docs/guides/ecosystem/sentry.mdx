@@ -4,13 +4,13 @@ sidebarTitle: Bun 中使用 Sentry
 mode: center
 ---
 
-[Sentry](https://sentry.io) 是一个以开发者为中心的错误跟踪和性能监控平台。Sentry 提供了一个针对 Bun 的一流 SDK——`@sentry/bun`，它可以为你的 Bun 应用自动收集错误和性能数据。
+[Sentry](https://sentry.io) 是一个错误跟踪和性能监控平台。其 Bun SDK `@sentry/bun` 可以为你的应用添加检测功能，自动收集错误和性能数据。
 
-还没有账号或 Sentry 项目？请前往 [sentry.io](https://sentry.io/signup/)，然后再返回本页。
+如果你还没有 Sentry 账户和项目，请在 [sentry.io](https://sentry.io/signup/) 创建一个，然后返回此页面。
 
 ---
 
-要开始在 Bun 中使用 Sentry，首先安装 Sentry Bun SDK。
+首先，安装 Sentry Bun SDK。
 
 ```sh terminal icon="terminal"
 bun add @sentry/bun
@@ -18,7 +18,7 @@ bun add @sentry/bun
 
 ---
 
-接着，在应用入口文件中使用你的 Sentry DSN 初始化 Sentry SDK。你可以在 Sentry 项目设置中找到你的 DSN。
+然后，在应用的入口文件中使用你的 Sentry DSN 初始化 SDK。你可以在 Sentry 项目设置中找到 DSN。
 
 ```ts sentry.ts icon="/icons/typescript.svg"
 import * as Sentry from "@sentry/bun";
@@ -35,7 +35,7 @@ Sentry.init({
 
 ---
 
-你可以通过捕获一个测试错误来验证 Sentry 是否正常工作：
+通过捕获测试错误来验证 Sentry 是否正常工作：
 
 ```ts sentry.ts icon="/icons/typescript.svg"
 setTimeout(() => {
@@ -47,8 +47,8 @@ setTimeout(() => {
 }, 99);
 ```
 
-要查看并解决记录的错误，请登录 [sentry.io](https://sentry.io/) 并打开你的项目。点击错误标题将打开一个页面，显示详细信息并可将其标记为已解决。
+要查看并解决记录的错误，请登录 [sentry.io](https://sentry.io/)，然后打开你的项目。点击错误标题即可打开详情页面，你可以在该页面将错误标记为已解决。
 
 ---
 
-想了解更多关于 Sentry 及使用 Sentry Bun SDK 的信息，请查看 [Sentry 文档](https://docs.sentry.io/platforms/javascript/guides/bun)。
+如需详细了解 Sentry Bun SDK，请参阅 [Sentry 文档](https://docs.sentry.io/platforms/javascript/guides/bun)。

@@ -3,7 +3,7 @@ title: 转译器
 description: 使用 Bun 的转译器来转译 JavaScript 和 TypeScript 代码
 ---
 
-Bun 通过 `Bun.Transpiler` 类暴露其内部转译器。要创建一个 Bun 转译器的实例：
+Bun 将其内部转译器作为 `Bun.Transpiler` 类公开。创建实例：
 
 ```ts
 const transpiler = new Bun.Transpiler({
@@ -34,20 +34,12 @@ const result = transpiler.transformSync(code);
 ````
 
 ```ts output
-import { __require as require } from "bun:wrap";
-import * as JSX from "react/jsx-dev-runtime";
-var jsx = require(JSX).jsxDEV;
-
-export default jsx(
-  "div",
-  {
-    children: "hi!",
-  },
-  undefined,
-  false,
-  undefined,
-  this,
-);
+import * as whatever from "./whatever.ts";
+export function Home(props) {
+  return jsxDEV_7x81h0kn("p", {
+    children: props.title
+  }, undefined, false, undefined, this);
+}
 ````
 
 </CodeGroup>
@@ -60,9 +52,9 @@ transpiler.transformSync("<div>hi!</div>", "tsx");
 
 <Accordion title="细节说明">
 
-当调用 `.transformSync` 时，转译器会在当前执行代码的相同线程中运行。
+`.transformSync` 会在与调用代码相同的线程中运行转译器。
 
-如果使用了宏，它将在与转译器相同的线程中运行，但在一个独立的事件循环中，与应用程序的其余部分分开。当前，宏与普通代码之间共享全局变量，这意味着可以（但不推荐）在宏和普通代码间共享状态。试图在宏外部使用 AST 节点是未定义行为。
+[宏](/bundler/macros) 会与转译器在同一线程中运行，但使用的事件循环与应用程序的其余部分不同。宏和常规代码共享全局变量，因此可以（但不建议）在它们之间共享状态。在宏之外使用 AST 节点属于未定义行为。
 
 </Accordion>
 
@@ -78,7 +70,7 @@ const result = await transpiler.transform("<div>hi!</div>");
 console.log(result);
 ```
 
-除非你要转译大量大文件，否则通常建议使用 `Bun.Transpiler.transformSync`。使用线程池的开销往往比实际转译代码花费的时间更久。
+除非你要转译_许多_大型文件，否则请使用 `Bun.Transpiler.transformSync`。线程池开销通常比转译本身的开销还要高。
 
 ```ts
 await transpiler.transform("<div>hi!</div>", "tsx");
@@ -86,15 +78,15 @@ await transpiler.transform("<div>hi!</div>", "tsx");
 
 <Accordion title="细节说明">
 
-`.transform()` 方法会在 Bun 的工作线程池中运行转译器，因此如果调用 100 次，会在 `Math.floor($cpu_count * 0.8)` 个线程间并行运行，不会阻塞主 JavaScript 线程。
+`.transform()` 方法会在 Bun 的工作线程池中运行转译器，因此运行 100 次会将工作分散到 `Math.floor($cpu_count * 0.8)` 个线程中，而不会阻塞主 JavaScript 线程。
 
-如果代码使用了宏，可能会在该新线程中启动 Bun JavaScript 运行时环境的新实例。
+如果你的代码使用了宏，它可能会在这个新线程中生成一份 Bun JavaScript 运行时环境的新副本。
 
 </Accordion>
 
 ## `.scan()`
 
-`Transpiler` 实例还可以扫描某段源代码，返回其导入和导出列表及每个项的附加元数据。[仅类型](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-8.html#type-only-imports-and-export) 的导入和导出会被忽略。
+`.scan()` 方法扫描源代码，并返回其导入和导出的列表，以及每一项对应的元数据。[仅类型](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-8.html#type-only-imports-and-export)的导入和导出会被忽略。
 
 <CodeGroup>
 
@@ -124,10 +116,6 @@ const result = transpiler.scan(code);
       "path": "react"
     },
     {
-      "kind": "import-statement",
-      "path": "remix"
-    },
-    {
       "kind": "dynamic-import",
       "path": "./loader"
     }
@@ -137,7 +125,7 @@ const result = transpiler.scan(code);
 
 </CodeGroup>
 
-`imports` 数组中的每个导入项都有 `path` 和 `kind`。Bun 将导入分类如下：
+`imports` 数组中的每个导入项都包含 `path` 和 `kind`。Bun 将导入分类为以下几种类型：
 
 - `import-statement`：`import React from 'react'`
 - `require-call`：`const val = require('./cjs.js')`
@@ -150,7 +138,7 @@ const result = transpiler.scan(code);
 
 ## `.scanImports()`
 
-对于性能敏感的代码，可以使用 `.scanImports()` 方法获取导入列表。由于一些性能优化，它比 `.scan()` 更快（尤其是大型文件），但准确度略低。
+在对性能敏感的代码中，使用 `.scanImports()` 方法获取导入列表。它比 `.scan()` 更快（尤其是对于大型文件），但由于性能优化，其准确性略低。
 
 <CodeGroup>
 
@@ -194,7 +182,7 @@ const result = transpiler.scanImports(code);
 
 ## 参考
 
-```ts See Typescript Definitions expandable
+```ts 查看可展开的 TypeScript 定义
 type Loader = "jsx" | "js" | "ts" | "tsx";
 
 interface TranspilerOptions {
@@ -235,8 +223,8 @@ interface TranspilerOptions {
   minifyWhitespace?: boolean,
 
   // 是否内联常量值
-  // 通常提升性能并减少包大小
-  // 默认: true
+  // 通常可以提高性能并减小包体积
+  // 默认: false
   inline?: boolean,
 }
 

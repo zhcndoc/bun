@@ -16,7 +16,7 @@ test.skip("尚未实现的功能", () => {
 
 ---
 
-运行 `bun test` 将不会执行此测试。它将在终端输出中被标记为跳过。
+运行 `bun test` 不会执行此测试。终端输出会将其标记为已跳过。
 
 ```sh terminal icon="terminal"
 bun test
@@ -28,11 +28,11 @@ test.test.ts:
 ✓ multiply [0.02ms]
 » 尚未实现的功能
 
- 2 通过
- 1 跳过
- 0 失败
- 2 次 expect() 调用
-共执行 3 个测试，来自 1 个文件。 [74.00ms]
+ 2 pass
+ 1 skip
+ 0 fail
+ 2 expect() calls
+Ran 3 tests across 1 file. [74.00ms]
 ```
 
 ---
@@ -40,4 +40,4 @@ test.test.ts:
 另请参见：
 
 - [将测试标记为待办](/guides/test/todo-tests)
-- [文档 > 测试运行器 > 编写测试](/test/writing-tests)
+- [编写测试](/test/writing-tests)

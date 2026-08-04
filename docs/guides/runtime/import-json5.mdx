@@ -1,14 +1,14 @@
 ---
-title: Import a JSON5 file
-sidebarTitle: Import JSON5
+title: 导入 JSON5 文件
+sidebarTitle: 导入 JSON5
 mode: center
 ---
 
-Bun natively supports `.json5` imports.
+Bun 原生支持导入 `.json5` 文件。
 
 ```json5 config.json5 icon="file-code"
 {
-  // Comments are allowed
+  // 允许使用注释
   database: {
     host: "localhost",
     port: 5432,
@@ -29,7 +29,7 @@ Bun natively supports `.json5` imports.
 
 ---
 
-Import the file like any other source file.
+像导入其他源文件一样导入该文件。
 
 ```ts config.ts icon="/icons/typescript.svg"
 import config from "./config.json5";
@@ -41,7 +41,7 @@ config.features.auth; // => true
 
 ---
 
-You can also use named imports to destructure top-level properties:
+你也可以使用命名导入来解构顶层属性：
 
 ```ts config.ts icon="/icons/typescript.svg"
 import { database, server, features } from "./config.json5";
@@ -53,10 +53,10 @@ console.log(features.rateLimit); // => true
 
 ---
 
-For parsing JSON5 strings at runtime, use `Bun.JSON5.parse()`:
+如需在运行时解析 JSON5 字符串，请使用 `Bun.JSON5.parse()`：
 
 ```ts config.ts icon="/icons/typescript.svg"
-const data = JSON5.parse(`{
+const data = Bun.JSON5.parse(`{
   name: 'John Doe',
   age: 30,
   hobbies: [
@@ -71,4 +71,4 @@ console.log(data.hobbies); // => ["reading", "coding"]
 
 ---
 
-See [Docs > API > JSON5](/runtime/json5) for complete documentation on JSON5 support in Bun.
+有关 Bun 对 JSON5 的其余支持，请参阅 [JSON5](/runtime/json5)。

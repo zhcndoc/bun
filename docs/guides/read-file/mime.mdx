@@ -8,10 +8,10 @@ mode: center
 
 ```ts
 const file = Bun.file("./package.json");
-file.type; // application/json
+file.type; // application/json;charset=utf-8
 
 const file = Bun.file("./index.html");
-file.type; // text/html
+file.type; // text/html;charset=utf-8
 
 const file = Bun.file("./image.png");
 file.type; // image/png
@@ -19,4 +19,4 @@ file.type; // image/png
 
 ---
 
-有关使用 `BunFile` 的更多信息，请参考 [API > 文件输入输出](/runtime/file-io)。
+有关如何使用 `BunFile` 的更多信息，请参阅[文件 I/O](/runtime/file-io)。

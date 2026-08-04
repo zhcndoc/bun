@@ -13,19 +13,19 @@ await Bun.file("photo.jpg").image().resize(400, 400, { fit: "inside" }).webp({ q
 
 ## 输入
 
-构造函数接受路径、字节或 `Blob`——包括 `Bun.file()` 和 `Bun.s3()`。`Blob#image()` 是 `new Bun.Image(blob)` 的简写：
+构造函数接受路径、字节或 `Blob`——包括 `Bun.file()` 和 `Bun.s3.file()`。`Blob#image()` 是 `new Bun.Image(blob)` 的简写：
 
 ```ts
 new Bun.Image("./photo.jpg"); // 文件路径
 new Bun.Image(buffer); // Buffer / ArrayBuffer / TypedArray
-new Bun.Image(Bun.file("photo.jpg")); // BunFile（延迟读取，线程外执行）
-Bun.file("photo.jpg").image(); // 同上
-Bun.s3("bucket/photo.jpg").image(); // S3File
+new Bun.Image(Bun.file("photo.jpg")); // BunFile（延迟读取、在线程外执行）
+Bun.file("photo.jpg").image(); // 与上面相同
+Bun.s3.file("bucket/photo.jpg").image(); // S3File
 ```
 
 格式会根据字节内容自动识别——会忽略扩展名和 `Content-Type`。
 
-**路径字符串是文件系统路径。** 不要直接将受用户控制的字符串传给构造函数——这会成为任意文件读取原语。请将不受信任的输入读入 `Buffer`（例如通过 `fetch`/`Bun.file` 并进行你自己的校验），然后传入这些字节。
+**路径字符串是文件系统路径。**不要将用户控制的字符串直接传给构造函数——这会产生任意文件读取原语。请先使用 `fetch` 或 `Bun.file` 将不受信任的输入读入 `Buffer`，并进行你自己的验证，然后再传入这些字节。
 
 当传入 `TypedArray`/`ArrayBuffer` 时，在终结方法尚未完成时不要修改它——解码会在线程外运行并借用这些字节。`SharedArrayBuffer` 和可调整大小的缓冲区会被拒绝；请使用 `buf.slice()` 传入固定视图。
 
@@ -63,11 +63,11 @@ img.resize(800, 600, { filter: "mitchell" });
 | `fit`              | 行为                                                |
 | ------------------ | --------------------------------------------------- |
 | `"fill"`（默认）   | 拉伸到精确的 `width × height`                        |
-| `"inside"`         | 保持宽高比；结果适配于 _within_ 该边界内 |
+| `"inside"`         | 保持宽高比；结果适配于该边界内                        |
 
 `filter` 用于选择重采样内核。默认的 `"lanczos3"` 是照片的最佳选择。
 
-| Filter                    | 适用场景                                         |
+| 滤镜                       | 适用场景                                         |
 | ------------------------- | ------------------------------------------------ |
 | `"lanczos3"` _（默认）_   | 通用，照片最锐利                                 |
 | `"lanczos2"`              | 略柔和，振铃伪影更少                             |
@@ -124,10 +124,10 @@ await img.blob(); // Blob，.type 设置为输出 MIME
 await img.toBase64(); // string
 await img.dataurl(); // "data:image/png;base64,…"
 await img.write("out.webp"); // number（写入的字节数）
-await img.write(Bun.s3("bucket/out.webp"));
+await img.write(Bun.s3.file("bucket/out.webp"));
 ```
 
-`.write()` 接受与 `Bun.write` 相同的目标——路径字符串、`Bun.file()`、`Bun.s3()` 或文件描述符。如果你没有串联格式方法，并且目标是路径字符串，则会由扩展名选择格式（`.jpg`/`.png`/`.webp`/`.heic`/`.avif`）。
+`.write()` 接受与 `Bun.write` 相同的目标类型——路径字符串、`Bun.file()`、`Bun.s3.file()` 或文件描述符。如果你没有链式调用格式方法，并且目标是路径字符串，则扩展名会决定格式（`.jpg`/`.png`/`.webp`/`.heic`/`.avif`）。
 
 ## 占位符
 
@@ -163,7 +163,7 @@ Bun.serve({
 });
 ```
 
-直接传入管道（`new Response(img)`）也可以，但目前会在 body 初始化期间同步执行编码。
+直接传递管道（`new Response(img)`）同样有效，但会在正文初始化期间同步执行编码。
 
 ## 剪贴板
 
@@ -185,12 +185,12 @@ if (img) {
 | JPEG / PNG / WebP      | libjpeg-turbo · spng · libwebp    | 相同              | 相同         |
 | BMP / GIF（解码）      | 内置                              | ImageIO           | WIC          |
 | TIFF（解码）           | ❌                                | ImageIO           | WIC          |
-| Resize / rotate / flip | Highway SIMD                      | Accelerate vImage | Highway SIMD |
+| 缩放 / 旋转 / 翻转     | Highway SIMD                      | Accelerate vImage | Highway SIMD |
 | HEIC / AVIF            | ❌ `ERR_IMAGE_FORMAT_UNSUPPORTED` | ImageIO ²         | WIC ¹        |
-| Clipboard              | ❌ 返回 `null`                    | NSPasteboard      | Win32        |
+| 剪贴板                 | ❌ 返回 `null`                    | NSPasteboard      | Win32        |
 
 ¹ Windows 需要来自 Microsoft Store 的 **HEIF Image Extensions** / **AV1 Video Extension**。
-² AVIF _encode_ 需要系统级 AV1 编码器——仅 Apple Silicon M3+ 可用。Intel Mac 和 M1/M2 会以 `ERR_IMAGE_FORMAT_UNSUPPORTED` 拒绝；AVIF _decode_ 在所有 ImageIO 支持的地方都可用（macOS 13+）。
+² AVIF _编码_ 需要系统级 AV1 编码器——仅 Apple Silicon M3+ 可用。Intel Mac 和 M1/M2 会以 `ERR_IMAGE_FORMAT_UNSUPPORTED` 拒绝；AVIF _解码_ 在所有 ImageIO 支持的地方都可用（macOS 13+）。
 
 当当前机器上没有可用的系统后端格式时，终结方法会以 `error.code === "ERR_IMAGE_FORMAT_UNSUPPORTED"` 拒绝——可据此分支回退到可移植格式：
 

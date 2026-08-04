@@ -1,21 +1,21 @@
 ---
 title: 在 Railway 上部署 Bun 应用
-description: 通过本分步指南使用 CLI 和仪表盘方法部署 Bun 应用，涵盖可选的 PostgreSQL 设置和自动 SSL 配置。
+description: 从 CLI 或仪表盘将 Bun 应用部署到 Railway，可选配置 PostgreSQL 并自动启用 SSL
 sidebarTitle: 在 Railway 上部署
 mode: center
 ---
 
-Railway 是一个基础设施平台，您可以在这里配置基础设施，在本地使用该基础设施进行开发，然后部署到云端。它支持从 GitHub 通过零配置实现即时部署，自动 SSL 以及内置数据库配置。
+Railway 是一个基础设施平台：你可以配置基础设施，在本地基于它进行开发，然后将应用部署到云端。它支持零配置从 GitHub 部署、自动处理 SSL，并提供数据库。
 
-本指南演示如何部署带有 PostgreSQL 数据库（可选）的 Bun 应用，这正是下面模板所提供的内容。
+本指南将部署一个可选配 PostgreSQL 数据库的 Bun 应用，使用的配置与以下模板相同。
 
-You can either follow this guide step-by-step or deploy the pre-configured template with one click:
+你可以按照本指南逐步操作，也可以一键部署预配置的模板：
 
 <a
   href="https://railway.com/deploy/bun-react-postgres?referralCode=Bun&utm_medium=integration&utm_source=template&utm_campaign=bun"
   target="_blank"
 >
-  <img src="https://railway.com/button.svg" alt="Deploy on Railway" />
+  <img src="https://railway.com/button.svg" alt="在 Railway 上部署" />
 </a>
 
 ---
@@ -33,7 +33,7 @@ You can either follow this guide step-by-step or deploy the pre-configured templ
 
 <Steps>
 <Step title="步骤 1">
-确保已安装 Railway CLI。
+安装 Railway CLI。
 
 ```bash terminal icon="terminal"
 bun install -g @railway/cli
@@ -49,7 +49,7 @@ railway login
 
 </Step>
 <Step title="步骤 3">
-认证成功后，初始化一个新项目。
+完成身份验证后，初始化一个新项目。
 
 ```bash terminal icon="terminal"
 railway init
@@ -71,7 +71,7 @@ railway add --service bun-react-db --variables DATABASE_URL=\${{Postgres.DATABAS
 
 </Step>
 <Step title="步骤 5">
-服务创建并连接完成后，将应用部署到 Railway。默认情况下，服务仅在 Railway 的私有网络内可访问。若要让您的应用公开访问，需要生成公共域名。
+服务创建并连接后，将应用部署到 Railway。默认情况下，服务只能在 Railway 的私有网络中访问，因此请生成一个公共域名，以便让您的应用可公开访问。
 
 ```bash terminal icon="terminal"
 # 部署您的应用
@@ -84,7 +84,7 @@ railway domain
 </Step>
 </Steps>
 
-您的应用现已上线！Railway 会在每次 GitHub 推送时自动部署。
+您的应用现已上线。每次推送到 GitHub 时，Railway 都会自动部署。
 
 ---
 
@@ -121,7 +121,7 @@ railway domain
 </Step>
 </Steps>
 
-您的应用现已上线！Railway 会在每次 GitHub 推送时自动部署。
+您的应用现已上线。Railway 会在每次 GitHub 推送时自动部署。
 
 ---
 
@@ -129,7 +129,7 @@ railway domain
 
 默认情况下，Railway 使用 [Nixpacks](https://docs.railway.com/guides/build-configuration#nixpacks-options) 自动检测并零配置构建您的 Bun 应用。
 
-但使用 [Railpack](https://docs.railway.com/guides/build-configuration#railpack) 应用构建器能提供更好的 Bun 支持，并始终支持最新版本的 Bun。预配置模板默认使用 Railpack。
+不过，[Railpack](https://docs.railway.com/guides/build-configuration#railpack) 应用构建器对 Bun 的支持更好，并且始终支持最新版本的 Bun。预配置模板默认使用 Railpack。
 
 要在自定义项目中启用 Railpack，请在您的 `railway.json` 文件中添加以下内容：
 
@@ -142,4 +142,4 @@ railway domain
 }
 ```
 
-更多构建配置细节，请参考 [Railway 文档](https://docs.railway.com/guides/build-configuration)。
+有关更多构建配置设置，请参阅 [Railway 文档](https://docs.railway.com/guides/build-configuration)。

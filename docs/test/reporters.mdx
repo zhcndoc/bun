@@ -3,7 +3,7 @@ title: 测试报告工具
 description:
 ---
 
-bun test 支持通过报告工具输出不同格式的结果。本文档涵盖内置报告工具以及如何实现你自己的自定义报告工具。
+`bun test` 通过内置和自定义报告器支持不同的输出格式。
 
 ---
 
@@ -11,7 +11,7 @@ bun test 支持通过报告工具输出不同格式的结果。本文档涵盖�
 
 ### 默认控制台报告工具
 
-默认情况下，bun test 以人类可读的格式将结果输出到控制台：
+默认情况下，`bun test` 会以人类可读的格式将结果输出到控制台：
 
 ```sh terminal icon="terminal"
 test/package-json-lint.test.ts:
@@ -26,7 +26,7 @@ test/package-json-lint.test.ts:
 Ran 4 tests in 1.44ms
 ```
 
-当终端不支持颜色时，输出会避免非 ASCII 字符：
+当终端不支持颜色时，输出会避免使用非 ASCII 字符：
 
 ```sh terminal icon="terminal"
 test/package-json-lint.test.ts:
@@ -43,7 +43,7 @@ Ran 4 tests across 1 files. [0.66ms]
 
 ### 点状报告工具
 
-点状报告工具用 `.` 表示通过的测试，用 `F` 表示失败的测试——适合大型测试套件。
+点状报告工具会为通过的测试显示 `.`，并为失败的测试输出完整的错误详情，适用于大型测试套件。
 
 ```sh terminal icon="terminal"
 bun test --dots
@@ -52,7 +52,7 @@ bun test --reporter=dots
 
 ### JUnit XML 报告工具
 
-对于 CI/CD 环境，Bun 支持生成 JUnit XML 报告。JUnit XML 是一种被广泛采用的测试结果格式，许多 CI/CD 系统可解析，包括 GitLab、Jenkins 等。
+对于 CI/CD 环境，Bun 可以生成 JUnit XML 报告。这是一种广泛采用的测试结果格式，许多 CI/CD 系统都可以解析，包括 GitLab 和 Jenkins。
 
 #### 使用 JUnit 报告工具
 
@@ -62,11 +62,11 @@ bun test --reporter=dots
 bun test --reporter=junit --reporter-outfile=./junit.xml
 ```
 
-这将在测试运行完成时，除了常规输出外，还会将 JUnit XML 报告写入指定路径。
+控制台输出不会改变；Bun 会在测试运行结束时将 JUnit XML 报告写入指定路径。
 
 #### 通过 bunfig.toml 配置
 
-你也可以在 `bunfig.toml` 文件中配置 JUnit 报告工具：
+你也可以在 `bunfig.toml` 中配置 JUnit 报告工具：
 
 ```toml title="bunfig.toml" icon="settings"
 [test.reporter]
@@ -75,9 +75,9 @@ junit = "path/to/junit.xml"  # JUnit XML 报告的输出路径
 
 #### JUnit 报告中的环境变量
 
-JUnit 报告工具会自动在 XML 输出中以 `<properties>` 形式包含环境信息，有助于跟踪 CI 环境中的测试运行。
+JUnit 报告工具会将环境信息作为 `<properties>` 包含在 XML 输出中，因此你可以了解测试运行所对应的环境和提交。
 
-具体会包含以下可用的环境变量：
+在可用时，它会包含以下环境变量：
 
 | 环境变量                                                              | 属性名称     | 说明                  |
 | --------------------------------------------------------------------- | ------------ | --------------------- |
@@ -85,42 +85,38 @@ JUnit 报告工具会自动在 XML 输出中以 `<properties>` 形式包含环�
 | `GITHUB_SHA`、`CI_COMMIT_SHA`、`GIT_SHA`                              | `commit`     | Git 提交标识          |
 | 系统主机名                                                            | `hostname`   | 机器主机名            |
 
-这有助于更方便地追踪某次测试运行对应的环境和代码提交。
-
 #### 当前限制
 
-JUnit 报告工具目前存在一些限制，未来版本将逐步改进：
+JUnit 报告工具不包含：
 
-- 不包含单个测试的 `stdout` 和 `stderr` 输出
-- 不包含每个测试用例的精确时间戳字段
+- 各个测试的 `stdout` 和 `stderr` 输出
+- 每个测试用例的精确时间戳字段
 
 ### GitHub Actions 报告工具
 
-Bun test 会自动检测是否在 GitHub Actions 环境中运行，并直接向控制台输出 GitHub Actions 注解。无需额外配置，只需安装 Bun 并运行 `bun test` 即可。
+`bun test` 会检测其是否在 GitHub Actions 中运行，并直接向控制台输出 GitHub Actions 注释。除了安装 Bun 并运行 `bun test` 外，无需进行其他配置。
 
-关于 GitHub Actions 工作流配置示例，请参阅 CLI 文档的 [CI/CD 集成](/pm/cli/install#ci%2Fcd) 部分。
+有关 GitHub Actions 工作流的示例，请参阅 [CI/CD 集成](/pm/cli/install#ci%2Fcd)。
 
 ---
 
 ## 自定义报告工具
 
-Bun 允许开发者通过扩展 WebKit Inspector 协议中针对测试的特定域，实现自定义测试报告工具。
+你可以使用 Bun 针对 WebKit 检查器协议的测试专用扩展来实现自定义测试报告器，从而实时报告测试执行的详细信息。
 
-### 测试的 Inspector 协议
+### 测试检查器协议
 
-为了支持测试报告，Bun 在标准 WebKit Inspector 协议基础上，新增了两个自定义域：
+Bun 使用两个自定义域扩展了标准 WebKit 检查器协议：
 
 1. **TestReporter**：报告测试发现、开始和结束事件
-2. **LifecycleReporter**：报告测试执行中的错误和异常
-
-这些扩展使得你能够构建能实时接收详细测试执行信息的自定义报告工具。
+2. **LifecycleReporter**：报告测试执行期间的错误和异常
 
 ### 关键事件
 
-自定义报告工具可监听以下关键事件：
+自定义报告器可以监听以下事件：
 
 - `TestReporter.found`：测试被发现时触发
 - `TestReporter.start`：测试开始运行时触发
 - `TestReporter.end`：测试完成时触发
-- `Console.messageAdded`：测试运行中控制台有输出时触发
-- `LifecycleReporter.error`：出现错误或异常时触发
+- `Console.messageAdded`：测试运行期间控制台有输出时触发
+- `LifecycleReporter.error`：发生错误或异常时触发

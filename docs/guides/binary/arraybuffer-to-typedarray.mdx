@@ -4,7 +4,7 @@ sidebarTitle: "ArrayBuffer 到 Uint8Array"
 mode: center
 ---
 
-`Uint8Array` 是一种 _类型化数组_，意味着它是一种查看底层 `ArrayBuffer` 中数据的机制。
+`Uint8Array` 是一种_类型化数组_，是对底层 `ArrayBuffer` 中数据的视图。
 
 ```ts
 const buffer = new ArrayBuffer(64);
@@ -13,7 +13,7 @@ const arr = new Uint8Array(buffer);
 
 ---
 
-其他类型化数组的实例也可以类似创建。
+以相同的方式创建其他类型化数组的实例。
 
 ```ts
 const buffer = new ArrayBuffer(64);
@@ -38,4 +38,4 @@ const arr = new Uint8Array(buffer, 0, 16); // 查看前 16 个字节
 
 ---
 
-更多实用工具请参见[文档 > API > 工具](/runtime/utils)。
+参见 [工具](/runtime/utils)。

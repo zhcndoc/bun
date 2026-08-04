@@ -3,7 +3,7 @@ title: 归档
 description: 通过 Bun 的快速本地实现创建和解压 tar 归档文件
 ---
 
-Bun 通过 `Bun.Archive` 提供了一个快速的本地实现，用于操作 tar 归档文件。它支持从内存数据创建归档，解压归档到磁盘，以及读取归档内容而不进行解压。
+`Bun.Archive` 是 Bun 用于处理 tar 归档文件的原生 API。它可以根据内存中的数据创建归档文件，将归档文件解压到磁盘，并在不解压的情况下读取归档内容。
 
 ## 快速开始
 
@@ -138,15 +138,15 @@ const count = await archive.extract("./extracted");
 console.log(`解压了 ${count} 个条目`);
 ```
 
-目标目录如果不存在会自动创建。已有文件会被覆盖。返回的计数包括文件、目录和符号链接（在 POSIX 系统上）。
+`extract()` 会在目标目录不存在时创建该目录，并覆盖现有文件。返回的计数包括文件、目录和符号链接（在 POSIX 系统上）。
 
-**注意**：在 Windows 上，归档中的符号链接始终会被跳过，Bun 不会尝试创建它们，无论权限如何。Linux 和 macOS 上，符号链接会正常解压。
+**注意**：在 Windows 上，无论权限级别如何，Bun 都会在解压时始终跳过符号链接。在 Linux 和 macOS 上，符号链接会正常解压。
 
-**安全提示**：Bun.Archive 在解压时会验证路径，拒绝绝对路径（POSIX 的 `/`、Windows 的驱动器字母如 `C:\` 或 `C:/`，以及 UNC 路径如 `\\server\share`）。路径遍历组件 (`..`) 会被规范化移除（例如 `dir/sub/../file` 会变成 `dir/file`），以防止目录逃逸攻击。
+**安全提示**：Bun.Archive 会在解压过程中验证路径。它会拒绝绝对路径（POSIX 的 `/`、类似 `C:\` 或 `C:/` 的 Windows 驱动器号，以及类似 `\\server\share` 的 UNC 路径）和不安全的符号链接目标。路径遍历组件（`..`）会被规范化移除，以防止目录逃逸攻击：`dir/sub/../file` 会变为 `dir/file`。
 
 ### 过滤解压的文件
 
-使用 glob 模式只解压特定文件。模式针对归档条目路径，规范为使用正斜杠 (`/`)。正向模式指定包含，负向模式（以 `!` 开头）指定排除。负向模式在正向模式后应用，因此**仅使用负向模式将匹配不到任何文件**（必须先包含一个正向模式如 `**`）：
+使用 glob 模式仅解压特定文件。模式会与归档条目路径进行匹配，路径会被规范化为使用正斜杠（`/`）。正模式指定要包含的内容，负模式（以 `!` 开头）指定要排除的内容。如果只提供负模式，则会包含所有不匹配这些模式的条目：
 
 ```ts
 const tarball = await Bun.file("package.tar.gz").bytes();
@@ -161,7 +161,7 @@ const multiCount = await archive.extract("./extracted", {
 });
 ```
 
-使用负向模式（以 `!` 开头）排除文件。当正负模式混用时，条目必须匹配至少一个正向模式且不匹配任何负向模式：
+混合使用正模式和负模式时，条目必须至少匹配一个正模式，且不能匹配任何负模式：
 
 ```ts
 // 解压所有文件，除了 node_modules
@@ -179,7 +179,7 @@ const srcCount = await archive.extract("./extracted", {
 
 ### 获取所有文件
 
-使用 `.files()` 获取归档内容作为 `File` 对象的 `Map`，并不会解压到磁盘。与 `extract()` 处理所有条目类型不同，`files()` 仅返回常规文件（无目录）：
+使用 `.files()` 获取归档内容，返回由 `File` 对象组成的 `Map`，无需解压到磁盘。与会处理所有条目类型的 `extract()` 不同，`files()` 只返回普通文件（不包含目录）：
 
 ```ts
 const tarball = await Bun.file("package.tar.gz").bytes();
@@ -194,12 +194,12 @@ for (const [path, file] of files) {
 
 每个 `File` 对象包含：
 
-- `name` - 归档内的文件路径（始终使用 `/` 作为分隔符）
-- `size` - 文件大小，单位字节
+- `name` - 归档中的文件路径（始终使用正斜杠 `/` 作为分隔符）
+- `size` - 文件大小，单位为字节
 - `lastModified` - 修改时间戳
-- 标准的 `Blob` 方法：`text()`、`arrayBuffer()`、`stream()` 等
+- 标准 `Blob` 方法，例如 `text()`、`arrayBuffer()` 和 `stream()`
 
-**注意**：`files()` 会将文件内容读取到内存中。对于大型归档，建议直接使用 `extract()` 解压到磁盘。
+**注意**：`files()` 会将文件内容加载到内存中。对于大型归档，请使用 `extract()` 直接写入磁盘。
 
 ### 错误处理
 
@@ -234,11 +234,7 @@ try {
 - **磁盘空间不足** - 空间不够时，`extract()` 会抛错
 - **路径无效** - 路径格式错误时，操作会抛错
 
-`extract()` 返回的计数包含所有成功写入的条目（文件、目录及 POSIX 系统上的符号链接）。
-
-**安全提示**：Bun.Archive 在解压时自动验证路径。拒绝绝对路径（POSIX `/`、Windows 驱动器字母、UNC 路径）和不安全的符号链接目标。路径中的遍历组件 (`..`) 会被规范化移除，防止目录逃逸。
-
-对于不可信的归档，可以先枚举并验证路径：
+对于不受信任的归档，可以在解压前枚举并验证路径，以提高安全性：
 
 ```ts
 const archive = new Bun.Archive(untrustedData);
@@ -260,7 +256,7 @@ for (const [path] of files) {
 await archive.extract("./safe-output");
 ```
 
-使用带 glob 模式的 `files()`，如果没有匹配，返回空的 `Map`：
+使用 glob 模式调用时，如果没有文件匹配，`files()` 会返回一个空的 `Map`：
 
 ```ts
 const matches = await archive.files("*.nonexistent");
@@ -289,12 +285,12 @@ const codeFiles = await archive.files(["**/*.ts", "**/*.js"]);
 
 支持的 glob 模式（基于 [Bun.Glob](/docs/api/glob) 语法的子集）：
 
-- `*` - 匹配除 `/` 外的任意字符
+- `*` - 匹配除 `/` 之外的任意字符
 - `**` - 匹配包括 `/` 在内的任意字符
 - `?` - 匹配单个字符
 - `[abc]` - 匹配字符集
-- `{a,b}` - 匹配多个选项
-- `!pattern` - 排除匹配的文件（取反），必须配合正向模式使用；只用负向模式匹配不到任何文件
+- `{a,b}` - 匹配多个选项中的任意一个
+- `!pattern` - 排除与模式匹配的文件（否定）。如果只提供否定模式，则会包含所有与这些模式不匹配的文件。
 
 请参阅 [Bun.Glob](/docs/api/glob) 了解完整的 glob 语法及转义和高级模式。
 
@@ -317,11 +313,11 @@ const compressed = new Bun.Archive({ "hello.txt": "Hello, World!" }, { compress:
 const maxCompression = new Bun.Archive({ "hello.txt": "Hello, World!" }, { compress: "gzip", level: 12 });
 ```
 
-选项支持：
+`options` 参数接受：
 
 - 不传或 `undefined` - 默认未压缩 tar
 - `{ compress: "gzip" }` - 启用 gzip 压缩，默认等级 6
-- `{ compress: "gzip", level: number }` - gzip 压缩，自定义等级 1-12（1 为最快，12 为最小）
+- `{ compress: "gzip", level: number }` - gzip 压缩，自定义等级 1-12（1 为最快，12 为最小）。
 
 ## 示例
 
@@ -398,7 +394,7 @@ await Bun.write("my-project.tar.gz", archive);
 
 ## 参考
 
-> **注意**：以下类型签名为文档简化版。完整类型定义请查看 [`packages/bun-types/bun.d.ts`](https://github.com/oven-sh/bun/blob/main/packages/bun-types/bun.d.ts)。
+> **注意**：以下类型签名经过简化。完整的类型定义请参见 [`packages/bun-types/bun.d.ts`](https://github.com/oven-sh/bun/blob/main/packages/bun-types/bun.d.ts)。
 
 ```ts
 type ArchiveInput =

@@ -8,7 +8,7 @@ Bun 实现了 `node:fs` 模块，其中包括用于向文件追加内容的 `fs.
 
 ---
 
-你可以使用 `fs.appendFile` 异步地向文件追加数据，如果文件不存在则创建该文件。内容可以是字符串或 `Buffer`。
+`fs.appendFile` 异步地向文件追加数据，如果文件尚不存在，则创建该文件。内容可以是字符串或 `Buffer`。
 
 ```ts
 import { appendFile } from "node:fs/promises";
@@ -51,4 +51,4 @@ appendFileSync("message.txt", "data to append", "utf8");
 
 ---
 
-更多信息请参见 [Node.js 文档](https://nodejs.org/api/fs.html#fspromisesappendfilepath-data-options)。
+请参阅 [Node.js 文档](https://nodejs.org/api/fs.html#fspromisesappendfilepath-data-options) 以了解 `fs.appendFile`。

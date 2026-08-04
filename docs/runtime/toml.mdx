@@ -6,8 +6,8 @@ description: 通过运行时 API 和打包器集成，使用 Bun 对 TOML 文件
 在 Bun 中，TOML 与 JSON、JSON5 和 YAML 同为一等公民。你可以：
 
 - 使用 `Bun.TOML.parse` 解析 TOML 字符串
-- 在运行时通过 `import` 和 `require` 将 TOML 文件作为模块导入（支持热重载和监听模式）
-- 通过 Bun 的打包器在前端应用中 `import` 和 `require` TOML 文件
+- 在运行时将 TOML 文件作为模块进行 `import` 和 `require`（包括热重载和监视模式支持）
+- 在前端应用中使用 Bun 的打包器 `import` 和 `require` TOML 文件
 
 ---
 
@@ -45,16 +45,17 @@ console.log(data);
 
 #### 支持的 TOML 特性
 
-Bun 的 TOML 解析器支持 [TOML v1.0 规范](https://toml.io/en/v1.0.0)，包括：
+Bun 的 TOML 解析器实现了完整的 [TOML v1.1.0 规范](https://github.com/toml-lang/toml/releases/tag/1.1.0)，并通过了完整的官方 [toml-test](https://github.com/toml-lang/toml-test) 一致性测试套件。
 
-- **字符串**：基本字符串 (`"..."`) 和字面量字符串 (`'...'`)，包括多行字符串
-- **整数**：十进制、十六进制（`0x`）、八进制（`0o`）和二进制（`0b`）
+- **字符串**：基本字符串（`"..."`）和字面量字符串（`'...'`），包括多行字符串，以及所有转义序列（`\uHHHH`、`\UHHHHHHHH` 和 TOML 1.1 中的 `\xHH` 与 `\e`）
+- **整数**：十进制、十六进制（`0x`）、八进制（`0o`）和二进制（`0b`）。无法无损表示为 JavaScript 数字的整数（超出 ±(2^53 - 1)）会抛出异常
 - **浮点数**：包括 `inf` 和 `nan`
 - **布尔值**：`true` 和 `false`
-- **数组**：支持混合类型及嵌套数组
-- **表**：标准表（`[table]`）和内联表（`{ key = "value" }`）
+- **日期/时间**：带偏移量的日期时间、本地日期时间、本地日期和本地时间，会以源文本字符串的形式返回
+- **数组**：包括混合类型数组和嵌套数组
+- **表**：标准表（`[table]`）和内联表（`{ key = "value" }`），包括 TOML 1.1 多行内联表
 - **表数组**：`[[array]]`
-- **点记法键**：`a.b.c = "value"`
+- **点号键**：`a.b.c = "value"`
 - **注释**：使用 `#`
 
 ```ts
@@ -82,15 +83,45 @@ role = "backend"
 
 #### 错误处理
 
-如果 TOML 无效，`Bun.TOML.parse()` 会抛出异常：
+如果 TOML 无效，`Bun.TOML.parse()` 会抛出 `SyntaxError`：
 
 ```ts
 try {
   Bun.TOML.parse("invalid = = =");
 } catch (error) {
-  console.error("解析 TOML 失败:", error.message);
+  console.error("Failed to parse TOML:", error.message);
+  // 解析 TOML 失败：TOML 解析错误：应为值，但发现了 '='
 }
 ```
+
+### `Bun.TOML.stringify()`
+
+将 JavaScript 对象序列化为 TOML 文档。标量键位于前面，
+随后是 `[table]` 和 `[[array-of-tables]]` 部分：
+
+```ts
+Bun.TOML.stringify({
+  name: "app",
+  server: { host: "localhost", port: 8080 },
+  points: [{ x: 1 }, { x: 2 }],
+});
+// name = "app"
+//
+// [server]
+// host = "localhost"
+// port = 8080
+//
+// [[points]]
+// x = 1
+//
+// [[points]]
+// x = 2
+```
+
+顶层值必须是对象——TOML 文档就是一个表。`Date`
+值会转换为 TOML 带偏移量的日期时间。由于 TOML 无法表示
+`null` 值、`BigInt` 和循环结构，遇到这些值时会抛出异常；`undefined`、
+函数和符号属性会被跳过（在数组中则会抛出异常，因为 TOML 数组不能包含空位）。
 
 ---
 
@@ -98,7 +129,7 @@ try {
 
 ### ES 模块
 
-你可以直接将 TOML 文件作为 ES 模块导入。TOML 内容会被解析，并以默认导出和命名导出的形式提供：
+直接将 TOML 文件作为 ES 模块导入。Bun 会解析 TOML，并将其同时作为默认导出和命名导出提供：
 
 ```toml config.toml
 [database]
@@ -153,7 +184,7 @@ if (features.rateLimit) {
 
 #### 导入属性
 
-你也可以使用导入属性将任意文件以 TOML 形式加载：
+使用导入属性将任意文件作为 TOML 加载：
 
 ```ts app.ts icon="/icons/typescript.svg"
 import myConfig from "./my.config" with { type: "toml" };
@@ -161,7 +192,7 @@ import myConfig from "./my.config" with { type: "toml" };
 
 ### CommonJS
 
-TOML 文件同样可以在 CommonJS 中被 require：
+你也可以在 CommonJS 中使用 `require` 导入 TOML 文件：
 
 ```ts app.ts icon="/icons/typescript.svg"
 const config = require("./config.toml");
@@ -176,7 +207,7 @@ console.log(database.port); // 5432
 
 ## TOML 热重载
 
-当你使用 `bun --hot` 运行应用时，对 TOML 文件的修改会被自动检测并热重载，无需重启：
+当你使用 `bun --hot` 运行应用程序时，Bun 会检测 TOML 文件的更改，并在不重启的情况下重新加载：
 
 ```toml config.toml
 [server]
@@ -211,13 +242,11 @@ Bun.serve({
 bun --hot server.ts
 ```
 
-现在修改 `config.toml` 时，改动会立即反映到正在运行的应用中。
-
 ---
 
 ## 打包器集成
 
-当你导入 TOML 文件并使用 Bun 打包时，TOML 会在构建时被解析，并作为 JavaScript 模块包含到打包产物中：
+使用 Bun 进行打包时，打包器会在构建时解析导入的 TOML，并将其作为 JavaScript 模块包含在内：
 
 ```bash terminal icon="terminal"
 bun build app.ts --outdir=dist
@@ -225,13 +254,13 @@ bun build app.ts --outdir=dist
 
 这意味着：
 
-- 生产环境零运行时 TOML 解析开销
+- 生产环境中无需承担 TOML 运行时解析开销
 - 更小的打包体积
-- 对未使用属性（命名导入）的摇树优化支持
+- 对未使用的属性进行 Tree Shaking（命名导入）
 
 ### 动态导入
 
-TOML 文件支持动态导入：
+你也可以动态导入 TOML 文件：
 
 ```ts
 const config = await import("./config.toml");

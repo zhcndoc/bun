@@ -3,7 +3,7 @@ title: JSONL
 description: 使用 Bun 内置的流式解析器解析换行分隔的 JSON（JSONL）
 ---
 
-Bun 内置支持解析 [JSONL](https://jsonlines.org/)（换行分隔的 JSON），每一行都是一个独立的 JSON 值。该解析器使用 JavaScriptCore 优化的 JSON 解析器在 C++ 中实现，支持流式场景。
+Bun 内置支持解析 [JSONL](https://jsonlines.org/)（换行分隔的 JSON），其中每一行都是一个独立的 JSON 值。解析器使用 JavaScriptCore 的优化 JSON 解析器以 C++ 实现，并支持流式处理。
 
 ```ts
 const results = Bun.JSONL.parse('{"name":"Alice"}\n{"name":"Bob"}\n');
@@ -37,17 +37,17 @@ const results = Bun.JSONL.parse(buffer);
 // [{ a: 1 }, { b: 2 }]
 ```
 
-当传入 `Uint8Array` 时，缓冲区开头的 UTF-8 BOM 会被自动跳过。
+对于 `Uint8Array` 输入，Bun 会跳过缓冲区开头的 UTF-8 BOM。
 
 ### 错误处理
 
-如果输入包含无效 JSON，`Bun.JSONL.parse()` 会抛出 `SyntaxError`：
+如果输入包含无效 JSON 且没有成功解析任何值，`Bun.JSONL.parse()` 会抛出 `SyntaxError`。如果在发生错误前至少解析出了一个值，则会返回已解析的值，而不会抛出错误。
 
 ```ts
 try {
-  Bun.JSONL.parse('{"valid":true}\n{invalid}\n');
+  Bun.JSONL.parse("{invalid}\n");
 } catch (error) {
-  console.error(error); // SyntaxError: Failed to parse JSONL
+  console.error(error); // SyntaxError: 解析 JSONL 失败
 }
 ```
 
@@ -55,7 +55,7 @@ try {
 
 ## `Bun.JSONL.parseChunk()`
 
-对于流式场景，`parseChunk` 尽可能从输入中解析完整值并报告解析进度。当数据逐步接收（例如网络流）时，知道从何处继续解析很有用。
+对于流式处理，`parseChunk` 会从输入中解析尽可能多的完整值，并报告解析到的位置，这样当数据以增量方式到达时（例如来自网络流），你就知道应从哪里继续解析。
 
 ```ts
 const chunk = '{"id":1}\n{"id":2}\n{"id":3';
@@ -121,14 +121,14 @@ const buf = new TextEncoder().encode('{"a":1}\n{"b":2}\n{"c":3}\n');
 // 从字节 8 开始解析
 const result = Bun.JSONL.parseChunk(buf, 8);
 console.log(result.values); // [{ b: 2 }, { c: 3 }]
-console.log(result.read); // 24
+console.log(result.read); // 23
 
 // 解析特定范围
 const partial = Bun.JSONL.parseChunk(buf, 0, 8);
 console.log(partial.values); // [{ a: 1 }]
 ```
 
-The `read` value is always a byte offset into the original buffer. Use it with `TypedArray.subarray()` for zero-copy streaming:
+`read` 值始终是原始缓冲区中的字节偏移量。将它与 `TypedArray.subarray()` 结合使用，可以实现零拷贝流式处理：
 
 ```ts
 let buf = new Uint8Array(0);

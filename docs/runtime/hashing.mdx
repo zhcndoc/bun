@@ -1,6 +1,6 @@
 ---
 title: 哈希
-description: Bun 提供了一套使用多种密码学安全算法进行密码哈希和验证的实用函数
+description: 使用各种具备密码学安全性的算法对密码进行哈希处理和验证的实用函数
 ---
 
 <Note>
@@ -24,7 +24,7 @@ const isMatch = await Bun.password.verify(password, hash);
 // => true
 ```
 
-传递给 `Bun.password.hash` 的第二个参数是一个配置对象，可用于选择和配置哈希算法。
+`Bun.password.hash` 的第二个参数是一个用于选择和配置哈希算法的参数对象。
 
 ```ts
 const password = "super-secure-pa$$word";
@@ -45,7 +45,7 @@ const bcryptHash = await Bun.password.hash(password, {
 
 用于生成哈希的算法信息会存储在哈希本身里。使用 `bcrypt` 时，返回的哈希以 [模块化密码格式 (Modular Crypt Format)](https://passlib.readthedocs.io/en/stable/modular_crypt_format.html) 编码，以保证与大多数现有的 `bcrypt` 实现兼容；使用 `argon2` 时，结果采用较新的 [PHC 格式](https://github.com/P-H-C/phc-string-format/blob/master/phc-sf-spec.md) 编码。
 
-`verify` 函数能基于输入的哈希自动检测算法并使用正确的验证方法，可正确解析 PHC 或 MCF 编码的哈希算法。
+`verify` 函数会从输入哈希中检测算法，无论其采用 PHC 格式还是 MCF 格式编码，并使用匹配的验证方法。
 
 ```ts
 const password = "super-secure-pa$$word";
@@ -58,7 +58,7 @@ const isMatch = await Bun.password.verify(password, hash);
 // => true
 ```
 
-所有函数也提供同步版本。请注意，这些函数计算量很大，使用阻塞 API 可能导致应用性能下降。
+所有函数也都提供同步版本。这些函数的计算成本较高，因此阻塞式 API 可能会降低应用程序性能。
 
 ```ts
 const password = "super-secure-pa$$word";
@@ -73,11 +73,11 @@ const isMatch = Bun.password.verifySync(password, hash);
 
 ### 盐值
 
-使用 `Bun.password.hash` 时，会自动生成盐值并包含在哈希中。
+`Bun.password.hash` 会自动生成盐值，并将其包含在哈希中。
 
 ### bcrypt — 模块化密码格式
 
-在下面的 [模块化密码格式](https://passlib.readthedocs.io/en/stable/modular_crypt_format.html) 哈希示例（bcrypt 使用）：
+在下面的 [模块化密码格式](https://passlib.readthedocs.io/en/stable/modular_crypt_format.html) 哈希示例中使用了 bcrypt：
 
 输入：
 
@@ -95,12 +95,12 @@ $2b$10$Lyj9kHYZtiyfxh2G60TEfeqs7xkkGiEFFDi3iJGc50ZG/XJ1sxIFi;
 
 格式由以下部分组成：
 
-- `bcrypt` 标识符：`$2b`
-- 轮数：`$10` - 轮数的对数（log2）
-- 盐值：`$Lyj9kHYZtiyfxh2G60TEfeqs7xkkGiEFFDi3iJGc50ZG/XJ1sxIFi`
-- 哈希值：`$GzJ8PuBi+K+BVojzPfS5mjnC8OpLGtv8KJqF99eP6a4`
+- `bcrypt`: `$2b`
+- `rounds`: `$10` - 轮数（实际轮数的以 2 为底的对数）
+- `salt`: `Lyj9kHYZtiyfxh2G60TEfe`
+- `hash`: `qs7xkkGi+K+BVojzPfS5mjnC8OpLGtv8KJqF99eP6a4`
 
-默认情况下，bcrypt 库会截断长度超过 72 字节的密码。在 Bun 中，如果你传递给 `Bun.password.hash` 的密码超过 72 字节并选择使用 `bcrypt` 算法，则密码会先通过 SHA-512 计算哈希，再传给 bcrypt。
+默认情况下，bcrypt 库会截断长度超过 72 字节的密码。`Bun.password.hash` 使用 `bcrypt` 算法时，不会静默截断密码，而是会先使用 SHA-512 对任何长度超过 72 字节的密码进行哈希，然后再将其传递给 bcrypt。
 
 ```ts
 await Bun.password.hash("hello".repeat(100), {
@@ -108,11 +108,9 @@ await Bun.password.hash("hello".repeat(100), {
 });
 ```
 
-因此，Bun 不会将一个 500 字节密码默默截断至 72 字节再传给 bcrypt，而是先用 SHA-512 哈希后再传递（仅在超过 72 字节时）。这是更安全的默认行为。
+### argon2 - PHC 格式
 
-### argon2 — PHC 格式
-
-以下为采用 [PHC 格式](https://github.com/P-H-C/phc-string-format/blob/master/phc-sf-spec.md) 的哈希 (argon2 使用)：
+以下为采用 [PHC 格式](https://github.com/P-H-C/phc-string-format/blob/master/phc-sf-spec.md) 的哈希（使用 argon2）：
 
 输入：
 
@@ -144,7 +142,7 @@ $argon2id$v=19$m=65536,t=2,p=1$xXnlSvPh4ym5KYmxKAuuHVlDvy2QGHBNuI6bJJrRDOs$2YY6M
 
 `Bun.hash` 是一组用于非密码学哈希的实用工具。非密码学哈希算法优化的是计算速度而非抗碰撞性或安全性。
 
-标准的 `Bun.hash` 函数使用 [Wyhash](https://github.com/wangyi-fudan/wyhash) 算法，根据任意长度输入生成64位哈希。
+标准的 `Bun.hash` 函数使用 [Wyhash](https://github.com/wangyi-fudan/wyhash)，从任意大小的输入生成 64 位哈希值。
 
 ```ts
 Bun.hash("some data here");
@@ -162,14 +160,14 @@ Bun.hash(arr.buffer);
 Bun.hash(new DataView(arr.buffer));
 ```
 
-可选地，第二个参数可以指定整数种子。对于 64 位哈希，种子若超过 `Number.MAX_SAFE_INTEGER`，需用 BigInt 传入避免精度损失。
+第二个参数是可选的整数种子。对于 64 位哈希值，如果种子超过 `Number.MAX_SAFE_INTEGER`，请将其作为 BigInt 传递，以避免精度损失。
 
 ```ts
 Bun.hash("some data here", 1234);
 // 15724820720172937558n
 ```
 
-更多哈希算法作为 `Bun.hash` 的属性提供。API 一致，只是返回值类型从 32 位的 number 改为 64 位的 bigint。
+其他哈希算法可作为 `Bun.hash` 的属性使用。每种算法的 API 都相同；32 位哈希值返回 number，64 位哈希值返回 bigint。
 
 ```ts
 Bun.hash.wyhash("data", 1234); // 等同于 Bun.hash()
@@ -190,10 +188,11 @@ Bun.hash.rapidhash("data", 1234);
 
 ## `Bun.CryptoHasher`
 
-`Bun.CryptoHasher` 是一个通用的工具类，支持增量计算字符串或二进制数据的哈希，支持多种密码学哈希算法。支持的算法包括：
+`Bun.CryptoHasher` 使用加密哈希算法增量计算字符串或二进制数据的哈希值。支持以下算法：
 
 - `"blake2b256"`
 - `"blake2b512"`
+- `"blake2s256"`
 - `"md4"`
 - `"md5"`
 - `"ripemd160"`
@@ -218,7 +217,7 @@ hasher.digest();
 // Uint8Array(32) [ <byte>, <byte>, ... ]
 ```
 
-初始化后，可使用 `.update()` 方法增量输入数据，参数可为 `string`、`TypedArray` 或 `ArrayBuffer`。
+使用 `.update()` 向哈希计算器增量传入数据，它接受 `string`、`TypedArray` 和 `ArrayBuffer`。
 
 ```ts
 const hasher = new Bun.CryptoHasher("sha256");
@@ -228,7 +227,7 @@ hasher.update(new Uint8Array([1, 2, 3]));
 hasher.update(new ArrayBuffer(10));
 ```
 
-如果传入 `string`，可选第2个参数指定编码（默认为 `'utf-8'`）。支持的编码如下：
+对于字符串，可选的第二个参数用于指定编码（默认为 `'utf-8'`）。支持以下编码：
 
 | 编码类别     | 支持的编码                                  |
 | ------------ | ------------------------------------------- |
@@ -243,7 +242,7 @@ hasher.update("hello world", "base64");
 hasher.update("hello world", "latin1");
 ```
 
-数据输入完成后，调用 `.digest()` 计算最终哈希。默认情况下，返回的是包含哈希值的 `Uint8Array`。
+传入所有数据后，使用 `.digest()` 计算最终哈希值。默认情况下，此方法返回一个包含哈希值的 `Uint8Array`。
 
 ```ts
 const hasher = new Bun.CryptoHasher("sha256");
@@ -253,7 +252,7 @@ hasher.digest();
 // => Uint8Array(32) [ 185, 77, 39, 185, 147, ... ]
 ```
 
-`.digest()` 方法也可以返回字符串格式哈希，方法是指定编码：
+要将哈希值作为字符串获取，请向 `.digest()` 传入编码：
 
 ```ts
 hasher.digest("base64");
@@ -263,7 +262,7 @@ hasher.digest("hex");
 // => "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
 ```
 
-或者，将哈希写入预分配的 `TypedArray` 实例，适合某些对性能敏感的场景。
+此外，`.digest()` 还可以将哈希值写入现有的 `TypedArray`，而不是分配一个新的数组。
 
 ```ts
 const arr = new Uint8Array(32);
@@ -276,7 +275,7 @@ console.log(arr);
 
 ### `Bun.CryptoHasher` 中的 HMAC
 
-`Bun.CryptoHasher` 也支持计算 HMAC。需要在构造函数传入密钥。
+`Bun.CryptoHasher` 可以计算 HMAC 摘要。将密钥传入构造函数。
 
 ```ts
 const hasher = new Bun.CryptoHasher("sha256", "secret-key");
@@ -285,19 +284,26 @@ console.log(hasher.digest("hex"));
 // => "095d5a21fe6d0646db223fdf3de6436bb8dfb2fab0b51677ecf6441fcf5f2a67"
 ```
 
-使用 HMAC 时，支持的算法较少：
+HMAC 支持的算法集合更加有限：
 
+- `"blake2b256"`
 - `"blake2b512"`
+- `"md4"`
 - `"md5"`
+- `"ripemd160"`
 - `"sha1"`
 - `"sha224"`
 - `"sha256"`
 - `"sha384"`
+- `"sha512"`
 - `"sha512-224"`
 - `"sha512-256"`
-- `"sha512"`
+- `"sha3-224"`
+- `"sha3-256"`
+- `"sha3-384"`
+- `"sha3-512"`
 
-与非 HMAC 版本不同的是，HMAC 模式中 `.digest()` 调用后不会重置实例，再次使用同一实例会抛出错误。
+与非 HMAC 的 `Bun.CryptoHasher` 不同，HMAC `Bun.CryptoHasher` 实例在调用 `.digest()` 后不会重置，再次使用同一实例会抛出错误。
 
 支持 `.copy()` 和 `.update()`（在 `.digest()` 前），但 `.digest()` 方法不允许多次调用。
 

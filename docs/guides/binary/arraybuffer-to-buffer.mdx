@@ -15,7 +15,7 @@ const nodeBuffer = Buffer.from(arrBuffer);
 
 ---
 
-要创建一个仅查看底层缓冲区部分内容的 `Buffer`，请向构造函数传入偏移量和长度。
+要创建一个仅查看底层缓冲区部分内容的 `Buffer`，请将偏移量和长度传递给 `Buffer.from()`。
 
 ```ts
 const arrBuffer = new ArrayBuffer(64);
@@ -24,4 +24,4 @@ const nodeBuffer = Buffer.from(arrBuffer, 0, 16); // 查看前16字节
 
 ---
 
-完整的使用 Bun 操作二进制数据的文档，请参见 [文档 > API > 二进制数据](/runtime/binary-data#conversion)。
+参见[二进制数据](/runtime/binary-data#conversion)。

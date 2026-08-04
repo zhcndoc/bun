@@ -120,8 +120,8 @@ bun remove <package>
   跳过项目 <code>package.json</code> 中的生命周期脚本（依赖的脚本永远不会运行）
 </ParamField>
 
-<ParamField path="--concurrent-scripts" type="number" default="5">
-  生命周期脚本的最大并发作业数（默认 5）
+<ParamField path="--concurrent-scripts" type="number">
+  生命周期脚本的最大并发任务数（默认：CPU 核心数的 2 倍）
 </ParamField>
 
 ### 作用域与路径

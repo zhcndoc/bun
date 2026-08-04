@@ -21,14 +21,14 @@ bun update [package]
 
 ## `--interactive`
 
-为了获得更可控的更新体验，使用 `--interactive` 标志选择要更新的包：
+使用 `--interactive` 标志选择要更新的软件包：
 
 ```sh terminal icon="terminal"
 bun update --interactive
 bun update -i
 ```
 
-这将启动一个交互式终端界面，显示所有过期的包及其当前版本和目标版本。然后你可以选择要更新的包。
+该标志会打开一个终端界面，列出每个过期软件包及其当前版本和目标版本。
 
 ### 交互界面
 
@@ -56,10 +56,10 @@ bun update -i
 
 **列说明：**
 
-- **Package**（包名）：包的名称（可能会有 ` dev`、` peer`、` optional` 等后缀以区分）
-- **Current**（当前）：当前安装的版本
-- **Target**（目标）：将要安装的版本（符合 semver 约束）
-- **Latest**（最新）：最新可用的版本
+- **Package**：包名称（可能带有诸如 ` dev`、` peer` 或 ` optional` 的后缀）
+- **Current**：当前已安装的版本
+- **Target**：将要安装的版本（遵循 semver 约束）
+- **Latest**：最新可用版本
 
 ### 键盘操作
 
@@ -82,11 +82,11 @@ bun update -i
 
 ### 视觉指示
 
-- **☑** 已选择的包（将被更新）
+- **■** 已选中的包（将被更新）
 - **□** 未选中的包
-- **>** 当前光标所在位置
-- **颜色**：红色表示大版本更新，黄色表示小版本更新，绿色表示补丁更新
-- **下划线**：当前选中的更新目标版本
+- **❯** 当前光标位置
+- **颜色**：红色（主版本）、黄色（次版本）、绿色（补丁版本）变更
+- **下划线**：当前选中的更新目标
 
 ### 包分组
 
@@ -97,7 +97,7 @@ bun update -i
 - **peerDependencies** - 同级依赖
 - **optionalDependencies** - 可选依赖
 
-每个分组内，个别包可能带有额外后缀（` dev`、` peer`、` optional`）以增加区分度。
+在每个分组中，单个包可能带有后缀（` dev`、` peer`、` optional`）。
 
 ## `--recursive`
 
@@ -108,19 +108,19 @@ bun update --interactive --recursive
 bun update -i -r
 ```
 
-该命令会额外显示一个 “Workspace” 列，显示每个依赖所属的工作区。
+使用 `--recursive` 后，界面会添加“工作区”列，显示每个依赖所属的工作区。
 
 ## `--latest`
 
-默认情况下，`bun update` 会更新到符合 `package.json` 中版本范围的最新依赖版本。
+默认情况下，`bun update` 会将每个依赖项更新到满足 `package.json` 中版本范围的最新版本。
 
-如果想更新到不受当前版本范围限制的最新版本，可以使用 `--latest` 标志：
+若要更新到最新版本，而不管其是否满足该版本范围，请使用 `--latest` 标志：
 
 ```sh terminal icon="terminal"
 bun update --latest
 ```
 
-在交互模式下，可以使用 **l** 键切换单个包的目标版本（遵守 semver）和最新版本。
+在交互模式下，按 **l** 可在软件包的目标版本（遵循 semver）和最新版本之间切换。
 
 例如，以下 `package.json`：
 

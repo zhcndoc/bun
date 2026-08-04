@@ -20,7 +20,7 @@ await rm("path/to/directory", { recursive: true, force: true });
 - `recursive: true` - 删除子目录及其内容
 - `force: true` - 如果目录不存在，不抛出错误
 
-你也可以不使用 `force` 来确保目录存在：
+省略 `force` 可在目录不存在时获取错误：
 
 ```ts delete-directory.ts icon="/icons/typescript.svg"
 try {
@@ -36,4 +36,4 @@ try {
 
 ---
 
-更多文件系统操作，请参见 [文档 > API > 文件系统](/runtime/file-io)。
+请参阅[文件 I/O](/runtime/file-io) 了解更多文件系统操作。

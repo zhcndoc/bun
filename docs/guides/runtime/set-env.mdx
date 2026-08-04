@@ -4,7 +4,7 @@ sidebarTitle: 设置环境变量
 mode: center
 ---
 
-当前环境变量可通过 `process.env` 或 `Bun.env` 访问。
+使用 `process.env` 或 `Bun.env` 访问当前环境变量。
 
 ```ts index.ts icon="/icons/typescript.svg"
 Bun.env.API_TOKEN; // => "secret"
@@ -28,7 +28,7 @@ BAR=world
 
 ---
 
-变量也可以通过命令行设置。
+你也可以在命令行中设置变量。
 
 <CodeGroup>
 
@@ -48,4 +48,4 @@ $env:FOO="helloworld"; bun run dev
 
 ---
 
-有关在 Bun 中使用环境变量的更多信息，请参见 [文档 > 运行时 > 环境变量](/runtime/environment-variables)。
+请参阅[环境变量](/runtime/environment-variables)。

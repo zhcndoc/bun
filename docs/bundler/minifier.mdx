@@ -15,7 +15,7 @@ Bun 内置了一个快速的 JavaScript 和 TypeScript 压缩器，可以根据�
 bun build ./index.ts --minify --outfile=out.js
 ```
 
-`--minify` 标志会自动启用：
+`--minify` 标志启用：
 
 - 空白字符压缩
 - 语法压缩
@@ -36,7 +36,7 @@ bun build ./index.ts --production --outfile=out.js
 
 ### 细粒度控制
 
-你可以单独启用特定的压缩模式：
+分别启用特定的压缩模式：
 
 ```bash
 # 仅移除空白字符
@@ -80,7 +80,7 @@ await Bun.build({
 
 ## 压缩模式
 
-Bun 的压缩器有三个独立模式，可单独或组合启用。
+Bun 的压缩器有三种彼此独立的模式，你可以分别或同时启用。
 
 ### 空白字符压缩（`--minify-whitespace`）
 
@@ -94,7 +94,7 @@ Bun 的压缩器有三个独立模式，可单独或组合启用。
 
 根据使用频率重命名局部变量和函数名为更短的标识符。
 
-## 所有转换
+## 所有转换。
 
 ### 布尔字面量缩短
 
@@ -174,12 +174,12 @@ x != null
 
 将 Infinity 转换为数学表达式。
 
-```ts Input
+```ts 输入
 Infinity
 -Infinity
 ```
 
-```js Output
+```js 输出
 1/0
 -1/0
 ```
@@ -336,15 +336,15 @@ typeof x<'u'
 
 **模式：** `--minify-syntax`
 
-将简单模板字面量转换为常规字符串。
+将不包含插值的模板字面量转换为普通字符串。
 
-```ts Input
+```ts 输入
 `Hello World`
 `Line 1
 Line 2`
 ```
 
-```js Output
+```js 输出
 "Hello World"
 "Line 1\nLine 2"
 ```
@@ -503,14 +503,14 @@ x
 
 编译时计算常量条件的三元表达式。
 
-```ts Input
+```ts 输入
 true ? a : b
 false ? a : b
 x ? true : false
 x ? false : true
 ```
 
-```js Output
+```js 输出
 a
 b
 x ? !0 : !1
@@ -534,9 +534,9 @@ x ? !1 : !0
 ```js Output
 123
 123
-123
-123
-x
+- -x
+~~x
+!!x
 ```
 
 ### 双重否定移除
@@ -662,7 +662,7 @@ const x=0;
 
 **模式：** 始终生效
 
-尊重 `/*@__PURE__*/` 标注以支持摇树优化。
+遵循 `/*@__PURE__*/` 标注以进行摇树优化（移除未使用的代码）。
 
 ```ts Input
 const x = /*@__PURE__*/ expensive();
@@ -702,7 +702,7 @@ function a(b,c){const d=b+c;return d}
 - JavaScript 关键字和保留字
 - 全局标识符
 - 命名导出（保持 API 稳定）
-- CommonJS 名称：`exports`、`module`
+- CommonJS 名称：`exports`、`module`。
 
 ### 空白字符移除
 
@@ -824,7 +824,7 @@ const arrow = (a, b) => a + b;
 ```
 
 ```js Output
-function myFunction(a,b){return a+b}const arrow=(a,b)=>a+b;
+function myFunction(param1,param2){return param1+param2}const arrow=(a,b)=>a+b;
 ```
 
 ### 括号最小化
@@ -843,20 +843,6 @@ a + (b * c)
 (a+b)*c
 a+b*c
 x
-```
-
-### 属性名重整
-
-**模式：** `--minify-identifiers`（需配置）
-
-启用时，将对象属性名重命名为更短名称。
-
-```ts Input
-obj.longPropertyName
-```
-
-```js Output（启用属性名重整）
-obj.a
 ```
 
 ### 模板字面量值折叠
@@ -926,11 +912,11 @@ new Array(x, y)
 内联只有单个属性的对象的属性访问。
 
 ```ts Input
-({fn: () => console.log('hi')}).fn()
+({fn: () => console.log('hi')}).fn
 ```
 
 ```js Output
-(() => console.log('hi'))()
+() => console.log('hi')
 ```
 
 ### 字符串 charCodeAt 常量折叠
@@ -939,12 +925,12 @@ new Array(x, y)
 
 对 ASCII 字符串字面量计算 `charCodeAt()`。
 
-```ts Input
+```ts 输入
 "hello".charCodeAt(1)
 "A".charCodeAt(0)
 ```
 
-```js Output
+```js 输出
 101
 65
 ```
@@ -1007,14 +993,14 @@ import.meta.url
 
 合并相邻的相同类型变量声明。
 
-```ts Input
+```ts 输入
 let a = 1;
 let b = 2;
 const c = 3;
 const d = 4;
 ```
 
-```js Output
+```js 输出
 let a=1,b=2;
 const c=3,d=4;
 ```
@@ -1041,12 +1027,12 @@ console.log(1),console.log(2),console.log(3);
 
 合并 return 前的表达式，使用逗号运算符。
 
-```ts Input
+```ts 输入
 console.log(x);
 return y;
 ```
 
-```js Output
+```js 输出
 return console.log(x),y;
 ```
 
@@ -1071,7 +1057,7 @@ throw(console.log(x),new Error());
 
 跨模块边界内联枚举值。
 
-```ts Input 
+```ts 输入 
 // lib.ts
 export enum Color { Red, Green, Blue }
 
@@ -1080,7 +1066,7 @@ import { Color } from './lib';
 const x = Color.Red;
 ```
 
-```js Output
+```js 输出
 const x=0;
 ```
 
@@ -1099,34 +1085,18 @@ const obj = { [Keys.FOO]: value }
 const obj={foo:value}
 ```
 
-### 字符串数字转数字索引
+### 箭头函数主体简化
 
 **模式：** `--minify-syntax`
 
-将字符串数字属性访问转换为数字索引。
-
-```ts Input
-obj["0"]
-arr["5"]
-```
-
-```js Output
-obj[0]
-arr[5]
-```
-
-### 箭头函数主体简写
-
-**模式：** 始终生效
-
 当箭头函数仅返回值时，使用表达式主体语法。
 
-```ts Input
+```ts 输入
 () => { return x; }
 (a) => { return a + 1; }
 ```
 
-```js Output
+```js 输出
 () => x
 a => a + 1
 ```
@@ -1147,27 +1117,7 @@ a => a + 1
 { name, age }
 ```
 
-### 方法简写
-
-**模式：** 始终生效
-
-在对象字面量中使用方法简写语法。
-
-```ts Input
-{
-  foo: function() {},
-  bar: async function() {}
-}
-```
-
-```js Output
-{
-  foo() {},
-  async bar() {}
-}
-```
-
-### 移除 debugger 语句
+### 移除 `debugger` 语句
 
 **模式：** `--drop=debugger`
 
@@ -1206,21 +1156,21 @@ x=void 0;
 
 **模式：** `--drop=<name>`
 
-移除指定全局函数或方法的调用。
+移除对指定全局函数及其方法的调用。
 
-```ts Input
+```ts 输入
 assert(condition);
-obj.assert(test);
+assert.equal(a, b);
 ```
 
-```js Output（使用 --drop=assert）
+```js 输出（使用 --drop=assert）
 void 0;
 void 0;
 ```
 
 ## 保留名称
 
-压缩标识符时，如果想保留原始函数和类名以便调试，可以使用 `--keep-names` 标志：
+为了在压缩标识符的同时保留原始函数名和类名以便调试，请使用 `--keep-names` 标志：
 
 ```bash
 bun build ./index.ts --minify --keep-names --outfile=out.js
@@ -1239,7 +1189,7 @@ await Bun.build({
 });
 ```
 
-这会保留函数和类的 `.name` 属性，同时仍压缩实际的标识符名称。
+`--keep-names` 会在继续压缩标识符的同时，保留函数和类的 `.name` 属性。
 
 ## 组合示例
 
@@ -1272,12 +1222,12 @@ const a=42,b=()=>{const c=!0,d=void 0;return c?a:d},e=b();
 
 **适用单独模式的场景：**
 
-- **`--minify-whitespace`：** 快速减小尺寸，不改变语义
-- **`--minify-syntax`：** 输出更小，同时保留可读标识符，便于调试
-- **`--minify-identifiers`：** 最大尺寸减小（结合 `--keep-names` 可得更好的堆栈信息）
+- **`--minify-whitespace`:** 在不改变语义的情况下减小体积
+- **`--minify-syntax`:** 在保留可读标识符以便调试的同时生成更小的输出
+- **`--minify-identifiers`:** 最大限度地减小体积（结合 `--keep-names` 以获得更好的堆栈跟踪）
 
 **避免压缩的场景：**
 
 - 开发构建（调试更困难）
 - 需要可读错误信息时
-- 代码库供消费者阅读源码的库
+- 代码库供消费者阅读源码的库。

@@ -3,31 +3,31 @@ title: 二进制数据
 description: 在 JavaScript 中处理二进制数据
 ---
 
-本页面旨在作为在 JavaScript 中处理二进制数据的入门介绍。Bun 实现了多种用于处理二进制数据的数据类型和工具，其中大多数遵循 Web 标准。任何 Bun 特有的 API 都会在文中明确标注。
+Bun 实现了多种用于在 JavaScript 中处理二进制数据的数据类型和实用工具，其中大多数符合 Web 标准。Bun 特有的 API 会特别标注。
 
-下面是一份速查表，同时也作为目录。点击左侧栏中的条目即可跳转到对应章节。
+本速查表同时也是目录；点击左列中的类即可跳转到对应章节。
 
-| 类                          | 描述                                                                                                                                                                                                   |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`TypedArray`](#typedarray) | 一组类提供类似数组的接口，用于交互处理二进制数据。包括 `Uint8Array`、`Uint16Array`、`Int8Array` 等。                                                                                                    |
-| [`Buffer`](#buffer)         | `Uint8Array` 的子类，实现了多种便捷方法。与本表中的其他元素不同，这是一个 Node.js API（Bun 也实现了它）。在浏览器中不能使用。                                                                            |
-| [`DataView`](#dataview)     | 提供 `get/set` 接口，可在特定字节偏移量处读写 `ArrayBuffer` 中的若干字节。常用于读写二进制协议。                                                                                                           |
-| [`Blob`](#blob)             | 通常表示文件的只读二进制数据块。具有 MIME 类型 `type`、大小 `size`，以及转换为 `ArrayBuffer`、`ReadableStream` 和字符串的方法。                                                                            |
-| [`File`](#file)             | `Blob` 的子类，表示文件。具有 `name` 和 `lastModified` 时间戳。Node.js 20 中支持实验性实现。                                                                                                             |
-| [`BunFile`](#bunfile)       | _仅在 Bun 中_。`Blob` 的子类，表示懒加载的磁盘文件。通过 `Bun.file(path)` 创建。                                                                                                                      |
+| 类                       | 描述                                                                                                                                                                                    |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`TypedArray`](#typedarray) | 一组提供类似 `Array` 接口、用于与二进制数据交互的类。包括 `Uint8Array`、`Uint16Array`、`Int8Array` 等。                                      |
+| [`Buffer`](#buffer)         | `Uint8Array` 的子类，实现了广泛的便捷方法。与此表中的其他类不同，它是 Node.js API（Bun 已实现）。它在浏览器中不可用。 |
+| [`DataView`](#dataview)     | 提供 `get/set` API 的类，用于在 `ArrayBuffer` 的特定字节偏移处读写一定数量的字节。常用于读取或写入二进制协议。                    |
+| [`Blob`](#blob)             | 通常表示文件的只读二进制数据块。具有 MIME `type`、`size`，以及用于转换为 `ArrayBuffer`、`ReadableStream` 和字符串的方法。                            |
+| [`File`](#file)             | 表示文件的 `Blob` 子类。具有 `name` 和 `lastModified` 时间戳。Node.js v20 提供了实验性支持。                                                                  |
+| [`BunFile`](#bunfile)       | _仅限 Bun_。表示磁盘上延迟加载文件的 `Blob` 子类。通过 `Bun.file(path)` 创建。                                                                                  |
 
 ---
 
 ## `ArrayBuffer` 和视图
 
-直到 2009 年，JavaScript 中还没有语言原生的方式来存储和操作二进制数据。ECMAScript v5 引入了一系列新的机制来解决这个问题。最基础的构件是 `ArrayBuffer`，它是一种在内存中表示字节序列的数据结构。
+直到 ECMAScript v5（2009 年）引入了一系列机制之前，JavaScript 都没有语言原生的方式来存储和操作二进制数据。其中最基础的构建块是 `ArrayBuffer`，一种表示内存中字节序列的数据结构。
 
 ```ts
 // 此缓冲区可存储 8 字节
 const buf = new ArrayBuffer(8);
 ```
 
-尽管名字中有“数组”，但它并不是一个数组，并且不支持任何你可能期望的数组方法和操作符。事实上，无法直接从 `ArrayBuffer` 读取或写入值。你几乎只能检查它的大小或从中创建“切片”。
+尽管名称中包含“数组”（array），但它并不是数组，也不支持你可能期待的任何数组方法和运算符。你无法直接从 `ArrayBuffer` 中读取或写入值；你能做的只有检查其大小，以及从中创建“切片”。
 
 ```ts
 const buf = new ArrayBuffer(8);
@@ -37,13 +37,13 @@ const slice = buf.slice(0, 4); // 返回新的 ArrayBuffer
 slice.byteLength; // => 4
 ```
 
-要进行有趣的操作，需要所谓的“视图”——一种类，用于 _包装_ 一个 `ArrayBuffer` 实例，让你可以读取和操作其底层数据。有两种视图：_类型化数组_ 和 `DataView`。
+要读取或写入数据，你需要一个“视图”：一种_封装_ `ArrayBuffer` 实例，并允许你读取和操作底层数据的类。视图有两种类型：_类型化数组_和 `DataView`。
 
 ### `DataView`
 
 `DataView` 类是一个底层接口，用来读取和操作 `ArrayBuffer` 中的数据。
 
-下面创建一个新的 `DataView`，并将第一个字节设置为 `3`。
+以下代码创建一个 `DataView`，并将第一个字节设置为 3。
 
 ```ts
 const buf = new ArrayBuffer(4);
@@ -55,7 +55,7 @@ dv.getUint8(0); // => 3
 // [0b00000011, 0b00000000, 0b00000000, 0b00000000]
 ```
 
-现在，我们在字节偏移量 `1` 处写入一个 `Uint16`。这需要两个字节。我们使用值 `513`，它是 `2 * 256 + 1`；对应的字节是 `00000010 00000001`。
+接下来，在字节偏移量 `1` 处写入一个 `Uint16`。这需要两个字节。值 `513` 等于 `2 * 256 + 1`；用字节表示就是 `00000010 00000001`。
 
 ```ts
 dv.setUint16(1, 513);
@@ -64,14 +64,14 @@ dv.setUint16(1, 513);
 console.log(dv.getUint16(1)); // => 513
 ```
 
-至此，我们已经对底层 `ArrayBuffer` 的前三个字节赋值。即使第二和第三字节是通过 `setUint16()` 创建的，我们仍然可以使用 `getUint8()` 分别读取它们。
+底层 `ArrayBuffer` 的前三个字节现在都有值。尽管第二个和第三个字节是通过 `setUint16()` 写入的，你仍然可以使用 `getUint8()` 读取每个组成字节。
 
 ```ts
 console.log(dv.getUint8(1)); // => 2
 console.log(dv.getUint8(2)); // => 1
 ```
 
-若尝试写入超过底层 `ArrayBuffer` 可用空间的数据，将抛出错误。以下代码尝试在偏移 `0` 处写入一个 `Float64`（需要 8 字节），而缓冲区只有 4 个字节。
+如果写入的值所需空间大于底层 `ArrayBuffer` 的可用空间，就会抛出错误。以下代码尝试在字节偏移量 `0` 处写入一个 `Float64`（需要 8 个字节），但该缓冲区的长度只有 4 个字节。
 
 ```ts
 dv.setFloat64(0, 3.1415);
@@ -98,7 +98,9 @@ dv.setFloat64(0, 3.1415);
 类型化数组是一组类，提供类似数组的接口，用于访问 `ArrayBuffer` 中的数据。与 `DataView` 可以在某个偏移量写入不同大小的数字不同，`TypedArray` 将底层字节解释为固定大小数字的数组。
 
 <Note>
-  通常会将这组类按它们的父类 `TypedArray` 集合称呼。这个类是 JavaScript 的 _内部_ 类；你无法直接创建它的实例，`TypedArray` 也不是全局定义的。可以将其看作接口或抽象类。
+  通常会通过它们共同的超类 `TypedArray` 来统称这一系列类。这个类对于 JavaScript 来说是
+  _内部的_；你无法直接创建它的实例，并且 `TypedArray` 未定义在全局作用域中。可以将它视为一个
+  `interface` 或抽象类。
 </Note>
 
 ```ts
@@ -115,34 +117,11 @@ arr[2] = 255;
 arr[3] = 255; // 操作无效，越界
 ```
 
-虽然 `ArrayBuffer` 是字节序列，这些类型化数组类会按固定字节大小将字节解释为数字数组。
-
-下表列出了类型化数组类，以及它们如何解读 `ArrayBuffer` 的字节。
-
-| 类                                                                                                                       | 描述                                                                                                                                                             |
-| ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array)               | 每 1 字节被解释为无符号 8 位整数。范围是 0 到 255。                                                                                                              |
-| [`Uint16Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint16Array)             | 每 2 字节被解释为无符号 16 位整数。范围是 0 到 65535。                                                                                                           |
-| [`Uint32Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint32Array)             | 每 4 字节被解释为无符号 32 位整数。范围是 0 到 4294967295。                                                                                                       |
-| [`Int8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int8Array)                 | 每 1 字节被解释为有符号 8 位整数。范围是 -128 到 127。                                                                                                           |
-| [`Int16Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int16Array)               | 每 2 字节被解释为有符号 16 位整数。范围是 -32768 到 32767。                                                                                                      |
-| [`Int32Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int32Array)               | 每 4 字节被解释为有符号 32 位整数。范围是 -2147483648 到 2147483647。                                                                                            |
-| [`Float16Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float16Array)           | 每 2 字节被解释为 16 位浮点数。范围约为 -6.104e5 到 6.55e4。                                                                                                  |
-| [`Float32Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array)           | 每 4 字节被解释为 32 位浮点数。范围约为 -3.4e38 到 3.4e38。                                                                                                   |
-| [`Float64Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array)           | 每 8 字节被解释为 64 位浮点数。范围约为 -1.7e308 到 1.7e308。                                                                                                 |
-| [`BigInt64Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt64Array)         | 每 8 字节被解释为有符号 `BigInt`。范围 -9223372036854775808 到 9223372036854775807（但 `BigInt` 实际上能表示更大数）。                                       |
-| [`BigUint64Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigUint64Array)       | 每 8 字节被解释为无符号 `BigInt`。范围 0 到 18446744073709551615（但 `BigInt` 实际上能表示更大数）。                                                            |
-| [`Uint8ClampedArray`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8ClampedArray) | 与 `Uint8Array` 相同，但赋值时会自动“钳制”元素值至 0-255 区间。                                                                                              |
+类型化数组类，以及每种类型如何解释 `ArrayBuffer` 中的字节：
 
 下面的表展示了用不同类型化数组类查看 `ArrayBuffer` 字节时的字节解释方式：
 
-|                  | 字节 0                | 字节 1    | 字节 2                | 字节 3    | 字节 4                | 字节 5    | 字节 6                | 字节 7    |
-| ---------------- | --------------------- | --------- | --------------------- | --------- | --------------------- | --------- | --------------------- | --------- |
-| `ArrayBuffer`    | `00000000`            | `00000001`| `00000010`            | `00000011`| `00000100`            | `00000101`| `00000110`            | `00000111`|
-| `Uint8Array`     | 0                     | 1         | 2                     | 3         | 4                     | 5         | 6                     | 7         |
-| `Uint16Array`    | 256 (`1*256 + 0`)     |           | 770 (`3*256 + 2`)     |           | 1284 (`5*256 + 4`)    |           | 1798 (`7*256 + 6`)    |           |
-| `Uint32Array`    | 50462976              |           |                       |           | 117835012             |           |                       |           |
-| `BigUint64Array` | 506097522914230528n   |           |                       |           |                       |           |                       |           |
+下面的表展示了不同类型化数组类如何解释 `ArrayBuffer` 中的相同字节。
 
 从已有的 `ArrayBuffer` 创建类型化数组：
 
@@ -158,7 +137,7 @@ arr[1] = 60;
 console.log(arr); // => Uint8Array(10) [ 30, 60, 0, 0, 0, 0, 0, 0, 0, 0 ];
 ```
 
-如果尝试用相同 `ArrayBuffer` 创建 `Uint32Array`，将报错。
+从同一个 `ArrayBuffer` 实例化 `Uint32Array` 会抛出错误。
 
 ```ts
 const buf = new ArrayBuffer(10);
@@ -167,9 +146,9 @@ const arr = new Uint32Array(buf);
 //             不是元素大小的倍数
 ```
 
-`Uint32` 值需要 4 个字节（32 位）。因为 `ArrayBuffer` 长 10 字节，无法整除为 4 字节块。
+一个 `Uint32` 值需要四个字节（32 位）。由于 `ArrayBuffer` 的长度为 10 个字节，因此无法将其内容整齐地划分为每组 4 个字节的数据块。
 
-解决方法是对 `ArrayBuffer` 的特定“切片”创建类型化数组。下面的 `Uint16Array` 只“视图”底层 `ArrayBuffer` 的 _前_ 8 字节。我们指定字节偏移量为 `0`，长度为 `2`，表示数组包含两个 `Uint32` 元素。
+要解决此问题，请在 `ArrayBuffer` 的特定“切片”上创建类型化数组。下面的 `Uint32Array` 只“查看”底层 `ArrayBuffer` 的前 8 个字节：`byteOffset` 为 `0`，`length` 为 `2`，表示该数组所包含的 `Uint32` 值的数量。
 
 ```ts
 // 从 ArrayBuffer 切片创建类型化数组
@@ -185,7 +164,7 @@ arr.byteOffset; // 0
 arr.length; // 2
 ```
 
-你无需显式创建 `ArrayBuffer`，可以直接指定长度创建类型化数组：
+你不需要先创建 `ArrayBuffer` 实例；可以直接将长度传递给类型化数组构造函数：
 
 ```ts
 const arr2 = new Uint8Array(5);
@@ -206,7 +185,7 @@ arr1[7]; // => 7;
 const arr2 = new Uint8Array(arr);
 ```
 
-总体上，类型化数组与常规数组的方法相似，但部分方法不可用，比如 `push` 和 `pop`（因为需要调整底层 `ArrayBuffer` 大小）。
+类型化数组提供与普通数组相同的方法，但有少数例外。例如，`push` 和 `pop` 不可用，因为它们需要调整底层 `ArrayBuffer` 的大小。
 
 ```ts
 const arr = new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7]);
@@ -222,23 +201,23 @@ arr.includes(5); // true
 arr.indexOf(5); // 5
 ```
 
-更详细的属性和方法，请参考 [MDN 文档](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray)。
+有关类型化数组属性和方法的更多信息，请参阅 [MDN 文档](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray)。
 
 ### `Uint8Array`
 
-特别需要强调的是 `Uint8Array`，它表示经典的“字节数组”——一组范围在 0 到 255 之间的无符号 8 位整数。这是 JavaScript 中最常见的类型化数组。
+`Uint8Array` 是 JavaScript 中最常见的类型化数组。它表示经典的“字节数组”：由一系列介于 0 到 255 之间的 8 位无符号整数组成。
 
-在 Bun 中（未来可能其他 JavaScript 引擎也会），它带有在字节数组和经过序列化的 base64 或十六进制字符串之间转换的方法。
+在 Bun 中，它提供了在字节数组与其 base64 或十六进制字符串表示形式之间进行转换的方法。
 
 ```ts
-new Uint8Array([1, 2, 3, 4, 5]).toBase64(); // "AQIDBA=="
-Uint8Array.fromBase64("AQIDBA=="); // Uint8Array(4) [1, 2, 3, 4, 5]
+new Uint8Array([1, 2, 3, 4, 5]).toBase64(); // "AQIDBAU="
+Uint8Array.fromBase64("AQIDBAU="); // Uint8Array(5) [1, 2, 3, 4, 5]
 
 new Uint8Array([255, 254, 253, 252, 251]).toHex(); // "fffefdfcfb"
 Uint8Array.fromHex("fffefdfcfb"); // Uint8Array(5) [255, 254, 253, 252, 251]
 ```
 
-它是 [`TextEncoder#encode`](https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder) 的返回类型，也是 [`TextDecoder#decode`](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder) 的输入类型，这两个工具类设计用于字符串和各种二进制编码相互转换，尤其是 `"utf-8"`。
+它是 [`TextEncoder#encode`](https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder) 的返回值，也是 [`TextDecoder#decode`](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder) 的输入类型。这两个实用工具类用于在字符串与各种二进制编码之间进行转换，其中最重要的是 `"utf-8"`。
 
 ```ts
 const encoder = new TextEncoder();
@@ -247,7 +226,7 @@ const bytes = encoder.encode("hello world");
 
 const decoder = new TextDecoder();
 const text = decoder.decode(bytes);
-// => hello world
+// => 你好世界
 ```
 
 ### `Buffer`
@@ -266,13 +245,13 @@ console.log(buf.toString());
 // => Hello world
 ```
 
-完整文档请参见 [Node.js 文档](https://nodejs.org/api/buffer.html)。
+参见 [Node.js 文档](https://nodejs.org/api/buffer.html)。
 
 ## `Blob`
 
-`Blob` 是 Web API，常用于表示文件。`Blob` 最初仅在浏览器实现（与 `ArrayBuffer` 不同，后者是 JavaScript 的一部分），但现已支持 Node 和 Bun。
+`Blob` 是一种通常用于表示文件的 Web API。它最初源自浏览器（不同于属于 JavaScript 本身的 `ArrayBuffer`），但 Node.js 和 Bun 也支持它。
 
-通常不会直接创建 `Blob` 实例，更多情况下会从外部来源（例如浏览器中的 `<input type="file">` 元素）或库接收 `Blob` 实例。但也可以通过一个或多个字符串或二进制“blob part”创建 `Blob`。
+你很少会直接创建 `Blob` 实例；它们通常来自外部来源（例如浏览器中的 `<input type="file">` 元素）或某个库。不过，你可以使用一个或多个字符串或二进制“Blob 部分”创建 `Blob`。
 
 ```ts
 const blob = new Blob(["<html>Hello</html>"], {
@@ -280,10 +259,10 @@ const blob = new Blob(["<html>Hello</html>"], {
 });
 
 blob.type; // => text/html
-blob.size; // => 19
+blob.size; // => 18
 ```
 
-这些部分可以是 `string`，`ArrayBuffer`，`TypedArray`，`DataView`，或其他 `Blob` 实例。blob 部分按给定顺序拼接。
+这些部分可以是 `string`、`ArrayBuffer`、`TypedArray`、`DataView` 或其他 `Blob` 实例。这些部分会按照给定的顺序进行拼接。
 
 ```ts
 const blob = new Blob([
@@ -294,18 +273,18 @@ const blob = new Blob([
 ]);
 ```
 
-`Blob` 的内容可以异步读取为多种格式。
+以各种格式异步读取 `Blob` 的内容。
 
 ```ts
 await blob.text(); // => <html><body>hello</body></html>
-await blob.bytes(); // => Uint8Array（复制内容）
-await blob.arrayBuffer(); // => ArrayBuffer（复制内容）
-await blob.stream(); // => ReadableStream
+await blob.bytes(); // => Uint8Array (copies contents)
+await blob.arrayBuffer(); // => ArrayBuffer (copies contents)
+blob.stream(); // => ReadableStream
 ```
 
 ### `BunFile`
 
-`BunFile` 是 `Blob` 的子类，用于表示懒加载的磁盘文件。与 `File` 类似，它附加了 `name` 和 `lastModified` 属性。但与 `File` 不同，它不需要将文件加载到内存。
+`BunFile` 是 `Blob` 的子类，表示磁盘上延迟加载的文件。与 `File` 一样，它添加了 `name` 和 `lastModified` 属性。与 `File` 不同，它不要求将文件加载到内存中。
 
 ```ts
 const file = Bun.file("index.txt");
@@ -314,9 +293,7 @@ const file = Bun.file("index.txt");
 
 ### `File`
 
-<Warning>仅浏览器支持。Node.js 20 中实验性支持。</Warning>
-
-[`File`](https://developer.mozilla.org/en-US/docs/Web/API/File) 是 `Blob` 的子类，添加了 `name` 和 `lastModified` 属性。浏览器中常用于表示通过 `<input type="file">` 上传的文件。Node.js 和 Bun 也实现了 `File`。
+[`File`](https://developer.mozilla.org/en-US/docs/Web/API/File) 是 `Blob` 的子类，添加了 `name` 和 `lastModified` 属性。在浏览器中，它通常用于表示通过 `<input type="file">` 元素上传的文件。Node.js 和 Bun 都实现了 `File`。
 
 ```ts
 // 浏览器环境
@@ -332,13 +309,13 @@ const file = new File(["<html>Hello</html>"], "index.html", {
 });
 ```
 
-完整文档请查看 [MDN 文档](https://developer.mozilla.org/en-US/docs/Web/API/Blob)。
+请参阅 [MDN 文档](https://developer.mozilla.org/en-US/docs/Web/API/Blob)。
 
 ---
 
 ## 流
 
-流是一个重要抽象，用于处理二进制数据而无需一次性全部加载到内存。常用于读写文件、发送及接收网络请求、处理大规模数据。
+流让你能够处理二进制数据，而无需一次性将所有数据加载到内存中。它们通常用于读取和写入文件、发送和接收网络请求，以及处理大量数据。
 
 Bun 实现了 Web API 中的 [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) 和 [`WritableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream)。
 
@@ -361,7 +338,7 @@ const stream = new ReadableStream({
 });
 ```
 
-可以用 `for await` 语法逐块读取流内容。
+使用 `for await` 逐块读取流。
 
 ```ts
 for await (const chunk of stream) {
@@ -372,17 +349,17 @@ for await (const chunk of stream) {
 // => "world"
 ```
 
-关于 Bun 中流的更多内容，请参阅 [API > Streams](/runtime/streams)。
+有关 Bun 中流的更多信息，请参见[流](/runtime/streams)。
 
 ---
 
 ## 格式转换
 
-把一种二进制格式转换成另一种格式是常见任务，本节作为参考。
+使用本节作为将一种二进制格式转换为另一种格式的参考。
 
 ### 从 `ArrayBuffer`
 
-由于 `ArrayBuffer` 存储了类型化数组等二进制结构的底层数据，以下代码不是 _转换_ `ArrayBuffer`，而是用底层数据 _创建_ 新实例。
+由于 `ArrayBuffer` 存储着其他二进制结构（如 `TypedArray`）所依赖的数据，以下代码片段并不是将 `ArrayBuffer` _转换_ 为另一种格式。相反，它们使用底层数据_创建_一个新实例。
 
 #### 转为 `TypedArray`
 
@@ -462,7 +439,7 @@ new ReadableStream({
 
 #### 转为 `ArrayBuffer`
 
-获取底层 `ArrayBuffer`。注意，类型化数组可能是底层缓冲区的 _部分_ 视图，因此大小可能不同。
+`buffer` 属性是底层的 `ArrayBuffer`。`TypedArray` 可以是该缓冲区某个_切片_的视图，因此两者的大小可能不同。
 
 ```ts
 arr.buffer;
@@ -470,7 +447,7 @@ arr.buffer;
 
 #### 转为 `DataView`
 
-创建覆盖相同字节范围的 `DataView`。
+要创建一个覆盖与 `TypedArray` 相同字节范围的 `DataView`：
 
 ```ts
 new DataView(arr.buffer, arr.byteOffset, arr.byteLength);
@@ -686,8 +663,6 @@ new ReadableStream({
 
 #### 转为 `ArrayBuffer`
 
-`Blob` 提供了便捷方法。
-
 ```ts
 await blob.arrayBuffer();
 ```
@@ -732,7 +707,7 @@ blob.stream();
 
 ### 从 `ReadableStream`
 
-常用 [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) 作为中间体，方便将 `ReadableStream` 转为其他格式。
+[`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) 是将 `ReadableStream` 转换为其他格式时常用的中间类型。
 
 ```ts
 stream; // ReadableStream
@@ -740,7 +715,7 @@ stream; // ReadableStream
 const buffer = new Response(stream).arrayBuffer();
 ```
 
-但此方法冗长且增加不必要性能开销。Bun 提供一组优化后的便捷函数，用于将 `ReadableStream` 转换成多种二进制格式。
+但这种方式较为冗长，并且会增加不必要的开销。Bun 为将 `ReadableStream` 转换为各种二进制格式实现了经过优化的便捷函数。
 
 #### 转为 `ArrayBuffer`
 

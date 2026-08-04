@@ -4,7 +4,7 @@ sidebarTitle: 构建时常量
 mode: center
 ---
 
-`--define` 标志可以与 `bun build` 和 `bun build --compile` 一起使用，将构建时常量注入到您的应用程序中。这对于将构建版本、时间戳或配置标志等元数据直接嵌入编译后的可执行文件尤其有用。
+将 `--define` 传递给 `bun build` 或 `bun build --compile`，即可将构建时常量注入应用程序。您可以使用它将构建版本、时间戳或配置标志等元数据直接嵌入编译后的可执行文件中。
 
 ```sh terminal icon="terminal"
 bun build --compile --define BUILD_VERSION='"1.2.3"' --define BUILD_TIME='"2024-01-15T10:30:00Z"' src/index.ts --outfile myapp
@@ -173,7 +173,7 @@ bun build --compile \
 
 ### 构建自动化脚本
 
-创建构建脚本自动注入构建元数据：
+创建一个注入构建元数据的构建脚本：
 
 ```ts
 // build.ts
@@ -202,7 +202,7 @@ console.log(`构建版本为 ${version.trim()}`);
 
 ### 值的格式
 
-值必须是有效的 JSON，将被解析并内联为 JavaScript 表达式：
+值必须是有效的 JSON。Bun 会解析每个值，并将其内联为 JavaScript 表达式：
 
 ```sh
 # ✅ 字符串必须用 JSON 引号包裹
@@ -226,7 +226,7 @@ console.log(`构建版本为 ${version.trim()}`);
 
 ### 属性键名
 
-你可以使用属性访问模式作为键，不仅限于简单标识符：
+键可以是属性访问模式，而不仅仅是简单标识符：
 
 ```sh
 # ✅ 替换 process.env.NODE_ENV 为 "production"
@@ -237,12 +237,9 @@ console.log(`构建版本为 ${version.trim()}`);
 
 # ✅ 替换嵌套属性
 --define 'window.myApp.version="1.0.0"'
-
-# ✅ 替换数组访问
---define 'process.argv[2]="--production"'
 ```
 
-这对于环境变量特别有用：
+使用此功能可以在构建时内联环境变量：
 
 ```ts
 // 编译前
@@ -292,4 +289,4 @@ bun build --compile --target=bun-windows-x64 --define PLATFORM='"windows"' src/a
 
 - [运行时定义常量](/guides/runtime/define-constant) - 在 `bun run` 中使用 `--define`
 - [构建可执行文件](/bundler/executables) - `bun build --compile` 完整指南
-- [打包器 API](/bundler) - 包含 `define` 选项的完整打包器文档
+- [打包器 API](/bundler) - 包含 `define` 选项的完整打包器文档。

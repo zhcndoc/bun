@@ -1,13 +1,13 @@
 ---
 title: "测试配置"
-description: "了解如何使用 bunfig.toml 和命令行选项配置 Bun 测试行为"
+description: "使用 bunfig.toml 和命令行选项配置 bun test 行为"
 ---
 
-通过 `bunfig.toml` 文件和命令行选项配置 `bun test`。本页记录了 `bun test` 可用的配置选项。
+使用 `bunfig.toml` 和命令行选项配置 `bun test`。
 
 ## 配置文件
 
-你可以通过在 `bunfig.toml` 文件中添加 `[test]` 部分来配置 `bun test` 的行为：
+要在 `bunfig.toml` 中配置 `bun test`，请添加一个 `[test]` 部分：
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -18,20 +18,12 @@ description: "了解如何使用 bunfig.toml 和命令行选项配置 Bun 测试
 
 ### root
 
-`root` 选项指定测试发现的根目录，覆盖默认从项目根目录开始扫描的行为。
+`root` 选项设置 Bun 扫描测试的目录，而不是项目根目录。
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
 root = "src"  # 只在 src 目录内扫描测试
 ```
-
-这在你想要：
-
-- 限制测试扫描特定目录
-- 排除项目中某些部分的测试扫描
-- 按特定子目录结构组织测试
-
-时非常有用。
 
 #### 示例
 
@@ -49,7 +41,7 @@ root = "tests"
 
 ### 预加载脚本
 
-使用 `preload` 选项在运行测试前加载脚本：
+`preload` 选项会在测试运行前加载脚本：
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -93,11 +85,11 @@ mock.module("./external-api", () => ({
 }));
 ```
 
-### Path Ignore Patterns
+### 路径忽略模式
 
-使用 glob 模式从测试发现中完全排除文件和目录。与仅影响覆盖率报告的 `coveragePathIgnorePatterns` 不同，`pathIgnorePatterns` 会阻止匹配的路径被作为测试发现和运行。
+`pathIgnorePatterns` 使用 glob 模式从测试发现过程中完全排除文件和目录。与只影响覆盖率报告的 `coveragePathIgnorePatterns` 不同，`pathIgnorePatterns` 会阻止匹配的路径被发现并作为测试运行。
 
-当你的项目包含子模块、vendored 代码或其他带有 `*.test.ts` 文件但你不想让 `bun test` 拾取的目录时，这非常有用。
+当项目包含子模块、第三方托管代码或其他包含 `*.test.ts` 文件、但不希望被 `bun test` 识别的目录时，可以使用此选项。
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -118,7 +110,7 @@ pathIgnorePatterns = [
 bun test --path-ignore-patterns 'vendor/**' --path-ignore-patterns 'fixtures/**'
 ```
 
-匹配模式的目录会在扫描期间被剪枝，因此其内容不会被遍历。这意味着忽略大型目录树是高效的——Bun 不会花费时间读取其中的文件。
+Bun 会在扫描期间清理匹配模式的目录，并且不会遍历其内容，因此忽略大型目录树的开销很低。
 
 #### 常见用例
 
@@ -145,31 +137,6 @@ pathIgnorePatterns = [
 <Note>
   命令行 `--path-ignore-patterns` 标志会完全覆盖 `bunfig.toml` 的值——两者不会合并。
 </Note>
-
-## 超时设置
-
-### 默认超时
-
-设置所有测试的默认超时时间：
-
-```toml title="bunfig.toml" icon="settings"
-[test]
-timeout = 10000  # 10 秒（默认是 5000 毫秒）
-```
-
-此设置对所有测试生效，除非单独测试中显式重写超时：
-
-```ts title="test.ts" icon="/icons/typescript.svg"
-// 使用 bunfig.toml 中的默认超时
-test("使用默认超时", () => {
-  // 测试实现
-});
-
-// 重写默认超时
-test("自定义超时", () => {
-  // 测试实现
-}, 30000); // 30 秒
-```
 
 ## 报告器
 
@@ -233,30 +200,22 @@ bun test --smol
 - 更积极地进行垃圾回收
 - 尽可能减少缓冲区大小
 
-适用于：
-
-- 内存有限的 CI 环境
-- 占用大量内存的大型测试套件
-- 内存受限的开发环境
+在内存受限的环境中使用它，例如 CI 运行器，或用于大型测试套件。
 
 ## 测试执行
 
 ### concurrentTestGlob
 
-自动对匹配 glob 模式的测试文件启用并发测试执行。这对逐步迁移测试套件到并发执行或仅让特定测试类型并发运行很有用。
+启用并发测试执行，运行匹配 glob 模式的测试文件。
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
 concurrentTestGlob = "**/concurrent-*.test.ts"  # 对匹配此模式的文件并发运行
 ```
 
-匹配此模式的测试文件将如同命令行传入 `--concurrent` 标志，所有文件中的测试都将并发执行。该特性允许你：
+匹配该模式的测试文件的行为就像传入了 `--concurrent` 标志：这些文件中的每个测试都会并发运行。可以使用此配置逐步将测试套件迁移到并发执行，或者在其余测试保持串行运行的同时，并发运行某一类测试（例如集成测试）。
 
-- 逐渐迁移测试套件到并发执行
-- 并发执行集成测试，同时保持单元测试顺序执行
-- 将快速并发测试与需要顺序执行的测试分开
-
-当命令行指定了 `--concurrent` 标志时，会覆盖该设置，强制所有测试均并发执行，忽略 glob 模式。
+`--concurrent` CLI 标志会覆盖此设置，无论 glob 模式如何，都会强制所有测试并发运行。
 
 #### randomize
 
@@ -269,7 +228,7 @@ randomize = true
 
 #### seed
 
-指定用于可复现随机顺序的种子。需要 `randomize = true`：
+指定用于生成可复现随机顺序的种子。需要设置 `randomize = true`：
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -279,14 +238,14 @@ seed = 2444615283
 
 #### retry
 
-所有测试的默认重试次数。失败测试将最多重试指定次数。单个测试中 `{ retry: N }` 会覆盖此值。默认 `0`（不重试）。
+所有测试的默认重试次数。Bun 会在测试失败时，最多按此次数重试。每个测试的 `{ retry: N }` 会覆盖此值。默认为 `0`（不重试）。
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
 retry = 3
 ```
 
-命令行标志 `--retry` 会覆盖此设置。
+`--retry` CLI 标志会覆盖此设置。
 
 #### rerunEach
 
@@ -315,7 +274,7 @@ coverageDir = "./coverage"
 
 ### 避免测试文件计入覆盖率
 
-排除匹配测试文件模式（如 `*.test.ts`）的文件不计入覆盖率报告：
+从覆盖率报告中排除匹配测试模式的文件（例如 `*.test.ts`）：
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -324,7 +283,7 @@ coverageSkipTestFiles = true  # 从覆盖率报告中排除测试文件
 
 ### 覆盖率阈值
 
-覆盖率阈值可以用数字或对象形式指定具体阈值：
+将覆盖率阈值指定为单个数字，或指定为包含各指标阈值的对象：
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -372,7 +331,7 @@ coveragePathIgnorePatterns = [
 ]
 ```
 
-匹配任意模式的文件将不参与覆盖率计算和报告。详情及示例请参阅[覆盖率文档](/test/code-coverage)。
+匹配任意这些模式的文件都会从覆盖率计算和报告中排除。参见[代码覆盖率](/test/code-coverage)。
 
 #### 常见忽略模式
 
@@ -411,7 +370,7 @@ coveragePathIgnorePatterns = [
 
 ### Source Map 处理
 
-Bun 会内部转译所有文件，代码覆盖率也必须经过 source map 映射后才能正确报告。我们暴露了一个开关允许关闭此行为，但部分情况下会比较混乱，因为转译过程中 Bun 可能会移动代码或更改变量名。此选项主要用于调试覆盖率问题。
+Bun 会转译每个文件，因此覆盖率结果会先经过 source map 处理，然后再生成报告。`coverageIgnoreSourcemaps` 可选择不执行此处理，但结果会令人困惑：在转译过程中，Bun 可能会移动代码并重命名变量。此选项主要用于调试覆盖率问题。
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -424,7 +383,7 @@ coverageIgnoreSourcemaps = true  # 不使用 source map 进行覆盖率分析
 
 ## 安装设置继承
 
-`bun test` 会从 `bunfig.toml` 的 `[install]` 部分继承相关的网络和安装配置（registry、cafile、prefer、exact 等），这对于测试需要访问私有注册表或在测试运行时需要特定安装行为时非常重要。
+`bun test` 会从 `bunfig.toml` 的 `[install]` 部分继承网络和安装配置（例如 `registry`、`cafile`、`prefer` 和 `exact`）。如果测试需要访问私有注册表，或在运行期间触发安装，这一点就很重要。
 
 ```toml title="bunfig.toml" icon="settings"
 [install]
@@ -436,12 +395,11 @@ prefer = "offline"
 [test]
 # 测试专用配置
 coverage = true
-timeout = 10000
 ```
 
 ## 环境变量
 
-测试的环境变量应通过 `.env` 文件设置。Bun 会自动加载项目根目录下的 `.env` 文件。对于特定测试环境变量，可以创建 `.env.test` 文件：
+使用 `.env` 文件为测试设置环境变量，Bun 会自动从项目根目录加载这些文件。对于特定于测试的变量，创建一个 `.env.test` 文件，`bun test` 会自动加载该文件：
 
 ```ini title=".env.test" icon="settings"
 NODE_ENV=test
@@ -449,15 +407,9 @@ DATABASE_URL=postgresql://localhost:5432/test_db
 LOG_LEVEL=error
 ```
 
-然后通过 `--env-file` 加载：
-
-```bash terminal icon="terminal"
-bun test --env-file=.env.test
-```
-
 ## 完整配置示例
 
-下面是一个包含所有可用测试配置选项的完整示例：
+展示可用测试配置选项的示例：
 
 ```toml title="bunfig.toml" icon="settings"
 [install]
@@ -472,7 +424,6 @@ preload = ["./test-setup.ts", "./global-mocks.ts"]
 pathIgnorePatterns = ["vendor/**", "submodules/**"]
 
 # 执行设置
-timeout = 10000
 smol = true
 
 # 覆盖率配置
@@ -502,74 +453,11 @@ junit = "./reports/junit.xml"
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
-timeout = 5000
 coverage = false
 ```
 
 ```bash terminal icon="terminal"
-# 这些命令行参数会覆盖配置文件
-bun test --timeout 10000 --coverage
-# timeout 将是 10000 毫秒，覆盖率将被启用
-```
-
-## 条件配置
-
-你可以针对不同环境使用不同配置：
-
-```toml title="bunfig.toml" icon="settings"
-[test]
-# 默认测试配置
-coverage = false
-timeout = 5000
-
-# CI 环境覆盖
-[test.ci]
-coverage = true
-coverageThreshold = 0.8
-timeout = 30000
-```
-
-然后在 CI 里使用：
-
-```bash terminal icon="terminal"
-# 使用 CI 专用配置
-bun test --config=ci
-```
-
-## 验证和故障排除
-
-### 无效配置
-
-Bun 会对无效配置选项发出警告：
-
-```toml title="bunfig.toml" icon="settings"
-[test]
-invalidOption = true  # 这将产生警告
-```
-
-### 常见配置问题
-
-1. **路径解析**：配置中相对路径是相对于配置文件所在位置解析的  
-2. **模式匹配**：Glob 模式使用标准 glob 语法  
-3. **类型不匹配**：确保数字值未被引号包裹，除非它们应被视为字符串
-
-```toml title="bunfig.toml" icon="settings"
-[test]
-# 正确写法
-timeout = 10000
-
-# 错误写法 - 会被当成字符串处理
-timeout = "10000"
-```
-
-### 配置调试
-
-查看实际使用的配置：
-
-```bash terminal icon="terminal"
-# 显示生效配置
-bun test --dry-run
-
-# 详细日志显示配置加载过程
-bun test --verbose
+# 此命令行选项会覆盖配置文件
+bun test --coverage
+# 覆盖率将被启用
 ```

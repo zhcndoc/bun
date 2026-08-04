@@ -4,7 +4,7 @@ sidebarTitle: 提前中止
 mode: center
 ---
 
-使用 `--bail` 参数在遇到一次失败后中止测试运行。这在持续集成环境中尽早中止测试非常有用。
+使用 `--bail` 标志在首次失败后中止测试运行，以便持续集成运行尽可能早地失败。
 
 ```sh terminal icon="terminal"
 bun test --bail
@@ -12,7 +12,7 @@ bun test --bail
 
 ---
 
-要在达到一定失败次数后中止，可以在参数后选择性地指定数字。
+要在达到特定失败次数后中止，请在标志后传入一个数字。
 
 ```sh terminal icon="terminal"
 # 在失败达到 10 次后中止
@@ -21,4 +21,4 @@ bun test --bail=10
 
 ---
 
-完整的 `bun test` 文档，请参见 [文档 > 测试运行器](/test)。
+请参阅 [`bun test`](/test)。

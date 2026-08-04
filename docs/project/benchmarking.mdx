@@ -3,29 +3,27 @@ title: 性能基准测试
 description: 如何对 Bun 进行基准测试  
 ---
 
-Bun 以速度为设计目标。关键路径经过广泛的性能分析和基准测试。所有 Bun 公共基准测试的源代码都可以在 Bun 仓库的 [`/bench`](https://github.com/oven-sh/bun/tree/main/bench) 目录中找到。
+Bun 专为速度而设计。热点路径经过广泛的性能分析和基准测试。Bun 所有公开基准测试的源代码都位于 Bun 仓库的 [`/bench`](https://github.com/oven-sh/bun/tree/main/bench) 目录中。
 
 ## 测量时间
 
-为了精确测量时间，Bun 提供了两个运行时 API 函数：
+为了精确测量时间，Bun 提供了两个运行时 API：
 
-1. Web 标准的 [`performance.now()`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) 函数  
-2. `Bun.nanoseconds()`，类似于 `performance.now()`，但它返回应用程序启动以来的当前时间，单位为纳秒。你可以使用 `performance.timeOrigin` 将其转换为 Unix 时间戳。
+1. 符合 Web 标准的 [`performance.now()`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) 函数
+2. `Bun.nanoseconds()`，它类似于 `performance.now()`，但返回的是应用程序启动以来经过的时间，单位为纳秒。使用 `performance.timeOrigin` 可将其转换为 Unix 时间戳。
 
 ## 基准测试工具
 
-编写自己的基准测试时，选择合适的工具非常重要。
-
-- 对于微基准测试，一个很好的通用工具是 [`mitata`](https://github.com/evanwashere/mitata)。  
-- 对于负载测试，你**必须使用**至少与 `Bun.serve()` 同样快速的 HTTP 基准测试工具，否则你的结果会受到影响。一些流行的基于 Node.js 的基准测试工具如 [`autocannon`](https://github.com/mcollina/autocannon) 速度不够。我们推荐以下工具之一：
-  - [`bombardier`](https://github.com/codesenberg/bombardier)  
-  - [`oha`](https://github.com/hatoo/oha)  
-  - [`http_load_test`](https://github.com/uNetworking/uSockets/blob/master/examples/http_load_test.c)  
-- 对于基准测试脚本或 CLI 命令，我们推荐 [`hyperfine`](https://github.com/sharkdp/hyperfine)。
+- 对于微基准测试，我们推荐使用 [`mitata`](https://github.com/evanwashere/mitata)。
+- 对于负载测试，你 _必须使用_ 至少与 `Bun.serve()` 一样快的 HTTP 基准测试工具，否则测试结果会产生偏差。一些流行的基于 Node.js 的基准测试工具（例如 [`autocannon`](https://github.com/mcollina/autocannon)）速度不够快。我们推荐使用以下工具之一：
+  - [`bombardier`](https://github.com/codesenberg/bombardier)
+  - [`oha`](https://github.com/hatoo/oha)
+  - [`http_load_test`](https://github.com/uNetworking/uSockets/blob/master/examples/http_load_test.c)
+- 对于基准测试脚本或 CLI 命令，我们推荐使用 [`hyperfine`](https://github.com/sharkdp/hyperfine)。
 
 ## 测量内存使用
 
-Bun 有两个堆。一个堆用于 JavaScript 运行时，另一个堆用于其他所有内容。
+Bun 有两个堆：一个用于 JavaScript 运行时，另一个用于其他所有内容。
 
 ### JavaScript 堆统计
 
@@ -152,7 +150,7 @@ Bun.gc(true); // 同步执行
 Bun.gc(false); // 异步执行
 ```
 
-堆快照让你能够检查哪些对象没有被释放。你可以使用 `bun:jsc` 模块生成堆快照，然后用 Safari 或 WebKit GTK 开发者工具查看。生成堆快照：
+堆快照可以显示哪些对象没有被释放。使用 `Bun.generateHeapSnapshot()` 获取堆快照，然后使用 Safari 或 WebKit GTK 开发者工具查看。生成堆快照：
 
 ```ts
 import { generateHeapSnapshot } from "bun";
@@ -161,7 +159,7 @@ const snapshot = generateHeapSnapshot();
 await Bun.write("heap.json", JSON.stringify(snapshot, null, 2));
 ```
 
-要查看快照，在 Safari 开发者工具（或 WebKit GTK）中打开 `heap.json` 文件：
+要查看快照，请在 Safari 的开发者工具（或 WebKit GTK）中打开 `heap.json` 文件：
 
 1. 打开开发者工具  
 2. 点击「Timeline」（时间轴）  
@@ -185,14 +183,14 @@ await Bun.write("heap.json", JSON.stringify(snapshot, null, 2));
   />
 </Frame>
 
-> [网页调试器](/runtime/debugger#inspect) 也提供时间轴功能，允许你追踪并检查运行中的调试会话的内存使用情况。
+> [Web 调试器](/runtime/debugger#inspect)的时间轴还会跟踪正在运行的调试会话的内存使用情况。
 
 ### 本地堆统计
 
-Bun 另外使用 mimalloc 管理其他堆。要报告非 JavaScript 内存使用的汇总信息，设置环境变量 `MIMALLOC_SHOW_STATS=1`，退出时会打印统计信息。
+Bun 使用 mimalloc 管理另一个堆。要打印非 JavaScript 内存使用情况的摘要，请调用 `Bun.unsafe.mimallocDump()`。
 
-```sh terminal icon="terminal"
-MIMALLOC_SHOW_STATS=1 bun script.js
+```ts
+Bun.unsafe.mimallocDump();
 ```
 
 ```txt
@@ -225,7 +223,7 @@ numa nodes:       1
 bun --cpu-prof script.js
 ```
 
-这会生成一个 `.cpuprofile` 文件，你可以在 Chrome DevTools（性能标签页 → 加载配置文件）或 VS Code 的 CPU 分析器中打开。
+`--cpu-prof` 会写入一个 `.cpuprofile` 文件，你可以在 Chrome DevTools（性能面板 → 加载配置文件）或 VS Code 的 CPU 分析器中打开该文件。
 
 ### Markdown 输出
 
@@ -235,13 +233,13 @@ bun --cpu-prof script.js
 bun --cpu-prof-md script.js
 ```
 
-你也可以同时使用 `--cpu-prof` 和 `--cpu-prof-md` 来同时生成两种格式：
+同时使用 `--cpu-prof` 和 `--cpu-prof-md` 可一次生成两种格式：
 
 ```sh terminal icon="terminal"
 bun --cpu-prof --cpu-prof-md script.js
 ```
 
-还可以通过环境变量 `BUN_OPTIONS` 来触发分析：
+你也可以通过 `BUN_OPTIONS` 环境变量传递该标志：
 
 ```sh terminal icon="terminal"
 BUN_OPTIONS="--cpu-prof-md" bun script.js
@@ -269,17 +267,17 @@ bun --cpu-prof --cpu-prof-dir ./profiles script.js
 bun --heap-prof script.js
 ```
 
-这将生成一个 V8 `.heapsnapshot` 文件，可以在 Chrome DevTools（Memory 标签页 → 加载）中加载。
+`--heap-prof` 写入一个 V8 `.heapsnapshot` 文件，你可以在 Chrome DevTools 中加载该文件（“Memory”标签页 → “Load”）。
 
 ### Markdown 输出
 
-使用 `--heap-prof-md` 来生成 CLI 友好的 markdown 堆分析报告：
+使用 `--heap-prof-md` 来生成 CLI 友好的 Markdown 堆分析报告：
 
 ```sh terminal icon="terminal"
 bun --heap-prof-md script.js
 ```
 
-<Note>如果同时指定了 `--heap-prof` 和 `--heap-prof-md`，则以 markdown 格式为准。</Note>
+<Note>如果同时指定了 `--heap-prof` 和 `--heap-prof-md`，则以 Markdown 格式为准。</Note>
 
 ### 选项
 
@@ -291,6 +289,6 @@ bun --heap-prof --heap-prof-dir ./profiles script.js
 | 标志                          | 说明                                  |
 | ----------------------------- | ------------------------------------- |
 | `--heap-prof`                 | 退出时生成 V8 `.heapsnapshot` 文件    |
-| `--heap-prof-md`              | 退出时生成 markdown 格式的堆分析报告  |
+| `--heap-prof-md`              | 退出时生成 Markdown 格式的堆分析报告  |
 | `--heap-prof-name <filename>` | 设置输出文件名                        |
 | `--heap-prof-dir <dir>`       | 设置输出目录                          |

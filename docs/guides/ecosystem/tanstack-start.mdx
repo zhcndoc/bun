@@ -4,7 +4,7 @@ sidebarTitle: 使用 Bun 启动 TanStack Start
 mode: center
 ---
 
-[TanStack Start](https://tanstack.com/start/latest) 是一个由 TanStack Router 驱动的全栈框架。它支持完整文档的服务器端渲染（SSR）、流式传输、服务器函数、打包等功能，底层依赖 TanStack Router 和 [Vite](https://vite.dev/)。
+[TanStack Start](https://tanstack.com/start/latest) 是一个由 TanStack Router 和 [Vite](https://vite.dev/) 驱动的全栈框架。它支持完整文档 SSR、流式传输、服务器函数和打包。
 
 ---
 
@@ -18,18 +18,16 @@ mode: center
 
   </Step>
   <Step title="启动开发服务器">
-    切换到项目目录并使用 Bun 启动开发服务器。
+    切换到项目目录，并使用 Bun 启动 Vite 开发服务器。
 
     ```sh terminal icon="terminal"
     cd my-tanstack-app
     bun --bun run dev
     ```
 
-    这将启动由 Bun 运行的 Vite 开发服务器。
-
   </Step>
   <Step title="更新 package.json 中的脚本">
-   修改 `package.json` 中的 scripts 字段，在 Vite CLI 命令前添加 `bun --bun` 前缀，以确保 Bun 执行 Vite CLI 来处理常见任务，如 `dev`、`build` 和 `preview`。
+   在 `package.json` 的 scripts 字段中，为 Vite CLI 命令添加 `bun --bun` 前缀，以便 Bun 为 `dev`、`build` 和 `preview` 运行 Vite CLI。
 
     ```json package.json icon="file-json"
     {
@@ -48,13 +46,13 @@ mode: center
 
 ## 部署托管
 
-要托管你的 TanStack Start 应用，可以使用 [Nitro](https://nitro.build/) 或自定义 Bun 服务器进行生产环境部署。
+要在生产环境中托管你的 TanStack Start 应用，请使用 [Nitro](https://nitro.build/) 或自定义 Bun 服务器。
 
 <Tabs>
   <Tab title="Nitro">
     <Steps>
-      <Step title="将 Nitro 添加到你的项目中">
-        添加 [Nitro](https://nitro.build/) 到你的项目。此工具允许你将 TanStack Start 应用部署到不同的平台。
+      <Step title="将 Nitro 添加到项目">
+        将 [Nitro](https://nitro.build/) 添加到项目中，以便将你的 TanStack Start 应用部署到不同的平台。
 
         ```sh terminal icon="terminal"
         bun add nitro
@@ -62,7 +60,7 @@ mode: center
 
       </Step>
       <Step title={<span>更新你的 <code>vite.config.ts</code> 文件</span>}>
-        更新你的 `vite.config.ts` 文件，加入 TanStack Start 和 Bun 需要的插件。
+        将 Nitro 插件添加到你的 `vite.config.ts` 文件中。
 
         ```ts vite.config.ts icon="/icons/typescript.svg"
         // 其他导入...
@@ -104,10 +102,10 @@ mode: center
 
       </Step>
       <Step title="部署你的应用">
-        查看我们的部署指南，将你的应用部署到托管服务商。
+        使用以下指南之一，将你的应用部署到托管服务提供商。
 
         <Note>
-          部署到 Vercel 时，可以在 `vercel.json` 文件中添加 `"bunVersion": "1.x"`，或者在 `vite.config.ts` 中的 `nitro` 配置里添加：
+          部署到 Vercel 时，可以将 `"bunVersion": "1.x"` 添加到你的 `vercel.json` 文件中，或者在 `vite.config.ts` 文件的 `nitro` 配置中设置 Bun 版本：
 
           <Warning>
             部署到 Vercel 时**不要**使用 `bun` 的 Nitro 预设。
@@ -135,12 +133,12 @@ mode: center
   </Tab>
   <Tab title="自定义服务器">
     <Note>
-      此自定义服务器实现基于 [TanStack 的 Bun 模板](https://github.com/TanStack/router/blob/main/examples/react/start-bun/server.ts)。它提供了对静态资源服务的细粒度控制，包括支持内存管理的配置，可以将小文件预加载到内存中以实现快速响应，较大的文件则按需从磁盘提供。此方案在生产环境中需要精准控制资源使用和资源加载行为时非常有用。
+      此自定义服务器基于 [TanStack 的 Bun 模板](https://github.com/TanStack/router/blob/main/examples/react/start-bun/server.ts)。它可以让你精细控制静态资源的提供方式：小文件会预加载到内存中，大文件则会按需提供，同时还可以配置预加载内容的限制。
     </Note>
 
     <Steps>
       <Step title="创建生产服务器">
-        在项目根目录创建一个 `server.ts` 文件，内容如下，包含了自定义服务器的完整实现：
+        在项目根目录中创建一个 `server.ts` 文件：
 
         ```ts server.ts icon="/icons/typescript.svg" expandable
         /**
@@ -722,7 +720,7 @@ mode: center
         bun run start
         ```
 
-        服务器默认监听 3000 端口，可通过 `PORT` 环境变量配置。
+        服务器默认监听 3000 端口；设置 `PORT` 环境变量即可更改端口。
 
       </Step>
     </Steps>
@@ -787,4 +785,4 @@ mode: center
 
 ---
 
-[→ 查看 TanStack Start 官方文档](https://tanstack.com/start/latest/docs/framework/react/guide/hosting) 获取更多关于部署托管的信息。
+[→ 查看 TanStack Start 的托管文档](https://tanstack.com/start/latest/docs/framework/react/guide/hosting)。

@@ -4,7 +4,7 @@ sidebarTitle: Readable 转 Uint8Array
 mode: center
 ---
 
-要在 Bun 中将 Node.js 的 `Readable` 流转换为 `Uint8Array`，你可以用该流作为主体创建一个新的 `Response` 对象，然后使用 `bytes()` 将流读取为 `Uint8Array`。
+要在 Bun 中将 Node.js `Readable` 流转换为 `Uint8Array`，请以该流作为正文创建一个 `Response`，然后调用 `bytes()`。
 
 ```ts
 import { Readable } from "stream";

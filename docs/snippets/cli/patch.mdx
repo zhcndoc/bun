@@ -104,8 +104,8 @@ bun patch <package>@<version>
 
 ### 性能与资源
 
-<ParamField path="--concurrent-scripts" type="number" default="5">
-  生命周期脚本最大并发数（默认5）
+<ParamField path="--concurrent-scripts" type="number">
+  生命周期脚本的最大并发任务数（默认为 CPU 核心数的 2 倍）
 </ParamField>
 
 ### 缓存

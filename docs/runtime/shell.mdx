@@ -3,7 +3,7 @@ title: Shell
 description: 使用 Bun 的 shell 脚本 API 从 JavaScript 运行 shell 命令
 ---
 
-Bun Shell 让使用 JavaScript & TypeScript 编写 shell 脚本变得有趣。它是一个跨平台的类 bash shell，具备无缝的 JavaScript 互操作性。
+Bun Shell 让使用 JavaScript 和 TypeScript 编写 shell 脚本变得有趣。它是一个支持 JavaScript 互操作的跨平台类 bash shell。
 
 快速开始：
 
@@ -20,14 +20,14 @@ await $`cat < ${response} | wc -c`; // 1256
 
 ## 特性
 
-- **跨平台**：在 Windows、Linux 和 macOS 上可用。你无需安装额外依赖即可使用 Bun Shell 替代 `rimraf` 或 `cross-env`。诸如 `ls`、`cd`、`rm` 等常见 shell 命令以原生方式实现。
-- **熟悉感**：Bun Shell 是一个 bash 风格的 shell，支持重定向、管道、环境变量等。
-- **通配符**：通配符模式原生支持，包括 `**`、`*`、`{expansion}` 等。
-- **模板字面量**：模板字面量用于执行 shell 命令，允许插入变量和表达式。
-- **安全性**：Bun Shell 默认会对所有字符串进行转义，从而防止 shell 注入攻击。
-- **JavaScript 互操作**：将 `Response`、`ArrayBuffer`、`Blob`、`Bun.file(path)` 以及其他 JavaScript 对象用作 stdin、stdout 和 stderr。
-- **Shell 脚本**：Bun Shell 可用于运行 shell 脚本（`.bun.sh` 文件）。
-- **自定义解释器**：Bun Shell 使用 Zig 编写，并包含其词法解析器、语法解析器和解释器。Bun Shell 是一种小型编程语言。
+- **跨平台**：支持 Windows、Linux 和 macOS。无需安装 `rimraf` 或 `cross-env`，你可以使用 Bun Shell。`ls`、`cd` 和 `rm` 等常见 shell 命令均已原生实现。
+- **熟悉易用**：Bun Shell 是一个类 bash shell，支持重定向、管道和环境变量。
+- **Glob**：原生支持 Glob 模式，包括 `**`、`*` 和 `{expansion}`。
+- **模板字面量**：模板字面量可以执行 shell 命令，并插入变量和表达式。
+- **安全性**：Bun Shell 默认会转义所有字符串，防止 shell 注入攻击。
+- **JavaScript 互操作性**：使用 `Response`、`ArrayBuffer`、`Blob`、`Bun.file(path)` 及其他 JavaScript 对象作为标准输入、标准输出和标准错误。
+- **Shell 脚本**：Bun Shell 可以运行 shell 脚本（`.bun.sh` 文件）。
+- **自定义解释器**：Bun Shell 是一种使用 Rust 编写的微型编程语言，拥有自己的词法分析器、解析器和解释器。
 
 ---
 
@@ -49,7 +49,7 @@ import { $ } from "bun";
 await $`echo "Hello World!"`.quiet(); // 无输出
 ```
 
-如果想以文本形式访问命令输出，使用 `.text()`：
+要将命令的输出读取为文本，请使用 `.text()`：
 
 ```js
 import { $ } from "bun";
@@ -60,7 +60,7 @@ const welcome = await $`echo "Hello World!"`.text();
 console.log(welcome); // Hello World!\n
 ```
 
-默认情况下，`await` 返回的是 stdout 和 stderr 的 `Buffer`。
+默认情况下，使用 `await` 会将 stdout 和 stderr 作为 `Buffer` 返回。
 
 ```js
 import { $ } from "bun";
@@ -75,7 +75,7 @@ console.log(stderr); // Buffer(0) []
 
 ## 错误处理
 
-默认情况下，非零退出码会抛出错误。该 `ShellError` 包含执行命令的信息。
+默认情况下，非零退出码会抛出错误。`ShellError` 包含有关已运行命令的信息。
 
 ```js
 import { $ } from "bun";
@@ -90,7 +90,7 @@ try {
 }
 ```
 
-可用 `.nothrow()` 禁用抛出，返回结果的 `exitCode` 需手动检查。
+`.nothrow()` 会禁用错误抛出。请自行检查结果的 `exitCode`。
 
 ```js
 import { $ } from "bun";
@@ -105,7 +105,7 @@ console.log(stdout);
 console.log(stderr);
 ```
 
-也可通过在 `$` 函数上调用 `.nothrow()` 或 `.throws(boolean)` 来配置默认的非零退出码处理行为。
+要更改所有命令的默认行为，请在 `$` 函数本身上调用 `.nothrow()` 或 `.throws(boolean)`。
 
 ```js
 import { $ } from "bun";
@@ -125,17 +125,17 @@ await $`something-that-may-fail`; // 不抛异常
 
 ## 重定向
 
-可使用典型 Bash 操作符重定向命令的 _输入_ 和 _输出_：
+使用 Bash 中常见的操作符重定向命令的 _输入_ 或 _输出_：
 
 - `<` 重定向 stdin
 - `>` 或 `1>` 重定向 stdout
 - `2>` 重定向 stderr
 - `&>` 同时重定向 stdout 和 stderr
-- `>>` 或 `1>>` 追加重定向 stdout（而非覆盖）
-- `2>>` 追加重定向 stderr（而非覆盖）
-- `&>>` 追加重定向 stdout 和 stderr（而非覆盖）
-- `1>&2` 将 stdout 重定向到 stderr（所有写入 stdout 的内容将进入 stderr）
-- `2>&1` 将 stderr 重定向到 stdout（所有写入 stderr 的内容将进入 stdout）
+- `>>` 或 `1>>` 重定向 stdout，将内容_追加_到目标位置，而不是覆盖
+- `2>>` 重定向 stderr，将内容_追加_到目标位置，而不是覆盖
+- `&>>` 同时重定向 stdout 和 stderr，将内容_追加_到目标位置，而不是覆盖
+- `1>&2` 将 stdout 重定向到 stderr（写入 stdout 的内容将转而写入 stderr）
+- `2>&1` 将 stderr 重定向到 stdout（写入 stderr 的内容将转而写入 stdout）
 
 Bun Shell 还支持 JavaScript 对象之间的重定向。
 
@@ -152,14 +152,14 @@ await $`echo "Hello World!" > ${buffer}`;
 console.log(buffer.toString()); // Hello World!\n
 ```
 
-以下 JS 对象支持作为重定向目标：
+你可以将输出重定向到以下 JavaScript 对象：
 
 - `Buffer`、`Uint8Array`、`Uint16Array`、`Uint32Array`、`Int8Array`、`Int16Array`、`Int32Array`、`Float32Array`、`Float64Array`、`ArrayBuffer`、`SharedArrayBuffer`（写入底层缓冲区）
 - `Bun.file(path)`、`Bun.file(fd)`（写入文件）
 
 ### 示例：重定向输入自 JavaScript 对象 (`<`)
 
-使用 `<` 操作符将 JS 对象作为 stdin 重定向输入：
+要将 JavaScript 对象用作 stdin，请使用 `<` 操作符：
 
 ```js
 import { $ } from "bun";
@@ -171,7 +171,7 @@ const result = await $`cat < ${response}`.text();
 console.log(result); // hello i am a response body
 ```
 
-以下 JS 对象支持从中重定向：
+你可以从以下 JavaScript 对象重定向输入：
 
 - `Buffer`、`Uint8Array`、`Uint16Array`、`Uint32Array`、`Int8Array`、`Int16Array`、`Int32Array`、`Float32Array`、`Float64Array`、`ArrayBuffer`、`SharedArrayBuffer`（从底层缓冲区读）
 - `Bun.file(path)`、`Bun.file(fd)`（从文件读）
@@ -245,7 +245,7 @@ console.log(result); // 6\n
 
 ## 命令替换 (`$(...)`)
 
-命令替换允许将另一个脚本的输出嵌入当前脚本：
+命令替换会将另一个命令的输出插入当前脚本中：
 
 ```js
 import { $ } from "bun";
@@ -254,7 +254,7 @@ import { $ } from "bun";
 await $`echo Hash of current commit: $(git rev-parse HEAD)`;
 ```
 
-这是一种将命令输出作为文本插入的方法，例如声明 shell 变量：
+输出会作为文本插入，因此你可以使用它来声明 shell 变量：
 
 ```js
 import { $ } from "bun";
@@ -282,13 +282,13 @@ await $`echo \`echo hi\``;
 hi
 ```
 
-而是打印：
+它会打印：
 
 ```
-echo hi
+`echo hi`
 ```
 
-我们建议坚持使用 `$(...)` 语法。
+请改用 `$(...)` 语法。
 
 </Note>
 
@@ -296,7 +296,7 @@ echo hi
 
 ## 环境变量
 
-环境变量设置方式类似 bash：
+像在 bash 中一样设置环境变量：
 
 ```js
 import { $ } from "bun";
@@ -304,7 +304,7 @@ import { $ } from "bun";
 await $`FOO=foo bun -e 'console.log(process.env.FOO)'`; // foo\n
 ```
 
-可以通过字符串插值设置环境变量：
+使用字符串插值来设置值：
 
 ```js
 import { $ } from "bun";
@@ -326,9 +326,9 @@ await $`FOO=${foo} bun -e 'console.log(process.env.FOO)'`; // bar123; rm -rf /tm
 
 ### 修改环境变量
 
-默认所有命令使用 `process.env` 作为环境变量。
+默认情况下，所有命令都使用 `process.env` 作为其环境变量。
 
-可以通过 `.env()` 为单个命令更改环境变量：
+要修改单个命令的环境变量，请调用 `.env()`：
 
 ```js
 import { $ } from "bun";
@@ -336,7 +336,7 @@ import { $ } from "bun";
 await $`echo $FOO`.env({ ...process.env, FOO: "bar" }); // bar
 ```
 
-通过设置 `$.env` 可改变所有命令的默认环境变量：
+要修改所有命令的默认环境变量，请调用 `$.env`：
 
 ```js
 import { $ } from "bun";
@@ -350,7 +350,7 @@ await $`echo $FOO`; // bar
 await $`echo $FOO`.env({ FOO: "baz" }); // baz
 ```
 
-调用 `$.env()` 并传入无参数可以重置环境变量为默认值：
+要将环境变量重置为默认值，请不带参数调用 `$.env()`：
 
 ```js
 import { $ } from "bun";
@@ -366,7 +366,7 @@ await $`echo $FOO`.env(undefined); // ""
 
 ### 修改工作目录
 
-可通过传入字符串给 `.cwd()` 改变单个命令的工作目录：
+要修改命令的工作目录，请将字符串传递给 `.cwd()`：
 
 ```js
 import { $ } from "bun";
@@ -374,7 +374,7 @@ import { $ } from "bun";
 await $`pwd`.cwd("/tmp"); // /tmp
 ```
 
-可通过设置 `$.cwd` 更改所有命令的默认工作目录：
+要修改所有命令的默认工作目录，请调用 `$.cwd`：
 
 ```js
 import { $ } from "bun";
@@ -454,7 +454,7 @@ console.log(result); // Blob(13) { size: 13, type: "text/plain" }
 
 ## 内置命令
 
-为保证跨平台兼容，Bun Shell 实现了一套内置命令，并且可以从 PATH 环境变量读取命令。
+为了兼容跨平台环境，除了从 `PATH` 环境变量中读取命令外，Bun Shell 还实现了一组内置命令。
 
 - `cd`：切换工作目录
 - `ls`：列出目录文件
@@ -491,7 +491,7 @@ Bun Shell 也实现了一些用于处理 shell 的工具函数。
 
 ### `$.braces`（花括号扩展）
 
-该函数实现了简单的 [花括号扩展](https://www.gnu.org/software/bash/manual/html_node/Brace-Expansion.html)：
+`$.braces` 为 shell 命令实现了[花括号扩展](https://www.gnu.org/software/bash/manual/html_node/Brace-Expansion.html)：
 
 ```js
 import { $ } from "bun";
@@ -508,10 +508,10 @@ await $.braces(`echo {1,2,3}`);
 import { $ } from "bun";
 
 console.log($.escape('$(foo) `bar` "baz"'));
-// => \$(foo) \`bar\` \"baz\"
+// => "\$(foo) \`bar\` \"baz\""
 ```
 
-如果不希望字符串被转义，可将其包裹在 `{ raw: 'str' }` 对象中：
+若要跳过转义，请将字符串包装在 `{ raw: 'str' }` 对象中：
 
 ```js
 import { $ } from "bun";
@@ -526,9 +526,7 @@ await $`echo ${{ raw: '$(foo) `bar` "baz"' }}`;
 
 ## `.sh` 文件加载器
 
-对于简单的 shell 脚本，可以用 Bun Shell 替代 `/bin/sh` 来执行。
-
-To do so, run the script with `bun` on a file with the `.sh` extension.
+对于简单的 shell 脚本，你可以使用 Bun Shell 来代替 `/bin/sh`。将扩展名为 `.sh` 的文件传递给 `bun`：
 
 ```sh script.sh icon="file-code"
 echo "Hello World! pwd=$(pwd)"
@@ -542,7 +540,7 @@ bun ./script.sh
 Hello World! pwd=/home/demo
 ```
 
-Bun Shell 脚本跨平台，Windows 也支持：
+Bun Shell 脚本是跨平台的，因此可以在 Windows 上运行：
 
 ```powershell powershell icon="windows"
 bun .\script.sh
@@ -556,17 +554,17 @@ Hello World! pwd=C:\Users\Demo
 
 ## 实现说明
 
-Bun Shell 是一个用 Zig 实现、在 Bun 内的简易编程语言。包含手写词法解析器、语法解析器及解释器。与 bash、zsh 等 shell 不同，Bun Shell 支持并发运行操作。
+Bun Shell 是一种使用 Rust 实现的小型编程语言，拥有手写的词法分析器、解析器和解释器。与 bash、zsh 及其他 Shell 不同，Bun Shell 会并发运行操作。
 
 ---
 
 ## Bun shell 的安全性
 
-Bun shell 设计时**不调用系统 shell**（如 `/bin/sh`），而是重新实现了 bash，直接在 Bun 进程中运行，注重安全设计。
+根据设计，Bun Shell _不会调用系统 shell_，例如 `/bin/sh`。它是 Bash 的重新实现，运行在同一个 Bun 进程中。
 
 在解析命令参数时，将所有**插值变量**视为单一字面字符串。
 
-这能防止 Bun shell 出现 **命令注入**：
+这可以防止**命令注入**：
 
 ```js
 import { $ } from "bun";
@@ -577,13 +575,14 @@ const userInput = "my-file.txt; rm -rf /";
 await $`ls ${userInput}`;
 ```
 
-以上例中，`userInput` 被作为一个单独字符串传给 `ls`，导致 `ls` 查找名为 `"my-file; rm -rf /"` 的单一目录。
+在这里，`userInput` 会被视为单个字符串，因此 `ls` 会尝试读取名为
+`my-file.txt; rm -rf /` 的单个目录的内容。
 
 ### 安全注意事项
 
-虽然默认防止命令注入，开发者仍需注意某些场景的安全性。
+虽然默认情况下可以防止命令注入，但在某些场景下，你仍需负责安全性。
 
-类似于 `Bun.spawn` 或 `node:child_process.exec()`，你可选择用参数在新 shell 中执行命令（例如 `bash -c`）。
+与 `Bun.spawn` 或 `node:child_process.exec()` API 类似，你可以有意执行一个会使用参数生成新 shell 的命令（例如 `bash -c`）。
 
 此时，你交出了控制权，Bun 内置的保护机制不再适用，字符串将由新 shell 解释执行。
 
@@ -600,7 +599,7 @@ await $`bash -c "echo ${userInput}"`;
 
 ### 参数注入
 
-Bun shell 无法知道外部命令如何解析自己的命令行参数。攻击者可传入被目标程序识别为参数或选项的输入，导致异常行为。
+Bun Shell 无法知晓外部命令如何解释其自身的命令行参数。攻击者可以提供目标程序会识别为自身选项或标志的输入，从而导致非预期行为。
 
 ```js
 import { $ } from "bun";
@@ -614,7 +613,8 @@ await $`git ls-remote origin ${branch}`;
 ```
 
 <Note>
-  **建议** — 和所有语言中一样，始终在把用户提供的输入作为外部命令参数传递前进行安全检验。参数验证责任由应用代码承担。
+  **建议**：始终清理用户提供的输入，然后再将其作为参数传递给外部命令。
+  验证参数是应用程序的责任。
 </Note>
 
 ---

@@ -134,6 +134,6 @@ bun outdated <filter>
   用于安装依赖的特定平台优化。可选值：<code>clonefile</code>（默认），<code>hardlink</code>，<code>symlink</code>，<code>copyfile</code>
 </ParamField>
 
-<ParamField path="--concurrent-scripts" type="number" default="5">
-  生命周期脚本最大并发作业数（默认 5）
+<ParamField path="--concurrent-scripts" type="number">
+  生命周期脚本的最大并发任务数（默认：CPU 核心数的 2 倍）
 </ParamField>

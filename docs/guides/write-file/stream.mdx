@@ -4,7 +4,7 @@ sidebarTitle: 写入流
 mode: center
 ---
 
-要将 `ReadableStream` 写入磁盘，首先从流创建一个 `Response` 实例。然后可以使用 [`Bun.write()`](/runtime/file-io#writing-files-bun-write) 将该 `Response` 写入磁盘。
+要将 `ReadableStream` 写入磁盘，请从该流创建一个 `Response`，然后将其传递给 [`Bun.write()`](/runtime/file-io#writing-files-bun-write)。
 
 ```ts
 const stream: ReadableStream = ...;
@@ -16,4 +16,4 @@ await Bun.write(path, response);
 
 ---
 
-完整的 `Bun.write()` 文档请参见 [文档 > API > 文件 I/O](/runtime/file-io#writing-files-bun-write)。
+请参阅 [`Bun.write()`](/runtime/file-io#writing-files-bun-write)。

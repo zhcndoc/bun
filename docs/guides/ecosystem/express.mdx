@@ -4,11 +4,9 @@ sidebarTitle: Express 与 Bun
 mode: center
 ---
 
-Express 和其他主要的 Node.js HTTP 库应该开箱即用。Bun 实现了这些库依赖的 [`node:http`](https://nodejs.org/api/http.html) 和 [`node:https`](https://nodejs.org/api/https.html) 模块。
+Express 和其他主要的 Node.js HTTP 库应该可以在 Bun 中无需修改即可运行。Bun 实现了这些库所依赖的 [`node:http`](https://nodejs.org/api/http.html) 和 [`node:https`](https://nodejs.org/api/https.html) 模块。
 
-<Note>
-  更多详细的兼容性信息，请参阅 [运行时 > Node.js API](/runtime/nodejs-compat#node-http) 页面。
-</Note>
+<Note>详情请参阅 [Node.js 兼容性](/runtime/nodejs-compat#node-http)。</Note>
 
 ```sh terminal icon="terminal"
 bun add express

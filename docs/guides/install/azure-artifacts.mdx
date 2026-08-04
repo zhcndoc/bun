@@ -5,12 +5,12 @@ mode: center
 ---
 
 <Note>
-  在 [Azure
-  Artifacts](https://learn.microsoft.com/en-us/azure/devops/artifacts/npm/npmrc?view=azure-devops&tabs=windows%2Cclassic)
-  关于 `.npmrc` 的说明中，建议对密码进行 base64 编码。但在使用 `bun install` 时不要这样做。Bun 会在需要时自动为你进行 base64 编码。
+  [Azure
+  Artifacts'](https://learn.microsoft.com/en-us/azure/devops/artifacts/npm/npmrc?view=azure-devops&tabs=windows%2Cclassic)
+  关于 `.npmrc` 的说明要求对密码进行 base64 编码。使用 `bun install` 时不要这样做。如果需要，Bun 会自动为你对密码进行 base64 编码。
 </Note>
 
-[Azure Artifacts](https://azure.microsoft.com/en-us/products/devops/artifacts) 是 Azure DevOps 提供的包管理系统。它允许你托管私有的 npm 注册表、npm 包以及其他类型的包。
+[Azure Artifacts](https://azure.microsoft.com/en-us/products/devops/artifacts) 是 Azure DevOps 的包管理系统。你可以使用它托管自己的私有 npm 注册表以及其他类型的包。
 
 ---
 
@@ -18,7 +18,7 @@ mode: center
 
 ---
 
-要配合 `bun install` 使用，在项目中添加一个名为 `bunfig.toml` 的文件，内容如下。确保将 `my-azure-artifacts-user` 替换为你的 Azure Artifacts 用户名，例如 `jarred1234`。
+要将其与 `bun install` 配合使用，请在项目中添加一个包含以下内容的 `bunfig.toml` 文件。将 `my-azure-artifacts-user` 替换为你的 Azure Artifacts 用户名，例如 `jarred1234`。
 
 ```toml bunfig.toml icon="settings"
 [install.registry]
@@ -30,7 +30,7 @@ password = "$NPM_PASSWORD"
 
 ---
 
-然后，将你的 Azure 个人访问令牌赋值给环境变量 `NPM_PASSWORD`。Bun 会[自动读取](/runtime/environment-variables) `.env` 文件，因此在项目根目录创建一个名为 `.env` 的文件即可。不需要对令牌进行 base64 编码，Bun 会帮你处理。
+然后将你的 Azure Personal Access Token 分配给 `NPM_PASSWORD` 环境变量。Bun [会自动读取](/runtime/environment-variables) `.env` 文件，因此请在项目根目录中创建一个名为 `.env` 的文件。不要对令牌进行 base64 编码；Bun 会为你完成这项工作。
 
 ```ini .env icon="settings"
 NPM_PASSWORD=<在此粘贴令牌>
@@ -42,7 +42,7 @@ NPM_PASSWORD=<在此粘贴令牌>
 
 ---
 
-如果不使用 `bunfig.toml`，你可以设置环境变量 `NPM_CONFIG_REGISTRY` 来配置 Azure Artifacts。URL 中应包含 `:username` 和 `:_password` 作为查询参数，替换 `<USERNAME>` 和 `<PASSWORD>` 为相应的值。
+若要在不使用 `bunfig.toml` 的情况下配置 Azure Artifacts，请设置 `NPM_CONFIG_REGISTRY` 环境变量。URL 应将 `:username` 和 `:_password` 作为查询参数包含在内。将 `<USERNAME>` 和 `<PASSWORD>` 替换为你自己的值。
 
 ```bash terminal icon="terminal"
 NPM_CONFIG_REGISTRY=https://pkgs.dev.azure.com/my-azure-artifacts-user/_packaging/my-azure-artifacts-user/npm/registry/:username=<USERNAME>:_password=<PASSWORD>
@@ -54,9 +54,9 @@ NPM_CONFIG_REGISTRY=https://pkgs.dev.azure.com/my-azure-artifacts-user/_packagin
 
 ---
 
-在 [Azure Artifacts](https://learn.microsoft.com/en-us/azure/devops/artifacts/npm/npmrc?view=azure-devops&tabs=windows%2Cclassic) 的 `.npmrc` 说明中会建议对密码进行 base64 编码，但使用 `bun install` 时切勿这样做。Bun 会自动为你进行 base64 编码（如果需要的话）。
+[Azure Artifacts'](https://learn.microsoft.com/en-us/azure/devops/artifacts/npm/npmrc?view=azure-devops&tabs=windows%2Cclassic) 关于 `.npmrc` 的说明要求对密码进行 base64 编码。使用 `bun install` 时不要这样做。如果需要，Bun 会自动为你对密码进行 base64 编码。
 
-<Note>**提示** — 如果密码以 `==` 结尾，很可能就是 base64 编码的。</Note>
+<Note>如果密码以 `==` 结尾，则它可能已经过 base64 编码。</Note>
 
 ---
 
@@ -68,7 +68,7 @@ atob("<base64编码的密码>");
 
 ---
 
-或者使用命令行工具 `base64`，但这样可能会被保存到终端历史记录中，出于安全考虑不建议这么做：
+或者，使用 `base64` 命令行工具，但密码可能会出现在 shell 历史记录中：
 
 ```bash terminal icon="terminal"
 echo "base64编码的密码" | base64 --decode

@@ -18,7 +18,7 @@ Bun.cron("0 * * * *", async () => {
 **解析 cron 表达式以查找下一个匹配时间：**
 
 ```ts
-// 下一个工作日上午 9:30 UTC
+// 下一个工作日当地时间上午 9:30
 const next = Bun.cron.parse("30 9 * * MON-FRI");
 ```
 
@@ -32,7 +32,7 @@ await Bun.cron("./worker.ts", "30 2 * * MON", "weekly-report");
 
 ## `Bun.cron.parse()`
 
-解析一个 cron 表达式，并返回 UTC 中下一个匹配的 `Date`。
+解析 cron 表达式，并返回系统本地时区中下一个匹配的 `Date`。
 
 ```ts
 const next = Bun.cron.parse("*/15 * * * *");
@@ -41,14 +41,15 @@ console.log(next); // => 下一个一刻钟边界
 
 ### 参数
 
-| 参数           | 类型             | 描述                                              |
-| -------------- | ---------------- | -------------------------------------------------------- |
-| `expression`   | `string`         | 5 字段的 cron 表达式或预定义别名         |
-| `relativeDate` | `Date \| number` | 搜索的起始点（默认为 `Date.now()`） |
+| 参数           | 类型              | 描述                                                                         |
+| -------------- | ----------------- | ------------------------------------------------------------------------------ |
+| `expression`   | `string`          | 5 字段 cron 表达式或预定义别名                                                |
+| `relativeDate` | `Date \| number`  | 搜索的起始点（默认为 `Date.now()`）                                           |
+| `options`      | `{ tz?: string }` | 用于解释计划的 IANA 时区名称（默认为系统时区）                                 |
 
 ### 返回值
 
-`Date | null` — 下一个匹配时间；如果在 8 年内不存在匹配则返回 `null`（例如 2 月 30 日）。
+`Date | null` — 下一个匹配的时间；如果在 8 年内不存在匹配项，则返回 `null`（例如 2 月 30 日）。
 
 ### 链式调用
 
@@ -58,7 +59,7 @@ console.log(next); // => 下一个一刻钟边界
 let cursor: Date | number = Date.now();
 for (let i = 0; i < 3; i++) {
   cursor = Bun.cron.parse("0 * * * *", cursor)!;
-  console.log(cursor.toLocaleString()); // next three top-of-hour boundaries
+  console.log(cursor.toLocaleString()); // 接下来三个整点边界
 }
 ```
 
@@ -70,11 +71,11 @@ for (let i = 0; i < 3; i++) {
 
 | 字段        | 取值                  | 特殊字符 |
 | ------------ | ----------------------- | ------------------ |
-| Minute       | `0`–`59`                | `*` `,` `-` `/`    |
-| Hour         | `0`–`23`                | `*` `,` `-` `/`    |
-| Day of month | `1`–`31`                | `*` `,` `-` `/`    |
-| Month        | `1`–`12` 或 `JAN`–`DEC` | `*` `,` `-` `/`    |
-| Day of week  | `0`–`7` 或 `SUN`–`SAT`  | `*` `,` `-` `/`    |
+| 分钟       | `0`–`59`                | `*` `,` `-` `/`    |
+| 小时         | `0`–`23`                | `*` `,` `-` `/`    |
+| 月中的日期 | `1`–`31`                | `*` `,` `-` `/`    |
+| 月份        | `1`–`12` 或 `JAN`–`DEC` | `*` `,` `-` `/`    |
+| 星期几  | `0`–`7` 或 `SUN`–`SAT`  | `*` `,` `-` `/`    |
 
 ### 特殊字符
 
@@ -113,14 +114,27 @@ Bun.cron.parse("0 0 1 January *");
 
 ```ts
 const next = Bun.cron.parse("@daily");
-console.log(next); // => next UTC midnight
+console.log(next); // => 下一个本地午夜
 ```
 
 ### 时区
 
-`Bun.cron.parse()` 和进程内 `Bun.cron(schedule, handler)` 会使用 **UTC** 来解释计划。无需处理 DST（夏令时）——`0 9 * * *` 永远表示 9:00 UTC。
+计划任务按照系统的**本地时区**进行解释——其方式与 crontab、launchd 和 Windows 任务计划程序读取计划的方式相同。操作系统级形式和进程内回调形式会在相同的墙上时钟时间触发。
 
-操作系统级 `Bun.cron(path, schedule, title)` 使用**系统的本地时区**，因为这就是 crontab、launchd 和 Windows 任务计划程序的工作方式。要让两种形式保持一致，请用 `TZ=UTC` 运行该进程。
+如需覆盖默认时区，请将 IANA 时区名称作为 `{ tz }` 传递给 `Bun.cron.parse()` 或进程内的 `Bun.cron(schedule, handler, options)`：
+
+```ts
+// 无论服务器的时区是什么，均为 09:00 UTC
+Bun.cron.parse("0 9 * * *", Date.now(), { tz: "UTC" });
+
+// 在纽约时间 09:00 触发
+Bun.cron("0 9 * * *", handler, { tz: "America/New_York" });
+```
+
+夏令时转换：
+
+- **春季调快** — 如果计划任务落在缺失的小时内，则会在当天触发，并因时间间隔而顺延（例如，`30 2 * * *` 会在春季调快当天的 3:30 运行）。对于缺失小时内的多分钟模式（`*/15 2 * * *`），只有第一个匹配项会触发。
+- **秋季调慢** — 在重复小时内的固定时间计划（`30 1 * * *`）只会触发一次，即在第一次出现时触发。分钟或小时字段为 `*` 的计划（`0 * * * *`、`* * * * *`）会经过**两次**出现的时间——每个实际时间分钟触发一次，与 Linux 上的 crontab 行为一致。
 
 ### 月份中的日期与星期交互
 
@@ -135,7 +149,7 @@ Bun.cron.parse("0 0 15 * FRI");
 
 ---
 
-## `Bun.cron(schedule, handler)` — in-process
+## `Bun.cron(schedule, handler)` — 进程内
 
 在当前进程内以 cron 计划运行回调。
 
@@ -145,24 +159,25 @@ const job = Bun.cron("*/5 * * * *", async () => {
 });
 ```
 
-这是适用于长期运行的服务器和工作线程的轻量选项——不需要系统 cron 守护进程，在每个平台上工作方式一致，并且在多次触发之间共享状态（数据库连接池、缓存、模块级变量）。
+进程内调度是长时间运行的服务器和工作进程的轻量级选项——无需系统 cron 守护进程，在所有平台上的行为都相同，并且会在多次调用之间共享状态（数据库连接池、缓存、模块级变量）。
 
-|                              | In-process                       | [OS-level](#bun-cron-path-schedule-title-os-level) |
+|                              | 进程内                           | [操作系统级](#bun-cron-path-schedule-title-os-level) |
 | ---------------------------- | -------------------------------- | -------------------------------------------------- |
-| Survives process exit/reboot | No                               | Yes                                                |
-| Shared state between runs    | Yes                              | No（每次都是全新进程）                       |
-| Platform requirements        | None                             | crontab / launchd / Task Scheduler                 |
-| Windows expression limits    | None                             | [48-trigger cap](#trigger-limit)                   |
-| Return type                  | [`CronJob`](#the-cronjob-handle) | `Promise<void>`                                    |
+| 进程退出/重启后是否保留       | 否                               | 是                                                |
+| 多次运行之间是否共享状态     | 是                               | 否（每次都是全新进程）                       |
+| 平台要求                    | 无                             | crontab / launchd / Task Scheduler                 |
+| Windows 表达式限制          | 无                             | [48 个触发器上限](#trigger-limit)                   |
+| 返回类型                  | [`CronJob`](#the-cronjob-handle) | `Promise<void>`                                    |
 
 ### 参数
 
 | 参数  | 类型                         | 描述                                                                                                                                                                  |
 | ---------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `schedule` | `string`                     | 一个 [cron 表达式](#cron-expression-syntax) 或昵称（例如 `"@hourly"`）。                                                                                                   |
-| `handler`  | `(this: CronJob) => unknown` | 每次触发都会调用。可以返回 Promise —— 在它完成之前不会安排下一次触发。在 `function` 回调内部，`this` 是 `CronJob`（因此 `this.stop()` 可以生效）。 |
+| `schedule` | `string`                     | 一个 [cron 表达式](#cron-expression-syntax) 或类似 `"@hourly"` 的昵称。                                                                                                   |
+| `handler`  | `(this: CronJob) => unknown` | 每次触发时调用。可以返回 Promise——在该 Promise 完成前不会安排下一次触发。在 `function` 回调内部，`this` 是 `CronJob`（因此可以使用 `this.stop()`）。 |
+| `options`  | `{ tz?: string }`            | 用于解析计划的 IANA 时区名称（默认为系统时区）。                                                                                              |
 
-同步返回一个 [`CronJob`](#the-cronjob-handle)。如果表达式无效或在未来没有任何发生（例如 `"0 0 30 2 *"`——2 月 30 日），会抛出 `TypeError`。
+同步返回一个 [`CronJob`](#the-cronjob-handle)。如果表达式无效、时区名称未知，或者表达式没有未来的发生时间（例如 `"0 0 30 2 *"`，即 2 月 30 日），则抛出 `TypeError`。
 
 ### 不重叠保证
 
@@ -181,7 +196,7 @@ const job = Bun.cron("*/5 * * * *", async () => {
 process.on("unhandledRejection", err => log.error("cron failed:", err));
 
 Bun.cron("* * * * *", async () => {
-  await mightThrow(); // logged and retried next minute
+  await mightThrow(); // 已记录日志，并在下一分钟重试
 });
 ```
 
@@ -195,20 +210,20 @@ Bun.cron("* * * * *", async () => {
 using job = Bun.cron("0 * * * *", () => {});
 
 job.cron; // => "0 * * * *"
-job.stop(); // cancel — the handler will not fire again
-job.unref(); // allow the process to exit even while scheduled
-job.ref(); // keep the process alive (default)
+job.stop(); // 取消 — handler 将不再触发
+job.unref(); // 即使仍处于计划状态，也允许进程退出
+job.ref(); // 保持进程运行（默认）
 ```
 
 `CronJob` 是 [`Disposable`](https://github.com/tc39/proposal-explicit-resource-management) —— `using job = Bun.cron(...)` 会在作用域退出时自动停止。`stop()`、`ref()` 和 `unref()` 都会返回该 job 以便链式调用。
 
 ### 假定时器
 
-进程内 cron 以真实的墙钟时间为基准。`jest.useFakeTimers()`、`setSystemTime()`、`advanceTimersByTime()` 和 `runAllTimers()` 不会影响它何时触发。
+进程内 cron 支持 `jest.useFakeTimers()`。`setSystemTime()`、`advanceTimersByTime()` 和 `runAllTimers()` 控制其触发时间，因此你可以无需等待真实时钟即可测试计划回调。
 
 ---
 
-## `Bun.cron(path, schedule, title)` — OS-level
+## `Bun.cron(path, schedule, title)` — 操作系统级别
 
 注册一个操作系统级别的 cron 任务，按计划运行 JavaScript/TypeScript 模块。
 
@@ -301,7 +316,7 @@ Bun 使用 [launchd](https://developer.apple.com/library/archive/documentation/M
 ~/Library/LaunchAgents/bun.cron.<title>.plist
 ```
 
-plist 使用 `StartCalendarInterval` 定义计划。支持包含范围、列表或步长的复杂模式——Bun 通过笛卡尔积将它们展开为多个 `StartCalendarInterval` 字典。
+plist 使用 `StartCalendarInterval` 定义调度计划。支持包含范围、列表或步长的复杂模式 — Bun 会将它们扩展为笛卡尔积形式的多个 `StartCalendarInterval` 字典。
 
 **查看已注册的任务：**
 
@@ -345,11 +360,11 @@ Bun 使用基于 XML 任务定义的 [Windows Task Scheduler](https://learn.micr
 
 #### 用户上下文
 
-任务使用 [`S4U` (Service-for-User)](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-logontype-simpletype) 登录类型注册，即使用户未登录也会以注册用户的身份运行任务——与 Linux `crontab` 行为一致。不存储密码。
+Bun 使用 [`S4U`（用户服务）](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-logontype-simpletype)登录类型注册任务，即使注册用户未登录，任务也会以该用户身份运行 — 与 Linux `crontab` 的行为一致。不会存储密码。
 
-TCP/IP 网络（`fetch()`、HTTP、WebSocket、数据库连接）正常工作。唯一的限制是 S4U 任务无法访问 [Windows 认证的网络资源](https://learn.microsoft.com/en-us/windows/win32/taskschd/security-contexts-for-running-tasks)（SMB 文件共享、映射驱动器、Kerberos/NTLM 服务）。
+TCP/IP 网络（`fetch()`、HTTP、WebSocket、数据库连接）正常工作。唯一的限制是 S4U 任务无法访问 [Windows 身份验证的网络资源](https://learn.microsoft.com/en-us/windows/win32/taskschd/security-contexts-for-running-tasks)（SMB 文件共享、映射驱动器、Kerberos/NTLM 服务）。
 
-在无法解析当前用户 [Security Identifier (SID)](https://learn.microsoft.com/en-us/windows/security/identity-protection/access-control/security-identifiers) 的无头服务器和 CI 环境中——例如由 [NSSM](https://nssm.cc/) 或类似工具创建的服务账户——`Bun.cron()` 将失败并返回解释该问题的错误。要解决此问题，可以将 Bun 作为普通用户账户运行，或使用 `schtasks /create /xml <file> /tn <name> /ru SYSTEM /f` 手动创建计划任务。
+在无头服务器和 CI 环境中，如果无法解析当前用户的[安全标识符（SID）](https://learn.microsoft.com/en-us/windows/security/identity-protection/access-control/security-identifiers) — 例如由 [NSSM](https://nssm.cc/) 或类似工具创建的服务帐户 — `Bun.cron()` 将失败，并显示解释该问题的错误信息。要解决此问题，请使用普通用户帐户运行 Bun，或使用 `schtasks /create /xml <file> /tn <name> /ru SYSTEM /f` 手动创建计划任务。
 
 #### 触发器限制
 

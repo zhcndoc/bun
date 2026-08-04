@@ -3,7 +3,7 @@ title: "JSX"
 description: "Bun 内置的 JSX 和 TSX 支持，具有可配置的转译选项"
 ---
 
-Bun 开箱即支持 `.jsx` 和 `.tsx` 文件。Bun 的内部转译器会在执行前将 JSX 语法转换为原生 JavaScript。
+Bun 支持 `.jsx` 和 `.tsx` 文件。Bun 的内部转译器会在执行前将 JSX 语法转换为原生 JavaScript。
 
 ```ts react.tsx icon="/icons/typescript.svg"
 function Component(props: {message: string}) {
@@ -19,62 +19,62 @@ console.log(<Component message="Hello world!" />);
 
 ## 配置
 
-Bun 会读取你的 `tsconfig.json` 或 `jsconfig.json` 配置文件，以确定如何在内部执行 JSX 转换。为了避免使用这两者，也可以在 [`bunfig.toml`](/runtime/bunfig) 中定义以下选项。
+Bun 会读取你的 `tsconfig.json` 或 `jsconfig.json`，以确定如何在内部执行 JSX 转换。如果你不想使用其中任何一个，也可以在 [`bunfig.toml`](/runtime/bunfig) 中设置相同的选项。
 
-下面的编译器选项将被遵循。
+Bun 支持以下编译器选项。
 
 ### [`jsx`](https://www.typescriptlang.org/tsconfig#jsx)
 
-JSX 构造如何被内部转换成原生 JavaScript。下表列出了 `jsx` 的可能取值，以及对以下简单 JSX 组件的转译结果：
+JSX 构造在内部如何转换为原生 JavaScript。下表列出了 `jsx` 的可能取值，以及每个取值如何转译以下 JSX 组件：
 
 ```tsx
 <Box width={5}>Hello</Box>
 ```
 
-| 编译器选项                                         | 转译输出                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| -------------------------------------------------| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `json<br/>{<br/>  "jsx": "react"<br/>}<br/>`      | `tsx<br/>import { createElement } from "react";<br/>createElement("Box", { width: 5 }, "Hello");<br/>`                                                                                                                                                                                                                                                                                                                                                            |
-| `json<br/>{<br/>  "jsx": "react-jsx"<br/>}<br/>`  | `tsx<br/>import { jsx } from "react/jsx-runtime";<br/>jsx("Box", { width: 5 }, "Hello");<br/>`                                                                                                                                                                                                                                                                                                                                                                      |
-| `json<br/>{<br/>  "jsx": "react-jsxdev"<br/>}<br/>` | `tsx<br/>import { jsxDEV } from "react/jsx-dev-runtime";<br/>jsxDEV(<br/>  "Box",<br/>  { width: 5, children: "Hello" },<br/>  undefined,<br/>  false,<br/>  undefined,<br/>  this,<br/>);<br/>`<br/><br/>`jsxDEV` 变量名是 React 约定用法。`DEV` 后缀直观地表明该代码用于开发环境。React 开发版本较慢，包含额外的有效性校验和调试工具。 |
-| `json<br/>{<br/>  "jsx": "preserve"<br/>}<br/>`   | `tsx<br/>// JSX 不被转译<br/>// Bun 当前不支持 "preserve"<br/><Box width={5}>Hello</Box><br/>`                                                                                                                                                                                                                                                                                                                                                                    |
+| 编译器选项                                          | 转译后的输出                                                                                                                                                                                                                                                                                                                                                                                                             |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `json<br/>{<br/>  "jsx": "react"<br/>}<br/>`        | `tsx<br/>React.createElement(Box, { width: 5 }, "Hello");<br/>`                                                                                                                                                                                                                                                                                                                                                         |
+| `json<br/>{<br/>  "jsx": "react-jsx"<br/>}<br/>`    | `tsx<br/>import { jsx } from "react/jsx-runtime";<br/>jsx("Box", { width: 5 }, "Hello");<br/>`                                                                                                                                                                                                                                                                                                                          |
+| `json<br/>{<br/>  "jsx": "react-jsxdev"<br/>}<br/>` | `tsx<br/>import { jsxDEV } from "react/jsx-dev-runtime";<br/>jsxDEV(<br/>  "Box",<br/>  { width: 5, children: "Hello" },<br/>  undefined,<br/>  false,<br/>  undefined,<br/>  this,<br/>);<br/>`<br/><br/>`jsxDEV` 变量名是 React 的约定。`DEV` 后缀表示该代码用于开发环境。React 的开发版本速度较慢，并包含额外的有效性检查和调试工具。 |
+| `json<br/>{<br/>  "jsx": "preserve"<br/>}<br/>`     | `tsx<br/>// JSX 不会被转译<br/>// Bun 目前不支持 "preserve"<br/><Box width={5}>Hello</Box><br/>`                                                                                                                                                                                                                                                                                                                        |
 
 ### [`jsxFactory`](https://www.typescriptlang.org/tsconfig#jsxFactory)
 
-<Note>**注意** — 仅当 `jsx` 为 `react` 时生效。</Note>
+<Note>仅适用于 `jsx` 为 `react` 的情况。</Note>
 
-用于表示 JSX 构造的函数名。默认值为 `"createElement"`。此选项对像 [Preact](https://preactjs.com/) 之类使用不同函数名称（`"h"`）的库很有用。
+用于表示 JSX 构造的函数名称。默认值为 `"React.createElement"`。对于使用不同函数名称（`"h"`）的库（如 [Preact](https://preactjs.com/)），可以设置此选项。
 
-| 编译器选项                                                          | 转译输出                                                                |
-| ------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `json<br/>{<br/>  "jsx": "react",<br/>  "jsxFactory": "h"<br/>}<br/>` | `tsx<br/>import { h } from "react";<br/>h("Box", { width: 5 }, "Hello");<br/>` |
+| 编译器选项                                                          | 转译后的输出                             |
+| ------------------------------------------------------------------- | ----------------------------------------- |
+| `json<br/>{<br/>  "jsx": "react",<br/>  "jsxFactory": "h"<br/>}<br/>` | `tsx<br/>h(Box, { width: 5 }, "Hello");<br/>` |
 
 ### [`jsxFragmentFactory`](https://www.typescriptlang.org/tsconfig#jsxFragmentFactory)
 
-<Note>**注意** — 仅当 `jsx` 为 `react` 时生效。</Note>
+<Note>仅适用于 `jsx` 为 `react` 的情况。</Note>
 
-用于表示 [JSX 片段](https://react.dev/reference/react/Fragment)（如 `<>Hello</>`）的函数名；仅当 `jsx` 为 `react` 时生效。默认值为 `"Fragment"`。
+用于表示 [JSX 片段](https://react.dev/reference/react/Fragment)（例如 `<>Hello</>`）的函数名称。默认值为 `"React.Fragment"`。
 
-| 编译器选项                                                                                                       | 转译输出                                                                                                                             |
-| ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `json<br/>{<br/>  "jsx": "react",<br/>  "jsxFactory": "myjsx",<br/>  "jsxFragmentFactory": "MyFragment"<br/>}<br/>` | `tsx<br/>// 输入<br/><>Hello</>;<br/><br/>// 输出<br/>import { myjsx, MyFragment } from "react";<br/>myjsx(MyFragment, null, "Hello");<br/>` |
+| 编译器选项                                                                                                      | 转译后的输出                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `json<br/>{<br/>  "jsx": "react",<br/>  "jsxFactory": "myjsx",<br/>  "jsxFragmentFactory": "MyFragment"<br/>}<br/>` | `tsx<br/>// 输入<br/><>Hello</>;<br/><br/>// 输出<br/>myjsx(MyFragment, null, "Hello");<br/>` |
 
 ### [`jsxImportSource`](https://www.typescriptlang.org/tsconfig#jsxImportSource)
 
-<Note>**注意** — 仅当 `jsx` 为 `react-jsx` 或 `react-jsxdev` 时生效。</Note>
+<Note>仅适用于 `jsx` 为 `react-jsx` 或 `react-jsxdev` 的情况。</Note>
 
-指定从哪个模块导入组件工厂函数（`createElement`，`jsx`，`jsxDEV` 等）。默认值为 `"react"`。通常在使用如 Preact 这样的组件库时需要设置。
+组件工厂函数（如 `createElement`、`jsx` 或 `jsxDEV`）导入自的模块。默认值为 `"react"`。使用 Preact 这类组件库时，通常需要设置此选项。
 
-| 编译器选项                                                                                                      | 转译输出                                                                                                                                                                                                                                       |
-| ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `jsonc<br/>{<br/>  "jsx": "react",<br/>  // jsxImportSource 未定义<br/>  // 默认为 "react"<br/>}<br/>`              | `tsx<br/>import { jsx } from "react/jsx-runtime";<br/>jsx("Box", { width: 5, children: "Hello" });<br/>`                                                                                                                                        |
-| `jsonc<br/>{<br/>  "jsx": "react-jsx",<br/>  "jsxImportSource": "preact",<br/>}<br/>`                             | `tsx<br/>import { jsx } from "preact/jsx-runtime";<br/>jsx("Box", { width: 5, children: "Hello" });<br/>`                                                                                                                                       |
-| `jsonc<br/>{<br/>  "jsx": "react-jsxdev",<br/>  "jsxImportSource": "preact",<br/>}<br/>`                          | `tsx<br/>// 会自动添加 /jsx-runtime 后缀<br/>import { jsxDEV } from "preact/jsx-dev-runtime";<br/>jsxDEV(<br/>  "Box",<br/>  { width: 5, children: "Hello" },<br/>  undefined,<br/>  false,<br/>  undefined,<br/>  this,<br/>);<br/>`            |
+| 编译器选项                                                                                                       | 转译后的输出                                                                                                                                                                                                                               |
+| ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `jsonc<br/>{<br/>  "jsx": "react-jsx",<br/>  // 未定义 jsxImportSource<br/>  // 默认为 "react"<br/>}<br/>` | `tsx<br/>import { jsx } from "react/jsx-runtime";<br/>jsx("Box", { width: 5, children: "Hello" });<br/>`                                                                                                                                        |
+| `jsonc<br/>{<br/>  "jsx": "react-jsx",<br/>  "jsxImportSource": "preact",<br/>}<br/>`                                  | `tsx<br/>import { jsx } from "preact/jsx-runtime";<br/>jsx("Box", { width: 5, children: "Hello" });<br/>`                                                                                                                                       |
+| `jsonc<br/>{<br/>  "jsx": "react-jsxdev",<br/>  "jsxImportSource": "preact",<br/>}<br/>`                               | `tsx<br/>// /jsx-runtime 会自动追加<br/>import { jsxDEV } from "preact/jsx-dev-runtime";<br/>jsxDEV(<br/>  "Box",<br/>  { width: 5, children: "Hello" },<br/>  undefined,<br/>  false,<br/>  undefined,<br/>  this,<br/>);<br/>` |
 
-### JSX pragma
+### JSX 编译指令
 
-所有这些值都可以通过 _pragma_ 按文件单独设置。pragma 是一种特殊注释，用于在特定文件中设置编译器选项。
+你可以使用 _编译指令_ 为每个文件单独设置这些值。编译指令是一条注释，用于在特定文件中设置编译器选项。
 
-| Pragma                                  | 等效配置                                                     |
+| 编译指令                                | 等效配置                                                     |
 | --------------------------------------- | ------------------------------------------------------------ |
 | `ts<br/>// @jsx h<br/>`                 | `jsonc<br/>{<br/>  "jsxFactory": "h",<br/>}<br/>`             |
 | `ts<br/>// @jsxFrag MyFragment<br/>`    | `jsonc<br/>{<br/>  "jsxFragmentFactory": "MyFragment",<br/>}<br/>` |
@@ -95,13 +95,13 @@ console.log(
 );
 ```
 
-Bun 会漂亮地打印组件树：
+Bun 会以漂亮的格式打印组件树：
 
-<Frame>![JSX logging output](https://github.com/oven-sh/bun/assets/3084745/d29db51d-6837-44e2-b8be-84fc1b9e9d97)</Frame>
+<Frame>![JSX 日志输出](https://github.com/oven-sh/bun/assets/3084745/d29db51d-6837-44e2-b8be-84fc1b9e9d97)</Frame>
 
 ## 属性快速赋值（Prop punning）
 
-Bun 运行时还支持 JSX 的“属性快速赋值”。这是一种对同名变量赋值给属性的简写语法。
+Bun 运行时也支持 JSX 中的“属性快速赋值”：这是一种将变量赋值给同名属性的简写方式。
 
 ```tsx react.tsx icon="/icons/typescript.svg"
 function Div(props: {className: string;}) {

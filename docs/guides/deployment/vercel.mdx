@@ -4,16 +4,15 @@ sidebarTitle: 在 Vercel 上部署
 mode: center
 ---
 
-[Vercel](https://vercel.com/) 是一个云平台，允许你构建、部署和扩展你的应用。
+[Vercel](https://vercel.com/) 是一个用于构建、部署和扩展应用的云平台。
 
 <Warning>
-  Bun 运行时目前处于 Beta 阶段；某些功能（例如自动源码映射、字节码缓存、在
-  `node:http/https` 上的指标）尚不支持。
+  Bun 运行时处于 Beta 阶段。部分功能尚不受支持——例如，自动源映射、字节码缓存，以及 `node:http/https` 的指标。
 </Warning>
 
 <Note>
-  `Bun.serve` 当前不支持在 Vercel Functions 上使用。请在 Vercel 支持的框架中使用 Bun，如 Next.js、
-  Express、Hono 或 Nitro。
+  Vercel Functions 不支持 `Bun.serve`。请将 Bun 与 Vercel 支持的框架结合使用，例如 Next.js、Express、
+  Hono 或 Nitro。
 </Note>
 
 ---
@@ -28,7 +27,7 @@ mode: center
     	}
     	```
 
-    	Vercel 会自动检测此配置，并在 Bun 上运行你的应用。该值必须是 `"1.x"`，Vercel 会内部管理具体的次要版本号。
+    	Vercel 会自动检测此配置，并使用 Bun 运行你的应用。该值必须为 `"1.x"`；Vercel 会在内部处理次版本号。
 
     	为了达到最佳效果，请确保你的本地 Bun 版本与 Vercel 使用的版本相匹配。
     </Step>
@@ -46,10 +45,10 @@ mode: center
     	```
 
     	<Note>
-    		`--bun` 标志会在 Bun 下运行 Next.js CLI。打包（通过 Turbopack 或 Webpack）保持不变，但所有命令均在 Bun 运行时内执行。
+    		`--bun` 标志会在 Bun 下运行 Next.js CLI。打包过程（使用 Turbopack 或 Webpack）保持不变。
     	</Note>
 
-    	这可确保本地开发和构建都使用 Bun。
+    	使用这些脚本后，本地开发和构建都会使用 Bun。
     </Step>
 
     <Step title="部署你的应用">

@@ -1,7 +1,7 @@
 ## CLI 用法
 
 ```bash terminal icon="terminal"
-bun update <package> <version>
+bun update <name>@<version>
 ```
 
 ### 更新策略
@@ -106,8 +106,8 @@ bun update <package> <version>
   跳过项目 <code>package.json</code> 中的生命周期脚本（依赖脚本永远不会执行）
 </ParamField>
 
-<ParamField path="--concurrent-scripts" type="number" default="5">
-  生命周期脚本的最大并发作业数（默认 5）
+<ParamField path="--concurrent-scripts" type="number">
+  生命周期脚本的最大并发任务数（默认值：CPU 核心数的 2 倍）
 </ParamField>
 
 ### 安装控制

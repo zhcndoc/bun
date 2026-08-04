@@ -4,7 +4,7 @@ sidebarTitle: "ArrayBuffer 转数组"
 mode: center
 ---
 
-要以数字数组的形式获取 `ArrayBuffer` 的内容，可以在该缓冲区上创建一个 [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array)，然后使用 [`Array.from()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from) 方法将其转换为数组。
+要将 `ArrayBuffer` 的内容作为数字数组获取，请在该缓冲区上创建一个 [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array)，然后使用 [`Array.from()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from) 将其转换为数组。
 
 ```ts
 const buf = new ArrayBuffer(64);
@@ -15,7 +15,7 @@ arr[0]; // 0 (初始化为全零)
 
 ---
 
-`Uint8Array` 类支持数组索引和迭代。但是如果你希望将该实例转换为普通的 `Array`，请使用 `Array.from()`。（这通常比直接使用 `Uint8Array` 会更慢。）
+`Uint8Array` 类支持数组索引和迭代。要将该实例转换为常规 `Array`，请使用 `Array.from()`。这可能比直接使用 `Uint8Array` 更慢。
 
 ```ts
 const buf = new ArrayBuffer(64);
@@ -26,4 +26,4 @@ const regularArr = Array.from(uintArr);
 
 ---
 
-参见 [文档 > API > 二进制数据](/runtime/binary-data#conversion) 获取关于使用 Bun 操作二进制数据的完整文档。
+请参阅[二进制数据](/runtime/binary-data#conversion)。

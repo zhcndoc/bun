@@ -4,7 +4,7 @@ sidebarTitle: 模拟系统时间
 mode: center
 ---
 
-Bun 的测试运行器支持通过 `setSystemTime` 函数以编程方式设置系统时间。
+使用 `bun:test` 中的 `setSystemTime` 函数在测试中设置系统时间。
 
 ```ts
 import { test, expect, setSystemTime } from "bun:test";
@@ -22,7 +22,7 @@ test("party like it's 1999", () => {
 
 ---
 
-`setSystemTime` 函数通常与 [生命周期钩子](/test/lifecycle) 一起使用，以配置具有确定性的“假时钟”的测试环境。
+在 `beforeAll` 等[生命周期钩子](/test/lifecycle)中调用 `setSystemTime`，为测试提供一个确定性的“模拟时钟”。
 
 ```ts
 import { test, expect, beforeAll, setSystemTime } from "bun:test";
@@ -47,4 +47,4 @@ setSystemTime(); // 重置为实际时间
 
 ---
 
-完整的 Bun 测试运行器模拟文档请参见 [文档 > 测试运行器 > 日期和时间](/test/dates-times)。
+请参阅[日期和时间](/test/dates-times)。

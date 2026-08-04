@@ -12,4 +12,4 @@ import html from "./file.html" with { type: "text" };
 console.log(html); // <!DOCTYPE html><html><head>...
 ```
 
-这也可以与热模块重载和/或监听模式一起使用，以强制 Bun 在 `./file.html` 文件更改时重新加载。
+启用热模块重新加载或监视模式后，每当 `./file.html` 发生变化时，Bun 都会重新加载。

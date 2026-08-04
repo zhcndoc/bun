@@ -1,13 +1,13 @@
 ---
-title: Cookies
+title: Cookie
 description: 使用 Bun 的原生 API 处理 HTTP Cookie
 ---
 
-Bun 提供了通过 `Bun.Cookie` 和 `Bun.CookieMap` 来处理 HTTP cookies 的原生 API。这些 API 提供了快速的方法，用于在 HTTP 请求和响应中解析、生成以及操作 cookies。
+Bun 提供了两个用于处理 HTTP Cookie 的原生 API：`Bun.Cookie` 和 `Bun.CookieMap`。它们可以解析、生成和操作 HTTP 请求与响应中的 Cookie。
 
 ## CookieMap 类
 
-`Bun.CookieMap` 提供了类似 Map 的接口，用于操作一组 cookies。它实现了 `Iterable` 接口，允许你使用 `for...of` 循环以及其它迭代方法。
+`Bun.CookieMap` 是一个类似 Map 的 cookie 集合。它实现了 `Iterable`，因此可以与 `for...of` 循环和其他迭代方法一起使用。
 
 ```ts title="cookies.ts" icon="/icons/typescript.svg"
 // 创建空的 CookieMap
@@ -117,7 +117,7 @@ cookies.set(cookie);
 
 #### `delete(options: CookieStoreDeleteOptions): void`
 
-从 Map 中删除一个 cookie。应用于 Response 时，会添加一个值为空字符串且过期时间为过去的 cookie。只有当域和路径与原 cookie 创建时相同，浏览器才会成功删除该 cookie。
+从 map 中移除一个 cookie。应用到 Response 时，这会添加一个值为空字符串且过期时间为过去时间的 cookie。只有当域名和路径与创建该 cookie 时使用的域名和路径匹配时，浏览器才会删除该 cookie。
 
 ```ts title="delete-cookie.ts" icon="/icons/typescript.svg"
 // 用默认域和路径通过名称删除
@@ -141,9 +141,9 @@ const json = cookies.toJSON();
 
 #### `toSetCookieHeaders(): string[]`
 
-返回可用于设置所有 cookie 变更的 `Set-Cookie` 头部字符串数组。
+返回一个包含所有 cookie 变更对应的 `Set-Cookie` 标头值的数组。
 
-使用 `Bun.serve()` 时，不必显式调用此方法。对 `req.cookies` map 的任何修改都会自动应用到响应头。这一方法主要适用于其它 HTTP 服务器实现。
+将此方法用于 `Bun.serve()` 以外的 HTTP 服务器。在 `Bun.serve()` 中，无需调用此方法：对 `req.cookies` map 所做的任何更改都会自动应用到响应标头中。
 
 ```js title="node-server.js" icon="file-code"
 import { createServer } from "node:http";
@@ -260,23 +260,23 @@ new Bun.Cookie(options: CookieInit);
 ### 属性
 
 ```ts title="cookie-properties.ts" icon="/icons/typescript.svg"
-cookie.name; // string - Cookie 名称
-cookie.value; // string - Cookie 值
-cookie.domain; // string | null - 域范围（未指定为 null）
-cookie.path; // string - URL 路径范围（默认 "/"）
-cookie.expires; // number | undefined - 过期时间戳（自 Epoch 以来的毫秒）
-cookie.secure; // boolean - 是否要求 HTTPS
+cookie.name; // 字符串 - Cookie 名称
+cookie.value; // 字符串 - Cookie 值
+cookie.domain; // 字符串 | null - 域作用域（未指定时为 null）
+cookie.path; // 字符串 - URL 路径作用域（默认为 "/"）
+cookie.expires; // Date | undefined - 过期日期
+cookie.secure; // 布尔值 - 要求使用 HTTPS
 cookie.sameSite; // "strict" | "lax" | "none" - SameSite 设置
-cookie.partitioned; // boolean - 是否隔离（CHIPS）
-cookie.maxAge; // number | undefined - 最大存活秒数
-cookie.httpOnly; // boolean - 仅 HTTP 可访问（不可用 JavaScript 访问）
+cookie.partitioned; // 布尔值 - Cookie 是否已分区（CHIPS）
+cookie.maxAge; // 数字 | undefined - 最大存活时间（秒）
+cookie.httpOnly; // 布尔值 - 只能通过 HTTP 访问（不能通过 JavaScript 访问）
 ```
 
 ### 方法
 
 #### `isExpired(): boolean`
 
-检查 cookie 是否已过期。
+检查 cookie 是否已过期。当同时设置了 `maxAge` 和 `expires` 时，按照 [RFC 6265](https://datatracker.ietf.org/doc/html/rfc6265#section-5.3) 的要求，以 `maxAge` 为准。
 
 ```ts title="is-expired.ts" icon="/icons/typescript.svg"
 // 已过期 cookie（日期为过去）
@@ -290,6 +290,10 @@ const validCookie = new Bun.Cookie("name", "value", {
   maxAge: 3600, // 1 小时（秒）
 });
 console.log(validCookie.isExpired()); // false
+
+// 非正数的 maxAge 会使 cookie 立即过期
+const deletedCookie = new Bun.Cookie("name", "value", { maxAge: 0 });
+console.log(deletedCookie.isExpired()); // true
 
 // 会话 cookie（无过期时间）
 const sessionCookie = new Bun.Cookie("name", "value");
@@ -313,9 +317,9 @@ const cookie = new Bun.Cookie("session", "abc123", {
 });
 
 console.log(cookie.serialize());
-// => "session=abc123; Domain=example.com; Path=/admin; Expires=Sun, 19 Mar 2025 15:03:26 GMT; Secure; HttpOnly; SameSite=strict"
+// => "session=abc123; Domain=example.com; Path=/admin; Expires=Sun, 19 Mar 2025 15:03:26 GMT; Secure; HttpOnly; SameSite=Strict"
 console.log(cookie.toString());
-// => "session=abc123; Domain=example.com; Path=/admin; Expires=Sun, 19 Mar 2025 15:03:26 GMT; Secure; HttpOnly; SameSite=strict"
+// => "session=abc123; Domain=example.com; Path=/admin; Expires=Sun, 19 Mar 2025 15:03:26 GMT; Secure; HttpOnly; SameSite=Strict"
 ```
 
 #### `toJSON(): CookieInit`
@@ -347,7 +351,7 @@ const jsonString = JSON.stringify(cookie);
 
 #### `Cookie.parse(cookieString: string): Cookie`
 
-解析 cookie 字符串成 `Cookie` 实例。
+将 cookie 字符串解析为 `Cookie` 实例。
 
 ```ts title="parse-cookie.ts" icon="/icons/typescript.svg"
 const cookie = Bun.Cookie.parse("name=value; Path=/; Secure; SameSite=Lax");
@@ -361,7 +365,7 @@ console.log(cookie.sameSite); // "lax"
 
 #### `Cookie.from(name: string, value: string, options?: CookieInit): Cookie`
 
-工厂方法用于创建 cookie。
+用于创建 cookie 的工厂方法。
 
 ```ts title="cookie-from.ts" icon="/icons/typescript.svg"
 const cookie = Bun.Cookie.from("session", "abc123", {

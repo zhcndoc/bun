@@ -4,7 +4,7 @@ sidebarTitle: "Uint8Array 到 ArrayBuffer"
 mode: center
 ---
 
-[`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) 是一种 _类型化数组_ 类，意味着它是一种查看底层 `ArrayBuffer` 中数据的机制。底层的 `ArrayBuffer` 可以通过 `buffer` 属性访问。
+[`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) 是一个_类型化数组_，是底层 `ArrayBuffer` 中数据的视图。`buffer` 属性返回该 `ArrayBuffer`。
 
 ```ts
 const arr = new Uint8Array(64);
@@ -13,10 +13,10 @@ arr.buffer; // => ArrayBuffer(64)
 
 ---
 
-`Uint8Array` 可能是底层 `ArrayBuffer` 中数据的一个 _子集_ 视图。在这种情况下，`buffer` 属性将返回整个缓冲区，`byteOffset` 和 `byteLength` 属性将指示该子集。
+`Uint8Array` 可能是底层 `ArrayBuffer` 中数据_子集_的视图。在这种情况下，`buffer` 属性返回整个缓冲区，而 `byteOffset` 和 `byteLength` 属性则指示该子集。
 
 ```ts
-const arr = new Uint8Array(64, 16, 32);
+const arr = new Uint8Array(new ArrayBuffer(64), 16, 32);
 arr.buffer; // => ArrayBuffer(64)
 arr.byteOffset; // => 16
 arr.byteLength; // => 32
@@ -24,4 +24,4 @@ arr.byteLength; // => 32
 
 ---
 
-有关使用 Bun 操作二进制数据的完整文档，请参见 [文档 > API > 二进制数据](/runtime/binary-data#conversion)。
+请参阅[二进制数据](/runtime/binary-data#conversion)。

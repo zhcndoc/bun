@@ -3,7 +3,7 @@ title: "锁文件"
 description: "Bun 的锁文件格式和配置"
 ---
 
-运行 `bun install` 将创建一个名为 `bun.lock` 的锁文件。
+`bun install` 创建一个名为 `bun.lock` 的锁文件。
 
 #### 应该提交到 git 吗？
 
@@ -11,14 +11,14 @@ description: "Bun 的锁文件格式和配置"
 
 #### 是否可以生成锁文件但不安装？
 
-要生成锁文件而不安装到 `node_modules`，可以使用 `--lockfile-only` 标志。锁文件始终会保存到磁盘，即使它与项目的 `package.json` 文件已经是最新的。
+要在不安装到 `node_modules` 的情况下生成锁文件，请使用 `--lockfile-only` 标志。即使锁文件已与项目的 `package.json`(s) 保持最新状态，也始终会将其保存到磁盘。
 
 ```bash terminal icon="terminal"
 bun install --lockfile-only
 ```
 
 <Note>
-  使用 `--lockfile-only` 仍然会将注册表元数据以及 git/tarball 依赖项填充到全局安装缓存中。
+  `--lockfile-only` 仍会使用注册表元数据以及 git/tarball 依赖填充全局安装缓存。
 </Note>
 
 #### 可以选择不生成锁文件吗？
@@ -29,7 +29,7 @@ bun install --lockfile-only
 bun install --no-save
 ```
 
-安装 Yarn 锁文件，_同时_ 创建 `bun.lock`。
+要在 `bun.lock` 之外再写入一个 Yarn 锁文件：
 
 <CodeGroup>
 
@@ -48,9 +48,9 @@ print = "yarn"
 
 #### 基于文本的锁文件
 
-Bun v1.2 将默认锁文件格式更改为基于文本的 `bun.lock`。现有的二进制格式 `bun.lockb` 可以通过运行命令 `bun install --save-text-lockfile --frozen-lockfile --lockfile-only` 并删除 `bun.lockb` 来迁移到新格式。
+Bun v1.2 将默认锁文件格式更改为基于文本的 `bun.lock`。要迁移现有的二进制 `bun.lockb`，请运行 `bun install --save-text-lockfile --frozen-lockfile --lockfile-only`，然后删除 `bun.lockb`。
 
-关于新锁文件格式的更多信息，请参阅我们的 [博客文章](https://bun.com/blog/bun-lock-text-lockfile)。
+有关该格式的更多信息，请参阅[博客文章](https://bun.com/blog/bun-lock-text-lockfile)。
 
 #### 自动锁文件迁移
 

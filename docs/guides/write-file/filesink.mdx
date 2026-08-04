@@ -4,9 +4,9 @@ sidebarTitle: 递增写入
 mode: center
 ---
 
-Bun 提供了一个用于递增写入文件的 API。这对于写入大型文件，或长时间写入文件非常有用。
+Bun 提供了用于向文件递增写入的 API。适用于大文件，或需要在较长时间内持续向文件写入数据的场景。
 
-在 `BunFile` 上调用 `.writer()` 可以获取一个 `FileSink` 实例。该实例可用于高效地缓冲数据，并周期性地“刷新”到磁盘。你可以多次写入和刷新。
+在 `BunFile` 上调用 `.writer()` 可获取一个 `FileSink` 实例。它会缓冲数据；调用 `.flush()` 将缓冲区写入磁盘。你可以多次写入并刷新。
 
 ```ts
 const file = Bun.file("/path/to/file.txt");
@@ -23,7 +23,7 @@ writer.flush();
 
 ---
 
-`.write()` 方法可以接受字符串或二进制数据。
+`.write()` 方法接受字符串或二进制数据。
 
 ```ts
 w.write("hello");
@@ -34,7 +34,7 @@ writer.flush();
 
 ---
 
-当内部缓冲区满时，`FileSink` 也会自动刷新。你可以通过 `highWaterMark` 选项配置缓冲区大小。
+当内部缓冲区已满时，`FileSink` 也会自动刷新。你可以使用 `highWaterMark` 选项配置缓冲区大小。
 
 ```ts
 const file = Bun.file("/path/to/file.txt");
@@ -43,7 +43,7 @@ const writer = file.writer({ highWaterMark: 1024 * 1024 }); // 1MB
 
 ---
 
-写入完成后，调用 `.end()` 来自动刷新缓冲区并关闭文件。
+完成写入后，调用 `.end()` 刷新缓冲区并关闭文件。
 
 ```ts
 writer.end();
