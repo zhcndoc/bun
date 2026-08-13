@@ -168,6 +168,27 @@ console.log(`CPU 时间（用户态）: ${usage.cpuTime.user} 微秒`);
 console.log(`CPU 时间（内核态）: ${usage.cpuTime.system} 微秒`);
 ```
 
+## 使用 cgroups 限制资源（Linux）
+
+在 Linux 上，传入 `cgroup` 可在[控制组](https://docs.kernel.org/admin-guide/cgroup-v2.html)内启动子进程。子进程在开始执行前就会加入 cgroup，因此配置在其中的限制——内存、pids、CPU——会从第一条指令开始生效，并应用于该子进程随后生成的每个进程。当超过内存限制时，内核会在 cgroup _内部_ OOM-kill 一个进程，而不是从父进程回收内存。
+
+cgroup 是 `/sys/fs/cgroup` 下的一个目录；使用普通文件操作创建并配置它，然后传入其路径（或已打开的目录文件描述符）：
+
+```ts index.ts icon="/icons/typescript.svg"
+import { mkdirSync, writeFileSync } from "node:fs";
+
+const dir = "/sys/fs/cgroup/build-jobs";
+mkdirSync(dir, { recursive: true });
+writeFileSync(`${dir}/memory.max`, String(2 * 1024 ** 3)); // cgroup v1: memory.limit_in_bytes
+
+const proc = Bun.spawn({
+  cmd: ["make", "-j8"],
+  cgroup: dir,
+});
+```
+
+同一个目录可以传递给任意数量的 spawn；限制适用于它们的总使用量。同时支持 cgroup v1 和 v2 层级结构。创建 cgroup 通常需要 root 权限或一个已委派的子树。在其他平台上，此选项会被忽略；在 Linux 上，如果无法加入 cgroup，spawn 会失败。
+
 ## 使用 AbortSignal
 
 你可以使用 `AbortSignal` 中止子进程：

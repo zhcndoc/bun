@@ -682,11 +682,22 @@ publicHoistPattern = ["*eslint*", "*prettier*"]
 
 ### `install.hoistPattern`
 
-在使用 `"isolated"` 链接器时，匹配这些 glob 模式的包会被提升到虚拟存储根目录（`node_modules/.bun`），以便虚拟存储中的其他包能够解析它们。默认 `[]`。类似于 pnpm 的 `hoist-pattern`。
+使用 `"isolated"` 链接器时，匹配这些 glob 模式的包会被提升到虚拟存储中的备用目录（`node_modules/.bun/node_modules`），以便虚拟存储中的其他包可以解析它们。默认情况下，每个包都会被提升到该目录，相当于 `["*"]`。类似于 pnpm 的 `hoist-pattern`。
 
 ```toml title="bunfig.toml" icon="settings"
 [install]
 hoistPattern = ["*"]
+```
+
+### `install.hoist`
+
+使用 `"isolated"` 链接器时，Bun 会创建 `node_modules/.bun/node_modules`，这是一个备用目录，其中包含指向每个已安装包的符号链接（或者仅包含匹配 `install.hoistPattern` 的包）。该目录位于存储中每个包的向上解析路径上，因此包仍然可以解析自己未声明的依赖（“幻影依赖”）。设置 `hoist = false` 可完全跳过此目录的创建：此时，存储包中的未声明导入会失败，除非该包被链接到项目根目录的 `node_modules` 中（例如直接依赖、匹配 `publicHoistPattern` 的包或工作区包）。由于 `.bun` 位于其中，这些包仍处于解析路径上。项目自身的 `node_modules` 符号链接不会改变。默认 `true`。等同于 pnpm 的 `hoist` 设置，包括根 `node_modules` 的这一注意事项；其优先级高于 `install.hoistPattern`。
+
+此设置仅适用于 `"isolated"` 链接器。提升式安装不受影响：在那里，扁平的 `node_modules` 树本身就是布局，而不是由此开关控制的内容。
+
+```toml title="bunfig.toml" icon="settings"
+[install]
+hoist = false
 ```
 
 ### `install.logLevel`

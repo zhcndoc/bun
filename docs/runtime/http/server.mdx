@@ -296,7 +296,18 @@ await server.stop();
 await server.stop(true);
 ```
 
-默认情况下，`stop()` 会允许正在进行的请求和 WebSocket 连接完成。传入 `true` 会立即终止所有连接。
+默认情况下，`stop()` 会允许正在处理的请求和 WebSocket 连接完成。空闲的 keep-alive 连接会立即关闭，正在处理请求的连接会在其响应发送完毕后关闭。传递 `true` 则会立即终止所有连接。返回的 promise 会在每个连接都关闭后解析。
+
+### `server.closeIdleConnections()`
+
+在不停止服务器的情况下，关闭当前未处理请求的 keep-alive 连接：
+
+```ts
+const closed = server.closeIdleConnections();
+console.log(`closed ${closed} idle connections`);
+```
+
+它会返回已关闭的连接数量。正在处理请求的连接和已打开的 WebSocket 不受影响，服务器仍会接受新连接。这与 `node:http` 的 `server.closeIdleConnections()` 行为一致，后者不返回任何内容。
 
 ### `server.ref()` 和 `server.unref()`
 
@@ -557,8 +568,14 @@ interface Server extends Disposable {
   stop(closeActiveConnections?: boolean): Promise<void>;
 
   /**
-   * 在不重启服务器的情况下重新加载处理程序。
-   * 只能更新 fetch 和 error 处理程序。
+   * Close idle keep-alive connections without stopping the server.
+   * @returns The number of connections closed
+   */
+  closeIdleConnections(): number;
+
+  /**
+   * Update handlers without restarting the server.
+   * Only fetch and error handlers can be updated.
    */
   reload(options: Serve): void;
 

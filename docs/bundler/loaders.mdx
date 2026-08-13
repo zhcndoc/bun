@@ -216,6 +216,59 @@ export default {
 
 ---
 
+### `xml`
+
+**XML 加载器。** 默认用于 `.xml`。
+
+XML 文件可以直接导入。Bun 会使用其原生 XML 1.0 解析器将其解析为 [`Bun.XML.parse`](/runtime/xml) 的紧凑对象结构：根元素使用一个键，属性使用 `"@name"` 键，重复的子元素使用数组，属性或子元素旁的文本使用 `"#text"`，并且每个值都是字符串。
+
+```ts
+import doc from "./config.xml";
+console.log(doc.config["@version"]);
+
+// via import attribute:
+import feed from "./export.rss" with { type: "xml" };
+```
+
+打包时，解析后的 XML 会以内联的 JavaScript 对象形式插入包内。
+
+```ts
+var doc = {
+  config: {
+    "@version": "2",
+    // ...other fields
+  },
+};
+```
+
+如果将 `.xml` 文件作为入口点传入，则会将其转换为一个通过 `export default` 导出解析后对象的 `.js` 模块。
+
+<CodeGroup>
+
+```xml 输入
+<user id="1">
+  <name>John Doe</name>
+  <email>johndoe@example.com</email>
+  <role>admin</role>
+  <role>editor</role>
+</user>
+```
+
+```ts 输出
+export default {
+  user: {
+    "@id": "1",
+    name: "John Doe",
+    email: "johndoe@example.com",
+    role: ["admin", "editor"],
+  },
+};
+```
+
+</CodeGroup>
+
+---
+
 ### `text`
 
 **文本加载器。** 默认用于 `.txt`。

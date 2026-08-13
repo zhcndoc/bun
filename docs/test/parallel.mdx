@@ -1,0 +1,177 @@
+---
+title: "并行和隔离测试运行"
+description: "使用 --parallel 跨 CPU 核心运行测试文件，使用 --isolate 将文件彼此隔离，在一个文件内并发运行测试，并使用 --shard 和 --timings 将测试套件拆分到 CI 机器上"
+---
+
+`bun test` 有三个彼此独立的开关，用于同时运行多个项目：
+
+| Flag                               | Unit of parallelism             | What it does                                                                                                         |
+| ---------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `--parallel[=N]`                   | test **files**, in processes    | Runs files across `N` worker processes (default: number of CPU cores). Implies `--isolate`; `--no-isolate` opts out. |
+| `--concurrent` / `test.concurrent` | **tests** within one file       | Lets `async` tests in the same file overlap while one is awaiting.                                                   |
+| `--shard=i/n`                      | test files, across **machines** | Runs the `i`-th of `n` deterministic slices of the suite. Combine with `--timings` to balance by duration.           |
+
+它们可以组合使用：一个 CI 任务可以运行 `bun test --shard=2/4 --parallel`，而该分片中的文件仍然可以包含 `test.concurrent` 测试
+
+## `--parallel`
+
+```sh terminal icon="terminal"
+bun test --parallel        # one worker per CPU core
+bun test --parallel=4      # exactly 4 workers
+```
+
+主 `bun test` 进程会变成协调器。它照常发现测试文件，然后启动工作进程，并一次将一个文件交给每个工作进程。每个测试完成后，结果会流式传回，因此输出看起来与串行运行相同——每个文件的结果都会在其文件名下集中打印，并且一个测试中的 `console.log` 输出永远不会与另一个文件的输出交错
+
+```txt
+bun test v1.4.0 8x PARALLEL
+
+src/router.test.ts:
+✓ matches static routes [0.31ms]
+✓ matches params [0.12ms]
+
+src/db.test.ts:
+✓ migrates up [41.02ms]
+✓ migrates down [38.60ms]
+...
+```
+
+工作进程会延迟启动。第一个工作进程会立即启动；只有当每个正在运行的工作进程都忙碌了几毫秒后（`--parallel-delay=<ms>`，默认值为 `5`），其余工作进程才会被创建。因此，一组很小的文件会在单个工作进程上运行，不产生进程创建开销，而第一个耗时较长的文件会触发完整的扩展并行运行
+
+### 文件如何分配
+
+文件会按路径排序，并为每个工作进程拆分出一个连续的分块，因此同一目录中的文件——它们通常会导入相同的模块——大多会落在同一个进程中（分块边界可能落在目录内部，且被窃取的文件会移动）。当某个工作进程处理完自己的分块后，它会从另一个工作进程中剩余的最大分块里窃取后半部分。使用 [`--timings`](#balancing-with---timings) 时，分块会根据记录的耗时而不是文件数量进行切分，每个工作进程会先启动其最慢的文件；空闲工作进程则会从剩余时间最多的分块中，窃取尚未启动且最慢的文件
+
+### 每个文件都会被隔离（除非选择退出）
+
+`--parallel` 隐含启用 [`--isolate`](#--isolate)：即使两个文件落在同一个工作进程上，每个文件也会在全新的全局对象中运行。使用 `--parallel` 通过的测试不会依赖前一个文件泄漏的状态
+
+`--parallel --no-isolate` 会关闭这一行为：每个工作进程会为分配给它的所有文件保留单一的全局对象和模块注册表，这与串行 `bun test` 为整个测试套件所做的完全相同。导入内容（以及 `--preload` 模块）会在每个工作进程中求值一次，而不是每个文件一次，这是运行大量小文件测试套件的最快方式——代价是，一个文件可能观察到同一工作进程中更早文件留下的任何内容。由于工作进程永远不知道哪个文件是它处理的最后一个文件，预加载级别的 `beforeAll`／`afterAll` hook 仍然会包裹每个文件
+
+### 工作进程环境
+
+每个工作进程都会将 `BUN_TEST_WORKER_ID` 和 `JEST_WORKER_ID` 设置为从 1 开始的索引，因此测试可以为每个工作进程选择不同的数据库、端口范围或临时目录：
+
+```ts title="db.test.ts" icon="/icons/typescript.svg"
+const dbName = `app_test_${process.env.BUN_TEST_WORKER_ID ?? "1"}`;
+```
+
+会影响测试执行方式的标志（`--timeout`、`--preload`、`--define`、`--coverage`、`--update-snapshots`、`-t`、`--retry`、`--rerun-each`、`--concurrent`、`--randomize`／`--seed` 等）都会转发给工作进程。`--bail` 由协调器以文件粒度处理：达到失败阈值后不会再启动新文件，但已经在运行的文件会完成
+
+Coverage、JUnit XML 和 snapshot 写入会由协调器合并，因此 `--parallel --coverage --reporter=junit --reporter-outfile=junit.xml` 会生成一份报告
+
+如果工作进程崩溃（原生 addon 发生段错误，或测试调用了 `process.exit`），它正在运行的文件会被报告为失败，并由替代工作进程接手剩余文件。由致命信号导致的崩溃会中止整个运行，因此不会被之后通过的文件掩盖
+
+### `--parallel` 何时有帮助，何时没有
+
+当测试套件主要由测试执行时间构成时，`--parallel` 会带来收益——例如 I/O 等待、实际计算、子进程以及大量文件。它也有代价：每个文件都会在全新的全局对象中重新求值其导入内容（参见 [`--isolate`](#--isolate)），并且每个工作进程都是拥有独立 JIT 预热过程的单独进程。对于一组非常快、且都导入同一个大型模块图的文件，普通的 `bun test`（一个进程、一个共享模块注册表）可能更快。请两种方式都试试；每次运行结束时都会打印耗时数据
+
+## `--isolate`
+
+```sh terminal icon="terminal"
+bun test --isolate
+```
+
+在同一个进程内的全新 JavaScript 全局对象中运行每个测试文件。在文件之间，Bun 会：
+
+- 创建新的 `globalThis`（因此文件附加到 `globalThis` 上的属性、被修补的内置对象以及模块级状态都会消失），
+- 清除 ESM 和 CommonJS 模块注册表（每个文件都会重新求值其导入内容），
+- 关闭文件留下的服务器、套接字、文件监视器和子进程，取消其计时器，并恢复 fake timers，
+- 在新的全局对象中重新运行 `--preload` 脚本
+
+这就是 Jest 和 Vitest 默认的行为。它通过重新求值每个文件的导入内容为代价，消除了“单独运行时通过，在完整测试套件中失败”的问题
+
+为了降低这一成本，转译后的源代码和字节码会在进程级别缓存，并在各个全局对象之间共享：第二个导入某模块的文件会跳过读取、转译和解析，直接进入求值阶段。只有模块的顶层代码会再次运行
+
+不使用 `--isolate` 时（默认情况），所有文件共享一个全局对象和一个模块注册表。这是最快的模式，适用于文件之间不会泄漏状态的测试套件
+
+## 文件内的并发测试
+
+`--parallel` 会将 _文件_ 分散到各个核心上。在一个文件内，测试仍然会逐个运行，除非选择启用并发；启用后，某个 `async` 测试等待 I/O 时，其他测试可以与其重叠运行：
+
+```ts title="api.test.ts" icon="/icons/typescript.svg"
+import { test, expect } from "bun:test";
+
+test.concurrent("GET /users", async () => {
+  const res = await fetch(`${baseUrl}/users`);
+  expect(res.status).toBe(200);
+});
+
+test.concurrent("GET /posts", async () => {
+  const res = await fetch(`${baseUrl}/posts`);
+  expect(res.status).toBe(200);
+});
+
+// runs after the concurrent group, alone
+test.serial("resets the database", async () => {
+  await resetDb();
+});
+```
+
+- `test.concurrent(...)`／`describe.concurrent(...)` 标记单个测试或整个测试组
+- `--concurrent` 会将每个测试视为并发测试；`test.serial` 可退出并发模式
+- `--max-concurrency=N` 限制同时运行的测试数量（默认值为 20）
+- `bunfig.toml` 中的 [`concurrentTestGlob`](/test/configuration#concurrenttestglob) 仅对匹配的文件启用该功能
+
+并发测试共享同一个线程和全局对象；这是面向 I/O 密集型测试的协作式并发，而不是额外的 CPU 核心。在并发执行时，`expect.assertions()` 和其他每个测试的全局状态需要谨慎处理——请参阅[并发测试执行](/test/index#concurrent-test-execution)
+
+## 使用 `--shard` 将测试套件拆分到 CI 机器
+
+```sh terminal icon="terminal"
+bun test --shard=1/3   # machine 1
+bun test --shard=2/3   # machine 2
+bun test --shard=3/3   # machine 3
+```
+
+每台机器都会按路径对发现的测试文件排序，并获取一个确定性的分片，因此所有分片合起来会在无需协调的情况下恰好覆盖每个文件一次。不使用 `--timings` 时，排序列表中的第 `i` 个文件会分配给分片 `(i mod n) + 1`——按文件数量平衡，而不是按文件耗时平衡
+
+### 使用 `--timings` 进行平衡
+
+文件数量并不能很好地代表耗时：某个分片可能最终包含所有耗时较长的集成测试。向 `bun test` 提供每个文件的耗时记录后，它会根据总耗时切分分片，同时将相邻文件（它们共享导入内容）放在一起：
+
+```sh terminal icon="terminal"
+# Record durations (any run can do this; --parallel is fine)
+bun test --timings=.bun-test-timings.json --update-timings
+
+# Use them
+bun test --shard=2/8 --parallel --timings=.bun-test-timings.json
+```
+
+该文件是普通 JSON，按耗时从高到低排列，因此也可以作为“哪些内容较慢”的报告：
+
+```json title=".bun-test-timings.json" icon="file-json"
+{
+  "version": 1,
+  "files": {
+    "test/integration/build.test.ts": 41234,
+    "test/db/migrate.test.ts": 9876,
+    "src/router.test.ts": 112
+  }
+}
+```
+
+- 路径相对于项目根目录；值是整个文件的墙上时钟毫秒数
+- 不使用 `--shard` 时，`--update-timings` 会合并到它读取的内容中，因此在本地重新运行测试套件的一部分会刷新这些条目，并保留其余内容。已经不存在的文件对应条目会保留；删除该文件即可重新开始
+- 使用 `--shard` 时，`--update-timings` **只会写入该分片运行的文件**——见下文
+- 没有条目的文件在切分分片时会被假定采用中位数耗时，并且在 `--parallel` 下会优先启动
+- 使用 `--timings` 时，`--parallel` 也会使用这些耗时：工作进程分块会按时间切分，并且每个工作进程会先启动其最慢的文件
+
+#### 每个分片一个 timings 文件
+
+`--timings` 可以传递多次；这些文件会作为一张表读取（尚不存在的路径会被跳过），而 `--update-timings` 会写入第一个路径。在 `--shard` 下，该输出只包含该分片运行的文件，因此各分片的输出彼此不相交；在下一次运行时将它们一起读取，就会累加成整个测试套件——无需合并步骤。主页上的[大型代码库](/test/index#large-codebases)包含完整的 CI 工作流
+
+## 对比
+
+2,000 个 TypeScript 测试文件 × 每个文件 8 个小型测试，所有文件都导入一个基于 `zod`、`date-fns` 和 `lodash` 构建的小型应用，并通过每个 runner 的预加载机制加载一个共享 setup 文件（自定义 matcher ＋ `beforeEach`／`afterEach`）——这就是大型应用单元测试套件的形态（[`bench/test/app`](https://github.com/oven-sh/bun/tree/main/bench/test/app)、`bun app/setup.ts 2000 20`）。16 核 Apple M4 Max：
+
+| Mode                             | Bun                                           | Vitest 4.1                                            | Jest 30 (`@swc/jest`)                                  |
+| -------------------------------- | --------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------ |
+| all cores, one global per worker | `bun test --parallel --no-isolate` **0.75 s** | `vitest run --no-isolate` 3.7 s                       | —                                                      |
+| all cores, fresh global per file | `bun test --parallel` **6.8 s**               | `vitest run` 133 s                                    | `jest` 19.1 s                                          |
+| one thread, one global           | `bun test` **2.4 s**                          | `vitest run --no-isolate --no-file-parallelism` 8.5 s | — (`jest --runInBand`, 80 s, still isolates each file) |
+
+<Note>
+  墙上时钟耗时，使用 `hyperfine --warmup 1`，Bun 1.4、Node.js 25.6，每个 runner 使用其标准配置以及 setup-file 选项
+  （`bunfig.toml` `test.preload`、`setupFilesAfterEnv`、`setupFiles`）。生成器和配置文件都在仓库中，因此你可以重新运行；实际比例会随着测试的具体内容而变化——这个测试套件特意让每个文件的开销占主导，而不是测试主体
+</Note>
+
+时间消耗在哪里：对于每个文件使用全新的全局对象时，每个 runner 都会重新求值导入内容和 setup 文件 2,000 次。Bun 会在这些全局对象之间共享转译后的源代码和字节码，因此不会重复解析，但模块求值和 JIT 预热仍然会在每个文件中重复进行——这就是为什么在这种形态下，一个共享全局对象（`bun test`）胜过十六个隔离工作进程，而十六个共享全局对象（`--parallel --no-isolate`）则胜过两者

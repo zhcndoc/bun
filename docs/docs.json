@@ -160,6 +160,7 @@
               "/runtime/yaml",
               "/runtime/markdown",
               "/runtime/json5",
+              "/runtime/xml",
               "/runtime/jsonl",
               "/runtime/html-rewriter",
               "/runtime/image",
@@ -280,7 +281,7 @@
           {
             "group": "测试执行",
             "icon": "zap",
-            "pages": ["/test/runtime-behavior", "/test/discovery"]
+            "pages": ["/test/runtime-behavior", "/test/discovery", "/test/parallel"]
           },
           {
             "group": "测试特性",
@@ -512,6 +513,7 @@
               "/guides/runtime/import-toml",
               "/guides/runtime/import-yaml",
               "/guides/runtime/import-json5",
+              "/guides/runtime/import-xml",
               "/guides/runtime/import-html",
               "/guides/util/import-meta-dir",
               "/guides/util/import-meta-file",

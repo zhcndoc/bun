@@ -1,0 +1,63 @@
+---
+title: 导入 XML 文件
+sidebarTitle: 导入 XML
+mode: center
+---
+
+Bun 原生支持 `.xml` 导入
+
+```xml config.xml icon="file-code"
+<?xml version="1.0" encoding="UTF-8"?>
+<config env="production">
+  <database host="localhost" port="5432" name="myapp"/>
+  <server port="3000" timeout="30"/>
+  <feature name="auth"/>
+  <feature name="rateLimit"/>
+</config>
+```
+
+---
+
+像导入其他源文件一样导入该文件。该模块就是解析后的文档：根元素对应一个键，属性对应 `"@name"` 键，重复元素对应数组，并且所有值都是字符串
+
+```ts config.ts icon="/icons/typescript.svg"
+import doc from "./config.xml";
+
+doc.config["@env"]; // => "production"
+doc.config.database["@host"]; // => "localhost"
+doc.config.server["@port"]; // => "3000"
+doc.config.feature.map(f => f["@name"]); // => ["auth", "rateLimit"]
+```
+
+---
+
+根元素也可以作为命名导入使用：
+
+```ts config.ts icon="/icons/typescript.svg"
+import { config } from "./config.xml";
+
+console.log(config.database["@name"]); // => "myapp"
+console.log(Number(config.server["@timeout"])); // => 30
+```
+
+---
+
+如需在运行时解析 XML 字符串，请使用 `Bun.XML.parse()`：
+
+```ts config.ts icon="/icons/typescript.svg"
+const data = Bun.XML.parse(`
+  <user id="7">
+    <name>John Doe</name>
+    <hobby>reading</hobby>
+    <hobby>coding</hobby>
+  </user>
+`);
+
+console.log(data.user.name); // => "John Doe"
+console.log(data.user.hobby); // => ["reading", "coding"]
+console.log(data.user["@id"]); // => "7"
+```
+
+---
+
+请参阅 [XML](/runtime/xml)，了解 Bun 对 XML 的其余支持，包括有序的 `{ compact: false }` 节点树和 `Bun.XML.stringify()`。

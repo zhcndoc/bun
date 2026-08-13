@@ -76,6 +76,12 @@ bun --watch test
   --no-clear-screen`。
 </Note>
 
+<Note>
+  在每次重启之前，`bun run --watch` 都会运行你的脚本为终止信号注册的处理程序（默认为
+  `SIGTERM`，与 Node.js 发送给其监视进程的信号一致）。使用 **`--watch-kill-signal`** 可以选择其他信号，例如
+  `bun --watch --watch-kill-signal SIGINT index.ts`。
+</Note>
+
 ---
 
 ## `--hot` 模式

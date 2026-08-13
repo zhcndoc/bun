@@ -71,8 +71,10 @@ linker = "isolated"
 
 ```bash tree layout of node_modules icon="list-tree"
 node_modules/
-├── .bun/                          # 中央包存储
-│   ├── package@1.0.0/             # 版本化包安装
+├── .bun/                          # Central package store
+│   ├── node_modules/              # Hoisted fallback (see install.hoist)
+│   │   └── package -> ../package@1.0.0/node_modules/package
+│   ├── package@1.0.0/             # Versioned package installations
 │   │   └── node_modules/
 │   │       └── package/           # 实际包文件
 │   ├── @scope+package@2.1.0/      # 作用域包 (+ 代替 /)
@@ -122,7 +124,19 @@ node_modules/.bun/package@1.0.0_react@18.2.0/
 
 目录名称同时包含包版本及其对等依赖版本，因此每种唯一组合都会获得自己的安装。
 
-### 全局虚拟存储
+### 使用 `install.hoist = false` 进行严格解析
+
+默认情况下，Bun 会创建 `node_modules/.bun/node_modules`，这是一个包含指向每个已安装包的符号链接的回退目录。由于它是每个存储条目的祖先目录，存储中的包可以解析它从未声明的依赖。设置 [`install.hoist = false`](/runtime/bunfig#install-hoist)（或在 `.npmrc` 中设置与 pnpm 匹配的 `hoist=false`）可跳过该目录的创建，使未声明的导入失败，而不是依赖于恰好安装的其他内容。有一个与 pnpm 共有的例外：根 `node_modules` 也位于存储之上，因此链接到其中的包（你的直接依赖、匹配 `publicHoistPattern` 的包以及工作区包）仍可从任何存储包中解析：
+
+```toml bunfig.toml icon="settings"
+[install]
+linker = "isolated"
+hoist = false
+```
+
+[`install.hoistPattern`](/runtime/bunfig#install-hoistpattern) 和 [`install.publicHoistPattern`](/runtime/bunfig#install-publichoistpattern) 分别提供了基于模式控制同一回退目录和根 `node_modules` 的方式。
+
+### Global virtual store
 
 当启用 [`install.globalStore`](/runtime/bunfig#install-globalstore) 时，存储条目会先物化一次到 `<cache>/links/` 下的 [全局虚拟存储](/pm/global-store)，而 `node_modules/.bun/<pkg>@<ver>` 则是指向它的符号链接。在 `rm -rf node_modules` 之后进行冷启动安装时，每个包只需创建一个符号链接，而不是再次复制每个包的文件，这在典型的中型项目中大约快 **7×**。全局存储默认**关闭**；请参阅 [全局存储文档](/pm/global-store) 了解如何启用、完整布局、基准测试和权衡。
 
@@ -221,4 +235,4 @@ bun install --linker isolated
 
 - [包管理器 > 工作区](/pm/workspaces) — 多包仓库工作区管理
 - [包管理器 > 锁文件](/pm/lockfile) — 理解 Bun 的锁文件格式
-- [CLI > install](/pm/cli/install) — 完整的 `bun install` 命令参考
+- [CLI > install](/pm/cli/install) — 完整的 `bun install` 命令参考。

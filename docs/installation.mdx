@@ -21,7 +21,7 @@ Bun 以单个、无依赖的可执行文件形式提供。在 macOS、Linux 和 
 
     </CodeGroup>
     <Note>
-      **Linux 用户**  安装 Bun 需要 `unzip` 软件包（`sudo apt install unzip`）。建议使用 5.6 或更高版本的内核；Bun 在旧至 3.10 版本的内核（RHEL 7）上也能运行，并会优雅地降级使用较新的系统调用。使用 `uname -r` 检查你的内核版本。
+      **Linux 用户：** 安装 Bun 需要 `unzip` 软件包（`sudo apt install unzip`）。推荐使用 5.6 或更高版本的内核；Bun 也可以在低至 3.10 版本的内核（RHEL 7）上运行，并会优雅地降级对较新系统调用的使用。使用 `uname -r` 检查你的内核版本。
       </Note>
 
   </Tab>
@@ -291,15 +291,14 @@ bun upgrade --stable
 
 ### Musl 二进制
 
-适用于不支持 `glibc` 的发行版（如 Alpine Linux, Void Linux）：
+适用于不支持 `glibc` 的发行版（如 Alpine Linux、Void Linux）：
 
 - [Linux x64 musl](https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x64-musl.zip)
 - [Linux x64 musl baseline](https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x64-musl-baseline.zip)
 - [Linux ARM64 musl](https://github.com/oven-sh/bun/releases/latest/download/bun-linux-aarch64-musl.zip)
 
 <Note>
-  Bun 的 glibc 二进制需要 glibc 2.17 或更高版本。如果你遇到类似 `bun:
-  /lib/x86_64-linux-gnu/libc.so.6: version GLIBC_... not found` 的错误，请尝试使用 musl 二进制。Bun 的安装脚本会自动为你的系统选择正确的二进制。
+  Bun 的 glibc 二进制需要 glibc 2.17 或更高版本。如果你遇到类似 `bun: /lib/x86_64-linux-gnu/libc.so.6: version GLIBC_... not found` 的错误，请尝试使用 musl 二进制。Bun 的安装脚本会自动为你的系统选择正确的二进制。
 </Note>
 
 ---

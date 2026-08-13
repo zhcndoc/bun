@@ -113,16 +113,43 @@ rewriter.on("div.content", {
 });
 ```
 
-处理器可以是异步的，并返回一个 Promise。异步操作会阻塞转换，直到操作完成：
+处理器可以是异步的并返回一个 Promise。转换会在该元素处暂停，直到 Promise 处理完成，因此处理器仍会按照文档顺序逐个运行：
 
 ```ts
 rewriter.on("div", {
   async element(element) {
-    await Bun.sleep(1000);
-    element.setInnerContent("<span>替换内容</span>", { html: true });
+    const fragment = await fetch("https://example.com/fragment").then(r => r.text());
+    element.setInnerContent(fragment, { html: true });
   },
 });
 ```
+
+`transform(response)` 会立即返回；重写会在后台继续进行，你可以从返回的 `Response` 中读取结果。由于重写的生命周期会超出 `transform()`，异步处理器抛出的错误（或其返回的被拒绝的 Promise）会导致响应 body 被拒绝，而不是从 `transform()` 中抛出：
+
+```ts
+try {
+  const output = await rewriter.transform(new Response(html)).text();
+} catch (error) {
+  console.error("a handler failed:", error);
+}
+```
+
+对 `string` 或 `ArrayBuffer` 调用 `transform()` 时，必须同步返回结果，因此无法等待需要事件循环运行的处理器（例如计时器、I/O 或 `fetch`）。此类处理器会使 `transform()` 抛出 `TypeError`，并且重写会失败，不再运行任何后续处理器：
+
+```ts
+new HTMLRewriter()
+  .on("div", {
+    async element(element) {
+      await Bun.sleep(1000); // needs a timer
+    },
+  })
+  .transform("<div></div>");
+// TypeError: HTMLRewriter.transform() cannot synchronously return a string
+// because a content handler returned a Promise that did not resolve within a
+// microtask. Pass a Response instead and await its body
+```
+
+如果处理器的 Promise 在微任务检查点内完成（任何不需要事件循环的操作，包括 `process.nextTick` 和已经解析的 Promise），则它仍可与 `transform(string)` 一起使用。如果处理器可能需要等待实际工作，请传入 `Response`。
 
 ### CSS 选择器支持
 
@@ -306,25 +333,37 @@ rewriter.onDocument({
 
 ## 错误处理
 
-HTMLRewriter 操作可能因多种情况抛出错误：
+错误通过哪个通道传递，取决于你调用的重载，而不是时机。`transform()` 本身会针对以下情况抛出错误：
 
 - `on()` 方法中的选择器语法无效
-- 转换方法中的 HTML 内容无效
-- 处理 Response 正文时发生流错误
-- 内存分配失败
 - 输入类型无效（例如传入 Symbol）
-- 正文已使用错误
-
-捕获并处理这些错误：
+- body 已使用错误，以及输入 body 已经失败或中止
+- 对 `string`／`ArrayBuffer` 输入，内容处理器引发的任何错误，因为这些输入必须在 `transform()` 返回前生成结果——包括需要事件循环的处理器（参见[元素处理器](#element-handlers)）
 
 ```ts
 try {
-  const result = rewriter.transform(input);
-  // 处理结果
+  const result = rewriter.transform("<div></div>");
 } catch (error) {
   console.error("HTMLRewriter 错误:", error);
 }
 ```
+
+对于 `Response` 输入，`transform()` 会在重写完成前返回，因此重写过程中发现的所有错误都会通过输出 body 传递：
+
+- 内容处理器抛出的错误，或其返回的被拒绝的 Promise
+- 格式错误或被截断的输入
+- 读取输入 body 时发生的流错误
+- 内存分配失败
+
+```ts
+try {
+  const output = await rewriter.transform(new Response(html)).text();
+} catch (error) {
+  console.error("the rewrite failed:", error);
+}
+```
+
+如果处理器创建了 Promise，却既不返回也不等待该 Promise，则该 Promise 的拒绝不会通过上述任何一个通道传递：与任何脱离上下文的拒绝一样，它会进入进程全局的 `unhandledRejection` 路径。Bun 的早期版本可能会从 `transform()` 本身暴露该错误。
 
 ---
 

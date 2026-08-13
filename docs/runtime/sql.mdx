@@ -529,11 +529,11 @@ DATABASE_URL="mysql2://user:pass@localhost:3306/mydb"
 | ------------------------- | ------------ | --------------------- |
 | `MYSQL_HOST`              | `localhost`  | 数据库主机            |
 | `MYSQL_PORT`              | `3306`       | 端口                  |
-| `MYSQL_USER`              | `root`       | 用户名                |
+| `MYSQL_USER`               | `root`       | 用户名                |
 | `MYSQL_PASSWORD`          | 空字符串     | 密码                  |
 | `MYSQL_DATABASE`           | `mysql`      | 数据库名              |
-| `MYSQL_URL`               | 空字符串     | MySQL 主要连接 URL    |
-| `TLS_MYSQL_DATABASE_URL`  | 空字符串     | 启用 SSL/TLS 的连接 URL |
+| `MYSQL_URL`                | 空字符串     | MySQL 主要连接 URL    |
+| `TLS_MYSQL_DATABASE_URL`   | 空字符串     | 启用 SSL/TLS 的连接 URL |
 
 ### PostgreSQL 环境变量
 
@@ -550,13 +550,14 @@ DATABASE_URL="mysql2://user:pass@localhost:3306/mydb"
 
 如果未提供连接 URL，Bun 会检查以下单独的参数：
 
-| 环境变量         | 备用变量                    | 默认值      | 说明          |
-| ---------------- | --------------------------- | ----------- | ------------- |
-| `PGHOST`         | -                           | `localhost` | 主机          |
-| `PGPORT`         | -                           | `5432`      | 端口          |
-| `PGUSERNAME`     | `PGUSER`, `USER`, `USERNAME` | `postgres`  | 用户名        |
-| `PGPASSWORD`     | -                           | 空字符串    | 密码          |
-| `PGDATABASE`     | -                           | 当前用户名  | 数据库名      |
+| 环境变量 | 备用变量 | 默认值 | 说明 |
+| -------------------- | ---------------------------- | ------------- | ------------------------------------------------------------------------------ |
+| `PGHOST`             | -                            | `localhost`   | 数据库主机 |
+| `PGPORT`             | -                            | `5432`        | 数据库端口 |
+| `PGUSERNAME`         | `PGUSER`, `USER`, `USERNAME` | `postgres`    | 数据库用户 |
+| `PGPASSWORD`         | -                            | （空）       | 数据库密码 |
+| `PGDATABASE`         | -                            | username      | 数据库名称 |
+| `PGSSLMODE`          | -                            | `disable`     | SSL 模式（`disable`、`allow`、`prefer`、`require`、`verify-ca`、`verify-full`） |
 
 ### SQLite 环境变量
 
@@ -594,7 +595,7 @@ bun --sql-preconnect --hot index.js
 
 ## 连接选项
 
-You can configure the connection manually by passing options to the `SQL` constructor. Options vary by adapter:
+你可以通过向 `SQL` 构造函数传递选项来手动配置连接。选项因适配器而异：
 
 ### MySQL 选项
 
@@ -893,13 +894,13 @@ const sql = new SQL({
 });
 ```
 
-| SSL Mode      | Description                                                                                                          |
-| ------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `disable`     | 不使用 SSL/TLS。如果服务器要求 SSL，连接将失败。如果未指定模式，这是默认模式。                            |
-| `prefer`      | 首先尝试使用 SSL；如果 SSL 连接失败，则回退到非 SSL 连接。                                                                 |
-| `require`     | 要求使用 SSL，但不验证证书。如果无法建立 SSL 连接，则失败。                                   |
-| `verify-ca`   | 验证服务器证书是否由受信任的 CA 签名。如果验证失败，则失败。                                    |
-| `verify-full` | 最安全的模式。验证证书及主机名是否匹配。可防止不受信任的证书和中间人攻击。 |
+| SSL 模式      | 说明                                                                                                                   |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `disable`     | 不使用 SSL/TLS。如果服务器要求 SSL，连接将失败。如果未指定模式，这是默认模式。                                        |
+| `prefer`      | 首先尝试使用 SSL；如果 SSL 连接失败，则回退到非 SSL 连接。                                                            |
+| `require`     | 要求使用 SSL，但不验证证书。如果无法建立 SSL 连接，则失败。                                                          |
+| `verify-ca`   | 验证服务器证书是否由受信任的 CA 签名。如果验证失败，则失败。                                                         |
+| `verify-full` | 最安全的模式。验证证书及主机名是否匹配。可防止不受信任的证书和中间人攻击。                                           |
 
 ### 连接字符串中设置
 

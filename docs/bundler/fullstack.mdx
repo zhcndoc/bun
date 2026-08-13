@@ -507,6 +507,20 @@ env = "PUBLIC_*"  # 仅内联以 PUBLIC_ 开头的环境变量（推荐）
 
 有关构建时配置和示例，请参阅 [HTML 和静态网站](/bundler/html-static#inline-environment-variables)。
 
+## Sourcemaps
+
+在开发环境中，Bun 会为打包的路由生成链接的 sourcemaps，并将它们与 JavaScript 和 CSS 分块一起提供。在生产环境中（`development: false`），sourcemaps 默认处于禁用状态，因此服务器不会暴露你的原始源代码。
+
+要覆盖默认设置，请在 `bunfig.toml` 中设置 `sourcemap` 选项：
+
+```toml title="bunfig.toml" icon="settings"
+[serve.static]
+sourcemap = "linked" # serve sourcemaps in production too
+# sourcemap = "inline"   # embed sourcemaps in the chunks
+# sourcemap = "external" # emit .map files without a sourceMappingURL comment
+# sourcemap = false      # never generate sourcemaps
+```
+
 ## 工作原理
 
 Bun 使用 `HTMLRewriter` 扫描 HTML 文件中的 `<script>` 和 `<link>` 标签，作为 Bun 打包器入口点，生成针对 JS/TS/TSX/JSX 及 CSS 的优化包，并提供结果。
@@ -517,8 +531,8 @@ Bun 使用 `HTMLRewriter` 扫描 HTML 文件中的 `<script>` 和 `<link>` 标�
 <Step title="1. <script> 处理">
 - 转译 `<script>` 标签中的 TypeScript、JSX 和 TSX
 - 打包导入的依赖
-- 生成用于调试的 sourcemap
-- 在 `Bun.serve()` 中 `development` 非 `true` 时进行代码压缩
+- 在开发环境中生成用于调试的 sourcemaps
+- 当 `Bun.serve()` 中的 `development` 不为 `true` 时进行压缩
 
 ```html title="index.html" icon="file-code"
 <script type="module" src="./counter.tsx"></script>

@@ -5,7 +5,7 @@ description: "Bun 的打包器和运行时支持的文件类型和加载器"
 
 Bun 打包器实现了一组默认加载器。一般来说，打包器和运行时支持相同的文件类型集合。
 
-`.js` `.cjs` `.mjs` `.mts` `.cts` `.ts` `.tsx` `.jsx` `.css` `.json` `.jsonc` `.json5` `.toml` `.yaml` `.yml` `.txt` `.wasm` `.node` `.html` `.sh`
+`.js` `.cjs` `.mjs` `.mts` `.cts` `.ts` `.tsx` `.jsx` `.css` `.json` `.jsonc` `.json5` `.toml` `.yaml` `.yml` `.xml` `.txt` `.wasm` `.node` `.html` `.sh`
 
 Bun 使用文件扩展名来选择解析文件的内置 _加载器_。每个加载器都有一个名称，例如 `js`、`tsx` 或 `json`。在构建扩展 Bun 功能的[插件](/bundler/plugins)时，会使用这些名称。
 
@@ -239,6 +239,57 @@ export default {
   name: "John Doe",
   age: 35,
   email: "johndoe@example.com",
+};
+```
+
+</CodeGroup>
+
+### `xml`
+
+**XML 加载器**。`.xml` 的默认加载器。
+
+XML 文件可以直接导入。Bun 使用原生 XML 1.0 解析器将其解析为 [`Bun.XML.parse`](/runtime/xml) 的紧凑对象结构：根元素对应一个键，属性对应 `"@name"` 键，重复的子元素对应数组，与属性或子元素相邻的文本对应 `"#text"`，并且所有值都是字符串。
+
+```ts
+import doc from "./config.xml";
+console.log(doc.config["@version"]);
+
+// 通过导入属性：
+import feed from "./export.rss" with { type: "xml" };
+```
+
+打包时，解析后的 XML 会以内联的 JavaScript 对象形式嵌入包中。
+
+```ts
+var doc = {
+  config: {
+    "@version": "2",
+    // ...other fields
+  },
+};
+```
+
+如果将 `.xml` 文件作为入口点传入，它会被转换为一个 `export default` 解析后对象的 `.js` 模块。
+
+<CodeGroup>
+
+```xml Input
+<user id="1">
+  <name>John Doe</name>
+  <email>johndoe@example.com</email>
+  <role>admin</role>
+  <role>editor</role>
+</user>
+```
+
+```ts Output
+export default {
+  user: {
+    "@id": "1",
+    name: "John Doe",
+    email: "johndoe@example.com",
+    role: ["admin", "editor"],
+  },
 };
 ```
 

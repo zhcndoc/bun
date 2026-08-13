@@ -104,6 +104,8 @@ console.log(heapStats());
     Function: 2381,
     AsyncFunction: 2,
     GlobalObject: 1,
+    AsyncFunction: 2,
+    GlobalObject: 1,
     ArrayBuffer: 2,
     Boolean: 1,
     Math: 1,
@@ -261,13 +263,13 @@ bun --cpu-prof --cpu-prof-dir ./profiles script.js
 
 ## 堆分析
 
-退出时生成堆快照以分析内存使用并发现内存泄漏。
+退出时写入堆分析文件，以分析内存使用情况并查找内存泄漏。
 
 ```sh terminal icon="terminal"
 bun --heap-prof script.js
 ```
 
-`--heap-prof` 写入一个 V8 `.heapsnapshot` 文件，你可以在 Chrome DevTools 中加载该文件（“Memory”标签页 → “Load”）。
+`--heap-prof` 会在退出时写入完整的 V8 格式堆快照，使用 Node.js 的诊断文件名格式（`Heap.<yyyymmdd>.<hhmmss>.<pid>.<tid>.<seq>.heapprofile`）。其内容与 `v8.writeHeapSnapshot()` / `Bun.generateHeapSnapshot("v8")` 相同：通过「Memory」选项卡 →「Load」在 Chrome DevTools 中加载该文件（选择「All Files」或将文件重命名为 `.heapsnapshot`——扩展名遵循 Node 的 `--heap-prof` 文件名约定，测试框架和工具会根据此约定进行识别）。
 
 ### Markdown 输出
 
@@ -282,13 +284,14 @@ bun --heap-prof-md script.js
 ### 选项
 
 ```sh terminal icon="terminal"
-bun --heap-prof --heap-prof-name my-snapshot.heapsnapshot script.js
+bun --heap-prof --heap-prof-name my-profile.heapprofile script.js
 bun --heap-prof --heap-prof-dir ./profiles script.js
 ```
 
-| 标志                          | 说明                                  |
-| ----------------------------- | ------------------------------------- |
-| `--heap-prof`                 | 退出时生成 V8 `.heapsnapshot` 文件    |
-| `--heap-prof-md`              | 退出时生成 Markdown 格式的堆分析报告  |
-| `--heap-prof-name <filename>` | 设置输出文件名                        |
-| `--heap-prof-dir <dir>`       | 设置输出目录                          |
+| 标志                           | 说明                                                                                                                                       |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `--heap-prof`                  | 在退出时写入 `.heapprofile` 文件                                                                                                        |
+| `--heap-prof-md`               | 在退出时生成 Markdown 堆分析文件                                                                                                       |
+| `--heap-prof-name <filename>`  | 设置输出文件名                                                                                                                        |
+| `--heap-prof-dir <dir>`        | 设置输出目录                                                                                                                       |
+| `--heap-prof-interval <bytes>` | 为兼容 Node.js 而接受（快照只会在退出时获取一次；JavaScriptCore 没有可应用间隔的分配采样功能） |

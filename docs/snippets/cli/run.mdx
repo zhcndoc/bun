@@ -110,6 +110,10 @@ bun run <文件或脚本>
   文件变更时自动重启进程
 </ParamField>
 
+<ParamField path="--watch-kill-signal" type="string" default="SIGTERM">
+  当 --watch 重启进程时运行其处理程序的信号
+</ParamField>
+
 <ParamField path="--hot" type="boolean">
   在 Bun 运行时、测试运行器或打包器中启用自动重载
 </ParamField>
