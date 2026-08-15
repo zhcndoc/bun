@@ -43,8 +43,8 @@ await fetch("https://example.com", {
 
 ## 环境变量
 
-要为所有请求使用同一代理，请将 `$HTTP_PROXY` 或 `$HTTPS_PROXY` 环境变量设置为代理 URL。
+要为所有请求使用同一个代理，请将 `$HTTP_PROXY` 和 `$HTTPS_PROXY` 环境变量设置为代理 URL。`$HTTP_PROXY` 仅用于请求 `http://` URL，而 `$HTTPS_PROXY` 仅用于请求 `https://` URL，因此请将两者都设置为代理，以代理所有请求。
 
 ```sh terminal icon="terminal"
-HTTPS_PROXY=https://username:password@proxy.example.com:8080 bun run index.ts
+HTTP_PROXY=https://username:password@proxy.example.com:8080 HTTPS_PROXY=https://username:password@proxy.example.com:8080 bun run index.ts
 ```

@@ -9,7 +9,9 @@ description: "检查已安装的包是否存在已知的安全漏洞"
 bun audit
 ```
 
-Bun 会将已安装包及其版本列表发送到 npm，并打印发现的任何漏洞报告。从默认注册表以外的注册表安装的包将被跳过。
+Bun 从 `bun.lock` 中读取包列表（不需要 `node_modules`），将其发送到 npm 咨询端点，并打印报告。来自作用域注册表的包会改为发送到该注册表；如果该注册表没有咨询端点，这些包会被列为已跳过，并且不会影响退出代码。
+
+`bun audit` 永远不会修改 `package.json`、`bun.lock` 或 `node_modules`。要应用修复，请使用 [`bun audit fix`](#bun-audit-fix)。
 
 如果未发现漏洞，命令会打印：
 
@@ -17,44 +19,103 @@ Bun 会将已安装包及其版本列表发送到 npm，并打印发现的任何
 No vulnerabilities found
 ```
 
-检测到漏洞时，Bun 会列出每个受影响的包、严重等级、简短描述以及漏洞公告链接。报告末尾会打印摘要和更新提示：
+否则，Bun 会列出每个受影响的包及其严重性、简短描述和咨询链接，随后显示摘要：
 
 ```
 3 vulnerabilities (1 high, 2 moderate)
-To update all dependencies to the latest compatible versions:
-  bun update
-To update all dependencies to the latest versions (including breaking changes):
-  bun update --latest
+
+  bun audit fix           upgrade the vulnerable packages within their ranges
+  bun audit fix --latest  also cross major versions
 ```
 
 ### 过滤选项
 
-**`--audit-level=<low|moderate|high|critical>`** - 只显示该严重等级及以上的漏洞：
+**`--audit-level=<low|moderate|high|critical>`** - 仅报告严重性达到此级别或更高的漏洞：
 
 ```bash terminal icon="terminal"
 bun audit --audit-level=high
 ```
 
-**`--prod`** - 只审计生产依赖（排除 devDependencies）：
+**`--prod`**（`-p`、`-P`、`--production`）- 仅审计可通过 `dependencies`、`optionalDependencies` 或 `peerDependencies` 访问的包：
 
 ```bash terminal icon="terminal"
 bun audit --prod
 ```
 
-**`--ignore <CVE>`** - 忽略特定的 CVE（重复此选项可忽略多个漏洞）：
+**`--omit=<dev|optional|peer>`** - 跳过只能通过给定依赖类型访问的包。可重复使用。`--omit=dev` 与 `--prod` 相同：
 
 ```bash terminal icon="terminal"
-bun audit --ignore CVE-2022-25883 --ignore CVE-2023-26136
+bun audit --omit=optional --omit=peer
 ```
+
+**`--ignore <id>`** - 根据 GHSA ID 或数字 ID 忽略咨询信息。可重复使用。（CVE ID 不在注册表数据中，因此无法匹配。）
+
+```bash terminal icon="terminal"
+bun audit --ignore GHSA-c2qf-rxjj-qqgw --ignore 1112918
+```
+
+这些选项仅适用于 CLI；要在每次运行时应用它们，请将其放入 `package.json` 脚本中。
 
 ### `--json`
 
-使用 `--json` 参数打印来自注册表的原始 JSON 响应，而非格式化报告：
+打印注册表返回的原始 JSON 响应，而不是格式化报告：
 
 ```bash terminal icon="terminal"
 bun audit --json
 ```
 
-### 退出码
+JSON 未经过过滤——`--audit-level` 和 `--ignore` 只会影响退出代码。
 
-如果未发现漏洞，`bun audit` 会以代码 `0` 退出；如果报告列出了任何漏洞，则以代码 `1` 退出，即使传入了 `--json` 也是如此。
+### `bun audit fix`
+
+```bash terminal icon="terminal"
+bun audit fix
+```
+
+运行审计，然后将每个存在漏洞的包升级到所有依赖方的范围都允许的最低无漏洞版本，并进行安装。只有 `bun.lock` 和 `node_modules` 会发生变化，但有一个例外：固定为精确版本的直接依赖会被视为 `^version`，如果找到修复版本，`package.json` 中的固定版本（或 catalog 条目）会被重写。
+
+```
+fixing:
+  ms@0.7.0 → 0.7.1
+  lodash@4.17.20 → 4.17.21
+    package.json: 4.17.20 → 4.17.21
+
+blocked by a dependent's range:
+  minimatch@0.3.0 → 3.0.2
+    express@3.21.2 depends on minimatch@0.3.0
+  semver@5.7.1 → 6.3.1
+    my-app depends on semver@^5.0.0
+    bun audit fix --latest
+
+no published version fixes:
+  left-pad@1.3.0  GHSA-xxxx-xxxx-xxxx
+    bun audit fix --ignore GHSA-xxxx-xxxx-xxxx
+
+Fixed 2 vulnerabilities in 2 packages
+5 vulnerabilities remaining
+```
+
+- **blocked by a dependent's range** — 没有安全版本符合依赖方声明的范围。如果该范围位于你自己的 `package.json` 或 catalog 中，`bun audit fix --latest` 可以绕过它。否则，请更新依赖方，或添加 [`overrides`](/pm/overrides) 条目
+- **no published version fixes** — 每个已发布版本都存在漏洞。请替换该包，或使用打印出的 `--ignore` 命令忽略此咨询信息
+- 如果没有更新版本是安全的，但较旧版本是安全的，Bun 会降级，并将该行标记为 `(downgrade)`
+- 如果安全版本比 `--minimum-release-age` 更新，仍会安装该版本，并将其标记为 `(newer than --minimum-release-age)`
+- 已修补的依赖（`patchedDependencies`）会像其他包一样升级；之后使用 `bun patch` 重新创建补丁
+- 安装后，Bun 会重新审计新的锁定文件。`remaining` 数量和退出代码反映第二次审计的结果，因此与后续运行 `bun audit` 得出的结果一致
+- `--dry-run` 会打印计划，但不会安装
+- `--json` 会打印一个描述计划和结果的单个 JSON 对象（`fixes`、`blocked`、`unfixable`、`unmatched`、`unaudited`、`vulnerableAfterInstall`、`fixed`、`remaining`、`dryRun`）。如果生命周期脚本可能向 stdout 写入内容，请传递 `--ignore-scripts`
+- 在 `bunfig.toml` 中配置的[安全扫描器](/pm/security-scanner-api)会对即将安装的包运行，与 `bun update` 的行为相同
+- `--prod`、`--frozen-lockfile` 和 `--no-save` 会被拒绝，因为它们会阻止写入 `bun.lock`
+
+### `bun audit fix --latest`
+
+```bash terminal icon="terminal"
+bun audit fix --latest
+```
+
+与 `bun audit fix` 相同，但你自己的 `package.json` 文件和 catalog 中的范围不再阻止修复——它们会被重写以接受新版本，同时保留其样式（`^5.0.0` → `^6.3.1`、`~5.7.1` → `~6.3.1`，精确版本仍保持精确）。第三方包声明的范围仍会阻止修复；对于这些范围，请使用 `overrides`。
+
+### 退出代码
+
+应用 `--audit-level` 和 `--ignore` 后，如果不再存在漏洞，则返回 `0`，否则返回 `1`。对于 `bun audit fix`，该结果基于安装后的重新审计（使用 `--dry-run` 时则基于计划）。
+
+如果注册表请求失败，两个命令都会向 stderr 打印 `audit request failed`，并以 `1` 退出。

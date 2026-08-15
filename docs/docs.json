@@ -197,7 +197,15 @@
           {
             "group": "核心命令",
             "icon": "terminal",
-            "pages": ["/pm/cli/install", "/pm/cli/add", "/pm/cli/remove", "/pm/cli/update", "/pm/bunx"]
+            "pages": [
+              "/pm/cli/install",
+              "/pm/cli/add",
+              "/pm/cli/remove",
+              "/pm/cli/update",
+              "/pm/cli/dedupe",
+              "/pm/cli/prune",
+              "/pm/bunx"
+            ]
           },
           {
             "group": "发布与分析",
@@ -389,7 +397,6 @@
               "/guides/ecosystem/sentry",
               "/guides/ecosystem/solidstart",
               "/guides/ecosystem/ssr-react",
-              "/guides/ecosystem/stric",
               "/guides/ecosystem/sveltekit",
               "/guides/ecosystem/systemd",
               "/guides/ecosystem/vite",

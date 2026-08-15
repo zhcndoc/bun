@@ -5,7 +5,7 @@ mode: center
 ---
 
 <Note>
-  Prisma 的动态子命令加载要求在安装 Bun 的同时安装 npm。这会影响 `prisma init` 和 `prisma migrate` 等 CLI 命令。使用 `prisma-client` 生成器生成的代码可以与 Bun 一起使用。
+  Prisma 动态加载的子命令，例如 `prisma dev`，要求在 Bun 旁边安装 npm。本指南中使用的命令（`prisma init`、`prisma migrate` 和 `prisma generate`）已内置于 CLI 中。使用 `prisma-client` 生成器生成的代码可与 Bun 一起使用。
 </Note>
 
 <Steps>
@@ -29,7 +29,7 @@ mode: center
     </Step>
 
     <Step title="使用 SQLite 初始化 Prisma">
-    	使用 `bunx` 运行 Prisma CLI，初始化 schema 和迁移目录。本指南使用内存中的 SQLite 数据库。
+    	使用 `bunx` 调用 Prisma CLI，以初始化 schema 和迁移目录。本指南使用本地 SQLite 数据库文件；`prisma init` 会将其连接字符串 `DATABASE_URL="file:./dev.db"` 写入 `.env`。
 
     	```bash terminal icon="terminal"
     	bunx --bun prisma init --datasource-provider sqlite
@@ -39,7 +39,8 @@ mode: center
 
     	```prisma prisma/schema.prisma icon="/icons/ecosystem/prisma.svg"
     	  generator client {
-    	    provider = "prisma-client" // [!code ++]
+    	    provider = "prisma-client"
+    	    output = "../generated/prisma" // [!code --]
     	    output = "./generated" // [!code ++]
     	    engineType = "client" // [!code ++]
     	    runtime = "bun" // [!code ++]
@@ -47,7 +48,6 @@ mode: center
 
     	  datasource db {
     	    provider = "sqlite"
-    	    url      = env("DATABASE_URL")
     	  }
 
     	  model User { // [!code ++]
@@ -59,15 +59,16 @@ mode: center
     </Step>
 
     <Step title="创建并运行数据库迁移">
-    	生成并运行初始迁移。这会将一个 `.sql` 迁移文件写入 `prisma/migrations`，创建一个新的 SQLite 数据库，并针对该数据库运行迁移。
+    	生成并运行初始迁移。这会将 `.sql` 迁移文件写入 `prisma/migrations`，创建一个新的 SQLite 数据库，并对其运行迁移。Bun 使用 `--bun` 运行 CLI 时[不会自动加载 `.env`](/runtime/environment-variables)，而 `prisma init` 生成的 `prisma.config.ts` 会从环境中读取 `DATABASE_URL`，因此请显式传入 `--env-file=.env`。
 
     	```bash terminal icon="terminal"
-    	 bunx --bun prisma migrate dev --name init
+    	 bun run --bun --env-file=.env prisma migrate dev --name init
     	 ```
     	 ```txt
-    	环境变量从 .env 加载
-    	Prisma schema 从 prisma/schema.prisma 加载
-    	数据源 "db": SQLite 数据库 "dev.db" 位于 "file:./dev.db"
+    	Loaded Prisma config from prisma.config.ts.
+
+    	Prisma schema loaded from prisma/schema.prisma.
+    	Datasource "db": SQLite database "dev.db" at "file:./dev.db"
 
     	SQLite 数据库 dev.db 已创建，位置：file:./dev.db
 
@@ -79,17 +80,15 @@ mode: center
     	  └─ 20251014141233_init/
     	    └─ migration.sql
 
-    	你的数据库现已与 schema 同步。
-
-    	✔ 在 18ms 内生成 Prisma Client (6.17.1) 到 ./generated
+    	Your database is now in sync with your schema.
     	```
     </Step>
 
     <Step title="生成 Prisma Client">
-    	如输出所示，每当你运行新的迁移时，Prisma 都会重新生成 _Prisma 客户端_。该客户端提供了一个完全类型化的 API，用于读取和写入数据库。你也可以使用 Prisma CLI 手动重新生成它。
+    	`prisma migrate dev` 不会生成 _Prisma client_，因此请使用 Prisma CLI 生成它。该客户端提供用于读取和写入数据库的完全类型化 API。
 
     	```sh terminal icon="terminal"
-    	bunx --bun prisma generate
+    	bun run --bun --env-file=.env prisma generate
     	```
     </Step>
 
@@ -98,9 +97,9 @@ mode: center
 
     	```ts prisma/db.ts icon="/icons/typescript.svg"
     	import { PrismaClient } from "./generated/client";
-    	import { PrismaLibSQL } from "@prisma/adapter-libsql";
+    	import { PrismaLibSql } from "@prisma/adapter-libsql";
 
-    	const adapter = new PrismaLibSQL({ url: process.env.DATABASE_URL || "" });
+    	const adapter = new PrismaLibSql({ url: process.env.DATABASE_URL || "" });
     	export const prisma = new PrismaClient({ adapter });
     	```
     </Step>
@@ -131,25 +130,22 @@ mode: center
     	```bash terminal icon="terminal"
     	bun run index.ts
     	```
-    	```txg
-    	创建了 john-0.12802932895402364@example.com
-    	数据库中共有 1 名用户。
+    	```txt
+    	There are 1 users in the database.
     	```
 
     	```bash terminal icon="terminal"
     	bun run index.ts
     	```
     	```txt
-    	创建了 john-0.8671308799782803@example.com
-    	数据库中共有 2 名用户。
+    	There are 2 users in the database.
     	```
 
     	```bash terminal icon="terminal"
     	bun run index.ts
     	```
     	```txt
-    	创建了 john-0.4465968383115295@example.com
-    	数据库中共有 3 名用户。
+    	There are 3 users in the database.
     	```
     </Step>
 

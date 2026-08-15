@@ -82,7 +82,7 @@ mode: center
     	<Note>
     		确保启动命令对应你的应用入口文件。如果你在 `package.json` 中配置了 start 脚本，也可以使用 `CMD ["bun", "run", "start"]`。
 
-    		如果你的应用没有依赖项，可以省略 `RUN bun install --production --frozen-lockfile` 行。
+    		如果你的应用没有依赖项，可以省略 `COPY package.json bun.lock ./` 和 `RUN bun install --production --frozen-lockfile` 行（对于没有依赖项的项目，Bun 不会写入 `bun.lock`）。
     	</Note>
 
     	在项目根目录中创建一个新的 `.dockerignore` 文件。该文件列出了要从容器镜像中_排除_的文件和目录，例如 `node_modules`，从而使构建更快、镜像更小：
@@ -107,7 +107,8 @@ mode: center
     	doctl registry login
     	```
     	```txt
-    	Successfully authenticated with registry.digitalocean.com
+    	Logging Docker in to registry.digitalocean.com
+    	Notice: Login valid for 30 days. Use the --expiry-seconds flag to set a shorter expiration or --never-expire for no expiration.
     	```
 
     	<Note>

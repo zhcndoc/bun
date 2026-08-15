@@ -178,13 +178,21 @@ cowsay "Bun!"
 bun install --production
 ```
 
-如需可复现安装，请使用 `--frozen-lockfile`。Bun 会安装锁定文件中指定的确切版本，并且不会更新锁定文件。如果你的 `package.json` 与 `bun.lock` 不一致，Bun 将退出并报错。
+`--production` 意味着启用 `--frozen-lockfile`。它只控制实际安装的内容——早期安装时已经存在于 `node_modules` 中的 `devDependencies` 会保留在那里。使用 [`bun prune --production`](/pm/cli/prune) 将其移除。
+
+如需可复现安装，请使用 `--frozen-lockfile`。Bun 会安装锁文件中指定的确切版本，并且不会更新锁文件。如果你的 `package.json` 与 `bun.lock` 不一致，Bun 会以错误退出。
 
 ```bash terminal icon="terminal"
 bun install --frozen-lockfile
 ```
 
-有关 `bun.lock` 的更多信息，请参阅[锁定文件](/pm/lockfile)。
+Bun 不会在 CI 中自动启用 `--frozen-lockfile`；请传入该标志或使用 `bun ci`。如果完全不存在锁文件，`--frozen-lockfile` 会从 `package.json` 安装，但不会写入锁文件。
+
+`--frozen-lockfile` 支持在经过裁剪的 monorepo 检出目录上运行（例如 `turbo prune` 的输出，或仅复制了部分工作区文件夹的 Docker 上下文）。`bun.lock` 中列出但磁盘上缺少其 `package.json` 的工作区会被跳过，并显示 `note:`；这些工作区的专属依赖不会被安装。如果剩余的某个工作区依赖于被跳过的工作区，安装将失败。
+
+如需在不安装的情况下验证锁文件，请使用 `bun install --frozen-lockfile --dry-run`。
+
+有关 `bun.lock` 的更多信息，请参阅[锁文件](/pm/lockfile)。
 
 ---
 
@@ -308,7 +316,7 @@ minimumReleaseAgeExcludes = ["@types/node", "typescript"]
 1. `$XDG_CONFIG_HOME/.bunfig.toml` 或 `$HOME/.bunfig.toml`
 2. 当前目录下的 `./bunfig.toml`
 
-二者均存在时，配置会合并。
+如果两者都找到，则都会被加载，并且项目的 `bunfig.toml` 中设置的键会覆盖全局文件中的同名键。
 
 通过 `bunfig.toml` 进行配置是可选的。以下是默认值：
 
@@ -523,10 +531,14 @@ bun install
 
 ### 锁文件迁移
 
-- 将 `pnpm-lock.yaml` 转换成 `bun.lock` 格式
-- 保留版本和解析信息
-- 保持依赖关系及 peer 依赖
-- 支持补丁依赖并含数据完整性哈希
+- 将 `pnpm-lock.yaml`（锁文件版本 7–9，包括 pnpm 11 的多文档文件）转换为 `bun.lock`
+- 保留已解析的版本和完整性哈希
+- 保留对等依赖范围和 `peerDependenciesMeta`，因此下一次 `bun install` 不会更改迁移后的锁文件
+- 迁移 git、GitHub、tarball URL、`file:` 和 `npm:` 别名依赖，包括传递依赖
+- 通过 `pnpm-workspace.yaml` 中的 `namedRegistries` 解析 pnpm 命名注册表（`name@registry:version`）
+- 将注入的工作区包（`dependenciesMeta.*.injected`）转换为普通工作区依赖
+- 处理已修补的依赖，将 pnpm 仅包含哈希的 `patchedDependencies` 条目与补丁文件进行匹配
+- 跳过 `runtime:` 条目（由 pnpm 管理的 Node.js 版本），并显示警告
 
 ### 工作区配置
 
@@ -588,11 +600,14 @@ Bun 会从 `pnpm-lock.yaml` 和 `pnpm-workspace.yaml` 中迁移以下 pnpm 配�
 - **patchedDependencies** 从 `pnpm.patchedDependencies` 迁移至 `package.json` 根级 `patchedDependencies`
 - **workspace overrides** 应用自 `pnpm-workspace.yaml` 至根 `package.json`
 
-### 要求
+### 要求和限制
 
-- 需 pnpm 锁文件版本至少 7
-- 工作区包需提供 `package.json` 的 `name` 字段
-- 目录下所有 catalog 依赖必须在目录定义中存在
+- 要求 pnpm 锁文件版本为 7 或更高
+- 工作区包的 `package.json` 中必须包含 `name` 字段
+- 依赖引用的所有 catalog 条目都必须存在于 catalogs 定义中
+- `pnpm-lock.yaml` 中的每个工作区都必须在磁盘上有对应的 `package.json`（在 Docker 中，请在运行 `bun install` 之前将其复制进去）
+- 不支持相对路径的 `link:` 依赖，以及带有子目录（`resolution.path`）的 git 依赖
+- 如果迁移因上述任一原因失败，Bun 会打印原因，并改为从头开始解析
 
 迁移完成后，可以安全删除 `pnpm-lock.yaml` 和 `pnpm-workspace.yaml`。
 

@@ -124,7 +124,7 @@ rewriter.on("div", {
 });
 ```
 
-`transform(response)` 会立即返回；重写会在后台继续进行，你可以从返回的 `Response` 中读取结果。由于重写的生命周期会超出 `transform()`，异步处理器抛出的错误（或其返回的被拒绝的 Promise）会导致响应 body 被拒绝，而不是从 `transform()` 中抛出：
+`transform(response)` 会立即返回；重写会在后台继续进行，你可以从返回的 `Response` 中读取结果。读取结果会控制重写的速度：流式输入（文件、`fetch()` 响应、`ReadableStream`）只会以返回 body 被消费的速度读取，因此缓慢的读取者不会导致整个文档累积在内存中。如果没有读取 body，重写仍会运行每个处理器直到文档末尾，并缓冲输出，直到 body 被读取。由于重写的生命周期会超出 `transform()`，异步处理器抛出的错误（或其返回的被拒绝的 Promise）会拒绝响应 body，而不会从 `transform()` 抛出：
 
 ```ts
 try {

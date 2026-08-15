@@ -137,7 +137,6 @@ pub fn action2(a: bun_core::String) -> bun_core::String {
 export const Formatter = t.stringEnum("highlight-javascript", "highlight-javascript-redacted", "escape-powershell");
 
 export const fmtString = fn({
-  implNamespace: "js_bindings",
   args: {
     global: t.globalObject,
     code: t.UTF8String,
@@ -151,31 +150,24 @@ export const fmtString = fn({
 在生成 C++ `enum class` 之前，会对 `t.stringEnum` 的值按字母顺序进行**排序**，因此判别值必须与生成的头文件顺序匹配，而不是 `.bind.ts` 中的声明顺序：
 
 ```rust
-pub mod js_bindings {
-    #[repr(u8)]
-    #[derive(Copy, Clone, Eq, PartialEq)]
-    pub enum Formatter {
-        EscapePowershell = 0,
-        HighlightJavascript = 1,
-        HighlightJavascriptRedacted = 2,
-    }
+#[repr(u8)]
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub enum Formatter {
+    EscapePowershell = 0,
+    HighlightJavascript = 1,
+    HighlightJavascriptRedacted = 2,
+}
 
-    pub fn fmt_string(
-        global: &JSGlobalObject,
-        code: &[u8],
-        formatter_id: Formatter,
-    ) -> JsResult<bun_core::String> {
-        // ...
-    }
+pub fn fmt_string(
+    global: &JSGlobalObject,
+    code: &[u8],
+    formatter_id: Formatter,
+) -> JsResult<bun_core::String> {
+    // ...
 }
 ```
 
 WebIDL 强烈建议枚举值使用 kebab-case，以与现有 Web API 保持一致。
-
-## `implNamespace`
-
-在 `fn({...})` 上设置 `implNamespace: "foo"` 会将生成的调用路由到
-`crate::<basename>::foo::fn_name`，而不是 `crate::<basename>::fn_name`。使用此选项可将相关的绑定实现归入一个子模块中。
 
 ## `t.oneOf`
 
@@ -264,4 +256,4 @@ TODO。
 
 ## 类
 
-TODO
+TODO。

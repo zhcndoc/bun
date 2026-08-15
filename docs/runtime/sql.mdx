@@ -32,17 +32,18 @@ const sqliteResults = await sqlite`
 
 ### 功能特性
 
-- 使用带标签的模板字面量防止 SQL 注入
+- 带标签的模板字面量，可防止 SQL 注入
 - 事务
 - 命名参数和位置参数
 - 连接池
-- 支持 `BigInt`
-- 支持 SASL（SCRAM-SHA-256）、MD5 和明文身份验证
+- `BigInt` 支持
+- SASL（SCRAM-SHA-256）、MD5 和明文身份验证
 - 连接超时
 - 将行作为数据对象、数组的数组或 Buffer 返回
-- 二进制协议支持，速度更快
-- 支持 TLS（以及身份验证模式）
+- 二进制协议支持，可提升速度
+- TLS 支持（以及身份验证模式）
 - 使用环境变量自动配置
+- PostgreSQL `LISTEN` / `NOTIFY`
 
 ---
 
@@ -138,6 +139,25 @@ MySQL 数据库支持：
 - **SSL/TLS 连接**：SSL 模式配置类似 PostgreSQL
 - **连接属性**：客户端信息发送到服务器便于监控
 - **查询流水线**：无需等待响应即可执行多个预处理语句
+
+</Accordion>
+
+<Accordion title="MySQL 8 在明文 TCP 上进行身份验证（allowPublicKeyRetrieval）">
+
+MySQL 8 账户默认使用 `caching_sha2_password` 插件。用户的首次连接需要完整身份验证：在未加密的连接上，客户端必须下载服务器的 RSA 公钥来加密密码。Bun 默认拒绝这样做（与 mysql2 和 Connector/J 的默认设置相同），因为网络路径上的攻击者可能替换自己的密钥并获取密码。连接会失败，并显示 `ERR_MYSQL_PUBLIC_KEY_RETRIEVAL_NOT_ALLOWED`。
+
+请使用 TLS 连接；如果你信任网络环境（例如本地开发数据库），也可以显式选择启用：
+
+```ts
+const mysql = new SQL({
+  adapter: "mysql",
+  hostname: "localhost",
+  username: "root",
+  password: "secret",
+  database: "myapp",
+  allowPublicKeyRetrieval: true, // permit RSA public key retrieval without TLS
+});
+```
 
 </Accordion>
 
@@ -422,6 +442,8 @@ await sql`
 const result = await sql.file("query.sql", [1, 2, 3]);
 ```
 
+使用 SQLite 适配器时，参数也可以是命名参数对象（`:name`、`$name` 或 `@name` 占位符），形式与下文 `sql.unsafe` 接受的对象相同。
+
 ### 不安全查询
 
 `sql.unsafe` 执行原始 SQL 字符串。请谨慎使用：它不会转义用户输入。不传递参数时，字符串可以包含多个命令。
@@ -435,6 +457,13 @@ const result = await sql.unsafe(`
 
 // 带参数（只支持单条命令）
 const result = await sql.unsafe("SELECT " + dangerous + " FROM users WHERE id = $1", [id]);
+```
+
+使用 SQLite 适配器时，参数也可以是使用 `:name`、`$name` 或 `@name` 占位符的命名参数对象。对象键会保留前缀（`{ ":id": 1 }`），除非连接设置了 `strict: true`，此时允许使用不带前缀的键：
+
+```ts
+const sql = new SQL({ adapter: "sqlite", filename: "myapp.db", strict: true });
+const result = await sql.unsafe("SELECT * FROM users WHERE id = :id", { id: 1 });
 ```
 
 ### 执行和取消查询
@@ -974,6 +1003,63 @@ try {
 
 ---
 
+## LISTEN / NOTIFY（PostgreSQL）
+
+`sql.listen()` 订阅 PostgreSQL 通知频道，`sql.notify()` 向频道发布通知。共享数据库的进程可以将其用作轻量级消息总线：缓存失效、在插入行时唤醒工作进程（通常由调用 `pg_notify` 的触发器完成）、分发小型事件。
+
+```ts
+import { sql } from "bun";
+
+const subscription = await sql.listen("orders", payload => {
+  console.log("new order", JSON.parse(payload));
+});
+
+await sql.notify("orders", JSON.stringify({ id: 42 }));
+
+await subscription.unlisten();
+```
+
+`listen()` 会在 PostgreSQL 确认 `LISTEN` 后完成，因此在它完成后发出的 `notify()` 都能够送达。它所完成得到的订阅对象也是异步可释放对象：
+
+```ts
+{
+  await using subscription = await sql.listen("orders", handleOrder);
+  await doWork();
+} // 在此处取消监听
+```
+
+### 工作原理
+
+- 客户端上的所有订阅共享一个专用连接。第一次调用 `listen()` 时会打开该连接，移除最后一个订阅时会关闭它，因此从未监听的客户端无需承担该连接的开销，取消所有监听后进程也可以在不调用 `sql.close()` 的情况下退出。
+- 只要存在任何订阅，该连接就会保持进程运行，就像监听中的服务器一样。
+- 如果连接断开，会以指数退避方式重新建立连接（250 毫秒开始，逐步加倍至 32 秒，并加入抖动），然后重新订阅每个频道。PostgreSQL 只会向已连接的监听者发送通知，因此期间发出的通知会丢失；`listen()` 的可选第三个参数会在初次订阅和每次重新连接后运行，可以在此处补齐遗漏的通知：
+
+```ts
+await sql.listen("orders", handleOrder, async () => {
+  for (const order of await sql`SELECT * FROM orders WHERE processed = false`) handleOrder(order);
+});
+```
+
+- 每次调用 `listen()` 都是独立订阅。同一频道上的多个订阅会共享单个服务端 `LISTEN`，每个回调都会收到每条通知，而每个句柄的 `unlisten()` 只会移除其自身调用注册的订阅。抛出异常的回调（无论是哪个参数中的回调）会被报告为未捕获异常，但订阅仍会保留。
+- 频道名称会自动作为标识符进行引用；与任何 PostgreSQL 标识符一样，其长度限制为 63 个字节。超过长度的名称会被拒绝，而不是静默截断。PostgreSQL 默认将负载限制为 8000 个字节。
+
+### `notify()`
+
+`notify()` 是一个普通查询（`SELECT pg_notify($1, $2)`），会在你调用它的句柄上执行。在 `sql` 上调用时使用连接池；在 `sql.begin()` 内调用时会在事务中执行，因此 PostgreSQL 会在 `COMMIT` 时发送通知，并在 `ROLLBACK` 时丢弃通知。这样可以只在更改可见后发出通知：
+
+```ts
+await sql.begin(async tx => {
+  const [order] = await tx`INSERT INTO orders ${sql(data)} RETURNING id`;
+  await tx.notify("orders", String(order.id)); // 在事务提交时送达
+});
+```
+
+负载是可选的：`sql.notify("cache-invalidated")` 就是 PostgreSQL 的裸 `NOTIFY`。保留连接和事务句柄也具有 `listen()`；它始终使用客户端共享的监听连接。
+
+`LISTEN`/`NOTIFY` 仅支持 PostgreSQL；在 MySQL 和 SQLite 上调用这些方法会被拒绝。
+
+---
+
 ## 预处理语句
 
 默认情况下，Bun 的 SQL 客户端会为它能够推断为静态的查询创建具名预处理语句，这样速度更快。要禁用此功能，请在连接选项中设置 `prepare: false`：
@@ -1293,8 +1379,6 @@ API 是统一的，但行为有所不同：
 尚未实现：
 
 - `COPY` 支持
-- `LISTEN` 支持
-- `NOTIFY` 支持
 
 未实现的一些较少用特性：
 

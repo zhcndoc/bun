@@ -33,7 +33,7 @@ import * as mongoose from "mongoose";
 
 const animalSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
+    name: { type: String, required: true },
     sound: { type: String, required: true },
   },
   {
@@ -62,14 +62,14 @@ await mongoose.connect("mongodb://127.0.0.1:27017/mongoose-app");
 
 // 创建新的 Animal 实例
 const cow = new Animal({
-  title: "Cow",
+  name: "Cow",
   sound: "Moo",
 });
 await cow.save(); // 保存到数据库
 
 // 读取所有 Animals
 const animals = await Animal.find();
-animals[0].speak(); // 打印 "Moo!"
+animals[0]!.speak(); // logs "Moo!"
 
 // 断开连接
 await mongoose.disconnect();

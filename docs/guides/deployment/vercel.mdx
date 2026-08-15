@@ -4,22 +4,17 @@ sidebarTitle: 在 Vercel 上部署
 mode: center
 ---
 
-[Vercel](https://vercel.com/) 是一个用于构建、部署和扩展应用的云平台。
+[Vercel](https://vercel.com/) 是一个用于构建、部署和扩展应用的云平台。Vercel Functions 可以在 Bun 运行时上运行，可以通过 Vercel 支持的框架运行，也可以作为 [`Bun.serve()`](/runtime/http/server) 服务器运行。
 
 <Warning>
-  Bun 运行时处于 Beta 阶段。部分功能尚不受支持——例如，自动源映射、字节码缓存，以及 `node:http/https` 的指标。
+  Vercel 上的 Bun 运行时目前处于 Beta 阶段。自动源映射、字节码缓存，以及 `node:http` 和 `node:https` 的请求指标目前尚不支持（`fetch` 的请求指标支持）。请参阅 Vercel 文档中的[功能支持](https://vercel.com/docs/functions/runtimes/bun#feature-support)。
 </Warning>
-
-<Note>
-  Vercel Functions 不支持 `Bun.serve`。请将 Bun 与 Vercel 支持的框架结合使用，例如 Next.js、Express、
-  Hono 或 Nitro。
-</Note>
 
 ---
 
 <Steps>
 	<Step title="在 vercel.json 中配置 Bun">
-		要启用 Bun 运行时以支持你的 Functions，在 `vercel.json` 文件中添加 `bunVersion` 字段：
+		要在 Bun 上运行 Functions，请将 [`bunVersion`](https://vercel.com/docs/project-configuration/vercel-json#bunversion) 字段添加到 `vercel.json` 文件中：
 
     	```json vercel.json icon="file-json"
     	{
@@ -27,28 +22,83 @@ mode: center
     	}
     	```
 
-    	Vercel 会自动检测此配置，并使用 Bun 运行你的应用。该值必须为 `"1.x"`；Vercel 会在内部处理次版本号。
+    	该值必须为 `"1.x"`；Vercel 会管理次要版本和补丁版本。
 
     	为了达到最佳效果，请确保你的本地 Bun 版本与 Vercel 使用的版本相匹配。
     </Step>
 
-    <Step title="Next.js 配置">
-    	如果你要部署一个 **Next.js** 项目（包括 ISR），请更新 `package.json` 中的脚本，使其使用 Bun 运行时：
+    <Step title="添加服务器">
+    	选择请求到达代码的方式。
 
-    	```json package.json icon="file-json"
-    	{
-    		"scripts": {
-    			"dev": "bun --bun next dev", // [!code ++]
-    			"build": "bun --bun next build" // [!code ++]
-    		}
-    	}
-    	```
+    	<Tabs>
+    		<Tab title="使用 Bun.serve() 处理整个应用">
+    			Vercel 的 Bun 框架预设会将部署的每个请求发送到单个 `Bun.serve()` 服务器。当项目设置了 `bunVersion`、包含 `bun.lock` 文件，并且在以下路径之一存在服务器入口点时，Vercel 会使用该预设：
 
-    	<Note>
-    		`--bun` 标志会在 Bun 下运行 Next.js CLI。打包过程（使用 Turbopack 或 Webpack）保持不变。
-    	</Note>
+    			- `server.{js,cjs,mjs,ts,cts,mts}`
+    			- `src/server.{js,cjs,mjs,ts,cts,mts}`
 
-    	使用这些脚本后，本地开发和构建都会使用 Bun。
+    			在 Bun 1.2 或更高版本中，`bun install` 会创建 `bun.lock`。在旧版本中，请运行 `bun install --save-text-lockfile`。该预设不会检测二进制格式的 `bun.lockb`。
+
+    			在模块加载时调用一次 `Bun.serve()`。Vercel 会检测到该调用，并将传入请求路由到它。支持 `fetch`、[`routes`](/runtime/http/routing)、`error` 和 `websocket` 选项：
+
+    			```ts server.ts icon="/icons/typescript.svg"
+    			Bun.serve({
+    				routes: {
+    					"/health": () => Response.json({ status: "ok" }),
+    				},
+    				fetch() {
+    					return new Response("Hello from Bun on Vercel");
+    				},
+    			});
+    			```
+
+    			最小项目包含 `package.json`、`bun.lock`、`server.ts` 以及上一步中的 `vercel.json`。它不需要 `api/` 目录或任何路由配置。
+
+    			<Note>
+    				`port` 和 `hostname` 仅在本地运行服务器时生效；它们不会配置部署后的端点。Vercel 不支持 Unix 套接字以及 `routes` 中的 [HTML 导入](/runtime/http/server#html-imports)。
+
+    				要提供 WebSocket 连接，请参阅 Vercel 的 WebSockets 文档中的 [Bun 示例](https://vercel.com/docs/functions/websockets#bun)。
+    			</Note>
+    		</Tab>
+
+    		<Tab title="在 /api 下使用 Bun.serve()">
+    			要将 Bun 服务器添加到同时包含前端的项目中，请创建 `api/server.ts`，并在模块加载时调用一次 `Bun.serve()`。Vercel 会将其作为 `/api/server` 下的单个 Function 部署。与框架预设不同，只有针对 `/api/server` 的请求才会到达此服务器。
+
+    			```ts api/server.ts icon="/icons/typescript.svg"
+    			Bun.serve({
+    				fetch(request) {
+    					const url = new URL(request.url);
+
+    					return Response.json({
+    						message: "Hello from Bun on Vercel",
+    						pathname: url.pathname,
+    					});
+    				},
+    			});
+    			```
+
+    			这里只需要上一步中的 `bunVersion` 设置；它不使用框架预设，也不要求存在 `bun.lock` 文件。要将其他路径发送到此服务器，请在 `vercel.json` 中添加路由覆盖规则。每个覆盖规则都必须使用完整的请求路径，包括 `/api/server` 前缀。详情请参阅 [Vercel Bun 运行时文档](https://vercel.com/docs/functions/runtimes/bun)。
+    		</Tab>
+
+    		<Tab title="Next.js 或其他框架">
+    			Vercel 支持的框架，例如 Next.js、Express、Hono 和 Nitro，在设置 `bunVersion` 后会运行在 Bun 上。
+
+    			如果你要部署 **Next.js** 项目（包括 ISR），还需要更新 `package.json` 中的脚本，使 Next.js CLI 在 Bun 下运行：
+
+    			```json package.json icon="file-json"
+    			{
+    				"scripts": {
+    					"dev": "bun --bun next dev", // [!code ++]
+    					"build": "bun --bun next build" // [!code ++]
+    				}
+    			}
+    			```
+
+    			<Note>
+    				`--bun` 标志会使 Next.js CLI 在 Bun 下运行。打包过程（使用 Turbopack 或 Webpack）不变。
+    			</Note>
+    		</Tab>
+    	</Tabs>
     </Step>
 
     <Step title="部署你的应用">
@@ -78,7 +128,7 @@ mode: center
     	console.log("runtime", process.versions.bun);
     	```
     	```txt
-    	runtime 1.3.3
+    	runtime 1.3.14
     	```
 
     	[参考 Vercel Bun 运行时文档了解功能支持 →](https://vercel.com/docs/functions/runtimes/bun#feature-support)

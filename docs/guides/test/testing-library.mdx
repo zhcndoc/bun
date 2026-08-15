@@ -51,7 +51,7 @@ afterEach(() => {
 
 ---
 
-接下来，将这些预加载脚本添加到你的 `bunfig.toml` 中。你也可以将所有内容放在一个 `preload.ts` 脚本中。
+接下来，将这些预加载脚本添加到你的 `bunfig.toml` 中。如果将它们合并到单个预加载脚本中，请在 `GlobalRegistrator.register()` 之后使用 `await import()` 加载 `@testing-library/*` 软件包；静态 `import` 会在 `register()` 运行之前进行求值，此时 `screen` 查询会抛出错误。
 
 ```toml bunfig.toml icon="settings"
 [test]
@@ -67,8 +67,8 @@ import { TestingLibraryMatchers } from "@testing-library/jest-dom/matchers";
 import { Matchers, AsymmetricMatchers } from "bun:test";
 
 declare module "bun:test" {
-  interface Matchers<T> extends TestingLibraryMatchers<typeof expect.stringContaining, T> {}
-  interface AsymmetricMatchers extends TestingLibraryMatchers {}
+  interface Matchers<T> extends TestingLibraryMatchers<typeof expect.stringContaining, void> {}
+  interface AsymmetricMatchers extends TestingLibraryMatchers<any, any> {}
 }
 ```
 
@@ -82,7 +82,7 @@ import { screen, render } from "@testing-library/react";
 import { MyComponent } from "./myComponent";
 
 test("Can use Testing Library", () => {
-  render(MyComponent);
+  render(<MyComponent />);
   const myComponent = screen.getByTestId("my-component");
   expect(myComponent).toBeInTheDocument();
 });

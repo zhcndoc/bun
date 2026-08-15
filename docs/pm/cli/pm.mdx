@@ -163,6 +163,61 @@ bun list --trusted
 └── esbuild@0.21.5
 ```
 
+## licenses
+
+列出每个已安装的软件包，并按照从 `node_modules` 中各软件包的 `package.json` 读取的许可证进行分组。没有 `license` 字段的软件包会列在 `Unknown` 下。只能通过 `devDependencies` 访问的软件包会标记为 `(dev)`。
+
+```bash terminal icon="terminal"
+bun pm licenses
+# or
+bun pm licenses ls
+```
+
+```txt
+MIT (2)
+├── path-parse@1.0.6
+└── resolve@1.9.0
+
+Unknown (4)
+├── a-dep@1.0.1 (dev)
+├── no-deps@1.0.0
+├── no-deps@1.0.1
+└── one-dep@1.0.0
+```
+
+| Flag                           | Description                                                                     |
+| ------------------------------ | ------------------------------------------------------------------------------- |
+| `--json`                       | 按许可证为键打印 JSON 对象                                            |
+| `--long`                       | 同时打印每个软件包的 `author`、`description` 和 `homepage`               |
+| `--prod`、`-p`                 | 跳过 `devDependencies`（等同于 `--omit=dev`）                                   |
+| `--dev`、`-D`                  | 仅列出由 `devDependencies` 引入的内容                                        |
+| `--omit=<dev\|optional\|peer>` | 跳过一种依赖类型，与 `bun install` 中的行为相同                                   |
+| `--filter <pattern>`、`-F`     | 仅列出匹配工作区的依赖（[筛选语法](/pm/filter)） |
+
+```bash terminal icon="terminal"
+bun pm licenses --json --prod
+```
+
+```json
+{
+  "MIT": [
+    {
+      "name": "path-parse",
+      "versions": ["1.0.6"],
+      "paths": ["/home/me/app/node_modules/path-parse"],
+      "license": "MIT",
+      "homepage": "https://github.com/jbgutierrez/path-parse#readme",
+      "author": "Javier Blanco <http://jbgutierrez.info>",
+      "description": "Node.js path.parse() ponyfill"
+    }
+  ]
+}
+```
+
+在工作区根目录中，会列出每个工作区的依赖；在工作区软件包内部，则只列出该软件包的依赖。使用 [`bun why`](/pm/cli/why) 可查明是什么引入了意外的软件包。
+
+需要同时存在 `bun.lock` 和 `node_modules`。锁文件中存在但 `node_modules` 中缺失的软件包（例如执行 `bun install --production` 后）会被跳过，并显示警告。
+
 ## whoami
 
 打印你的 npm 用户名。需要已登录（`bunx npm login`）并在 `bunfig.toml` 或 `.npmrc` 中保存凭据：
@@ -276,9 +331,9 @@ bun pm version v1.3.3 (ca7428e9)
 选项：
   --no-git-tag-version 跳过 git 操作
   --allow-same-version 避免版本相同时报错
-  --message=<val>, -m  自定义提交信息，使用 %s 代替版本号
+  --message=<val>、-m  自定义提交信息，使用 %s 代替版本号
   --preid=<val>        预发行标识（例如 beta → 1.0.1-beta.0）
-  --force, -f          跳过检查 git 是否脏状态
+  --force、-f          跳过检查 git 是否脏状态
 
 示例：
   bun pm version patch

@@ -430,7 +430,7 @@ peer = true
 
 是否让 `bun install` 在“生产模式”下运行。默认 `false`。
 
-在生产模式下，不会安装 `"devDependencies"`。`--production` CLI 标志会覆盖此设置。
+在生产模式下，不会安装 `"devDependencies"`，并且锁文件会被冻结（与 [`install.frozenLockfile`](#install-frozenlockfile) 相同）。使用 `--production` CLI 标志可为单次安装启用此模式。由于锁文件会被冻结，在该设置启用期间，`bun add`、`bun remove` 和 `bun update` 都会失败。
 
 ```toml title="bunfig.toml" icon="settings"
 [install]

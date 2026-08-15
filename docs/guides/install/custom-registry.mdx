@@ -11,16 +11,16 @@ mode: center
 # 将默认 registry 设置为字符串
 registry = "https://registry.npmjs.org"
 
-# 如有需要，设置令牌
-registry = { url = "https://registry.npmjs.org", token = "123456" }
+# if needed, set a token
+# registry = { url = "https://registry.npmjs.org", token = "123456" }
 
-# 如有需要，设置用户名/密码
-registry = "https://usertitle:password@registry.npmjs.org"
+# if needed, set a username/password
+# registry = "https://username:password@registry.npmjs.org"
 ```
 
 ---
 
-你的 `bunfig.toml` 可以引用环境变量。Bun 会自动从 `.env.local`、`.env.[NODE_ENV]` 和 `.env` 加载环境变量。参见[环境变量](/runtime/environment-variables)。
+你的 `bunfig.toml` 可以引用环境变量。无论 `NODE_ENV` 的值是什么，`bun install` 都会自动从 `.env.local`、`.env.production` 和 `.env` 中加载环境变量；它不会读取 `.env.development` 或 `.env.test`。参见[环境变量](/runtime/environment-variables)。
 
 ```toml bunfig.toml icon="settings"
 [install]

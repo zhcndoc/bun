@@ -4,25 +4,45 @@ sidebarTitle: Nuxt 搭配 Bun
 mode: center
 ---
 
-Bun 无需额外配置即可支持 [Nuxt](https://nuxt.com)。使用官方的 `nuxi` CLI 初始化 Nuxt 应用。
+Bun 无需额外配置即可支持 [Nuxt](https://nuxt.com)。使用官方的 `create-nuxt` CLI 初始化 Nuxt 应用。
 
 ```sh terminal icon="terminal"
-bunx nuxi init my-nuxt-app
+bun create nuxt@latest my-nuxt-app
 ```
 
 ```txt
-✔ 您想使用哪个包管理器？
-bun
-◐ 正在安装依赖...
-bun install v1.3.3 (16b4bf34)
- + @nuxt/devtools@0.8.2
- + nuxt@3.7.0
- 785 个包已安装 [2.67秒]
-✔ 安装完成。
-✔ 类型已生成于 .nuxt
-✨ Nuxt 项目已使用 v3 模板创建。下一步：
- › cd my-nuxt-app
- › 使用 bun run dev 启动开发服务器
+┌  Welcome to Nuxt!
+│
+◇  Templates loaded
+│
+◇  Which template would you like to use?
+│  minimal – Minimal starter with a single app.vue.
+│
+◇  Creating project in my-nuxt-app
+│
+◇  Downloaded minimal template
+│
+◇  Which package manager would you like to use?
+│  bun
+│
+◇  Initialize git repository?
+│  Yes
+│
+◇  Dependencies installed
+│
+◇  Git repository initialized
+│
+◇  Would you like to browse and install modules?
+│  No
+│
+└  ✨ Nuxt project has been created with the minimal template.
+
+╭── 👉 Next steps ─────╮
+│                      │
+│   › cd my-nuxt-app   │
+│   › bun run dev      │
+│                      │
+╰──────────────────────╯
 ```
 
 ---
@@ -39,23 +59,27 @@ bun --bun run dev
 ```
 
 ```txt
-nuxt dev
-Nuxi 3.6.5
-Nuxt 3.6.5 搭配 Nitro 2.5.2
-  > 本地:    http://localhost:3000/
-  > 网络:    http://192.168.0.21:3000/
-  > 网络:    http://[fd8a:d31d:481c:4883:1c64:3d90:9f83:d8a2]:3000/
+$ nuxt dev
+│
+●  Nuxt 4.5.2 (with Nitro 2.13.4, Vite 8.2.1 and Vue 3.5.41)
 
-✔ Nuxt DevTools 已启用 v0.8.0（实验性）
-ℹ Vite 客户端预热 547 毫秒
-✔ Nitro 构建完成 244 毫秒
+  ➜ Local:    http://localhost:3000/
+  ➜ Network:  use --host to expose
+
+  ➜ DevTools: press Shift + Alt + D in the browser (v3.4.1)
+
+✔ Vite client built in 95ms
+✔ Vite server built in 33ms
+[nitro] ✔ Nuxt Nitro server built in 948ms
+ℹ Vite server warmed up in 3ms
+ℹ Vite client warmed up in 9ms
 ```
 
 ---
 
 开发服务器启动后，打开 [http://localhost:3000](http://localhost:3000) 即可查看应用。该应用会渲染 Nuxt 内置的 `NuxtWelcome` 模板组件。
 
-开始开发你的应用时，可将 `app.vue` 中的 `<NuxtWelcome />` 替换为你自己的 UI。
+要开始开发应用，请将 `app/app.vue` 中的 `<NuxtWelcome />` 替换为你自己的 UI。
 
 <Frame>
   ![示例 Nuxt 应用运行在本地](https://github.com/oven-sh/bun/assets/3084745/2c683ecc-3298-4bb0-b8c0-cf4cfaea1daa)

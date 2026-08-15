@@ -27,8 +27,9 @@ Bun.serve({
 
     // 定义 websocket 处理函数
     async message(ws, message) {
-      // 上下文数据可通过 WebSocket 实例的 `data` 属性访问
-      console.log(`收到来自 ${ws.data.socketId} 的消息：${message}}`);
+      // the contextual data is available as the `data` property
+      // on the WebSocket instance
+      console.log(`Received ${message} from ${ws.data.socketId}`);
     },
   },
 });

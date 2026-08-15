@@ -45,11 +45,6 @@ node_modules
 
 将 `bar` 添加到 `package.json` 的 `"overrides"` 字段中。Bun 在确定要安装哪个版本的 `bar` 时，会遵循指定的版本范围，无论它是依赖项还是间接依赖项。
 
-<Note>
-  Bun 仅支持顶层的 `"overrides"`，不支持[嵌套的
-  overrides](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#overrides)。
-</Note>
-
 {/* prettier-ignore */}
 ```json package.json icon="file-json"
 {
@@ -63,11 +58,11 @@ node_modules
 }
 ```
 
+`"overrides"` 只从根目录的 `package.json` 中读取，不会从工作区软件包中读取。它们同样适用于 `peerDependencies`。
+
 ## `"resolutions"`
 
 `"resolutions"` 是 Yarn 对 `"overrides"` 的替代方案，语法类似。Bun 支持它，以便更轻松地从 Yarn 迁移。
-
-与 `"overrides"` 一样，_不支持嵌套 resolutions_。
 
 {/* prettier-ignore */}
 ```json package.json icon="file-json"
@@ -81,3 +76,78 @@ node_modules
   } // [!code ++]
 }
 ```
+
+## 值
+
+值可以是任何依赖项说明符，而不仅仅是版本范围。`npm:` 会将一个包替换为一个分支版本，而 `catalog:`（或 `catalog:<name>`）会使被覆盖的版本与一个[工作区 catalog](/pm/catalogs)保持同步：
+
+```json package.json icon="file-json"
+{
+  "name": "my-app",
+  "overrides": {
+    "quux": "npm:@myorg/quux@^1.0.0",
+    "foo": "catalog:"
+  }
+}
+```
+
+`"$name"` 值会复用你在自己的依赖项中为 `name` 声明的范围，因此`"bar": "$foo"`会将 `bar` 固定到你为 `foo` 声明的范围
+
+## 嵌套覆盖
+
+规则可以限定到一个父包，因此它只应用于该包的直接依赖项。npm 对象形式、pnpm 的 `>` 形式，以及带版本范围的父包均受支持：
+
+```json package.json icon="file-json"
+{
+  "name": "my-app",
+  "overrides": {
+    "micromatch": {
+      ".": "^4.0.5",
+      "picomatch": "^2.3.2"
+    },
+    "micromatch>picomatch": "^2.3.2",
+    "micromatch@^4>picomatch": "^2.3.2"
+  }
+}
+```
+
+对象中的`"."`会覆盖 `micromatch` 本身，其效果类似于顶层的`"micromatch"`规则
+
+`"resolutions"`接受 Yarn 的路径形式。为兼容性支持 `**`，但无论哪种形式，都只会影响父包的直接依赖项：
+
+```json package.json icon="file-json"
+{
+  "name": "my-app",
+  "resolutions": {
+    "micromatch/picomatch": "^2.3.2",
+    "**/micromatch/**/picomatch": "^2.3.2"
+  }
+}
+```
+
+当多个规则匹配时，最具体的规则优先：带版本的父包 > 父包 > 顶层
+
+## 版本范围覆盖
+
+键可以携带版本选择器，因此规则只会应用于声明范围与其重叠的依赖包。这是 `pnpm audit --fix` 写入的形式：
+
+```json package.json icon="file-json"
+{
+  "name": "my-app",
+  "overrides": {
+    "semver@<7.5.2": "7.5.2",
+    "webpack>terser@4": "4.8.1",
+    "terser@4": {
+      ".": "4.8.1"
+    }
+  }
+}
+```
+
+选择器会与每个依赖包所_声明_的范围进行比较，而不是与解析后的版本进行比较。`"semver@<7.5.2"`会应用于声明了 `^7.3.0` 的依赖包（它仍可能选择 `7.3.x`），但不会应用于声明了 `^7.5.2` 的依赖包。使用 dist-tag、`catalog:`、`workspace:`、git 或 URL 说明符的依赖包永远不会匹配选择器
+
+## 限制
+
+- 只支持一层父包。`a>b>c`、`a/b/c` 以及更深层的对象嵌套会被忽略，并显示警告
+- 不支持 pnpm 的`"pkg@"`（空选择器）和`"-"`（移除依赖项）形式，这些形式会被跳过，并显示警告
+- 包含嵌套规则或版本范围规则的锁文件会以 `lockfileVersion` 3 的形式写入，旧版本的 Bun 无法读取该格式

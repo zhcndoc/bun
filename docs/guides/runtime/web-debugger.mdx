@@ -19,7 +19,7 @@ Bun.serve({
 
 使用 `--inspect` 标志运行该文件。
 
-这将在一个可用端口上启动 WebSocket 服务器。调试工具会连接到此服务器，以检查正在运行的 Bun 进程。
+这会在端口 `6499` 上启动一个 WebSocket 服务器（传递 `--inspect=<port>` 可使用其他端口）。调试工具会连接到此服务器，以检查正在运行的 Bun 进程。
 
 Bun 在 [debug.bun.sh](https://debug.bun.sh) 托管了一个基于网页的调试器。它是 WebKit 的 [Web Inspector Interface](https://webkit.org/web-inspector/web-inspector-interface/) 的修改版本，对于 Safari 用户来说会很熟悉。
 
@@ -30,9 +30,9 @@ bun --inspect server.ts
 ```txt
 --------------------- Bun Inspector ---------------------
 Listening:
-  ws://localhost:6499/0tqxs9exrgrm
+  ws://localhost:6499/204e4940-4a8b-4ebc-8fee-1c66926bbc21
 Inspect in browser:
-  https://debug.bun.sh/#localhost:6499/0tqxs9exrgrm
+  https://debug.bun.sh/#localhost:6499/204e4940-4a8b-4ebc-8fee-1c66926bbc21
 --------------------- Bun Inspector ---------------------
 ```
 
@@ -90,10 +90,10 @@ Sources 面板左上方的按钮用于控制程序的执行。
 
 以下是每个控制流按钮的功能。
 
-- _继续执行脚本_ — 运行程序，直到遇到下一个断点或异常。
-- _单步跳过_ — 继续执行到下一行。
-- _单步进入_ — 如果当前语句包含函数调用，则进入被调用的函数。
-- _单步跳出_ — 如果当前语句是函数调用，则执行完该调用，然后从函数中跳出，回到调用它的位置。
+- _继续执行脚本_ — 运行程序，直到遇到下一个断点或异常
+- _单步跳过_ — 继续执行到下一行
+- _单步进入_ — 如果当前语句包含函数调用，则进入被调用的函数
+- _单步跳出_ — 如果当前语句是函数调用，则执行完该调用，然后从函数中跳出，回到调用它的位置
 
 <Frame>
   ![调试器控制按钮功能速查表](https://github-production-user-asset-6210df.s3.amazonaws.com/3084745/261510346-6a94441c-75d3-413a-99a7-efa62365f83d.png)

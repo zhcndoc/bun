@@ -17,9 +17,19 @@ bun create vite my-app
 ```
 
 ```txt
-✔ 选择一个框架：› React
-✔ 选择一个变体：› TypeScript + SWC
-正在在 /path/to/my-app/ 脚手架项目...
+◇  Select a framework:
+│  React
+│
+◇  Select a variant:
+│  TypeScript
+│
+◇  Which linter to use?
+│  Oxlint
+│
+◇  Install with bun and start now?
+│  No
+│
+◇  Scaffolding project in /path/to/my-app...
 ```
 
 ---
@@ -49,8 +59,9 @@ bunx --bun vite
   "scripts": {
     "dev": "vite", // [!code --]
     "dev": "bunx --bun vite", // [!code ++]
-    "build": "vite build",
-    "serve": "vite preview"
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview"
   },
   // ...
 ```

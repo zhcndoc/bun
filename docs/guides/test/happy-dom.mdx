@@ -26,7 +26,7 @@ GlobalRegistrator.register();
 
 ---
 
-此文件需要在所有测试文件之前运行。这正是 Bun 内置的 [_预加载_]() 选项的用途。在项目根目录中创建一个 `bunfig.toml` 文件（如果尚不存在），并添加以下内容。
+此文件需要在任何测试文件之前运行。这是 Bun 内置的 [_preload_](/runtime/bunfig#test-preload) 选项的任务。在项目根目录中创建一个 `bunfig.toml` 文件（如果尚不存在），并添加以下内容。
 
 `./happydom.ts` 文件应包含上一步中的注册代码。
 

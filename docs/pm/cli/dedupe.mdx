@@ -1,0 +1,55 @@
+---
+title: "bun dedupe"
+description: "从 bun.lock 中移除软件包的重复版本"
+---
+
+随着时间推移，即使某个版本能够满足所有范围，`bun.lock` 仍可能累积同一软件包的多个版本——例如，当范围为 `^0.15.7` 和 `^0.15.8` 时，同时存在 `esbuild@0.15.10` 和 `esbuild@0.15.11`。`bun dedupe` 会将它们合并为一组最小的已有锁定版本（优先选择较新的版本），保存 `bun.lock` 并执行安装
+
+```bash terminal icon="terminal"
+bun dedupe
+```
+
+```
+bun dedupe v1.4.0 (abc12345)
+
+↳ esbuild 0.15.10 → 0.15.11
+↳ react 18.2.0 → 18.3.1
+
+2 duplicate versions removed, 3 packages installed (checked 5 packages) [12.00ms]
+```
+
+每一行表示一个被移除的版本，以及其依赖项现在使用的版本
+
+`bun dedupe` 只会在锁文件中已有的版本之间进行选择。它不会从 registry 获取新版本，也不会将依赖项移到其范围之外——如需执行此操作，请使用 [`bun update`](/pm/cli/update)。`package.json` 永远不会被修改
+
+### `--check` 和 `--dry-run`
+
+`--check` 会报告将要移除的内容，但不会进行任何更改；如果存在重复版本，则退出状态为 `1`。可在 CI 中使用：
+
+```bash terminal icon="terminal"
+bun dedupe --check
+```
+
+```
+bun dedupe v1.4.0 (abc12345)
+
+↳ esbuild 0.15.10 → 0.15.11
+↳ react 18.2.0 → 18.3.1
+
+2 duplicate versions can be removed (checked 5 packages) [9.00ms]
+  bun dedupe
+```
+
+`--dry-run` 会打印相同的输出，但始终以 `0` 退出
+
+`--lockfile-only` 会重写 `bun.lock`，但不会执行安装
+
+### 注意事项
+
+- 会遵循 overrides 和 catalogs；每个依赖项都会使用其生效范围重新指向版本
+- 如果这是移除重复版本的唯一方式，直接依赖项可能会被移动到较旧的锁定版本（例如某个传递依赖将其精确固定到该版本）。如果希望较新的版本胜出，请使用 `bun update` 或 [override](/pm/overrides)
+- `patchedDependencies` 中的版本永远不会被移除。如果这会迫使另一个版本也必须保留，Bun 会打印 `kept …` 行来解释原因
+- 依赖于 dist-tag、git URL 或 tarball 的依赖项会保留其解析后的版本
+- 需要一个与 `package.json` 匹配的锁文件。如果自上次安装后依赖项发生了变化，它会退出并显示 `bun.lock does not match package.json`——请先运行 `bun install`。`package-lock.json`、`yarn.lock` 或 `pnpm-lock.yaml` 会自动迁移
+- 不能与 `--frozen-lockfile`、`--production` 或 `--no-save` 结合使用；请改用 `--check`
+- 使用 isolated linker 时，仅因 peer dependencies 不同而存在的同一版本的多个副本不属于重复版本，也不会被报告。过时的 store 条目会由 [`bun prune`](/pm/cli/prune) 清理

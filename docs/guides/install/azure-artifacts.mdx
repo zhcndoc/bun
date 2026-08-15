@@ -7,7 +7,9 @@ mode: center
 <Note>
   [Azure
   Artifacts'](https://learn.microsoft.com/en-us/azure/devops/artifacts/npm/npmrc?view=azure-devops&tabs=windows%2Cclassic)
-  关于 `.npmrc` 的说明要求对密码进行 base64 编码。使用 `bun install` 时不要这样做。如果需要，Bun 会自动为你对密码进行 base64 编码。
+  针对 `.npmrc` 的说明要求对密码进行 base64 编码。不要按照下文所示在 `bunfig.toml` 或 `NPM_CONFIG_REGISTRY`
+  中这样做；Bun 会为你对密码进行 base64 编码。Bun 也会读取 [`.npmrc`](/pm/npmrc) 文件，并且其中的
+  `_password` 必须保持 base64 编码，就像 Azure 的说明中所示
 </Note>
 
 [Azure Artifacts](https://azure.microsoft.com/en-us/products/devops/artifacts) 是 Azure DevOps 的包管理系统。你可以使用它托管自己的私有 npm 注册表以及其他类型的包。
@@ -18,11 +20,11 @@ mode: center
 
 ---
 
-要将其与 `bun install` 配合使用，请在项目中添加一个包含以下内容的 `bunfig.toml` 文件。将 `my-azure-artifacts-user` 替换为你的 Azure Artifacts 用户名，例如 `jarred1234`。
+要将其与 `bun install` 配合使用，请将一个 `bunfig.toml` 文件添加到项目中，内容如下。将 `my-azure-devops-org` 替换为你的 Azure DevOps 组织名称，并将 `my-feed` 替换为你的源名称。如果源的作用域限定为项目，URL 还会包含项目名称：`https://pkgs.dev.azure.com/my-azure-devops-org/my-project/_packaging/my-feed/npm/registry/`。`username` 可以是任意非空字符串。
 
 ```toml bunfig.toml icon="settings"
 [install.registry]
-url = "https://pkgs.dev.azure.com/my-azure-artifacts-user/_packaging/my-azure-artifacts-user/npm/registry"
+url = "https://pkgs.dev.azure.com/my-azure-devops-org/_packaging/my-feed/npm/registry/"
 username = "my-azure-artifacts-user"
 # 这里可以使用环境变量
 password = "$NPM_PASSWORD"
@@ -42,10 +44,10 @@ NPM_PASSWORD=<在此粘贴令牌>
 
 ---
 
-若要在不使用 `bunfig.toml` 的情况下配置 Azure Artifacts，请设置 `NPM_CONFIG_REGISTRY` 环境变量。URL 应将 `:username` 和 `:_password` 作为查询参数包含在内。将 `<USERNAME>` 和 `<PASSWORD>` 替换为你自己的值。
+要在不使用 `bunfig.toml` 的情况下配置 Azure Artifacts，请设置 `NPM_CONFIG_REGISTRY` 环境变量。URL 中应追加 `:username=<USERNAME>` 和 `:_password=<PASSWORD>`，如下所示。将 `<USERNAME>` 和 `<PASSWORD>` 替换为你自己的值。
 
 ```bash terminal icon="terminal"
-NPM_CONFIG_REGISTRY=https://pkgs.dev.azure.com/my-azure-artifacts-user/_packaging/my-azure-artifacts-user/npm/registry/:username=<USERNAME>:_password=<PASSWORD>
+NPM_CONFIG_REGISTRY=https://pkgs.dev.azure.com/my-azure-devops-org/_packaging/my-feed/npm/registry/:username=<USERNAME>:_password=<PASSWORD>
 ```
 
 ---
@@ -54,9 +56,12 @@ NPM_CONFIG_REGISTRY=https://pkgs.dev.azure.com/my-azure-artifacts-user/_packagin
 
 ---
 
-[Azure Artifacts'](https://learn.microsoft.com/en-us/azure/devops/artifacts/npm/npmrc?view=azure-devops&tabs=windows%2Cclassic) 关于 `.npmrc` 的说明要求对密码进行 base64 编码。使用 `bun install` 时不要这样做。如果需要，Bun 会自动为你对密码进行 base64 编码。
+[Azure Artifacts'](https://learn.microsoft.com/en-us/azure/devops/artifacts/npm/npmrc?view=azure-devops&tabs=windows%2Cclassic) 针对 `.npmrc` 的说明要求对密码进行 base64 编码。不要在 `bunfig.toml` 或 `NPM_CONFIG_REGISTRY` 中这样做；Bun 会为你对密码进行 base64 编码。Bun 也会读取 [`.npmrc`](/pm/npmrc) 文件，并且其中的 `_password` 必须保持 base64 编码，就像 Azure 的说明中所示
 
-<Note>如果密码以 `==` 结尾，则它可能已经过 base64 编码。</Note>
+<Note>
+  Azure DevOps personal access tokens 的长度为 84 个字符。经过 base64 编码后，其长度为 112 个字符，并且不会以
+  `=` 结尾
+</Note>
 
 ---
 

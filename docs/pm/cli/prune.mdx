@@ -1,0 +1,73 @@
+---
+title: "bun prune"
+description: "移除不在 bun.lock 中的包"
+---
+
+`bun prune` 会删除 `node_modules` 中当前 `bun.lock` 不会安装的所有内容——这些包通常是在切换分支、移除依赖项或使用其他包管理器安装后遗留下来的。使用 isolated linker 时，这还包括 `node_modules/.bun` 中的过时条目。
+
+它永远不会联系 registry，不会运行 lifecycle scripts，也不会修改 `bun.lock` 或 `package.json`。
+
+```bash terminal icon="terminal"
+bun prune
+```
+
+```
+bun prune v1.4.0 (abc12345)
+
+- @types/node@20.11.5
+- left-pad@1.3.0
+2 packages removed (checked 948) [22.00ms]
+```
+
+从 workspace 或嵌套的 `node_modules` 文件夹中移除的包会在括号中显示文件夹，例如 `- typescript@5.4.0 (packages/app/node_modules)`。
+
+### `--production`
+
+同时移除 `bun install --production` 不会安装的所有内容（即 `devDependencies`）。这样你就可以使用 dev dependencies 进行构建，并在不包含它们的情况下发布：
+
+```dockerfile
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
+COPY . .
+RUN bun run build
+RUN bun prune --production
+```
+
+`--omit=dev`、`--omit=optional` 和 `--omit=peer` 的工作方式与用于 `bun install` 时相同。
+
+### `--dry-run`
+
+列出将要移除的内容，但不实际删除任何内容：
+
+```bash terminal icon="terminal"
+bun prune --production --dry-run
+```
+
+```
+bun prune v1.4.0 (abc12345)
+
+- typescript@5.4.0
+1 package can be removed (checked 948) [9.00ms]
+  bun prune --production
+```
+
+### `--filter`
+
+仅清理所选 workspace 的 `node_modules` 文件夹（使用与 [`bun install --filter`](/pm/filter) 相同的模式）。共享位置——根目录下的 `node_modules`，或使用 isolated linker 时的 `node_modules/.bun`——也会被清理，但仍被未选中 workspace 需要的内容会保留。
+
+```bash terminal icon="terminal"
+bun prune --production --filter app
+```
+
+### 注意事项
+
+- 始终从 workspace 根目录运行，并涵盖每个 workspace 的 `node_modules`，即使是在某个 workspace 包内调用也是如此
+- 要求 `bun.lock` 与 `package.json` 匹配。如果你在上次安装后编辑了依赖项，请先运行 `bun install`
+- 使用与 `bun install` 相同的 linker。如果 `node_modules` 是使用另一个 linker 创建的，`bun prune` 会拒绝运行——请传入匹配的 `--linker`，或运行 `bun install`
+- 按名称匹配包。版本不正确的包会留给 `bun install` 替换。嵌套副本（`node_modules/a/node_modules/b`）只有在正确版本已安装到其上方后才会被移除；否则 Bun 会保留它并打印警告
+- 永远不会移除 workspace 文件夹、仍在使用的 `.bin` 条目、`.cache` 等点目录、普通文件或 `node_modules` 之外的任何内容
+- 会移除针对当前 `os`/`cpu` 禁用的包。传入 `--os`/`--cpu` 可针对其他平台进行清理
+- 对经过清理的 monorepo checkout（例如 `turbo prune` 的输出）的工作方式与 `bun install --frozen-lockfile` 相同
+- 如果任何条目删除失败，其余条目仍会被移除，并且命令以 `1` 退出
+- 不支持 `--global`
+- 如需清理全局缓存，请改用 [`bun pm cache rm`](/pm/cli/pm#cache)

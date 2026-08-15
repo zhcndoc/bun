@@ -7,18 +7,18 @@ mode: center
 使用官方的 [`setup-bun`](https://github.com/oven-sh/setup-bun) GitHub Action 在你的 GitHub Actions 执行器中安装 `bun`。
 
 ```yaml workflow.yml icon="file-code"
-title: my-workflow
+name: my-workflow
 jobs:
   my-job:
-    title: my-job
+    name: my-job
     runs-on: ubuntu-latest
     steps:
       # ...
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2 // [!code ++]
+      - uses: oven-sh/setup-bun@v2 # [!code ++]
 
-      # 运行任意 `bun` 或 `bunx` 命令
-      - run: bun install // [!code ++]
+      # run any `bun` or `bunx` command
+      - run: bun install # [!code ++]
 ```
 
 ---
@@ -26,16 +26,16 @@ jobs:
 指定要安装的 Bun 版本：
 
 ```yaml workflow.yml icon="file-code"
-title: my-workflow
+name: my-workflow
 jobs:
   my-job:
-    title: my-job
+    name: my-job
     runs-on: ubuntu-latest
     steps:
       # ...
       - uses: oven-sh/setup-bun@v2
-         with: # [!code ++]
-          bun-version: "latest" # 或 "canary" # [!code ++]
+        with: # [!code ++]
+          bun-version: "latest" # or "canary" # [!code ++]
 ```
 
 ---

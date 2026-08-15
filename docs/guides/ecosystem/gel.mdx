@@ -31,8 +31,8 @@ brew install geldata/tap/gel-cli
 使用 `bun init` 创建一个新的项目。
 
 ```sh terminal icon="terminal"
-mkdir my-edgedb-app
-cd my-edgedb-app
+mkdir my-gel-app
+cd my-gel-app
 bun init -y
 ```
 
@@ -45,28 +45,25 @@ gel project init
 ```
 
 ```txt
-在 `/Users/colinmcd94/Documents/bun/fun/examples/my-gel-app` 或其上级目录未找到 `gel.toml`
-是否要初始化一个新项目？[Y/n]
-> Y
-请为此项目指定要使用的 Gel 实例名称 [默认: my_gel_app]:
-> my_gel_app
-正在检查 Gel 版本...
-请为此项目指定要使用的 Gel 版本 [默认: x.y]:
-> x.y
+No `gel.toml` (or `edgedb.toml`) found in `/Users/colinmcd94/Documents/bun/fun/examples/my-gel-app` or above
+Initializing new project...
+Checking Gel versions...
 ┌─────────────────────┬──────────────────────────────────────────────────────────────────┐
-│ 项目目录           │ /Users/colinmcd94/Documents/bun/fun/examples/my-gel-app         │
-│ 项目配置           │ /Users/colinmcd94/Documents/bun/fun/examples/my-gel-app/gel.toml│
-│ 模式目录（空）     │ /Users/colinmcd94/Documents/bun/fun/examples/my-gel-app/dbschema│
-│ 安装方式           │ 便携包                                                         │
-│ 版本               │ x.y+6d5921b                                                    │
-│ 实例名称           │ my_gel_app                                                     │
+│ Project directory   │ /Users/colinmcd94/Documents/bun/fun/examples/my-gel-app          │
+│ Project config      │ /Users/colinmcd94/Documents/bun/fun/examples/my-gel-app/gel.toml │
+│ Schema dir (empty)  │ /Users/colinmcd94/Documents/bun/fun/examples/my-gel-app/dbschema │
+│ Installation method │ portable package                                                 │
+│ Version             │ x.y+6d5921b                                                      │
+│ Instance name       │ my_gel_app                                                       │
+│ Branch              │ main                                                             │
 └─────────────────────┴──────────────────────────────────────────────────────────────────┘
-版本 x.y+6d5921b 已下载
-正在初始化 Gel 实例...
-正在应用迁移...
-所有内容均为最新。版本 initial
-项目已初始化。
-连接到 my_gel_app，请运行 `gel`
+Version x.y+6d5921b is already downloaded
+Initializing Gel instance 'my_gel_app'...
+Applying migrations...
+Everything is up to date. Revision initial
+Writing gel.local.toml for configuration
+Project initialized.
+To connect to my_gel_app, run `gel`
 ```
 
 ---
@@ -75,26 +72,28 @@ gel project init
 
 ```sh terminal icon="terminal"
 gel
-gel> select 1 + 1;
+my_gel_app:main> select 1 + 1;
 ```
 
 ```txt
-2
+{2}
 ```
 
 然后运行 `\quit` 退出 REPL。
 
 ```sh terminal icon="terminal"
-gel> \quit
+my_gel_app:main> \quit
 ```
 
 ---
 
-接下来，定义一个模式。`gel project init` 命令已经创建了一个用于存放模式的 `dbschema/default.esdl` 文件。
+接下来，定义一个模式。`gel project init` 命令已经创建了一个 `dbschema/default.gel` 文件来保存它。
 
 ```txt File Tree icon="folder-tree"
 dbschema
-├── default.esdl
+├── default.gel
+├── extensions.gel
+├── futures.gel
 └── migrations
 ```
 
@@ -102,7 +101,7 @@ dbschema
 
 打开该文件，粘贴以下内容。
 
-```ts default.esdl icon="file-code"
+```ts default.gel icon="file-code"
 module default {
   type Movie {
     required title: str;
@@ -120,7 +119,7 @@ gel migration create
 ```
 
 ```txt
-已创建 /Users/colinmcd94/Documents/bun/fun/examples/my-gel-app/dbschema/migrations/00001.edgeql，ID: m1uwekrn4ni4qs7ul7hfar4xemm5kkxlpswolcoyqj3xdhweomwjrq
+Created dbschema/migrations/00001-m1uwekr.edgeql, id: m1uwekrn4ni4qs7ul7hfar4xemm5kkxlpswolcoyqj3xdhweomwjrq
 ```
 
 ```sh terminal icon="terminal"
@@ -128,7 +127,9 @@ gel migrate
 ```
 
 ```txt
-已应用 m1uwekrn4ni4qs7ul7hfar4xemm5kkxlpswolcoyqj3xdhweomwjrq (00001.edgeql)
+Applying m1uwekrn4ni4qs7ul7hfar4xemm5kkxlpswolcoyqj3xdhweomwjrq (00001-m1uwekr.edgeql)
+... parsed
+... applied
 ```
 
 ---
@@ -195,15 +196,16 @@ bunx @gel/generate edgeql-js
 ```
 
 ```txt
-正在生成查询构建器...
-检测到 tsconfig.json，正在生成 TypeScript 文件。
-   如需覆盖此行为，请使用 --target 标志。
-   运行 `npx @edgedb/generate --help` 获取完整选项。
-正在检查数据库模式...
-正在写入文件到 ./dbschema/edgeql-js
-生成完成！🤘
-不建议将生成的查询构建器纳入版本控制。
-是否要将查询构建器目录添加到 .gitignore？将添加以下内容：
+Generating query builder...
+Detected tsconfig.json, generating TypeScript files.
+   To override this, use the --target flag.
+   Run `npx @gel/generate --help` for full options.
+Introspecting database schema...
+Writing files to ./dbschema/edgeql-js
+Generation complete! 🤘
+Checking the generated query builder into version control
+is not recommended. Would you like to update .gitignore to ignore
+the query builder directory? The following line will be added:
 
    dbschema/edgeql-js
 
@@ -244,13 +246,13 @@ bun run index.ts
 [
   {
     title: "The Matrix",
-    releaseYear: 1999
+    releaseYear: 1999,
   }, {
     title: "The Matrix Reloaded",
-    releaseYear: 2003
+    releaseYear: 2003,
   }, {
     title: "The Matrix Revolutions",
-    releaseYear: 2003
+    releaseYear: 2003,
   }
 ]
 ```

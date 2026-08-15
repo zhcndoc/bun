@@ -4,16 +4,24 @@ sidebarTitle: 写入流
 mode: center
 ---
 
-要将 `ReadableStream` 写入磁盘，请从该流创建一个 `Response`，然后将其传递给 [`Bun.write()`](/runtime/file-io#writing-files-bun-write)。
+要将 `ReadableStream` 写入磁盘，请在 `BunFile` 上调用 `.writer()` 以获取 [`FileSink`](/runtime/file-io#incremental-writing-with-filesink)。该流是一个异步可迭代对象，因此请使用 `for await` 将其每个分块写入 `FileSink`，然后调用 `.end()` 刷新缓冲区并关闭文件。
 
 ```ts
 const stream: ReadableStream = ...;
 const path = "./file.txt";
-const response = new Response(stream);
+const writer = Bun.file(path).writer();
 
-await Bun.write(path, response);
+for await (const chunk of stream) {
+  writer.write(chunk);
+}
+
+await writer.end();
 ```
 
 ---
 
-请参阅 [`Bun.write()`](/runtime/file-io#writing-files-bun-write)。
+`.writer()` 会在文件不存在时创建文件，但不会截断现有文件。如果文件可能已经存在，请先删除它
+
+---
+
+请参阅 [`FileSink`](/runtime/file-io#incremental-writing-with-filesink)。

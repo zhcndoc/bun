@@ -4,7 +4,7 @@ sidebarTitle: Neon 无服务器 Postgres 与 Bun
 mode: center
 ---
 
-[Neon](https://neon.tech/) 是一款完全托管的无服务器 Postgres。Neon 将计算与存储分离，从而提供自动扩展、分支和无限存储等功能。
+[Neon](https://neon.com/) 是一个完全托管的无服务器 Postgres。Neon 将计算和存储分离，以提供自动扩缩容、分支和无限存储等功能。
 
 ---
 
@@ -19,10 +19,10 @@ bun add @neondatabase/serverless
 
 ---
 
-创建一个 `.env.local` 文件，并将你的 [Neon Postgres 连接字符串](https://neon.tech/docs/connect/connect-from-any-app) 添加进去。
+创建一个 `.env.local` 文件，并将你的 [Neon Postgres 连接字符串](https://neon.com/docs/connect/connect-from-any-app) 添加到其中。
 
 ```ini .env.local icon="settings"
-DATABASE_URL=postgresql://usertitle:password@ep-adj-noun-guid.us-east-1.aws.neon.tech/neondb?sslmode=require
+DATABASE_URL=postgresql://username:password@ep-adj-noun-guid.us-east-1.aws.neon.tech/neondb?sslmode=require
 ```
 
 ---
@@ -57,4 +57,4 @@ PostgreSQL 16.2 on x86_64-pc-linux-gnu, compiled by gcc (Debian 10.2.1-6) 10.2.1
 
 此示例使用了 Neon 无服务器驱动的基于 HTTP 的 SQL 功能。Neon 的无服务器驱动还提供了 `Client` 和 `Pool` 构造函数，用于支持会话、交互式事务以及兼容 node-postgres。
 
-完整内容请参阅 [Neon 文档](https://neon.tech/docs/serverless/serverless-driver) 了解无服务器驱动的详细介绍。
+请参阅 [Neon 的文档](https://neon.com/docs/serverless/serverless-driver)，了解无服务器驱动的完整概览。

@@ -38,15 +38,16 @@ bun start
 
 ```txt File Tree icon="folder-tree"
 ├── src/
-│   ├── index.ts        # 包含 API 路由的服务器入口点
-│   ├── frontend.tsx    # 带有 HMR 的 React 应用入口点
-│   ├── App.tsx         # 主要的 React 组件
-│   ├── APITester.tsx   # 用于测试 API 端点的组件
-│   ├── index.html      # HTML 模板
-│   ├── index.css       # 样式
-│   └── *.svg           # 静态资源
-├── package.json        # 依赖项和脚本
-├── tsconfig.json       # TypeScript 配置
-├── bunfig.toml         # Bun 配置
-└── bun.lock            # 锁定文件
+│   ├── index.ts        # Server entry point with API routes
+│   ├── frontend.tsx    # React app entry point with HMR
+│   ├── App.tsx         # Main React component
+│   ├── APITester.tsx   # Component for testing API endpoints
+│   ├── index.html      # HTML template
+│   ├── index.css       # Styles
+│   └── *.svg           # Static assets
+├── package.json        # Dependencies and scripts
+├── tsconfig.json       # TypeScript configuration
+├── bun-env.d.ts        # Type declarations for .svg and .css imports
+├── bunfig.toml         # Bun configuration
+└── bun.lock            # Lock file
 ```

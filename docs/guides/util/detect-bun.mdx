@@ -17,7 +17,7 @@ if (process.versions.bun) {
 或者，检查 `Bun` 全局变量，方式与检查 `window` 以检测浏览器环境相同。
 
 <Note>
-  在 TypeScript 中，如果未安装 `@types/bun`，这会导致类型错误。使用 `bun add -d @types/bun` 进行安装。
+  在 TypeScript 中，除非安装了 `@types/bun`，否则这会导致类型错误。使用 `bun add -d @types/bun` 进行安装。如果你使用的是 TypeScript 6.0 或更高版本，还需要在 `compilerOptions` 中添加 `"types": ["bun"]`。详情请参阅 [TypeScript 6 and 7](/typescript-6)。
 </Note>
 
 ```ts

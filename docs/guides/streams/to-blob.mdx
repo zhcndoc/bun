@@ -4,12 +4,14 @@ sidebarTitle: 流转换为 Blob
 mode: center
 ---
 
-`Bun.readableStreamToBlob` 将 [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) 的内容读取到 `Blob` 中。
+Bun 提供了多种便利方法，用于将 [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) 的内容读取为其他格式。要将流读取为 `Blob`，请调用其 `blob()` 方法。
 
 ```ts
 const stream = new ReadableStream();
-const blob = await Bun.readableStreamToBlob(stream);
+const blob = await stream.blob();
 ```
+
+`Bun.readableStreamToBlob(stream)` 的作用相同，但现已弃用，建议改用 `stream.blob()`。
 
 ---
 

@@ -6,8 +6,8 @@ mode: center
 
 要在 Bun 测试运行器中跳过测试，请使用 `test.skip` 函数。
 
-```ts test.ts icon="/icons/typescript.svg"
-import { test } from "bun:test";
+```ts test.test.ts icon="/icons/typescript.svg"
+import { test, expect } from "bun:test";
 
 test.skip("尚未实现的功能", () => {
   expect(Bun.isAwesome()).toBe(true);

@@ -7,8 +7,23 @@ import Remove from "/snippets/cli/remove.mdx";
 
 ## 基本用法
 
+<Note>**别名** — `bun rm`、`bun uninstall`、`bun r`</Note>
+
 ```bash terminal icon="terminal"
 bun remove ts-node
+```
+
+该软件包会从 `package.json` 中列出它的每个依赖组中移除，`bun.lock` 会更新，并且在没有其他依赖项依赖它后，该软件包会从 `node_modules` 中删除。
+
+## `--filter`
+
+<Note>**别名** — `-F`</Note>
+
+在 monorepo 中，使用与 [`bun add --filter`](/pm/cli/add#--filter) 相同的模式，将软件包从匹配的工作区中移除，而不是从当前目录的软件包中移除。使用 `--filter '*'` 可将其从每个工作区软件包中移除。不包含该软件包的工作区不会受到影响。
+
+```bash terminal icon="terminal"
+bun remove zod --filter api
+bun remove zod --filter '*'
 ```
 
 ---

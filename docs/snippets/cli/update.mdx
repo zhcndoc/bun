@@ -1,7 +1,8 @@
 ## CLI 用法
 
 ```bash terminal icon="terminal"
-bun update <name>@<version>
+bun update [<name>[@<version>] | <pattern>]...
+bun up
 ```
 
 ### 更新策略
@@ -11,13 +12,22 @@ bun update <name>@<version>
 </ParamField>
 
 <ParamField path="--latest" type="boolean">
-  将包更新到最新版本
+  将软件包更新到最新版本。别名: <code>-L</code>
 </ParamField>
 
 ### 依赖范围
 
-<ParamField path="--production" type="boolean">
-  不安装 devDependencies。别名: <code>-p</code>
+<ParamField path="--dev" type="boolean">
+  仅更新 <code>devDependencies</code>。别名: <code>-D</code>
+</ParamField>
+
+<ParamField path="--prod" type="boolean">
+  仅更新 <code>dependencies</code> 和 <code>optionalDependencies</code>。别名: <code>-P</code>、{" "}
+  <code>--production</code>
+</ParamField>
+
+<ParamField path="--no-optional" type="boolean">
+  不更新 <code>optionalDependencies</code>
 </ParamField>
 
 <ParamField path="--global" type="boolean">

@@ -87,10 +87,11 @@ node_modules/
 
 ### 解析算法
 
-1. **中央仓库** — 所有包安装在 `node_modules/.bun/package@version/` 目录中
-2. **符号链接** — 顶层 `node_modules` 包包含指向中央仓库的符号链接
-3. **Peer 解析** — 复杂的 peer 依赖使用特殊目录名
-4. **去重** — 具有相同包 ID 和 peer 依赖集的包被共享
+1. **中央存储** — 所有包都安装在 `node_modules/.bun/package@version/` 目录中
+2. **符号链接** — 顶层 `node_modules` 包含指向中央存储的符号链接
+3. **对等依赖解析** — 复杂的对等依赖会创建专用目录名称
+4. **去重** — 具有相同包 ID 和对等依赖集合的包会被共享
+5. **重新链接** — 后续安装时，会复用现有存储条目；如果某个依赖被重新解析，还会重新指向其符号链接。不再被引用的存储条目会一直保留，直到你运行 [`bun prune`](/pm/cli/prune)
 
 ### 工作区处理
 
@@ -136,7 +137,7 @@ hoist = false
 
 [`install.hoistPattern`](/runtime/bunfig#install-hoistpattern) 和 [`install.publicHoistPattern`](/runtime/bunfig#install-publichoistpattern) 分别提供了基于模式控制同一回退目录和根 `node_modules` 的方式。
 
-### Global virtual store
+### 全局虚拟存储
 
 当启用 [`install.globalStore`](/runtime/bunfig#install-globalstore) 时，存储条目会先物化一次到 `<cache>/links/` 下的 [全局虚拟存储](/pm/global-store)，而 `node_modules/.bun/<pkg>@<ver>` 则是指向它的符号链接。在 `rm -rf node_modules` 之后进行冷启动安装时，每个包只需创建一个符号链接，而不是再次复制每个包的文件，这在典型的中型项目中大约快 **7×**。全局存储默认**关闭**；请参阅 [全局存储文档](/pm/global-store) 了解如何启用、完整布局、基准测试和权衡。
 

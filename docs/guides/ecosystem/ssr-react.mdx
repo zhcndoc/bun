@@ -46,4 +46,4 @@ Bun.serve({
 
 ---
 
-React `19` 及更高版本包含一项 [SSR 优化](https://github.com/facebook/react/pull/25597)，可利用 Bun 的“直接”`ReadableStream` 实现。如果遇到类似 `export named 'renderToReadableStream' not found` 的错误，请安装 `19` 版本的 `react` 和 `react-dom`，或者改为从 `react-dom/server.browser` 而不是 `react-dom/server` 导入。详情请参阅 [facebook/react#28941](https://github.com/facebook/react/issues/28941)。
+React `19` 及更高版本包含一项 [SSR 优化](https://github.com/react/react/pull/25597)，可利用 Bun 的“直接”`ReadableStream` 实现。如果遇到类似 `export named 'renderToReadableStream' not found` 的错误，请安装 `19` 版本的 `react` 和 `react-dom`，或从 `react-dom/server.browser` 而不是 `react-dom/server` 导入。详情请参阅 [react/react#28941](https://github.com/react/react/issues/28941)。

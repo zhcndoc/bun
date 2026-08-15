@@ -4,7 +4,7 @@ sidebarTitle: "SvelteKit 与 Bun"
 mode: center
 ---
 
-使用 `sv create my-app` 通过 SvelteKit CLI 创建 SvelteKit 项目。根据提示选择模板并设置开发环境。
+使用 `sv create my-app` 通过 Svelte CLI 创建 SvelteKit 项目。回答提示以选择模板并设置开发环境。
 
 ```sh terminal icon="terminal"
 bunx sv create my-app
@@ -84,27 +84,29 @@ bun --bun run dev
 
 要构建生产版本，需要使用 SvelteKit 适配器。我们推荐使用 `svelte-adapter-bun`；使用 `bun add -D svelte-adapter-bun` 安装它。
 
-然后对 `svelte.config.js` 做出以下更改。
+然后对 `vite.config.ts`（或 `vite.config.js`）进行以下更改。如果你的项目在 `svelte.config.js` 中配置 SvelteKit，请在那里替换适配器导入。
 
-```js svelte.config.js icon="file-code"
+```ts vite.config.ts icon="/icons/typescript.svg"
 import adapter from "@sveltejs/adapter-auto"; // [!code --]
 import adapter from "svelte-adapter-bun"; // [!code ++]
-import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+import { sveltekit } from "@sveltejs/kit/vite";
+import { defineConfig } from "vite";
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-  // 详细信息请参考：https://svelte.dev/docs/kit/integrations#preprocessors
-  preprocess: vitePreprocess(),
+export default defineConfig({
+  plugins: [
+    sveltekit({
+      compilerOptions: {
+        // Force runes mode for the project, except for libraries. Can be removed in svelte 6.
+        runes: ({ filename }) => (filename.split(/[/\\]/).includes("node_modules") ? undefined : true),
+      },
 
-  kit: {
-    // adapter-auto 仅支持部分环境，具体环境列表请见 https://svelte.dev/docs/kit/adapter-auto
-    // 如果你的环境不被支持，或者你想指定特定环境，请切换适配器。
-    // 更多适配器信息请见 https://svelte.dev/docs/kit/adapters
-    adapter: adapter(),
-  },
-};
-
-export default config;
+      // adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
+      // If your environment is not supported, or you settled on a specific environment, switch out the adapter.
+      // See https://svelte.dev/docs/kit/adapters for more information about adapters.
+      adapter: adapter(),
+    }),
+  ],
+});
 ```
 
 ---
@@ -129,7 +131,18 @@ bun --bun run build
 
   运行 npm run preview 可在本地预览生产构建。
 
-  > 使用 svelte-adapter-bun
-    ✔ 通过 bun ./build/index.js 启动服务器
-    ✔ 完成
+  > Using svelte-adapter-bun
+    ✔ done
+```
+
+---
+
+然后使用 `bun ./build/index.js` 启动生产服务器。它默认监听端口 `3000`；设置 `PORT` 环境变量即可更改端口。
+
+```sh terminal icon="terminal"
+bun ./build/index.js
+```
+
+```txt
+Listening on http://0.0.0.0:3000/
 ```

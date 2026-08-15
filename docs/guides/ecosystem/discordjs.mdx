@@ -26,16 +26,16 @@ bun add discord.js
 
 ---
 
-你的机器人需要自己的账号，你需要在 Discord 的开发者门户中创建它。打开 [开发者门户](https://discord.com/developers/applications)，登录，然后创建一个 **Application**。进入后，打开 **Bot** 选项卡来创建机器人用户。如果你遇到困难，Discord 的 [设置教程](https://discordjs.guide/legacy/preparations/app-setup) 有截图可供参考。
+你的机器人需要有自己的账号，你可以在 Discord 的开发者门户中创建它。打开[开发者门户](https://discord.com/developers/applications)，登录并创建一个 **Application**。Discord 会自动为每个新应用添加一个机器人用户；你可以在 **Bot** 选项卡中找到它。如果你在操作时遇到困难，Discord 的[设置指南](https://discordjs.guide/legacy/preparations/app-setup)中提供了截图。
 
 从门户中复制两个值：
 
-- **Bot** 选项卡中的 **token**。它是代码用于登录的密码，所以请像对待密码一样保密。
-- **General Information** 选项卡中的 **Application ID**。Discord 使用它将你的命令绑定到这个应用。
+- **Bot** 选项卡中的 **token**：点击 **Reset Token** 生成它（Discord 只会显示一次）。它是你的代码用于登录的密码，因此请像对待密码一样保护它，不要向他人透露
+- **General Information** 选项卡中的 **Application ID**。Discord 使用它将你的命令关联到此应用
 
 ---
 
-机器人在被邀请到服务器之前，无法在服务器中执行任何操作。在门户的 **OAuth2** 部分，生成一个带有 `bot` 和 `applications.commands` 作用域的邀请链接，打开它，并将机器人添加到你管理的服务器中。斜杠命令需要 `applications.commands` 作用域，所以不要跳过它。最简单的起点是你自己用于测试的个人服务器，Discord 的 [添加机器人指南](https://discordjs.guide/legacy/preparations/adding-your-app) 也有带截图的步骤说明。
+机器人在被邀请到服务器之前，无法在服务器中执行任何操作。在门户的 **OAuth2** 部分，生成一个带有 `bot` 和 `applications.commands` 作用域的邀请链接，打开它，并将机器人添加到你管理的服务器中。斜杠命令需要 `applications.commands` 作用域，所以不要跳过它。最简单的起点是你自己用于测试的个人服务器，Discord 的[添加机器人指南](https://discordjs.guide/legacy/preparations/adding-your-app)也有带截图的步骤说明。
 
 ---
 
@@ -142,7 +142,7 @@ Logged in as my-bot#1234
 
 ---
 
-要添加另一个命令，只需在 `deploy-commands.ts` 中定义它，再运行一次脚本，并在 `bot.ts` 中为它的名称添加一个 `if` 分支。[Discord.js 文档](https://discord.js.org/docs) 涵盖了命令选项、权限、按钮、嵌入消息以及 API 的其余部分。
+要添加另一个命令，只需在 `deploy-commands.ts` 中定义它，再运行一次脚本，并在 `bot.ts` 中为它的名称添加一个 `if` 分支。[Discord.js 文档](https://discord.js.org/docs)涵盖了命令选项、权限、按钮、嵌入消息以及 API 的其余部分。
 
 ---
 

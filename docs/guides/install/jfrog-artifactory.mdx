@@ -12,12 +12,14 @@ mode: center
 
 ### 使用 bunfig.toml 配置
 
-将 `MY_SUBDOMAIN` 替换为你的 JFrog Artifactory 子域名，例如 `jarred1234`，并将 `MY_TOKEN` 替换为你的 JFrog Artifactory 令牌。
+将 `MY_SUBDOMAIN` 替换为你的 JFrog Artifactory 子域名，例如 `jarred1234`，并将 `MY_TOKEN` 替换为经过 base64 编码的 `username:password`；Bun 会将此值原样作为 `Basic` `Authorization` 标头发送。若要改用 JFrog 访问令牌进行身份验证，请使用 `_authToken=` 替代 `_auth=`；Bun 会将该值作为 `Bearer` 令牌发送。
 
 ```toml bunfig.toml icon="settings"
 [install.registry]
 url = "https://MY_SUBDOMAIN.jfrog.io/artifactory/api/npm/npm/_auth=MY_TOKEN"
-# 你也可以使用环境变量
+# To authenticate with an access token instead
+# url = "https://MY_SUBDOMAIN.jfrog.io/artifactory/api/npm/npm/_authToken=MY_TOKEN"
+# You can use an environment variable here
 # url = "$NPM_CONFIG_REGISTRY"
 ```
 

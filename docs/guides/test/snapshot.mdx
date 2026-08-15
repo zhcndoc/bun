@@ -30,7 +30,7 @@ test/snap.test.ts:
  0 fail
  snapshots: +1 added
  1 expect() calls
-Ran 1 tests across 1 files. [82.00ms]
+Ran 1 test across 1 file. [82.00ms]
 ```
 
 ---
@@ -46,7 +46,7 @@ test
 
 ---
 
-`snap.test.ts.snap` 文件是一个 JavaScript 文件，导出传入 `expect()` 值的序列化版本。这里 `{foo: "bar"}` 对象已被序列化为 JSON。
+`snap.test.ts.snap` 文件是一个 JavaScript 文件，它导出传入 `expect()` 的值的序列化版本。`{foo: "bar"}` 对象已按照 Jest 的快照格式进行了美化打印，该格式并非严格 JSON（注意末尾的逗号）。
 
 ```js snap.test.ts.snap icon="file-code"
 // Bun Snapshot v1, https://bun.sh/docs/test/snapshots
@@ -74,7 +74,7 @@ test/snap.test.ts:
  1 pass
  0 fail
  1 snapshots, 1 expect() calls
-Ran 1 tests across 1 files. [101.00ms]
+Ran 1 test across 1 file. [101.00ms]
 ```
 
 ---
@@ -94,7 +94,7 @@ test/snap.test.ts:
  0 fail
  snapshots: +1 added  # 快照已重新生成
  1 expect() calls
-Ran 1 tests across 1 files. [102.00ms]
+Ran 1 test across 1 file. [102.00ms]
 ```
 
 ---

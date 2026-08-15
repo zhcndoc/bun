@@ -38,6 +38,15 @@ bun add <package> <@version>
   仅在 <code>package.json</code> 中不存在该依赖时才添加
 </ParamField>
 
+<ParamField path="--catalog" type="string">
+  将解析后的版本添加到根目录 <code>package.json</code> 的 catalog 中，并以 <code>catalog:</code> 的形式依赖它；{" "}
+  <code>--catalog=NAME</code> 指向 <code>catalogs.NAME</code>
+</ParamField>
+
+<ParamField path="--filter" type="string">
+  将软件包添加到匹配的工作区，而不是当前软件包。别名：<code>-F</code>
+</ParamField>
+
 ### 项目文件与锁文件
 
 <ParamField path="--yarn" type="boolean">

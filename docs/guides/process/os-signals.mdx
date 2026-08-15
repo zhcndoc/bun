@@ -14,7 +14,7 @@ process.on("SIGINT", () => {
 
 ---
 
-如果你不知道要监听哪个信号，请监听 [`"beforeExit"`](https://nodejs.org/api/process.html#event-beforeexit) 和 [`"exit"`](https://nodejs.org/api/process.html#event-exit) 事件。
+要在进程退出时运行代码，请监听 [`"beforeExit"`](https://nodejs.org/api/process.html#event-beforeexit) 事件，该事件会在事件循环为空时触发；以及 [`"exit"`](https://nodejs.org/api/process.html#event-exit) 事件，该事件会在事件循环为空或调用 `process.exit()` 时触发。当进程被其没有监听器的信号终止时，不会触发这两个事件。要在信号触发时执行清理操作，请监听该信号，并在监听器中调用 `process.exit()`。
 
 ```ts
 process.on("beforeExit", code => {

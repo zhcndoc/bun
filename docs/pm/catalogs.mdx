@@ -84,9 +84,14 @@ my-monorepo/
   "devDependencies": {
     "jest": "catalog:testing",
     "testing-library": "catalog:testing"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
   }
 }
 ```
+
+`catalog:` 引用可在 `dependencies`、`devDependencies`、`optionalDependencies`、`peerDependencies` 中使用，也可作为根目录 [`overrides`](/pm/overrides) 规则的值使用。目录引用的行为与直接内联目录范围完全相同。
 
 ### 3. 运行 Bun Install
 
@@ -233,6 +238,12 @@ Bun 支持两种定义目录的方式：
 
 然后运行 `bun install` 即可更新所有包。
 
+## 使用 `bun add` 添加到目录
+
+`bun add --catalog`（或 `--catalog=<name>`）会将条目添加到根目录，并将 `"catalog:"` 写入当前软件包。如果未传入显式版本，则会重复使用现有的目录条目。请参阅 [`bun add --catalog`](/pm/cli/add#--catalog)。
+
+即使不使用该标志，`bun add react`（不带版本）也会在默认目录已列出 `react` 时写入 `"catalog:"`。传入版本则会改为写入具体的范围。
+
 ## 锁文件集成
 
 Bun 的锁文件会跟踪目录版本，因此可以确保不同环境中的安装结果一致。锁文件包含：
@@ -277,10 +288,11 @@ Bun 的锁文件会跟踪目录版本，因此可以确保不同环境中的安�
 
 ## 限制与注意事项
 
-- Catalog 引用必须匹配在 `catalog` 或某个命名 `catalogs` 中定义的依赖项
-- Catalog 名称中的空字符串和空格会被忽略（视为默认 Catalog）
-- Catalog 中无效的依赖版本会导致 `bun install` 解析失败
-- Catalog 仅在工作区内可用；无法在 monorepo 外部使用
+- 目录引用必须匹配 `catalog` 或命名目录之一中定义的依赖项
+- 目录名称中的空字符串和空格会被忽略（视为默认目录）
+- `catalog:default` 与 `catalog:` 相同。默认目录可以定义为 `catalog` 或 `catalogs.default`，但同一个软件包同时列在两者中会导致错误
+- 目录中的无效依赖版本在 `bun install` 期间无法解析
+- `catalog:` 仅适用于根目录和工作区的 `package.json` 文件。在已发布的软件包中无法解析——使用 `bun publish` 或 `bun pm pack` 发布时，它们会将其替换为实际范围（请参阅[发布](#发布)）
 
 ## 发布
 

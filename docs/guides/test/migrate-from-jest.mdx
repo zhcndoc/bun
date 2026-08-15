@@ -68,7 +68,7 @@ Bun 实现了 Jest 的大多数匹配器，但兼容性并非 100%。请参阅[�
 
 ```toml bunfig.toml icon="settings"
 [test]
-preload = ["./happy-dom.ts"]
+preload = ["./happydom.ts"]
 ```
 
 ---
@@ -101,13 +101,13 @@ bun test --timeout 10000
 
 - `transform` — Bun 支持 TypeScript 和 JSX。使用[插件](/runtime/plugins)配置其他文件类型。
 - `extensionsToTreatAsEsm`
-- `haste` — Bun 使用自己的内部源映射
+- `haste` — Bun 使用其自己的[模块解析器](/runtime/module-resolution)
 - `watchman`、`watchPlugins`、`watchPathIgnorePatterns` — 使用 `--watch` 以监视模式运行测试
-- `verbose` — 在 [`bunfig.toml`](/runtime/bunfig#loglevel) 中设置 `logLevel: "debug"`
+- `verbose` — `bun test` 默认会报告每个测试。使用 `--only-failures` 或 `--dots` 以减少输出（请参阅[测试报告器](/test/reporters)）。
 
 ---
 
-此处未提及的设置不受支持或没有对应功能。如果缺少你需要的功能，请[提交功能请求](https://github.com/oven-sh/bun)。
+许多其他设置在 `bunfig.toml` 的 `[test]` 部分中都有对应项，例如 `setupFiles`/`setupFilesAfterEnv` → `preload`、`testPathIgnorePatterns` → `pathIgnorePatterns`、`rootDir` → `root`、`coverageDirectory` → `coverageDir`、`coverageReporters` → `coverageReporter`，以及 `coverageThreshold` → `coverageThreshold`（使用类似 `0.9` 的小数，而不是百分比）。请参阅[测试配置](/test/configuration)。没有对应项的设置不受支持。如果缺少你需要的功能，请[提交功能请求](https://github.com/oven-sh/bun)。
 
 ---
 

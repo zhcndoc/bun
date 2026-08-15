@@ -11,11 +11,13 @@ description: "Bun 的锁文件格式和配置"
 
 #### 是否可以生成锁文件但不安装？
 
-要在不安装到 `node_modules` 的情况下生成锁文件，请使用 `--lockfile-only` 标志。即使锁文件已与项目的 `package.json`(s) 保持最新状态，也始终会将其保存到磁盘。
+要生成锁文件而不安装到 `node_modules`，请使用 `--lockfile-only` 标志。即使锁文件已与项目的 `package.json`（s）保持最新状态，锁文件也始终会保存到磁盘，除非设置了 `--frozen-lockfile`（或 `--production`）。
 
 ```bash terminal icon="terminal"
 bun install --lockfile-only
 ```
+
+`bun add`、`bun remove` 和 `bun update` 也接受 `--lockfile-only`。
 
 <Note>
   `--lockfile-only` 仍会使用注册表元数据以及 git/tarball 依赖填充全局安装缓存。
@@ -57,7 +59,9 @@ Bun v1.2 将默认锁文件格式更改为基于文本的 `bun.lock`。要迁移
 在没有 `bun.lock` 的项目中运行 `bun install` 时，Bun 会自动迁移现有的锁文件：
 
 - `yarn.lock` (v1)
-- `package-lock.json` (npm)
+- `package-lock.json` (npm，`lockfileVersion` 2、3 或 4)
 - `pnpm-lock.yaml` (pnpm)
 
-原始锁文件会被保留，验证无误后可以手动删除。
+来自 npm 6 或更早版本的 `package-lock.json`（`lockfileVersion` 1）不会被迁移；Bun 会打印警告，并改为根据 `package.json` 解析。
+
+原始锁文件会被保留，验证后可以手动删除。

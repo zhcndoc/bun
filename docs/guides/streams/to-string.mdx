@@ -4,12 +4,14 @@ sidebarTitle: 流转换为字符串
 mode: center
 ---
 
-`Bun.readableStreamToText` 将 [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) 的内容读取为字符串。
+Bun 提供了多种便利方法，用于将 [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) 的内容读取为其他格式。要将流读取为字符串，请调用其 `text()` 方法。
 
 ```ts
 const stream = new ReadableStream();
-const str = await Bun.readableStreamToText(stream);
+const str = await stream.text();
 ```
+
+`Bun.readableStreamToText(stream)` 具有相同的功能，但已弃用，推荐使用 `stream.text()`。
 
 ---
 

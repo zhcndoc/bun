@@ -4,10 +4,6 @@ sidebarTitle: 在 Bun 中使用 Prisma Postgres
 mode: center
 ---
 
-<Note>
-  Prisma 需要 Node.js 来运行某些生成代码，因此请确保在运行 `bunx prisma` 命令的环境中已安装 Node.js。
-</Note>
-
 <Steps>
 	<Step title="创建新项目">
 		首先，创建一个目录并用 `bun init` 初始化它。
@@ -20,11 +16,11 @@ mode: center
     </Step>
 
     <Step title="安装 Prisma 依赖">
-    	然后安装 Prisma CLI (`prisma`)、Prisma 客户端 (`@prisma/client`) 以及 accelerate 扩展作为依赖。
+    	然后将 Prisma CLI（`prisma`）、Prisma Client（`@prisma/client`）和 Postgres 驱动适配器（`@prisma/adapter-pg`）作为依赖项安装。
 
     	```bash terminal icon="terminal"
     	bun add -d prisma
-    	bun add @prisma/client @prisma/extension-accelerate
+    	bun add @prisma/client @prisma/adapter-pg
     	```
     </Step>
 
@@ -40,6 +36,7 @@ mode: center
     	```prisma prisma/schema.prisma icon="/icons/ecosystem/prisma.svg"
     	generator client {
     		provider = "prisma-client"
+    		output = "../generated/prisma" // [!code --]
     		output = "./generated" // [!code ++]
     		engineType = "client" // [!code ++]
     		runtime = "bun" // [!code ++]
@@ -47,7 +44,6 @@ mode: center
 
     	datasource db {
     		provider = "postgresql"
-    		url      = env("DATABASE_URL")
     	}
 
     	model User { // [!code ++]
@@ -69,16 +65,17 @@ mode: center
     <Step title="创建并运行数据库迁移">
     	然后生成并运行初始迁移。
 
-    	该命令会将 `.sql` 迁移文件写入 `prisma/migrations`，并针对你的 Postgres 数据库执行该迁移。
+    	该命令会将一个 `.sql` 迁移文件写入 `prisma/migrations`，并针对你的 Postgres 数据库执行该迁移。Bun 在使用 `--bun` 运行 CLI 时[不会自动加载 `.env`](/runtime/environment-variables)，而 `prisma init` 生成的 `prisma.config.ts` 会从环境中读取 `DATABASE_URL`，因此请显式传入 `--env-file=.env`。
 
     	```bash terminal icon="terminal"
-    	bunx --bun prisma migrate dev --name init
+    	bun run --bun --env-file=.env prisma migrate dev --name init
     	```
 
     	```txt
-    	从 .env 加载环境变量
-    	从 prisma/schema.prisma 加载 Prisma schema
-    	数据源 "db"：PostgreSQL 数据库 "mydb"，schema "public" 于 "localhost:5432"
+    	Loaded Prisma config from prisma.config.ts.
+
+    	Prisma schema loaded from prisma/schema.prisma.
+    	Datasource "db": PostgreSQL database "mydb", schema "public" at "localhost:5432"
 
     	应用迁移 `20250114141233_init`
 
@@ -88,28 +85,27 @@ mode: center
     	  └─ 20250114141233_init/
     	    └─ migration.sql
 
-    	数据库现已与 schema 同步。
-
-    	✔ 在 18ms 内生成 Prisma Client (6.17.1) 到 ./generated
+    	Your database is now in sync with your schema.
     	```
     </Step>
 
     <Step title="生成 Prisma Client">
-    	如输出所示，每当你运行新的迁移时，Prisma 都会重新生成 _Prisma 客户端_。该客户端提供了一个完全类型安全的 API，用于读取和写入数据库。若要手动重新生成客户端，请使用 Prisma CLI。
+    	`prisma migrate dev` 不会生成 _Prisma client_，因此请使用 Prisma CLI 生成它。该客户端提供了一个完全类型安全的 API，用于读取和写入数据库。
 
     	```sh terminal icon="terminal"
-    	bunx --bun prisma generate
+    	bun run --bun --env-file=.env prisma generate
     	```
     </Step>
 
-    <Step title="使用 Accelerate 初始化 Prisma Client">
-    	创建一个新的文件 `prisma/db.ts`，使用 Postgres 适配器初始化 PrismaClient。
+    <Step title="使用 Postgres 适配器初始化 Prisma Client">
+    	创建一个新文件 `prisma/db.ts`，使用 Postgres 适配器初始化 PrismaClient。
 
     	```ts prisma/db.ts icon="/icons/typescript.svg"
     	import { PrismaClient } from "./generated/client";
-    	import { withAccelerate } from '@prisma/extension-accelerate'
+    	import { PrismaPg } from "@prisma/adapter-pg";
 
-    	export const prisma = new PrismaClient().$extends(withAccelerate())
+    	const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+    	export const prisma = new PrismaClient({ adapter });
     	```
     </Step>
 

@@ -4,7 +4,7 @@ sidebarTitle: "SolidStart 与 Bun"
 mode: center
 ---
 
-使用 `create-solid` 初始化 SolidStart 应用。传入 `--solidstart` 标志以创建 SolidStart 项目，并传入 `--ts` 以支持 TypeScript。当提示选择模板时，选择 `basic` 以创建最小化的入门应用。
+使用 `create-solid` 初始化 SolidStart 应用。传入 `--solidstart` 标志以创建 SolidStart 项目，并传入 `--ts` 以支持 TypeScript。当提示选择 SolidStart 版本时，选择 `2 (Stable)`。当提示选择模板时，选择 `basic` 以创建一个最小化的入门应用。
 
 ```sh terminal icon="terminal"
 bun create solid my-app --solidstart --ts
@@ -12,10 +12,10 @@ bun create solid my-app --solidstart --ts
 
 ```txt
 ┌
- Create-Solid v0.6.11
+ Create-Solid v0.9.0
 │
-◇  项目名称
-│  my-app
+◇  Which version of SolidStart?
+│  2 (Stable)
 │
 ◇  请选择要使用的模板？
 │  basic
@@ -47,12 +47,12 @@ bun dev
 ```
 
 ```txt
-$ vinxi dev
-vinxi v0.5.8
-vinxi 启动开发服务器
+$ vite dev
 
-  ➜ 本地地址:    http://localhost:3000/
-  ➜ 网络地址:    使用 --host 以公开访问
+  VITE v8.1.4  ready in 818 ms
+
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: use --host to expose
 ```
 
 打开 [localhost:3000](http://localhost:3000)。你对 `src/routes/index.tsx` 所做的更改会自动热重载。

@@ -37,8 +37,8 @@ plugin({
         const source = readFileSync(path.substring(0, path.includes("?") ? path.indexOf("?") : path.length), "utf-8");
 
         const result = compile(source, {
-          filetitle: path,
-          generate: "client",
+          filename: path,
+          generate: "dom",
           dev: false,
         });
 
@@ -63,7 +63,7 @@ plugin({
 # 告诉 Bun 在测试运行前加载此插件
 preload = ["./svelte-loader.ts"]
 
-# 也可以写成：
+# This also works, at the top level of bunfig.toml instead of under [test]:
 # test.preload = ["./svelte-loader.ts"]
 ```
 
@@ -71,13 +71,14 @@ preload = ["./svelte-loader.ts"]
 
 在项目中添加一个示例 `.svelte` 文件。
 
+{/* prettier-ignore */}
 ```html Counter.svelte icon="file-code"
 <script>
   export let initialCount = 0;
   let count = initialCount;
 </script>
 
-<button on:click="{() => (count += 1)}">+1</button>
+<button on:click={() => (count += 1)}>+1</button>
 ```
 
 ---
@@ -93,8 +94,8 @@ test("点击时计数器递增", async () => {
   const { getByText, component } = render(Counter);
   const button = getByText("+1");
 
-  // 初始状态
-  expect(component.$$.ctx[0]).toBe(0); // initialCount 是第一个属性
+  // Initial state
+  expect(component.$$.ctx[0]).toBe(0); // ctx[0] is count; ctx[1] is initialCount
 
   // 点击递增按钮
   await fireEvent.click(button);

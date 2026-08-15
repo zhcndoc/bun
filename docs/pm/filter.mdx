@@ -3,9 +3,9 @@ title: "bun --filter"
 description: "使用 --filter 标志在 monorepo 中按模式选择包"
 ---
 
-`--filter`（或 `-F`）标志可按模式选择 monorepo 中的包。模式可以匹配包名称或包路径，并支持完整的 glob 语法。
+`--filter`（或 `-F`）标志按模式选择 monorepo 中的包。模式可以是包名称 glob、`./path` glob、`{dir}` 目录选择器或 `...` 依赖关系。
 
-`bun install` 和 `bun outdated` 支持 `--filter`，你还可以使用它同时在多个包中运行脚本。
+`bun run`、`bun install`、`bun add`、`bun remove`、`bun update`、`bun outdated`、`bun prune` 和 `bun pm licenses` 均支持该标志。对于包管理器命令，请将标志放在子命令之后（`bun install --filter api`），因为 `bun --filter <pattern> <word>` 会将 `<word>` 作为脚本运行。
 
 ---
 
@@ -19,13 +19,40 @@ description: "使用 --filter 标志在 monorepo 中按模式选择包"
 
 路径模式以 `./` 开头，并选择目录中匹配该模式的所有包。例如，要匹配 `packages` 子目录中的所有包，请使用 `--filter './packages/**'`。要匹配 `packages/foo` 中的包，请使用 `--filter ./packages/foo`。
 
+名称模式匹配完整的包名称（`core` 不会匹配 `@acme/core`；请使用 `@acme/*`），并且 `*` 不会跨越 `/`。路径模式必须匹配工作区目录本身：`./packages` 不会选择任何内容，`./packages/*` 会选择其中的每个直接工作区。
+
+### 目录 `--filter '{<dir>}'`
+
+大括号中的目录会选择该目录中或其任意下级目录中的所有工作区，目录路径相对于当前目录解析。`--filter '{packages}'` 会选择 `packages/` 下的所有内容；`--filter '{.}'` 会选择当前目录的工作区及其下的所有内容。
+
+### 依赖关系 `--filter 'foo...'`
+
+在模式后添加 `...`，还会选择通过工作区依赖关系关联的工作区：
+
+| 模式      | 选择                                                              |
+| --------- | ----------------------------------------------------------------- |
+| `foo...`  | `foo` 及其直接或传递依赖的工作区                                   |
+| `foo^...` | `foo` 直接或传递依赖的工作区，不包括 `foo` 本身                   |
+| `...foo`  | `foo` 及直接或传递依赖于它的工作区                               |
+| `...^foo` | 直接或传递依赖于 `foo` 的工作区，不包括 `foo` 本身               |
+
+`foo` 可以是名称 glob 或目录选择器（`...{./packages/api}`）。要排除内容，请将 `!` 放在最前面：`--filter '!...foo'`。
+
+```bash terminal icon="terminal"
+bun install --filter 'web...'
+bun add zod --filter '...^ui'
+bun outdated --filter '{./packages/apps}'
+```
+
 ---
 
 ## `bun install` 和 `bun outdated`
 
 默认情况下，`bun install` 会为 monorepo 中的每个包安装依赖。要为特定包安装依赖，请使用 `--filter`。
 
-假设一个 monorepo，工作区有 `./packages` 下的 `pkg-a`、`pkg-b` 和 `pkg-c`：
+多个 `--filter` 标志会组合使用：选择所有与正向模式匹配的内容，再排除与 `!` 模式匹配的内容。没有匹配任何内容的模式会打印警告。对于 `bun add`、`bun remove`、`bun update`、`bun prune` 和 `bun pm licenses`，如果完全没有选择工作区，则会报错。
+
+Given a monorepo with workspaces `pkg-a`, `pkg-b`, and `pkg-c` under `./packages`:
 
 ```bash terminal icon="terminal"
 # 安装除 `pkg-c` 以外所有工作区的依赖
@@ -80,6 +107,24 @@ bun --filter '*' dev
 两个脚本会并行运行，终端 UI 会显示它们各自的输出：
 
 <Frame>![终端输出](https://github.com/oven-sh/bun/assets/48869301/2a103e42-9921-4c33-948f-a1ad6e6bac71)</Frame>
+
+其他模式形式的用法相同：
+
+```bash terminal icon="terminal"
+# build web and everything it depends on, in dependency order
+bun --filter 'web...' build
+
+# test the packages that depend on ui
+bun --filter '...^ui' test
+
+# run dev in every package under packages/apps
+bun --filter '{./packages/apps}' dev
+
+# lint every package except docs
+bun --filter '*' --filter '!docs' lint
+```
+
+没有 `name` 的 `package.json` 只能通过 `./path` 模式选择。如果所选包中没有任何包包含该脚本，`bun run` 会退出并报错（传入 `--if-present` 则会改为以 0 退出）。
 
 ### 在工作区中运行脚本
 

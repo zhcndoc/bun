@@ -144,7 +144,7 @@ bun run --bun vite
 
 在 monorepo 中，`--filter` 参数可以一次在多个包中运行脚本。
 
-`bun run --filter <name_pattern> <script>` 会在名称匹配 `<name_pattern>` 的每个包中执行 `<script>`。
+`bun run --filter <pattern> <script>` 会在 `<pattern>` 选中的每个包中执行 `<script>`，其中 `<pattern>` 可以是包名称 glob、一个 `./path`、一个 `{dir}` 目录，或类似 `foo...` 的依赖关系。
 例如，如果你有包含名为 `foo`、`bar` 和 `baz` 的包的子目录，运行
 
 ```bash terminal icon="terminal"

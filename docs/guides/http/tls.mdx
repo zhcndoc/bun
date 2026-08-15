@@ -18,7 +18,7 @@ const server = Bun.serve({
 
 ---
 
-默认情况下，Bun 信任由 Mozilla 整理的知名根 CA 列表。要覆盖此列表，请将证书数组作为 `ca` 传入。
+默认情况下，Bun 信任由 Mozilla 整理的知名根 CA 列表。要覆盖此列表，请将证书数组作为 `ca` 传入。在服务器上，此列表用于验证_客户端_证书，因此还要设置 `requestCert: true`。
 
 ```ts server.ts icon="/icons/typescript.svg"
 const server = Bun.serve({
@@ -27,6 +27,7 @@ const server = Bun.serve({
     cert: Bun.file("cert.pem"),
     key: Bun.file("key.pem"),
     ca: [Bun.file("ca1.pem"), Bun.file("ca2.pem")],
+    requestCert: true,
   },
 });
 ```

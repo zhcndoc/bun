@@ -4,7 +4,7 @@ sidebarTitle: 启用压缩
 mode: center
 ---
 
-将 `perMessageDeflate` 参数设置为使用 [permessage-deflate](https://tools.ietf.org/html/rfc7692) WebSocket 扩展压缩所有消息。
+将 `perMessageDeflate` 参数设置为启用 [permessage-deflate](https://tools.ietf.org/html/rfc7692) WebSocket 扩展。这会与支持该扩展的客户端协商压缩；除非针对每条消息选择启用，否则使用 `ws.send()` 发送的消息仍不会进行压缩（见下文）。
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.serve({
@@ -18,12 +18,13 @@ Bun.serve({
 
 ---
 
-要为单个消息启用压缩，请在调用 `ws.send()` 时传入第二个参数 `true`。
+要为单条消息启用压缩，请将 `true` 作为第二个参数传递给 `ws.send()`。这要求启用 `perMessageDeflate`；否则消息将以未压缩的形式发送。
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.serve({
   // ...
   websocket: {
+    perMessageDeflate: true,
     async message(ws, message) {
       // 发送压缩消息
       ws.send(message, true);

@@ -26,20 +26,15 @@ writer.flush();
 `.write()` 方法接受字符串或二进制数据。
 
 ```ts
-w.write("hello");
-w.write(Buffer.from("there"));
-w.write(new Uint8Array([0, 255, 128]));
+writer.write("hello");
+writer.write(Buffer.from("there"));
+writer.write(new Uint8Array([0, 255, 128]));
 writer.flush();
 ```
 
 ---
 
-当内部缓冲区已满时，`FileSink` 也会自动刷新。你可以使用 `highWaterMark` 选项配置缓冲区大小。
-
-```ts
-const file = Bun.file("/path/to/file.txt");
-const writer = file.writer({ highWaterMark: 1024 * 1024 }); // 1MB
-```
+`FileSink` 还会在其内部缓冲区已满时自动刷新。
 
 ---
 

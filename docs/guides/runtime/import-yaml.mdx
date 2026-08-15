@@ -80,7 +80,7 @@ console.log(data.hobbies); // => ["reading", "coding"]
 要为 YAML 导入添加 TypeScript 支持，请创建一个在 YAML 文件名后附加 `.d.ts` 的声明文件（例如，`config.yaml` → `config.yaml.d.ts`）：
 
 ```ts config.yaml.d.ts icon="/icons/typescript.svg"
-const contents: {
+declare const contents: {
   database: {
     host: string;
     port: number;

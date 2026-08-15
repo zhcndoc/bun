@@ -11,10 +11,10 @@ Bun 内置了一个具有类似 Jest 的 `expect` API 的 [测试运行器](/tes
 要使用它，请在项目目录中运行 `bun test`。测试运行器会递归搜索匹配以下模式的文件，并运行其中包含的测试。
 
 ```txt File Tree icon="folder-tree"
-*.test.{js|jsx|ts|tsx}
-*_test.{js|jsx|ts|tsx}
-*.spec.{js|jsx|ts|tsx}
-*_spec.{js|jsx|ts|tsx}
+*.test.{js|jsx|ts|tsx|mjs|cjs|mts|cts}
+*_test.{js|jsx|ts|tsx|mjs|cjs|mts|cts}
+*.spec.{js|jsx|ts|tsx|mjs|cjs|mts|cts}
+*_spec.{js|jsx|ts|tsx|mjs|cjs|mts|cts}
 ```
 
 ---
@@ -60,7 +60,7 @@ test3.test.js:
  2 pass
  0 fail
  2 expect() calls
-Ran 2 tests across 1 files. [15.00ms]
+Ran 2 tests across 1 file. [15.00ms]
 ```
 
 ---

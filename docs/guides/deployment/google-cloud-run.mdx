@@ -53,14 +53,14 @@ Google Cloud CLI 已配置并准备使用！
 设置您的项目 ID 和编号变量，方便后续步骤复用。
 
 ```bash terminal icon="terminal"
-PROJECT_ID=$(gcloud projects list --format='value(projectId)' --filter='name="my bun app"')
-PROJECT_NUMBER=$(gcloud projects list --format='value(projectNumber)' --filter='name="my bun app"')
+PROJECT_ID=$(gcloud projects list --format='value(projectId)' --filter='projectId=my-bun-app')
+PROJECT_NUMBER=$(gcloud projects list --format='value(projectNumber)' --filter='projectId=my-bun-app')
 
 echo $PROJECT_ID $PROJECT_NUMBER
 ```
 
 ```txt
-my-bun-app-... [PROJECT_NUMBER]
+my-bun-app [PROJECT_NUMBER]
 ```
 
 </Step> 
@@ -85,8 +85,8 @@ gcloud billing projects link $PROJECT_ID --billing-account=[BILLING_ACCOUNT_ID]
 ```txt
 billingAccountName: billingAccounts/[BILLING_ACCOUNT_ID]
 billingEnabled: true
-name: projects/my-bun-app-.../billingInfo
-projectId: my-bun-app-...
+name: projects/my-bun-app/billingInfo
+projectId: my-bun-app
 ```
 
 </Step> 
@@ -131,7 +131,7 @@ CMD ["bun", "index.ts"]
 <Note>
   请确保启动命令对应您的应用入口点。如果您在 package.json 中有 start 脚本，也可以使用 `CMD ["bun", "run", "start"]`。
 
-如果您的应用没有依赖项，可以省略 `RUN bun install --production --frozen-lockfile` 行。
+如果您的应用没有依赖项，可以省略 `COPY package.json bun.lock ./` 和 `RUN bun install --production --frozen-lockfile` 行（对于没有依赖项的项目，Bun 不会写入 `bun.lock`）。
 
 </Note>
 
@@ -166,17 +166,17 @@ gcloud run deploy my-bun-app --source . --region=us-west1 --allow-unauthenticate
 
 是否继续 (Y/n)? Y
 
-使用 Dockerfile 构建并将容器部署到 Cloud Run 服务 [my-bun-app]，项目 [my-bun-app-...]，区域 [us-west1]
-✓ 构建和部署... 完成。
-  ✓ 验证服务...
-  ✓ 上传源码...
-  ✓ 构建容器... 日志可在 [https://console.cloud.google.com/cloud-build/builds...] 查看。
-  ✓ 创建修订版本...
-  ✓ 路由流量...
-  ✓ 设置 IAM 策略...
-完成。
-服务 [my-bun-app] 版本 [my-bun-app-...] 已部署，正在处理 100% 流量。
-服务 URL：https://my-bun-app-....us-west1.run.app
+Building using Dockerfile and deploying container to Cloud Run service [my-bun-app] in project [my-bun-app] region [us-west1]
+✓ Building and deploying... Done.
+  ✓ Validating configuration...
+  ✓ Uploading sources...
+  ✓ Building Container... Logs are available at [https://console.cloud.google.com/cloud-build/builds...].
+  ✓ Creating Revision...
+  ✓ Routing traffic...
+  ✓ Setting IAM Policy...
+Done.
+Service [my-bun-app] revision [my-bun-app-...] has been deployed and is serving 100 percent of traffic.
+Service URL: https://my-bun-app-....us-west1.run.app
 ```
 
 </Step>

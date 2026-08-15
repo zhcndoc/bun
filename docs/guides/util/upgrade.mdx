@@ -10,7 +10,7 @@ Bun 使用内置的 `bun upgrade` 命令自行升级。
 bun upgrade
 ```
 
-`bun upgrade` 会下载并安装最新的稳定版 Bun，替换当前已安装的版本。
+`bun upgrade` 会下载并安装最新的稳定版本的 Bun，替换当前已安装的版本。如果你使用的是 canary 构建版本，`bun upgrade` 则会安装最新的 canary 构建版本。
 
 <Note>要查看当前的 Bun 版本，请运行 `bun --version`。</Note>
 
@@ -33,7 +33,7 @@ bun --revision
 
 ## 升级到 canary 版本
 
-Canary 版本会在每次提交到 `main` 分支时发布。它们未经测试，但可用于尝试新功能，或在正式发布前验证错误修复。
+Canary 构建版本会在某个提交的 CI 测试通过后，自动从 `main` 分支发布。它们适用于在正式发布前试用新功能或验证错误修复。
 
 ```bash terminal icon="terminal"
 bun upgrade --canary

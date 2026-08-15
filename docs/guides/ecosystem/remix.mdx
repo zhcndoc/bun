@@ -4,93 +4,93 @@ sidebarTitle: 使用 Remix 和 Bun
 mode: center
 ---
 
-<Note>
-  Remix 开发服务器（`remix dev`）依赖 Bun 尚未实现的 Node.js API。本指南使用 Bun 初始化项目并安装依赖，然后使用 Node.js 运行开发服务器。
-</Note>
+[Remix 3](https://github.com/remix-run/remix) 是一个由独立软件包构建的 Web 框架（路由器、HTML 渲染、会话、表单解析等），这些软件包会作为 `remix` 软件包一起分发。在处于 beta 阶段期间，它以 npm 上的 `next` 标签发布，并且其服务器可以直接运行在 Bun 上。
+
+<Note>本指南介绍 Remix 3。Remix 2 项目应改用 `create-remix` 创建。</Note>
 
 ---
 
-使用 `create-remix` 初始化一个 Remix 应用。
+使用 Remix CLI 搭建一个新项目。
 
 ```sh terminal icon="terminal"
-bun create remix
+bunx remix@next new my-remix-app
 ```
 
 ```txt
- remix   v1.19.3 💿 让我们构建更好的网站...
+• Prepare target directory...
+✓ Prepare target directory
+• Generate scaffold files...
+✓ Generate scaffold files
+• Finalize package.json...
+✓ Finalize package.json
 
-   dir   我们应当在哪里创建你的新项目？
-         ./my-app
+Created My Remix App at my-remix-app
+```
 
-      ◼  使用基础模板 详情见 https://remix.run/docs/en/main/guides/templates#templates
-      ✔  模板已复制
+然后安装其依赖项。
 
-   git   是否初始化新的 git 仓库？
-         是
-
-  deps   使用 bun 安装依赖？
-         是
-
-      ✔  依赖已安装
-      ✔  Git 已初始化
-
-  done   完成！
-         使用 cd ./my-app 进入项目目录
-         查看 README.md 获取开发和部署说明。
+```sh terminal icon="terminal"
+cd my-remix-app
+bun install
 ```
 
 ---
 
-要启动开发服务器，请在项目根目录中运行 `bun run dev`。这会使用 Node.js 运行 `remix dev` 命令。
+生成的 `server.ts` 会创建一个 `node:http` 服务器，将每个请求交给应用的路由器处理。Bun 会直接运行它；传入 `--watch` 后，每当它导入的文件发生更改时，服务器都会重启。
 
 ```sh terminal icon="terminal"
-cd my-app
+bun --watch server.ts
+```
+
+```txt
+Server listening on http://localhost:44100
+```
+
+打开 [http://localhost:44100](http://localhost:44100) 查看起始页面。路由位于 `app/routes.ts` 和 `app/router.ts` 中，起始主页由 `app/actions/home-page.tsx` 渲染。
+
+---
+
+`package.json` 中生成的 `scripts` 会使用 Node.js 和 `remix/node-tsx` TypeScript 加载器运行服务器。Bun 会自行运行 TypeScript，因此请改为让脚本指向 `bun`。
+
+```json package.json icon="file-json"
+{
+  "scripts": {
+    "dev": "NODE_ENV=development node --watch --import remix/node-tsx server.ts", // [!code --]
+    "dev": "bun --watch server.ts", // [!code ++]
+    "start": "NODE_ENV=production node --import remix/node-tsx server.ts", // [!code --]
+    "start": "NODE_ENV=production bun server.ts" // [!code ++]
+  }
+}
+```
+
+```sh terminal icon="terminal"
 bun run dev
 ```
 
 ```txt
-$ remix dev
+$ bun --watch server.ts
+Server listening on http://localhost:44100
+```
 
-💿  remix dev
+<Note>
+  生成的 `hmr` 脚本（`hmr.ts`）也会加载 `remix/node-tsx`，而它依赖 `module.registerHooks()`。Bun 尚未实现该 API（参见 [Node.js 兼容性](/runtime/nodejs-compat#node-module)），因此该脚本无法在 Bun 下运行；而 `bun --watch` 会在发生更改时重启服务器。
+</Note>
 
-info  building...
-info  built (263ms)
-Remix App Server started at http://localhost:3000 (http://172.20.0.143:3000)
+---
+
+路由器是一个 `fetch` 处理器，因此也可以使用 [`Bun.serve()`](/runtime/http/server) 提供应用服务，而不是使用 `node:http`。
+
+```ts server.ts icon="/icons/typescript.svg"
+import { router } from "./app/router.ts";
+
+const server = Bun.serve({
+  port: 44100,
+  fetch: request => router.fetch(request),
+});
+
+console.log(`Server listening on ${server.url}`);
 ```
 
 ---
 
-打开 [http://localhost:3000](http://localhost:3000) 查看应用。在浏览器中，对 `app/routes/_index.tsx` 所做的更改会自动热重载。
-
-<Frame>
-  ![在本地运行的 Remix 应用](https://github.com/oven-sh/bun/assets/3084745/c26f1059-a5d4-4c0b-9a88-d9902472fd77)
-</Frame>
-
----
-
-要构建应用，请运行 `bun run build`。
-
-```sh terminal icon="terminal"
-bun run build
-```
-
-```txt
-$ remix build
-info  building... (NODE_ENV=production)
-info  built (158ms)
-```
-
-然后从项目根目录启动应用。
-
-```sh terminal icon="terminal"
-bun start
-```
-
-```txt
-$ remix-serve ./build/index.js
-[remix-serve] http://localhost:3000 (http://192.168.86.237:3000)
-```
-
----
-
-请参阅 [Remix 文档](https://remix.run/) 了解更多信息。
+请参阅 Remix [文档](https://github.com/remix-run/remix/tree/main/docs)以了解更多信息。

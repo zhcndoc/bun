@@ -1,23 +1,43 @@
 ---
-title: "bun upgrade"
-description: "将依赖项更新到最新版本"
+title: "bun update"
+description: "将依赖项更新到其版本范围允许的最新版本"
 ---
 
 import Update from "/snippets/cli/update.mdx";
 
 <Note>要升级 Bun CLI 版本，请参阅 [`bun upgrade`](/installation#upgrading)。</Note>
 
-要将所有依赖项更新到最新版本：
+`bun update`（别名 `bun up`）会将每个依赖项——直接依赖和传递依赖——更新到其请求版本范围所允许的最新版本，然后重写 `package.json` 和 `bun.lock`。要忽略已声明的版本范围，请使用 [`--latest`](#--latest)。
 
 ```sh terminal icon="terminal"
 bun update
 ```
 
-要将特定依赖项更新到最新版本：
+要更新特定的软件包，请传入其名称。名称可以是 glob 模式，`!` 用于排除：
 
 ```sh terminal icon="terminal"
-bun update [package]
+bun update zod
+bun update jquery@3            # move the package.json entry to the newest 3.x
+bun update '@types/*'
+bun update '@babel/*' '!@babel/core'
 ```
+
+`bun update <package>` 会更新 `<package>` 在 `bun.lock` 中出现的所有位置，并保持其他内容不变。这同样适用于传递依赖——`bun update caniuse-lite` 会获取嵌套依赖中的修复，而不会将其添加到 `package.json`。不在 `bun.lock` 中的名称会导致错误。
+
+更新的软件包会在安装摘要中显示为 `↑ name old → new`，当更新范围之外存在更新的主版本时，会显示 `(v3.0.0 available)`。使用 `--dry-run` 可预览更新。
+
+### `package.json` 如何被重写
+
+- `^1.1.0` → `^1.2.0`，`~1.1.0` → `~1.1.5`。运算符会被保留。使用 [`install.exact`](/runtime/bunfig#install-exact) 或 `--exact` 时，则会写入精确版本。
+- 精确固定版本、dist-tags（`"latest"`、`"next"`）以及其他版本范围形式（`*`、`1.x`、`>=1.0.0`）会按原样保留；只有 `bun.lock` 会发生变化。`--latest` 会重写这些内容。
+- `catalog:` 引用永远不会被重写；根目录 `package.json` 中的 catalog 条目会被更新。
+- `--no-save` 只更新 `node_modules`，不会修改 `package.json` 和 `bun.lock`。
+
+### 哪些内容会被保留
+
+- 版本范围永远不会扩大。依赖 `foo@^1.0.0` 的软件包永远不会获得 `foo@2.x`。
+- 只要版本范围允许，`patchedDependencies` 中的版本就会保持不变，并显示为 `kept name@version (patched, v1.2.3 available)`。`--latest` 和 [`bun audit fix`](/pm/cli/audit#bun-audit-fix) 会更新这些版本；之后请使用 [`bun patch`](/pm/cli/patch) 重新创建补丁。
+- 如果传递依赖的软件包注册表请求失败，该软件包会保留其锁定版本，并打印警告。直接依赖的请求失败则会导致错误。
 
 ## `--interactive`
 
@@ -28,7 +48,7 @@ bun update --interactive
 bun update -i
 ```
 
-该标志会打开一个终端界面，列出每个过期软件包及其当前版本和目标版本。
+这会打开一个终端界面，列出每个过时的直接依赖。你选择的软件包会按照运行 `bun update <name> ...` 的方式进行更新；其他所有内容都会保留其锁定版本。
 
 ### 交互界面
 
@@ -99,25 +119,54 @@ bun update -i
 
 在每个分组中，单个包可能带有后缀（` dev`、` peer`、` optional`）。
 
-## `--recursive`
+## `--recursive` 和 `--filter`
 
-配合 `--interactive` 使用 `--recursive` 标志可以在 monorepo 的所有工作区内更新依赖：
+在 monorepo 中，`bun update` 只会重写你运行命令所在工作区的 `package.json`（从根目录运行时，每个工作区的传递依赖仍会在 `bun.lock` 中更新）。
+
+- `--recursive`（`-r`）会更新每个工作区的 `package.json`。
+- `--filter <pattern>`（`-F`）使用[筛选语法](/pm/filter)，仅更新匹配的工作区。与 `bun install --filter` 一样，之后只会链接所选工作区。
+
+两者都可以与软件包名称、`--latest`、`--dry-run` 和 `--interactive` 结合使用（后者会添加一个 “Workspace” 列）。
 
 ```sh terminal icon="terminal"
-bun update --interactive --recursive
+bun update --recursive
+bun update --filter './packages/*'
 bun update -i -r
+bun update zod -r
+bun update zod --filter '...^ui'
 ```
 
-使用 `--recursive` 后，界面会添加“工作区”列，显示每个依赖所属的工作区。
+## `--dev`、`--prod`、`--no-optional`
+
+限制要更新的 `package.json` 条目：`--dev`（`-D`）仅更新 `devDependencies`，`--prod`（`-P`）仅更新 `dependencies` 和 `optionalDependencies`，`--no-optional` 跳过 `optionalDependencies`。它们可以与名称、模式、`--latest` 和 `--interactive` 结合使用。
+
+这些标志只会选择要更新的内容——`bun update --prod` 仍会安装 `devDependencies`。
+
+```sh terminal icon="terminal"
+bun update --dev
+bun update --prod --latest
+bun update -D '@types/*'
+bun update -i --prod
+```
+
+## `--global`
+
+`bun update -g` 会更新通过 `bun add -g` 安装的软件包：
+
+```sh terminal icon="terminal"
+bun update -g
+bun update -g typescript
+```
 
 ## `--latest`
 
 默认情况下，`bun update` 会将每个依赖项更新到满足 `package.json` 中版本范围的最新版本。
 
-若要更新到最新版本，而不管其是否满足该版本范围，请使用 `--latest` 标志：
+要将直接依赖更新到最新版本而不考虑已声明的版本范围，请使用 `--latest`（`-L`）。`package.json` 条目会以新版本为基础，重写为相同样式的版本范围。传递依赖仍会遵循其依赖方声明的版本范围，并且已经领先于 `latest` 的依赖（例如预发布版本）不会降级。
 
 ```sh terminal icon="terminal"
 bun update --latest
+bun update -L
 ```
 
 在交互模式下，按 **l** 可在软件包的目标版本（遵循 semver）和最新版本之间切换。

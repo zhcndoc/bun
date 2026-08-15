@@ -94,8 +94,8 @@ bun build --compile \
 
 使用构建时常量启用或禁用功能：
 
-```ts src/version.ts icon="/icons/typescript.svg"
-// 在构建时被替换
+```ts src/app.ts icon="/icons/typescript.svg"
+// Replaced at build time
 declare const ENABLE_ANALYTICS: boolean;
 declare const ENABLE_DEBUG: boolean;
 
@@ -115,7 +115,7 @@ if (ENABLE_DEBUG) {
 # 生产环境构建 - 启用分析，关闭调试
 bun build --compile --define ENABLE_ANALYTICS=true --define ENABLE_DEBUG=false src/app.ts --outfile app-prod
 
-# 开发环境构建 - 都启用
+# Development build - analytics disabled, debug enabled
 bun build --compile --define ENABLE_ANALYTICS=false --define ENABLE_DEBUG=true src/app.ts --outfile app-dev
 ```
 
@@ -123,7 +123,7 @@ bun build --compile --define ENABLE_ANALYTICS=false --define ENABLE_DEBUG=true s
 
 在构建时替换配置对象:
 
-```ts src/version.ts icon="/icons/typescript.svg"
+```ts src/app.ts icon="/icons/typescript.svg"
 declare const CONFIG: {
   apiUrl: string;
   timeout: number;

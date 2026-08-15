@@ -18,7 +18,7 @@ bun add @sentry/bun
 
 ---
 
-然后，在应用的入口文件中使用你的 Sentry DSN 初始化 SDK。你可以在 Sentry 项目设置中找到 DSN。
+然后在单独的文件中使用你的 Sentry DSN 初始化 SDK。你可以在 Sentry 项目设置中找到你的 DSN。
 
 ```ts sentry.ts icon="/icons/typescript.svg"
 import * as Sentry from "@sentry/bun";
@@ -31,6 +31,14 @@ Sentry.init({
   // 我们建议在生产环境中调整该值
   tracesSampleRate: 1.0,
 });
+```
+
+---
+
+使用 [`--preload`](/runtime) 启动你的应用，以便该文件在应用的任何模块之前运行。文件的 `import`s 会在其自身代码之前进行计算，因此在入口文件顶部调用 `Sentry.init()` 仍会在该文件导入的所有内容之后运行。
+
+```sh terminal icon="terminal"
+bun --preload ./sentry.ts index.ts
 ```
 
 ---
