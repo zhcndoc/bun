@@ -64,11 +64,11 @@ coverageThreshold = 0.9
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
-# 为行、函数和语句设置不同的阈值
-coverageThreshold = { lines = 0.9, functions = 0.9, statements = 0.9 }
+# To set different thresholds for lines and functions
+coverageThreshold = { lines = 0.9, functions = 0.9 }
 ```
 
-设置任何阈值都会启用 `fail_on_low_coverage`：如果覆盖率低于阈值，测试运行将失败。
+设置任一键后，如果行覆盖率或函数覆盖率低于相应阈值，`bun test --coverage` 就会以非零退出代码退出；未设置的键会保留 `0.9` 的默认值。Bun 接受 `statements` 键，但目前不会对其进行检查。在非 `--parallel` 模式下，只有启用了 `text` 报告器（默认设置）时才会进行检查；如果只使用 `--coverage-reporter=lcov` 运行，目前无论阈值如何都会以 0 退出。
 
 ## 覆盖率报告器
 
@@ -141,7 +141,7 @@ jobs:
 coverageSkipTestFiles = false  # default true
 ```
 
-当 `coverageSkipTestFiles` 为 `true`（默认值）时，匹配测试模式的文件（例如 `*.test.ts`、`*.spec.js`）会从覆盖率报告中排除。
+当 `coverageSkipTestFiles` 为 `true`（默认值）时，覆盖率报告会排除符合测试文件模式的文件（例如 `*.test.ts`、`*.spec.js`）。
 
 ### 忽略特定路径和模式
 
@@ -161,7 +161,7 @@ coveragePathIgnorePatterns = [
 ]
 ```
 
-该选项接受 glob 模式，其工作方式类似于 Jest 的 `collectCoverageFrom` 忽略模式。匹配任一模式的文件都会从覆盖率计算中排除，并且不会出现在文本和 LCOV 输出中。
+该选项接受 glob 模式，工作方式类似于 Jest 的 `collectCoverageFrom` 忽略模式。Bun 会在文本和 LCOV 输出中将符合任一模式的文件排除在覆盖率计算和报告之外。
 
 #### 常见用例
 
@@ -196,7 +196,7 @@ coveragePathIgnorePatterns = [
 
 ## 源码映射（Sourcemaps）
 
-Bun 默认会转译所有文件，并生成一个内部源码映射，将原始源代码中的行映射到 Bun 的内部表示。要禁用此功能，请将 `test.coverageIgnoreSourcemaps` 设置为 `true`；除非是高级使用场景，否则通常不需要这样做。
+Bun 默认会转译所有文件，并生成内部源映射，将原始源代码中的行映射到 Bun 的内部表示。要让覆盖率报告忽略此源映射，请将 `test.coverageIgnoreSourcemaps` 设置为 `true`。除非用于高级场景，否则通常不需要这样做。
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -212,9 +212,9 @@ coverageIgnoreSourcemaps = true  # 默认 false
 默认情况下，覆盖率报告：
 
 - **排除** `node_modules` 目录
-- **排除** 使用非 JS/TS 加载器加载的文件（例如 `.css`、`.txt`），除非指定了自定义 JS 加载器
-- **排除** 测试文件本身（可通过 `coverageSkipTestFiles = false` 包含）
-- 可使用 `coveragePathIgnorePatterns` 排除其他文件
+- **排除** 使用非 JS/TS 加载器加载的文件（例如 `.css`、`.txt`），除非你指定了自定义 JS 加载器
+- **排除** 测试文件本身（设置 `coverageSkipTestFiles = false` 可将其纳入报告）
+- 可以通过 `coveragePathIgnorePatterns` 排除其他文件
 
 ## 高级配置
 
@@ -280,13 +280,11 @@ test:coverage:
   stage: test
   script:
     - bun install
-    - bun test --coverage --coverage-reporter=lcov
-  coverage: '/Lines\s*:\s*(\d+.\d+)%/'
+    - bun test --coverage --coverage-reporter=text --coverage-reporter=lcov
+  coverage: '/All files\s*\|\s*[\d.]+\s*\|\s*(\d+\.\d+)/'
   artifacts:
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage/lcov.info
+    paths:
+      - coverage/lcov.info
 ```
 
 ## 解析覆盖率报告
@@ -311,10 +309,10 @@ All files    |   85.71 |   90.48 |
 
 ### 目标标准
 
-- **80% 及以上整体覆盖率**：通常认为表现良好
-- **关键路径 90% 及以上**：关键业务逻辑应当被充分测试
-- **工具函数 100%**：纯函数和工具函数更容易实现完全覆盖
-- **UI 组件覆盖率较低**：通常可以接受，因为多数需要集成测试。
+- **整体覆盖率达到 80% 以上**：通常被认为是良好水平
+- **关键路径覆盖率达到 90% 以上**：重要的业务逻辑应经过充分测试
+- **工具函数覆盖率达到 100%**：纯函数和工具函数可以得到完整测试
+- **UI 组件的覆盖率较低**：通常可以接受，因为它们可能需要集成测试
 
 ## 最佳实践
 
@@ -387,9 +385,9 @@ test("我的函数正常工作", () => {
 
 如果看到的覆盖率报告不符合预期：
 
-1. 检查源码映射是否正常工作
-2. 检查 `coveragePathIgnorePatterns` 是否配置正确
-3. 确保测试文件确实导入了要测试的代码
+1. 检查源映射是否正常工作
+2. 验证 `coveragePathIgnorePatterns` 中的文件模式
+3. 确保测试文件导入了要测试的代码
 
 ### 大型代码库性能问题
 
@@ -399,7 +397,6 @@ test("我的函数正常工作", () => {
 [test]
 # 排除不需要计算覆盖率的大型目录
 coveragePathIgnorePatterns = [
-  "node_modules/**",
   "vendor/**",
   "generated/**"
 ]

@@ -27,7 +27,7 @@ import.meta.hot.dispose(() => {
 ```
 
 <Warning>
-为了让这正常工作，Bun 强制要求这些 API 必须直接调用，不能通过间接引用。也就是说，以下用法是无效的：
+为了使这项死代码消除功能生效，Bun 会强制要求不通过间接方式调用这些 API。这意味着以下方式不可行：
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 // 无效：将 `hot` 赋值给变量
@@ -57,7 +57,7 @@ HMR API 仍在开发中，部分功能尚未实现。要在 `Bun.serve` 中禁�
 
 ## API 方法
 
-| Method             | Status | Notes                                                                 |
+| 方法                 | 状态 | 备注                                                                  |
 | ------------------ | ------ | --------------------------------------------------------------------- |
 | `hot.accept()`     | ✅     | 表示可以平稳地替换热更新。                                             |
 | `hot.data`         | ✅     | 在模块求值之间持久化数据。                                             |
@@ -71,7 +71,7 @@ HMR API 仍在开发中，部分功能尚未实现。要在 `Bun.serve` 中禁�
 
 ## import.meta.hot.accept()
 
-`accept()` 方法表示模块可以进行热替换。不带参数调用时，表示可以通过重新评估文件来替换此模块。热更新后，Bun 会自动修补该模块的导入者。
+`accept()` 方法表示模块可以进行热替换。不带参数调用时，表示 Bun 可以通过重新求值该文件来替换此模块。热更新后，Bun 会自动修补该模块的导入者。
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 // index.ts
@@ -86,14 +86,12 @@ export function getNegativeCount() {
 }
 ```
 
-这会为 `index.ts` 导入的所有文件创建一个热重载边界。每当保存 `foo.ts` 或其任何依赖项时，更新就会向上冒泡到 `index.ts`，使其重新评估。导入 `index.ts` 的文件随后会被修补，以导入新版本的 `getNegativeCount()`。如果只有 `index.ts` 被更新，则只会重新评估这一个文件，并复用 `foo.ts` 中的计数器。
+此调用会为 `index.ts` 导入的所有文件创建热重载边界。每当你保存 `foo.ts` 或其任何依赖项时，更新都会向上冒泡到 `index.ts`，然后重新求值。接着，Bun 会修补导入 `index.ts` 的文件，使其导入新版 `getNegativeCount()`。如果你只更新 `index.ts`，Bun 只会重新求值该文件，并复用 `foo.ts` 中的计数器。
 
 将此功能与 `import.meta.hot.data` 结合使用，可以将状态从之前的模块传递到新模块。
 
 <Info>
-  当没有模块调用 `import.meta.hot.accept()`（并且没有 React Fast Refresh 或插件代替你调用它）时，
-  文件更新后页面会重新加载，同时控制台会显示哪些文件失效。如果依赖完整的页面重新加载更合理，
-  则可以安全地忽略此警告。
+  如果没有模块调用 `import.meta.hot.accept()`（并且没有 React Fast Refresh 或插件代你调用），文件更新时页面会重新加载。控制台警告会显示哪些文件失效了。如果依赖完整页面重新加载更合适，可以放心忽略此警告。
 </Info>
 
 ### 带回调
@@ -111,14 +109,14 @@ import.meta.hot.accept(newModule => {
 });
 ```
 
-<Tip>建议优先使用不带参数的 `import.meta.hot.accept()`；这样通常更容易理解代码。</Tip>
+<Tip>通常建议调用不带参数的 `import.meta.hot.accept()`，这样代码会更清晰。</Tip>
 
 ### 接受其它模块
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 import { count } from "./foo";
 
-import.meta.hot.accept("./foo", () => {
+import.meta.hot.accept("./foo", newModule => {
   if (!newModule) return;
 
   console.log("updated: count is now ", count);
@@ -131,12 +129,12 @@ import.meta.hot.accept("./foo", () => {
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 import.meta.hot.accept(["./foo", "./bar"], newModules => {
-  // newModules 是数组，每项对应一个更新的模块
-  // 或者如果模块语法有错误则对应 undefined
+  // newModules holds the updated module at its index and
+  // undefined for the other dependencies
 });
 ```
 
-此变体接受一个依赖项数组。回调会接收更新后的模块；对于出现错误的模块，对应的值为 `undefined`。
+此变体接受一个依赖项数组。回调会收到一个数组，其中更新后的模块位于对应索引处，其它依赖项对应的位置为 `undefined`。
 
 ## import.meta.hot.data
 
@@ -150,15 +148,15 @@ const root = (import.meta.hot.data.root ??= createRoot(elem));
 root.render(<App />); // 复用已有 root
 ```
 
-在生产环境中，`data` 会被内联为 `{}`，因此不能用作状态持有。
+在生产环境中，Bun 会将 `data` 内联为 `{}`，因此不能将其用作状态持有器。
 
 <Tip>
-  对于有状态模块，推荐使用这种模式，因为 Bun 可以在生产环境中将 `{}.prop ??= value` 缩减为 `value`。
+  对于有状态模块，我们建议使用此模式，因为 Bun 可以在生产环境中将 `{}.prop ??= value` 缩小为 `value`。
 </Tip>
 
 ## import.meta.hot.dispose()
 
-绑定一个销毁回调。该回调在以下时机被调用：
+添加一个卸载回调。Bun 会在以下情况调用它：
 
 - 模块即将被替换（即新模块加载前）
 - 模块被卸载（所有对该模块的导入被移除，见 `import.meta.hot.prune()`）
@@ -171,15 +169,15 @@ import.meta.hot.dispose(() => {
 });
 ```
 
-<Warning>该回调不会在路由导航或浏览器标签关闭时调用。</Warning>
+<Warning>Bun 不会在路由导航或浏览器标签页关闭时调用此回调。</Warning>
 
-返回一个 promise 会延迟模块替换，直到模块被销毁。所有销毁回调会并行调用。
+返回一个 promise 会延迟模块替换，直到模块完成卸载。Bun 会并行调用所有卸载回调。
 
 ## import.meta.hot.prune()
 
-绑定一个清理回调。在所有导入这个模块的引用被移除之后调用，但该模块之前已经加载过。
+添加一个清理回调。当该模块的所有导入都被移除，但模块之前已加载时，Bun 会调用它。
 
-可使用它来清理模块加载时创建的资源。与 `import.meta.hot.dispose()` 不同，它与 `accept` 和 `data` 配合管理有状态资源时更加合适。以下是一个管理 WebSocket 的完整示例：
+可以使用它来清理模块加载时创建的资源。与 `import.meta.hot.dispose()` 不同，它与 `accept` 和 `data` 配合管理有状态资源时更加合适。以下是一个管理 WebSocket 的完整示例：
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 import { something } from "./something";
@@ -194,7 +192,7 @@ import.meta.hot.prune(() => {
 ```
 
 <Info>
-  如果改用 `dispose`，WebSocket 将在每次热更新时关闭并重新打开。两种代码版本都能在导入的文件更新时避免页面重新加载。
+  如果改用 `dispose`，WebSocket 会在每次热更新时关闭并重新打开。这两个版本的代码在更新导入的文件时，都会阻止页面重新加载。
 </Info>
 
 ## import.meta.hot.on() 和 off()
@@ -207,7 +205,7 @@ import.meta.hot.on("bun:beforeUpdate", () => {
 });
 ```
 
-当文件被替换时，所有相关事件监听器会自动移除。
+替换文件时，Bun 会自动移除该文件的所有事件监听器。
 
 ### 内置事件
 

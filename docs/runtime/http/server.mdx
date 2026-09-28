@@ -66,7 +66,7 @@ Bun.serve({
 });
 ```
 
-HTML 导入不仅仅用于提供 HTML：它们还会运行 Bun 的[打包器](/bundler)、JavaScript 转译器和 CSS 解析器，因此你可以使用 React、TypeScript 和 Tailwind CSS 构建前端。
+HTML 导入的功能不止是提供 HTML：它们还会运行 Bun 的 [打包器](/bundler)、JavaScript 转译器和 CSS 解析器，因此你可以使用 React、TypeScript 和 Tailwind CSS 构建前端。
 
 如需了解使用 HTML 导入构建全栈应用的完整指南，请参阅[全栈开发服务器](/bundler/fullstack)。
 
@@ -171,7 +171,7 @@ Bun.serve({
 
 ## HTTP/3 (QUIC)
 
-<Note>在 `Bun.serve` 中对 HTTP/3 的支持是**实验性**的，未来版本中可能会更改。</Note>
+<Note>`Bun.serve` 对 HTTP/3 的支持是**实验性**的，未来版本中可能会更改。</Note>
 
 `Bun.serve` 也可以通过 QUIC 监听 HTTP/3。将 `http3: true` 与 [`tls`](./tls) 一起设置；HTTP/3 需要 TLS。
 
@@ -190,7 +190,7 @@ Bun.serve({
 
 启用 `http3` 后，服务器会在同一端口上同时通过 TCP（HTTP/1.1）和 UDP（HTTP/3）监听。HTTP/1.1 响应会包含一个 `Alt-Svc` 标头，声明 HTTP/3 端点，以便支持的客户端可以自动升级。
 
-如果只想提供 HTTP/3——完全不启用 TCP 监听——请设置 `http1: false`：
+若要仅提供 HTTP/3 服务而完全不启用 TCP 监听，请设置 `http1: false`：
 
 ```ts
 Bun.serve({
@@ -207,14 +207,44 @@ Bun.serve({
 ```
 
 <Note>
-  `http3` 不支持 unix 域套接字——QUIC 需要一个 UDP 端口。`http1: false` 需要 `http3: true`。
+  `http3` 不支持 Unix 域套接字：QUIC 需要 UDP 端口。`http1: false` 需要同时设置 `http2: true` 或
+  `http3: true`。
 </Note>
+
+---
+
+## HTTP/2
+
+<Note>`Bun.serve` 对 HTTP/2 的支持是**实验性**的，未来版本中可能会更改。</Note>
+
+设置 `http2: true`，即可在同一端口上使用与 HTTP/1.1 相同的路由和 `fetch` 处理程序提供 HTTP/2 服务。
+
+```ts
+Bun.serve({
+  tls: {
+    key: Bun.file("./key.pem"),
+    cert: Bun.file("./cert.pem"),
+  },
+  http2: true, // [!code ++]
+  fetch(req) {
+    return new Response("通过 HTTP/2 你好！");
+  },
+});
+```
+
+使用 `tls` 时，Bun 会通过 ALPN 为每个连接选择协议。提供 `h2` 的客户端（浏览器、`curl`、`node:http2`）会使用 HTTP/2。其他客户端则使用 HTTP/1.1。
+
+不使用 `tls` 时，Bun 会为使用 HTTP/2 前言（“先验知识”）建立连接的客户端提供 HTTP/2 服务，例如 `curl --http2-prior-knowledge` 或来自 `node:http2` 的 `http2.connect("http://...")`。其他连接则使用 HTTP/1.1。
+
+设置 `http1: false` 可拒绝 HTTP/1.x 客户端。使用 TLS 时，提供 ALPN 但不包含 `h2` 的客户端会在握手时失败；完全不发送 ALPN 的客户端，以及未以该前言开头的明文连接，会收到 `505 HTTP Version Not Supported`。设置 `http1: false` 后，服务器无法接受 WebSocket 连接，因为 `server.upgrade()` 仅适用于 HTTP/1.1。
+
+`server.upgrade()` 仅适用于 HTTP/1.1 请求。不支持 HTTP/2 上的 WebSocket、服务器推送和响应尾部标头（gRPC 所需）。
 
 ---
 
 ## idleTimeout
 
-默认情况下，`Bun.serve` 会在连接空闲 **10 秒**后关闭连接。当没有数据正在发送或接收时，连接处于空闲状态；这也包括处理程序仍在运行但尚未向响应写入任何字节的进行中请求。浏览器和 `fetch()` 客户端会将此视为连接重置。
+默认情况下，`Bun.serve` 会在连接空闲 **10 秒**后将其关闭。没有数据正在发送或接收时，连接即为空闲。这也包括正在处理中的请求：处理程序仍在运行，但尚未向响应写入任何字节。浏览器和 `fetch()` 客户端会将其视为连接重置。
 
 要进行配置，请设置 `idleTimeout` 字段（单位为秒）。最大值为 `255`，设置为 `0` 则完全禁用超时。
 
@@ -251,7 +281,7 @@ export default {
 
 类型参数 `<undefined>` 是 WebSocket 数据类型。如果你添加了一个 WebSocket 处理程序，并通过 `server.upgrade(req, { data: ... })` 附加自定义数据，请将 `undefined` 替换为你的数据类型。
 
-你可以直接运行此文件：当 Bun 检测到某个文件包含带有 `fetch` 处理程序的 `default` 导出时，它会将其传入 `Bun.serve`。
+可以直接运行此文件：当 Bun 检测到某个文件的 `default` 导出中包含 `fetch` 处理程序时，就会将该导出传入 `Bun.serve`。
 
 ---
 
@@ -296,7 +326,7 @@ await server.stop();
 await server.stop(true);
 ```
 
-默认情况下，`stop()` 会允许正在处理的请求和 WebSocket 连接完成。空闲的 keep-alive 连接会立即关闭，正在处理请求的连接会在其响应发送完毕后关闭。传递 `true` 则会立即终止所有连接。返回的 promise 会在每个连接都关闭后解析。
+默认情况下，`stop()` 会允许正在处理的请求和 WebSocket 连接完成。服务器会立即关闭空闲的 keep-alive 连接。正在处理请求的连接会在服务器发送响应后关闭。传入 `true` 则会立即终止所有连接。每当所有连接都关闭后，返回的 Promise 就会解析。
 
 ### `server.closeIdleConnections()`
 
@@ -307,7 +337,7 @@ const closed = server.closeIdleConnections();
 console.log(`closed ${closed} idle connections`);
 ```
 
-它会返回已关闭的连接数量。正在处理请求的连接和已打开的 WebSocket 不受影响，服务器仍会接受新连接。这与 `node:http` 的 `server.closeIdleConnections()` 行为一致，后者不返回任何内容。
+它会返回已关闭的连接数量。正在处理请求的连接和已打开的 WebSocket 不受影响，服务器仍会接受新连接。此方法与 `node:http` 的 `server.closeIdleConnections()` 行为一致，后者不返回任何内容。
 
 ### `server.ref()` 和 `server.unref()`
 
@@ -346,7 +376,7 @@ server.reload({
 });
 ```
 
-将其用于开发和热重载。只能更新 `fetch`、`error`、`routes` 和 `websocket`。
+可将此方法用于开发和热重载。你只能更新 `fetch`、`error`、`routes` 和 `websocket`。
 
 ---
 
@@ -370,7 +400,7 @@ const server = Bun.serve({
 });
 ```
 
-使用 `server.timeout(req, 0)` 可以让长时间运行的流式响应（例如服务器发送事件）保持活动状态，而无需提高每个请求的全局 `idleTimeout`：
+使用 `server.timeout(req, 0)` 可让长时间运行的流式响应（例如服务器发送事件）保持连接，而无需为每个请求调高全局 `idleTimeout`。在 HTTP/2 上，超时作用于连接，因此其打开的请求中最宽松的超时值会生效：
 
 ```ts
 Bun.serve({
@@ -575,9 +605,9 @@ interface Server extends Disposable {
 
   /**
    * Update handlers without restarting the server.
-   * Only fetch and error handlers can be updated.
+   * Only fetch, error, routes, and websocket can be updated.
    */
-  reload(options: Serve): void;
+  reload(options: Serve.Options<undefined>): Server;
 
   /**
    * 向运行中的服务器发出请求。
@@ -683,7 +713,7 @@ interface WebSocketHandler<T = undefined> {
   /** 发送 Ping 帧以保持连接处于活动状态 */
   sendPings?: boolean;
 
-  /** 服务器是否会接收发布到自身的消息 */
+  /** Whether ws.publish() also sends the message to the socket that published it, if subscribed */
   publishToSelf?: boolean;
 
   /** 连接打开时调用 */

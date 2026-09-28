@@ -27,7 +27,7 @@ test("它是2020年", () => {
 });
 ```
 
-Jest 的 `useFakeTimers` 和 `useRealTimers` 也受支持，因此使用它们的现有测试可以继续正常运行：
+`bun:test` 也支持 Jest 的 `useFakeTimers` 和 `useRealTimers`，因此使用这些函数的现有测试仍可正常运行：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 test("就像在 jest 中一样", () => {
@@ -108,14 +108,14 @@ import { test, expect } from "bun:test";
 
 test("欢迎来到加利福尼亚！", () => {
   process.env.TZ = "America/Los_Angeles";
-  expect(new Date().getTimezoneOffset()).toBe(420);
+  expect(new Date("2020-07-01T00:00:00.000Z").getTimezoneOffset()).toBe(420);
   expect(new Intl.DateTimeFormat().resolvedOptions().timeZone).toBe("America/Los_Angeles");
 });
 
 test("欢迎来到纽约！", () => {
   // 与 Jest 不同，你可以在运行时多次设置时区，并且可以生效。
   process.env.TZ = "America/New_York";
-  expect(new Date().getTimezoneOffset()).toBe(240);
+  expect(new Date("2020-07-01T00:00:00.000Z").getTimezoneOffset()).toBe(240);
   expect(new Intl.DateTimeFormat().resolvedOptions().timeZone).toBe("America/New_York");
 });
 ```

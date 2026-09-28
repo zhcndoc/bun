@@ -20,7 +20,7 @@ mode: center
 ---
 
 <Steps> 
-<Step title={<span>初始化 <code>gcloud</code>，选择或创建项目</span>}>
+<Step title={<span>通过选择或创建项目来初始化 <code>gcloud</code></span>}>
 
 请确保您已经初始化 Google Cloud CLI。`gcloud init` 会让您登录，并提示您选择现有项目或创建新项目。
 
@@ -49,8 +49,8 @@ Google Cloud CLI 已配置并准备使用！
 ```
 
 </Step>
-<Step title="（可选）将项目信息存储到环境变量">
-设置您的项目 ID 和编号变量，方便后续步骤复用。
+<Step title="（可选）将项目信息存储在环境变量中">
+为项目 ID 和项目编号设置变量，以便在以下步骤中重复使用。
 
 ```bash terminal icon="terminal"
 PROJECT_ID=$(gcloud projects list --format='value(projectId)' --filter='projectId=my-bun-app')
@@ -101,7 +101,7 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 ```
 
 <Note>  
-这些命令会启用 Cloud Run（`run.googleapis.com`）和 Cloud Build（`cloudbuild.googleapis.com`），从源码部署时需要使用这两个服务。Cloud Run 运行您的容器化应用，而 Cloud Build 负责构建和打包应用。
+这些命令会启用 Cloud Run（`run.googleapis.com`）和 Cloud Build（`cloudbuild.googleapis.com`）。从源代码部署需要这两项服务。Cloud Run 运行容器化应用，而 Cloud Build 则负责构建和打包应用。
 
 IAM 绑定授予 Compute Engine 服务账户（`$PROJECT_NUMBER-compute@developer.gserviceaccount.com`）权限，代表您构建和部署镜像。
 
@@ -129,13 +129,13 @@ CMD ["bun", "index.ts"]
 ```
 
 <Note>
-  请确保启动命令对应您的应用入口点。如果您在 package.json 中有 start 脚本，也可以使用 `CMD ["bun", "run", "start"]`。
+  确保启动命令与应用的入口点相对应。如果 `package.json` 中有启动脚本，启动命令也可以是 `CMD ["bun", "run", "start"]`。
 
-如果您的应用没有依赖项，可以省略 `COPY package.json bun.lock ./` 和 `RUN bun install --production --frozen-lockfile` 行（对于没有依赖项的项目，Bun 不会写入 `bun.lock`）。
+如果应用没有依赖项，可以省略 `COPY package.json bun.lock ./` 和 `RUN bun install --production --frozen-lockfile` 这几行。没有依赖项的项目不会生成 `bun.lock`。
 
 </Note>
 
-在项目根目录创建新的 `.dockerignore` 文件。该文件列出了要从容器镜像中_排除_的文件和目录，例如 `node_modules`，从而让构建更快、镜像更小：
+在项目根目录创建新的 `.dockerignore` 文件。该文件列出要从容器镜像中_排除_的文件和目录，例如 `node_modules`。排除这些内容可以让构建更快、镜像更小：
 
 ```docker .dockerignore icon="Docker"
 node_modules

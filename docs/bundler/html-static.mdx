@@ -136,13 +136,13 @@ Press h + Enter to show shortcuts
 
 Bun 的转译器原生支持 JavaScript、TypeScript 和 JSX。请参阅[加载器](/bundler/loaders)。
 
-<Note>Bun 的转译器也在运行时使用。</Note>
+<Note>Bun 在运行时也使用相同的转译器。</Note>
 
 ### ES 模块与 CommonJS
 
 您可以在 JavaScript、TypeScript 和 JSX 文件中使用 ESM 和 CommonJS。Bun 会自动转译并打包它们。
 
-无需预先构建或单独优化步骤，全程同步完成。
+无需预构建或单独的优化步骤。Bun 会同时完成所有这些工作。
 
 请参阅[模块解析](/runtime/module-resolution)。
 
@@ -209,7 +209,7 @@ import "./styles.css";
 import "./more-styles.css";
 ```
 
-这会在输出目录中生成 `./app.css` 和 `./app.js`。从 JavaScript 导入的所有 CSS 文件都会被打包到每个入口点对应的单个 CSS 文件中。如果从多个 JavaScript 文件中导入同一个 CSS 文件，它在输出 CSS 文件中只会被包含一次。
+这会在输出目录中生成 `./app.css` 和 `./app.js`。Bun 会将从 JavaScript 导入的所有 CSS 文件打包到每个入口点对应的单个 CSS 文件中。如果你从多个 JavaScript 文件导入同一个 CSS 文件，Bun 只会在输出的 CSS 文件中包含它一次。
 
 ## 插件
 
@@ -276,7 +276,11 @@ env = "PUBLIC_*"  # 仅内联以 PUBLIC_ 开头的环境变量（推荐）
 ```
 
 <Note>
-  仅支持直接字面量的 `process.env.FOO`，不支持 `import.meta.env` 或间接访问如 `const env = process.env; env.FOO`。
+  仅对字面形式的 `process.env.FOO` 引用进行内联，不支持 `import.meta.env` 或 `const env =
+  process.env; env.FOO` 这样的间接访问。
+
+如果环境变量未设置，浏览器中可能会出现 `ReferenceError: process
+  is not defined` 这样的运行时错误。
 
 若环境变量未设置，浏览器可能会出现运行时错误，如 `ReferenceError: process is not defined`。
 </Note>
@@ -357,9 +361,9 @@ ready in 6.62ms
 Press h + Enter to show shortcuts
 ```
 
-每次调用 `console.log` 或 `console.error` 时，日志都会广播到启动服务器的终端，因此浏览器错误会显示在运行服务器的同一位置。这也有助于监视终端输出的 AI 代理。
+Bun 会将每次 `console.log` 或 `console.error` 调用广播到启动服务器的终端，因此浏览器错误会显示在运行服务器的同一位置。这也有助于监视终端输出的 AI 代理。
 
-在内部，此功能会复用热模块替换（HMR）现有的 WebSocket 连接来发送日志。
+在内部，Bun 会复用热模块替换（HMR）现有的 WebSocket 连接来发送日志。
 
 ## 在浏览器中编辑文件
 
@@ -470,11 +474,11 @@ Bun 会根据 HTML 文件解析所有路径，因此你可以按照任意方式�
 
 ## 工作原理
 
-这是对 Bun 在 JavaScript 中支持 [HTML 导入](/bundler/fullstack) 的一个小型封装。
+开发服务器是一个小型封装层，用于支持 Bun 在 JavaScript 中的 [HTML 导入](/bundler/fullstack)。
 
 ## 单文件独立 HTML
 
-你可以使用 `--compile --target=browser` 将整个前端打包成一个**单个自包含的 `.html` 文件**，无需外部依赖。所有 JavaScript、CSS 和图片都被直接内联到 HTML 中。
+你可以使用 `--compile --target=browser` 将整个前端打包成一个**自包含的单个 `.html` 文件**，且无需外部依赖。Bun 会将所有 JavaScript、CSS 和图像直接内联到 HTML 中。
 
 ```bash terminal icon="terminal"
 bun build --compile --target=browser ./index.html --outdir=dist

@@ -3,7 +3,7 @@ title: SQL
 description: Bun 提供原生绑定，通过统一的基于 Promise 的 API 来操作 SQL 数据库，支持 PostgreSQL、MySQL 和 SQLite。
 ---
 
-查询采用带标签的模板字面量编写，客户端支持连接池、事务和预处理语句。
+You write queries as tagged template literals, and the client supports connection pooling, transactions, and prepared statements.
 
 ```ts title="db.ts" icon="/icons/typescript.svg"
 import { sql, SQL } from "bun";
@@ -53,7 +53,7 @@ const sqliteResults = await sqlite`
 
 ### PostgreSQL
 
-PostgreSQL 适用于以下情况：
+Bun uses PostgreSQL when:
 
 - 连接字符串不符合 SQLite 或 MySQL 格式（作为默认适配器）
 - 明确使用 `postgres://` 或 `postgresql://` 协议的连接字符串
@@ -240,7 +240,7 @@ const sql = new SQL({
 });
 ```
 
-URL 中的查询参数会映射到这些配置：
+Bun parses query parameters in the URL to set these options:
 
 - `?mode=ro` → `readonly: true`
 - `?mode=rw` → `readonly: false, create: false`
@@ -375,7 +375,7 @@ await sql`
 
 ### 更新时动态列
 
-使用 `sql(object, ...string)` 选择要更新的列。每一列都必须在对象上定义。如果不列出任何列，则会使用对象中的所有键。
+Use `sql(object, ...string)` to pick which columns to update. Each column must be defined on the object. If you don't list any columns, Bun uses all keys on the object.
 
 ```ts
 await sql`UPDATE users SET ${sql(user, "name", "email")} WHERE id = ${user.id}`;
@@ -489,7 +489,7 @@ await query;
 
 #### MySQL 自动检测
 
-当连接字符串匹配以下模式时，会选择 MySQL：
+Bun selects MySQL when the connection string matches these patterns:
 
 - `mysql://...` — MySQL 协议
 - `mysql2://...` — MySQL2 协议（兼容别名）
@@ -506,7 +506,7 @@ DATABASE_URL="mysql2://user:pass@localhost:3306/mydb" bun run app.js
 
 #### SQLite 自动检测
 
-当连接字符串匹配以下模式时，会选择 SQLite：
+Bun selects SQLite when the connection string matches these patterns:
 
 - `:memory:` — 内存数据库
 - `sqlite://...` — SQLite 协议
@@ -541,7 +541,7 @@ DATABASE_URL="localhost:5432/mydb" bun run app.js
 
 ### MySQL 环境变量
 
-可以使用环境变量配置 MySQL 连接：
+You can configure MySQL connections with environment variables:
 
 ```bash
 # 优先使用的连接 URL
@@ -552,7 +552,7 @@ DATABASE_URL="mysql://user:pass@localhost:3306/mydb"
 DATABASE_URL="mysql2://user:pass@localhost:3306/mydb"
 ```
 
-如果未提供连接 URL，Bun 会检查以下单独的参数：
+Without a connection URL, Bun checks these individual parameters:
 
 | 环境变量                  | 默认值       | 说明                  |
 | ------------------------- | ------------ | --------------------- |
@@ -577,7 +577,7 @@ DATABASE_URL="mysql2://user:pass@localhost:3306/mydb"
 | `TLS_POSTGRES_DATABASE_URL`   | 启用 SSL/TLS 的连接 URL        |
 | `TLS_DATABASE_URL`            | 另一个启用 SSL/TLS 的连接 URL   |
 
-如果未提供连接 URL，Bun 会检查以下单独的参数：
+Without a connection URL, Bun checks these individual parameters:
 
 | 环境变量 | 备用变量 | 默认值 | 说明 |
 | -------------------- | ---------------------------- | ------------- | ------------------------------------------------------------------------------ |
@@ -590,7 +590,7 @@ DATABASE_URL="mysql2://user:pass@localhost:3306/mydb"
 
 ### SQLite 环境变量
 
-当 `DATABASE_URL` 包含兼容 SQLite 的 URL 时，可以使用它配置 SQLite 连接：
+You can configure SQLite connections with `DATABASE_URL` when it contains a SQLite-compatible URL:
 
 ```bash
 # SQLite 连接示例
@@ -599,7 +599,7 @@ DATABASE_URL="sqlite://./app.db"
 DATABASE_URL="file:///absolute/path/to/db.sqlite"
 ```
 
-**注意：** 使用 SQLite 时，`POSTGRES_URL` 和 `PGHOST` 等 PostgreSQL 专用环境变量会被忽略。
+**Note:** Bun ignores PostgreSQL-specific environment variables such as `POSTGRES_URL` and `PGHOST` when you use SQLite.
 
 ---
 
@@ -618,7 +618,7 @@ DATABASE_URL=postgres://user:pass@localhost:5432/db bun --sql-preconnect index.j
 bun --sql-preconnect --hot index.js
 ```
 
-`--sql-preconnect` 标志会在启动时使用您配置的环境变量建立 PostgreSQL 连接。如果连接失败，错误会在不导致应用程序崩溃的情况下得到处理。
+The `--sql-preconnect` flag establishes a PostgreSQL connection at startup using your configured environment variables. If the connection fails, Bun handles the error without crashing your application.
 
 ---
 
@@ -837,7 +837,7 @@ await sqlite`INSERT INTO flexible VALUES (${1}, ${"text"}, ${123.45}, ${Buffer.f
 
 用 `sql.begin` 启动事务，支持 PostgreSQL 和 SQLite。PostgreSQL 会从连接池中保留连接，SQLite 则在单一连接上开始事务。
 
-`BEGIN` 命令会自动发送，包括你指定的任何可选配置。如果事务期间发生错误，Bun 会执行 `ROLLBACK`。
+Bun sends the `BEGIN` command automatically, including any optional configurations you specify. If an error occurs during the transaction, Bun issues a `ROLLBACK`.
 
 ### 基本事务
 
@@ -886,7 +886,7 @@ await sql.begin(async tx => {
 
 ### 分布式事务
 
-两阶段提交（2PC）是一种分布式事务协议：在第一阶段，协调者准备每个节点，确保其数据已写入并准备提交；在第二阶段，各节点根据协调者的决定提交或回滚。
+Two-Phase Commit (2PC) is a distributed transaction protocol. In phase 1, the coordinator prepares each node, making sure its data is written and ready to commit. In phase 2, the nodes commit or roll back based on the coordinator's decision.
 
 在 PostgreSQL 和 MySQL 中，分布式事务会在其原始会话结束后继续存在，因此具有相应权限的用户或协调者可以在之后提交或回滚这些事务。PostgreSQL 将其实现为预备事务；MySQL 使用 XA 事务。
 
@@ -908,7 +908,7 @@ await sql.rollbackDistributed("tx1");
 
 ## 认证
 
-Bun 支持 SCRAM-SHA-256（SASL）、MD5 和明文身份验证。出于更高的安全性考虑，建议使用 SASL。请参阅 [Postgres SASL 身份验证](https://www.postgresql.org/docs/current/sasl-authentication.html)。
+Bun supports SCRAM-SHA-256 (SASL), MD5, and Clear Text authentication. We recommend SASL for better security. See [Postgres SASL Authentication](https://www.postgresql.org/docs/current/sasl-authentication.html).
 
 ### SSL 模式概述
 
@@ -947,7 +947,7 @@ const sql = new SQL("postgres://user:password@localhost/mydb?sslmode=verify-full
 
 ## 连接池
 
-Bun 的 SQL 客户端管理连接池：数据库连接会在多次查询之间重复使用，而不是每次查询都重新打开和关闭连接；连接池还会限制并发连接数。
+Bun's SQL client manages a connection pool. The pool reuses database connections across queries instead of opening and closing one for each query, and it caps the number of concurrent connections.
 
 ```ts
 const sql = new SQL({
@@ -958,7 +958,7 @@ const sql = new SQL({
 });
 ```
 
-在执行查询之前，不会建立连接。
+Bun doesn't open a connection until you run a query.
 
 ```ts
 const sql = Bun.SQL(); // 未连接
@@ -1001,6 +1001,13 @@ try {
 } // 自动释放
 ```
 
+When every connection is busy, `reserve()` waits until one frees up. Pass an `AbortSignal` to stop waiting: the promise rejects with `signal.reason` and no connection is taken from the pool. Aborting after the promise resolved has no effect, so a connection you received must still be released.
+
+```ts
+// Give up if no connection frees up within 5 seconds
+using reserved = await sql.reserve({ signal: AbortSignal.timeout(5000) });
+```
+
 ---
 
 ## LISTEN / NOTIFY（PostgreSQL）
@@ -1030,9 +1037,9 @@ await subscription.unlisten();
 
 ### 工作原理
 
-- 客户端上的所有订阅共享一个专用连接。第一次调用 `listen()` 时会打开该连接，移除最后一个订阅时会关闭它，因此从未监听的客户端无需承担该连接的开销，取消所有监听后进程也可以在不调用 `sql.close()` 的情况下退出。
-- 只要存在任何订阅，该连接就会保持进程运行，就像监听中的服务器一样。
-- 如果连接断开，会以指数退避方式重新建立连接（250 毫秒开始，逐步加倍至 32 秒，并加入抖动），然后重新订阅每个频道。PostgreSQL 只会向已连接的监听者发送通知，因此期间发出的通知会丢失；`listen()` 的可选第三个参数会在初次订阅和每次重新连接后运行，可以在此处补齐遗漏的通知：
+- All subscriptions on a client share one dedicated connection. The first `listen()` opens it, and removing the last subscription closes it. As a result, a client that never listens never pays for the connection, and unlistening everything lets the process exit without `sql.close()`.
+- While anything is subscribed, that connection keeps the process alive, like a listening server.
+- If the connection drops, Bun re-establishes it with exponential backoff (250ms doubling to 32s, with jitter) and re-subscribes every channel. PostgreSQL only delivers to connected listeners, so notifications sent in between are lost. The optional third argument to `listen()` runs on the initial subscribe and after every reconnect, which is the place to catch up:
 
 ```ts
 await sql.listen("orders", handleOrder, async () => {
@@ -1040,12 +1047,12 @@ await sql.listen("orders", handleOrder, async () => {
 });
 ```
 
-- 每次调用 `listen()` 都是独立订阅。同一频道上的多个订阅会共享单个服务端 `LISTEN`，每个回调都会收到每条通知，而每个句柄的 `unlisten()` 只会移除其自身调用注册的订阅。抛出异常的回调（无论是哪个参数中的回调）会被报告为未捕获异常，但订阅仍会保留。
-- 频道名称会自动作为标识符进行引用；与任何 PostgreSQL 标识符一样，其长度限制为 63 个字节。超过长度的名称会被拒绝，而不是静默截断。PostgreSQL 默认将负载限制为 8000 个字节。
+- Every `listen()` call is its own subscription. Several on one channel share a single server-side `LISTEN`. Each callback receives every notification, and each handle's `unlisten()` removes only what its own call registered. A callback (either argument) that throws is reported as an uncaught exception and stays subscribed.
+- Bun quotes channel names as identifiers for you. Like any PostgreSQL identifier, they are limited to 63 bytes, and Bun rejects longer names rather than silently truncating them. PostgreSQL limits payloads to 8000 bytes by default.
 
 ### `notify()`
 
-`notify()` 是一个普通查询（`SELECT pg_notify($1, $2)`），会在你调用它的句柄上执行。在 `sql` 上调用时使用连接池；在 `sql.begin()` 内调用时会在事务中执行，因此 PostgreSQL 会在 `COMMIT` 时发送通知，并在 `ROLLBACK` 时丢弃通知。这样可以只在更改可见后发出通知：
+`notify()` is an ordinary query (`SELECT pg_notify($1, $2)`) on whichever handle you call it through. On `sql` it uses the pool. Inside `sql.begin()` it runs in the transaction, so PostgreSQL delivers it on `COMMIT` and drops it on `ROLLBACK`. Calling `notify()` inside a transaction is how to announce a change only once it is visible:
 
 ```ts
 await sql.begin(async tx => {
@@ -1062,7 +1069,7 @@ await sql.begin(async tx => {
 
 ## 预处理语句
 
-默认情况下，Bun 的 SQL 客户端会为它能够推断为静态的查询创建具名预处理语句，这样速度更快。要禁用此功能，请在连接选项中设置 `prepare: false`：
+By default, Bun's SQL client creates named prepared statements for queries it can infer are static, which is faster. To disable named prepared statements, set `prepare: false` in the connection options:
 
 ```ts
 const sql = new SQL({
@@ -1075,19 +1082,19 @@ const sql = new SQL({
 
 查询仍使用“扩展”协议，但会作为[未命名预处理语句](https://www.postgresql.org/docs/current/protocol-flow.html#PROTOCOL-FLOW-EXT-QUERY)运行。未命名预处理语句只会持续到下一条指定将未命名语句作为目标的 Parse 语句发出为止。
 
-- 参数绑定仍然可以安全防止 SQL 注入
-- 每次查询都会由服务器从头开始解析和规划
-- 查询不会进行[流水线处理](https://www.postgresql.org/docs/current/protocol-flow.html#PROTOCOL-FLOW-PIPELINING)
+- Parameter binding is still safe against SQL injection
+- The server parses and plans each query from scratch
+- Queries are not [pipelined](https://www.postgresql.org/docs/current/protocol-flow.html#PROTOCOL-FLOW-PIPELINING)
+- Only one command per query is supported (unless you use `sql``.simple()`)
 
 - 使用 PGBouncer 事务模式（1.21.0 以后的版本如果配置正确已支持命名语句）
 - 调试查询执行计划
 - 动态 SQL 需频繁重新规划查询
 - 不支持多条语句（除非用 `.simple()`）
 
-- 在事务模式下使用 PGBouncer（不过从 PGBouncer 1.21.0 开始，在正确配置的情况下已支持协议级别的具名预处理语句）
-- 调试查询执行计划
-- 处理需要频繁重新生成查询计划的动态 SQL
-- 每个查询只支持一条命令（除非使用 `sql``.simple()`）
+- Using PGBouncer in transaction mode (though since PGBouncer 1.21.0, protocol-level named prepared statements are supported when configured properly)
+- Debugging query execution plans
+- Working with dynamic SQL where query plans need to be regenerated frequently
 
 禁用预处理语句可能会减慢使用不同参数频繁执行的查询，因为服务器需要对每次查询都从头开始解析和规划。
 
@@ -1173,7 +1180,9 @@ try {
 | `ERR_POSTGRES_MULTIDIMENSIONAL_ARRAY_NOT_SUPPORTED_YET` | 暂不支持多维数组           |
 | `ERR_POSTGRES_NULLS_IN_ARRAY_NOT_SUPPORTED_YET` | 暂不支持数组中包含 NULL          |
 
-### 协议错误
+The client raises these errors while it decodes a result, after the server ran the query. Only that query rejects. The connection stays open, and the other queries on it continue. An `INSERT`, `UPDATE` or `DELETE ... RETURNING` can already be stored at that point, so do not retry a write blindly. To read the value, cast the column to `text` or use `.raw()`.
+
+### Protocol Errors
 
 | 错误码                           | 说明             |
 | -------------------------------- | ---------------- |
@@ -1240,7 +1249,7 @@ try {
 
 ## 数字与 BigInt
 
-超出 53 位整数范围的数字将以字符串形式返回：
+Bun returns PostgreSQL `bigint` (`int8`) values, and MySQL `BIGINT` values outside the 32-bit range, as strings:
 
 ```ts
 import { sql } from "bun";
@@ -1273,9 +1282,8 @@ console.log(typeof x, x); // "bigint" 9223372036854777n
 
 我们尚未完成的事项：
 
-- 使用 `--db-preconnect` Bun CLI 标志预加载连接
-- 列名转换（例如，将 `snake_case` 转换为 `camelCase`）。这主要受限于使用 WebKit 的 `WTF::String` 在 C++ 中实现支持 Unicode 的大小写转换。
-- 列类型转换
+- Column name transforms (for example, `snake_case` to `camelCase`). This is mostly blocked on a unicode-aware implementation of changing the case in C++ using WebKit's `WTF::String`.
+- Column type transforms
 
 ## 数据库特有功能
 
@@ -1283,13 +1291,11 @@ console.log(typeof x, x); // "bigint" 9223372036854777n
 
 MySQL 支持多种认证插件，自动协商：
 
-- **`mysql_native_password`** - 传统 MySQL 认证，兼容性好
-- **`caching_sha2_password`** - MySQL 8.0+ 默认，更安全，使用 RSA 密钥交换
-- **`sha256_password`** - 基于 SHA-256 的认证
+MySQL supports multiple authentication plugins, which the client negotiates automatically:
 
 客户端自动处理服务器请求切换认证插件，包括非 SSL 下的密码安全交换。
 
-#### 预处理语句与性能
+The client automatically handles authentication plugin switching when the server requests it.
 
 MySQL 对所有参数化查询使用服务端预处理语句：
 
@@ -1341,7 +1347,7 @@ Bun 会向 MySQL 发送客户端信息以便进行监控：
 
 #### 类型处理
 
-MySQL 类型会转换为 JavaScript 类型：
+Bun converts MySQL types to JavaScript types:
 
 | MySQL 类型                              | JavaScript 类型          | 说明                                                                                             |
 | --------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------ |
@@ -1349,18 +1355,20 @@ MySQL 类型会转换为 JavaScript 类型：
 | BIGINT                                  | string, number or BigInt | 如果值适合 i32/u32，则为 number，否则根据 `bigint` 选项为 string 或 BigInt                     |
 | DECIMAL, NUMERIC                        | string                   | 用于保留精度                                                                                     |
 | FLOAT, DOUBLE                           | number                   |                                                                                                  |
-| DATE                                    | Date                     | JavaScript Date 对象                                                                             |
-| DATETIME, TIMESTAMP                     | Date                     | 按 UTC 解码（见下方说明）；`0000-00-00` 会变为 Invalid Date                                     |
-| TIME                                    | number                   | 微秒总数                                                                                         |
+| DATE                                    | Date                     | JavaScript Date object                                                                           |
+| DATETIME, TIMESTAMP                     | Date                     | Decoded as UTC (see note below); `0000-00-00` becomes an Invalid Date                            |
+| TIME                                    | string                   | Formatted as `HH:MM:SS` (`HHH:MM:SS` above 99 hours); prepared queries drop fractional seconds   |
 | YEAR                                    | number                   |                                                                                                  |
 | CHAR, VARCHAR, VARSTRING, STRING        | string                   |                                                                                                  |
 | TINY TEXT, MEDIUM TEXT, TEXT, LONG TEXT | string                   |                                                                                                  |
-| TINY BLOB, MEDIUM BLOB, BLOB, LONG BLOB | string                   | BLOB 类型是 TEXT 类型的别名                                                                      |
-| JSON                                    | object/array             | 自动解析                                                                                         |
-| BIT(1)                                  | boolean                  | MySQL 中的 BIT(1)                                                                                |
-| GEOMETRY                                | string                   | 几何数据                                                                                         |
+| TINY BLOB, MEDIUM BLOB, BLOB, LONG BLOB | Buffer                   | Same wire types as TEXT; Bun returns a Buffer when the column uses the binary character set      |
+| JSON                                    | object/array             | Automatically parsed                                                                             |
+| BIT(1)                                  | boolean                  | BIT(1) in MySQL                                                                                  |
+| GEOMETRY                                | Buffer                   | Binary character set; the bytes are a 4-byte SRID followed by WKB                                |
 
-`DATETIME` 和 `TIMESTAMP` 值在传输过程中不包含时区，因此 Bun 会按 **UTC** 读取回来——你得到的 `Date` 会保留存储时相同的 UTC 墙上时间，而不受机器时区影响。这与值的写入方式一致（绑定的 `Date` 会存储其 UTC 分量）。PostgreSQL 的 `timestamp`（无时区）也是如此；`timestamptz` 则带有显式偏移，因此不受影响。
+`DATETIME` and `TIMESTAMP` values have no timezone on the wire, so Bun reads them back as **UTC**. The `Date` you get has the same UTC wall-clock that was stored, regardless of the machine's timezone. Reading as UTC matches how Bun writes values (a bound `Date` stores its UTC components). The same applies to PostgreSQL's `timestamp` (without time zone); `timestamptz` carries an explicit offset and is unaffected.
+
+Bun also sets `time_zone = '+00:00'` on every MySQL connection it opens. The server converts `TIMESTAMP` columns through the session time zone, so this keeps the stored instant equal to the `Date` you bound, and it makes server-side time functions such as `NOW()` and `CURRENT_TIMESTAMP` evaluate in UTC. There is no option to pick a different session time zone yet: a manual `SET time_zone = ...` reaches only the one pooled connection that runs it ([#40254](https://github.com/oven-sh/bun/issues/40254) tracks a per-connection option).
 
 #### 与 PostgreSQL 的差异
 
@@ -1438,8 +1446,8 @@ try {
 	<Accordion title="为什么是这个 `Bun.sql`，而不是 `Bun.postgres`？">
 		最初的计划是添加更多数据库驱动。统一 API 现在支持 PostgreSQL、MySQL 和 SQLite。
 	</Accordion>
-	<Accordion title="如何知道当前使用的是哪个数据库适配器？">
-		适配器根据连接字符串自动识别：
+	<Accordion title="How do I know which database adapter is being used?">
+		Bun detects the adapter automatically from the connection string:
 
     	- 以 `mysql://` 或 `mysql2://` 开头为 MySQL
     	- 匹配 SQLite 格式（`:memory:`、`sqlite://`、`file://`）为 SQLite

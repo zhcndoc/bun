@@ -165,7 +165,7 @@ test("async mock functions", async () => {
 
 ## 使用 spyOn() 创建间谍
 
-使用 `spyOn()` 跟踪对函数的调用，而不会将其替换为模拟函数。间谍可以传递给 `.toHaveBeenCalled()` 和 `.toHaveBeenCalledTimes()`。
+使用 `spyOn()` 跟踪函数调用，而不将其替换为模拟函数。你可以将间谍传给 `.toHaveBeenCalled()` 和 `.toHaveBeenCalledTimes()`。
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect, spyOn } from "bun:test";
@@ -189,7 +189,7 @@ test("spyon", () => {
 ### 高级间谍用法
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
-import { test, expect, spyOn, afterEach } from "bun:test";
+import { test, expect, spyOn, afterEach, jest } from "bun:test";
 
 class UserService {
   async getUser(id: string) {
@@ -292,7 +292,27 @@ test("mock.module", async () => {
 });
 ```
 
-### 提前声明与预加载
+当工厂函数返回一个仍处于待定状态的 Promise 时，Bun 会在该 Promise 完成后更新已导入的模块。在这种情况下，`mock.module()` 会返回一个在更新完成后解析的 Promise；否则，它会返回 `undefined`。在测试或钩子中使用 `await mock.module(...)` 可以同时处理这两种情况。在测试文件的顶层，Bun 会等待待定的模块模拟完成后再运行文件中的测试。
+
+```ts title="test.ts" icon="/icons/typescript.svg"
+import { test, expect, mock } from "bun:test";
+import { foo } from "./module";
+
+mock.module("./module", async () => {
+  const { default: fixture } = await import("./fixture.json");
+  return { foo: fixture.foo };
+});
+
+test("async factory", () => {
+  expect(foo).toBe("baz");
+});
+```
+
+```json title="fixture.json" icon="file-json"
+{ "foo": "baz" }
+```
+
+### 提升与预加载
 
 为了确保模块在导入之前已被模拟，请使用 `--preload` 在测试运行前加载模拟模块。
 
@@ -322,7 +342,7 @@ preload = ["./my-preload"]
 
 #### 何时使用预加载
 
-模拟已经导入的模块会更新模块缓存，因此任何导入该模块的代码都会获取模拟版本。不过，原始模块已经执行过，因此其副作用也已经发生。
+模拟已导入的模块会更新模块缓存，因此任何导入该模块的内容都会获取模拟版本。不过，Bun 已经执行了原始模块，因此其副作用也已经发生。
 
 若要完全避免执行原始模块，请使用 `--preload` 在测试运行前加载模拟模块。
 
@@ -410,7 +430,7 @@ test("clearing all mocks", () => {
 
 ### 重置所有模拟
 
-`jest.resetAllMocks()`（及其 `vi.resetAllMocks()` 别名）会对每个模拟调用 `mockFn.mockReset()`：除了执行 `clearAllMocks()` 的操作外，它还会删除通过 `mockImplementation()`、`mockReturnValue()` 等方法设置的实现。它不会恢复 spy 的原始实现：
+`jest.resetAllMocks()`（及其别名 `vi.resetAllMocks()`）会对每个模拟调用 `mockFn.mockReset()`。除了 `clearAllMocks()` 的操作外，它还会丢弃通过 `mockImplementation()`、`mockReturnValue()` 等方法设置的实现。它不会恢复间谍的原始实现：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { expect, jest, test } from "bun:test";
@@ -504,7 +524,7 @@ test("vitest compatibility", () => {
 
 ### 惰性求值
 
-模拟工厂回调仅在模块被导入或加载时求值。
+Bun 仅在导入或 require 模块时才会执行模拟工厂回调。
 
 ### 路径解析
 
@@ -574,7 +594,7 @@ test("conditional API usage", async () => {
 ### 模拟清理模式
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
-import { afterEach, beforeEach } from "bun:test";
+import { afterEach, beforeEach, mock } from "bun:test";
 
 beforeEach(() => {
   // 设定通用模拟
@@ -586,7 +606,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  // 清理所有模拟
+  // Restore spies and clear call history; neither call resets the mock.module() override
   mock.restore();
   mock.clearAllMocks();
 });

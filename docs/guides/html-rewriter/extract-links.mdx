@@ -6,7 +6,7 @@ mode: center
 
 ## 从网页中提取链接
 
-Bun 的 [HTMLRewriter](/runtime/html-rewriter) API 可从 HTML 中提取链接。串联 CSS 选择器以匹配要处理的元素、文本和属性，然后将 `Response`、`ArrayBuffer` 或 `string` 传递给 `.transform`。
+Bun 的 [HTMLRewriter](/runtime/html-rewriter) API 可从 HTML 中提取链接。通过 CSS 选择器链匹配要处理的元素、文本和属性。然后将 `Response`、`ArrayBuffer` 或 `string` 传递给 `.transform`。
 
 ```ts extract-links.ts icon="/icons/typescript.svg"
 async function extractLinks(url: string) {

@@ -65,7 +65,7 @@ mode: center
     <Step title="创建并运行数据库迁移">
     	然后生成并运行初始迁移。
 
-    	该命令会将一个 `.sql` 迁移文件写入 `prisma/migrations`，并针对你的 Postgres 数据库执行该迁移。Bun 在使用 `--bun` 运行 CLI 时[不会自动加载 `.env`](/runtime/environment-variables)，而 `prisma init` 生成的 `prisma.config.ts` 会从环境中读取 `DATABASE_URL`，因此请显式传入 `--env-file=.env`。
+    	该命令会将 `.sql` 迁移文件写入 `prisma/migrations`，并在你的 Postgres 数据库上执行该文件。Bun 使用 `--bun` 运行 CLI 时[不会自动加载 `.env`](/runtime/environment-variables)。`prisma init` 生成的 `prisma.config.ts` 会从环境变量中读取 `DATABASE_URL`，因此请显式传入 `--env-file=.env`。
 
     	```bash terminal icon="terminal"
     	bun run --bun --env-file=.env prisma migrate dev --name init

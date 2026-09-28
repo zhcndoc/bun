@@ -85,17 +85,19 @@ node_modules/
 └── package-name -> .bun/package@1.0.0/node_modules/package  # 符号链接
 ```
 
+存储目录名称中 `@` 之后的部分是包的解析标识。对于注册表包，该部分是其版本号。对于文件夹、tarball、git 或 GitHub 依赖，Bun 会根据路径或 URL（以及提交）生成该部分，因此长度可能很长。Bun 最多写入其中的 80 个字节：如果解析标识较长，就将其截断到最多 63 个字节，然后附加 `+` 和根据完整解析标识生成的 16 个十六进制数字。因此，存储中包的路径最多比项目目录长 `34 + 2 * <name length> + 80` 个字符（如果包有 peer 依赖，则再多 17 个字符）。这在 Windows 上很重要：超过 260 个字符的路径仍可供 Bun 本身使用，但不能作为包生命周期脚本的工作目录。
+
 ### 解析算法
 
-1. **中央存储** — 所有包都安装在 `node_modules/.bun/package@version/` 目录中
+1. **中央存储** — Bun 将所有包安装到 `node_modules/.bun/package@version/` 目录中
 2. **符号链接** — 顶层 `node_modules` 包含指向中央存储的符号链接
-3. **对等依赖解析** — 复杂的对等依赖会创建专用目录名称
-4. **去重** — 具有相同包 ID 和对等依赖集合的包会被共享
-5. **重新链接** — 后续安装时，会复用现有存储条目；如果某个依赖被重新解析，还会重新指向其符号链接。不再被引用的存储条目会一直保留，直到你运行 [`bun prune`](/pm/cli/prune)
+3. **Peer 解析** — 复杂的 peer 依赖会创建专用目录名称
+4. **去重** — 具有相同包 ID 和 peer 依赖集的包会被共享
+5. **重新链接** — 后续安装时，如果某个依赖被重新解析，Bun 会复用现有存储条目并重新指向其符号链接。不再被引用的存储条目会保留，直到运行 [`bun prune`](/pm/cli/prune)
 
 ### 工作区处理
 
-在多包仓库中，工作区依赖有特殊处理：
+在 monorepo 中，Bun 会以特殊方式处理工作区依赖：
 
 - **工作区包** — 直接链接到其源目录，而不是存储目录
 - **工作区依赖** — 可以访问 monorepo 中的其他工作区包
@@ -127,7 +129,7 @@ node_modules/.bun/package@1.0.0_react@18.2.0/
 
 ### 使用 `install.hoist = false` 进行严格解析
 
-默认情况下，Bun 会创建 `node_modules/.bun/node_modules`，这是一个包含指向每个已安装包的符号链接的回退目录。由于它是每个存储条目的祖先目录，存储中的包可以解析它从未声明的依赖。设置 [`install.hoist = false`](/runtime/bunfig#install-hoist)（或在 `.npmrc` 中设置与 pnpm 匹配的 `hoist=false`）可跳过该目录的创建，使未声明的导入失败，而不是依赖于恰好安装的其他内容。有一个与 pnpm 共有的例外：根 `node_modules` 也位于存储之上，因此链接到其中的包（你的直接依赖、匹配 `publicHoistPattern` 的包以及工作区包）仍可从任何存储包中解析：
+默认情况下，Bun 会创建 `node_modules/.bun/node_modules`，这是一个回退目录，其中包含指向每个已安装包的符号链接。由于此目录是每个存储条目的祖先目录，存储中的包可以解析它从未声明的依赖。设置 [`install.hoist = false`](/runtime/bunfig#install-hoist)（或在 `.npmrc` 中设置 `hoist=false`，与 pnpm 一致）即可跳过此目录的创建。此后，未声明的导入会失败，而不会依赖恰好安装的其他包。这里有一个与 pnpm 相同的注意事项：根 `node_modules` 也位于存储目录之上。因此，链接到该目录中的包（你的直接依赖、匹配 `publicHoistPattern` 的包，以及工作区包）仍可从任何存储包中解析：
 
 ```toml bunfig.toml icon="settings"
 [install]
@@ -139,7 +141,7 @@ hoist = false
 
 ### 全局虚拟存储
 
-当启用 [`install.globalStore`](/runtime/bunfig#install-globalstore) 时，存储条目会先物化一次到 `<cache>/links/` 下的 [全局虚拟存储](/pm/global-store)，而 `node_modules/.bun/<pkg>@<ver>` 则是指向它的符号链接。在 `rm -rf node_modules` 之后进行冷启动安装时，每个包只需创建一个符号链接，而不是再次复制每个包的文件，这在典型的中型项目中大约快 **7×**。全局存储默认**关闭**；请参阅 [全局存储文档](/pm/global-store) 了解如何启用、完整布局、基准测试和权衡。
+启用 [`install.globalStore`](/runtime/bunfig#install-globalstore) 后，Bun 会将存储条目一次性物化到 `<cache>/links/` 下的[全局虚拟存储](/pm/global-store)中，而 `node_modules/.bun/<pkg>@<ver>` 则是指向该存储的符号链接。在典型的中型项目中，运行 `rm -rf node_modules` 后进行热安装，每个包只需创建一个符号链接，而无需再次复制每个包的所有文件，速度大约**快 7 倍**。全局存储默认**关闭**；有关如何启用、完整布局、基准测试和权衡，请参阅[全局存储文档](/pm/global-store)。
 
 ### 后端策略
 
@@ -214,7 +216,7 @@ rm -rf node_modules pnpm-lock.yaml
 bun install --linker isolated
 ```
 
-主要差别是 Bun 在 `node_modules` 中使用符号链接，而 pnpm 使用全局存储与符号链接。
+这些布局很相似：Bun 会将包从其[全局缓存](/pm/global-cache)硬链接（在 macOS 上则克隆）到每个项目的存储目录 `node_modules/.bun/`，并将顶层 `node_modules` 条目符号链接到该目录。启用 [`install.globalStore`](#global-virtual-store) 后，这些存储条目会改为符号链接到全局虚拟存储。
 
 ## 何时使用隔离安装
 
@@ -227,10 +229,10 @@ bun install --linker isolated
 
 **适合使用提升安装的情况：**
 
-- 使用假设扁平 `node_modules` 的旧代码
+- 处理假设 `node_modules` 扁平的旧代码
 - 需要兼容现有构建工具
-- 在符号链接支持不佳环境中工作
-- 喜欢传统 npm 简单行为。
+- 在符号链接支持不佳的环境中工作
+- 偏好传统的 npm 行为
 
 ## 相关文档
 

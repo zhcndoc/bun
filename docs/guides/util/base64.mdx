@@ -24,7 +24,7 @@ const decoded = Uint8Array.fromBase64(encoded);
 const text = new TextDecoder().decode(decoded); // => "hello world"
 ```
 
-Node.js 的 `Buffer` 扩展自 `Uint8Array`，因此可以使用 `toBase64()` 对缓冲区进行编码，并将其传递给接受 `Uint8Array` 的 API。`Buffer` 还通过 `Buffer.from(encoded, "base64")` 提供与 Node.js 兼容的 base64 解码功能。
+Node.js `Buffer` 继承自 `Uint8Array`，因此你可以使用 `toBase64()` 编码缓冲区，并将其传递给接受 `Uint8Array` 的 API。`Buffer` 还通过 `Buffer.from(encoded, "base64")` 提供与 Node.js 兼容的 base64 解码功能。
 
 ```ts
 const encoded = Buffer.from("hello world").toBase64();

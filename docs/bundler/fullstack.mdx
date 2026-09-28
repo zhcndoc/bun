@@ -6,7 +6,7 @@ description: "使用 Bun 集成的开发服务器构建全栈应用，它能够�
 首先，导入 HTML 文件并将它们传递给 `Bun.serve()` 的 `routes` 选项。
 
 ```ts title="app.ts" icon="/icons/typescript.svg"
-import { serve } from "bun";
+import { serve, sql } from "bun";
 import dashboard from "./dashboard.html";
 import homepage from "./index.html";
 
@@ -30,7 +30,7 @@ const server = serve({
       },
       async POST(req) {
         const { name, email } = await req.json();
-        const [user] = await sql`INSERT INTO users (name, email) VALUES (${name}, ${email})`;
+        const [user] = await sql`INSERT INTO users (name, email) VALUES (${name}, ${email}) RETURNING *`;
         return Response.json(user);
       },
     },
@@ -208,7 +208,7 @@ Bun.serve({
 - 在响应中包含 SourceMap 标头，以便开发者工具显示原始源代码
 - 禁用代码压缩
 - 每次请求 `.html` 文件时重新打包资源
-- 启用热模块重载（除非设置了 `hmr: false`）
+- 启用热模块重载（除非设置 `hmr: false`）
 
 ### 高级开发配置
 
@@ -235,11 +235,11 @@ Bun.serve({
 
 Bun 通过现有的 HMR WebSocket 连接发送日志。
 
-### 开发 vs 生产
+### 开发与生产
 
 | 功能            | 开发环境         | 生产环境 |
 | --------------- | ---------------- | -------- |
-| **Source maps** | ✅ 启用          | ❌ 禁用  |
+| **源映射**      | ✅ 启用          | ❌ 禁用  |
 | **代码压缩**    | ❌ 禁用          | ✅ 启用  |
 | **热重载**      | ✅ 启用          | ❌ 禁用  |
 | **资源打包**    | 🔄 每次请求      | 💾 缓存  |
@@ -273,7 +273,7 @@ serve({
 
 如果你不想添加构建步骤，可以在 `Bun.serve()` 中设置 `development: false`。
 
-这将：
+使用此设置时，Bun 会：
 
 - 启用打包资源的内存缓存。Bun 会在首次请求 `.html` 文件时延迟打包资源，并将结果缓存到内存中，直到服务器重启。
 - 启用 `Cache-Control` 和 `ETag` 响应头
@@ -400,7 +400,7 @@ serve({
 
 ## 插件
 
-Bun 的打包器插件在打包静态路由时同样支持。
+Bun 还支持在打包静态路由时使用打包器插件。
 
 要为 `Bun.serve` 配置插件，在 `bunfig.toml` 的 `[serve.static]` 部分添加 `plugins` 数组。
 
@@ -453,7 +453,7 @@ plugins = ["bun-plugin-tailwind"]
 
 ### 自定义插件
 
-任何导出有效打包器插件对象（包含 `name` 和 `setup` 字段的对象）的 JS 文件或模块都可以放置在 plugins 数组中：
+`plugins` 数组接受任何导出有效打包器插件对象的 JS 文件或模块（包含 `name` 和 `setup` 字段的对象）：
 
 ```toml title="bunfig.toml" icon="settings"
 [serve.static]
@@ -499,7 +499,8 @@ env = "PUBLIC_*"  # 仅内联以 PUBLIC_ 开头的环境变量（推荐）
 ```
 
 <Note>
-  仅适用于字面量 `process.env.FOO` 引用，不支持 `import.meta.env` 或间接访问如 `const env = process.env; env.FOO`。
+  Bun 只会替换字面的 `process.env.FOO` 引用，不会替换 `import.meta.env` 或 `const env =
+  process.env; env.FOO` 这类间接访问。
 
 如果环境变量未设置，浏览器可能会报错，如 `ReferenceError: process is not defined`。
 
@@ -507,9 +508,9 @@ env = "PUBLIC_*"  # 仅内联以 PUBLIC_ 开头的环境变量（推荐）
 
 有关构建时配置和示例，请参阅 [HTML 和静态网站](/bundler/html-static#inline-environment-variables)。
 
-## Sourcemaps
+## 源映射
 
-在开发环境中，Bun 会为打包的路由生成链接的 sourcemaps，并将它们与 JavaScript 和 CSS 分块一起提供。在生产环境中（`development: false`），sourcemaps 默认处于禁用状态，因此服务器不会暴露你的原始源代码。
+在开发环境中，Bun 会为打包后的路由生成关联的源映射，并与 JavaScript 和 CSS 分块一起提供。在生产环境中（`development: false`），默认禁用源映射，以免服务器暴露原始源代码。
 
 要覆盖默认设置，请在 `bunfig.toml` 中设置 `sourcemap` 选项：
 
@@ -523,7 +524,7 @@ sourcemap = "linked" # serve sourcemaps in production too
 
 ## 工作原理
 
-Bun 使用 `HTMLRewriter` 扫描 HTML 文件中的 `<script>` 和 `<link>` 标签，作为 Bun 打包器入口点，生成针对 JS/TS/TSX/JSX 及 CSS 的优化包，并提供结果。
+Bun 使用 `HTMLRewriter` 扫描 HTML 文件中的 `<script>` 和 `<link>` 标签，并将它们作为 Bun 打包器的入口点。然后，Bun 为 JavaScript/TypeScript/TSX/JSX 和 CSS 文件生成优化后的打包结果，并提供该结果。
 
 ### 处理流程
 
@@ -549,9 +550,9 @@ Bun 使用 `HTMLRewriter` 扫描 HTML 文件中的 `<script>` 和 `<link>` 标�
 ```
 
 </Step>
-<Step title="3. <img> 与资源处理">
-- 资源链接被重写以包含内容寻址哈希
-- CSS 文件中的小资源被内联为 `data:` URL，减少 HTTP 请求数量
+<Step title="3. <img> 和资源处理">
+- 重写资源链接，在 URL 中加入内容寻址哈希
+- 将 CSS 文件中的小型资源内联为 `data:` URL，减少网络请求总数
 </Step>
 <Step title="4. HTML 重写">
 - 合并所有 `<script>` 标签为一个带内容寻址哈希的 `<script>` 标签
@@ -559,8 +560,8 @@ Bun 使用 `HTMLRewriter` 扫描 HTML 文件中的 `<script>` 和 `<link>` 标�
 - 输出新的 HTML 文件
 </Step>
 <Step title="5. 提供服务">
-- 所有打包输出的文件都作为静态路由暴露，内部使用与传递 Response 对象给 `Bun.serve()` 中 `static` 相同机制
-- 行为类似于 `Bun.build` 对 HTML 文件的处理方式
+- 将打包器生成的所有输出文件暴露为静态路由，其内部使用的机制与将 Response 对象传递给 `Bun.serve()` 中的 `routes` 时相同。
+- 此流程与 `Bun.build` 处理 HTML 文件的方式类似。
 </Step>
 </Steps>
 
@@ -1086,4 +1087,4 @@ export default function handler(req, res) {
 - 内置 SSR 支持
 - 更完善的插件生态系统
 
-<Note>这项工作仍在进行中。功能和 API 可能会发生变化。</Note>
+<Note>全栈开发服务器仍在开发中。功能和 API 可能会发生变化。</Note>

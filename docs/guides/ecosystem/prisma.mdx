@@ -29,7 +29,7 @@ mode: center
     </Step>
 
     <Step title="使用 SQLite 初始化 Prisma">
-    	使用 `bunx` 调用 Prisma CLI，以初始化 schema 和迁移目录。本指南使用本地 SQLite 数据库文件；`prisma init` 会将其连接字符串 `DATABASE_URL="file:./dev.db"` 写入 `.env`。
+    	使用 Prisma CLI 和 `bunx` 初始化 schema 和迁移目录。本指南使用本地 SQLite 数据库文件。`prisma init` 会将其连接字符串 `DATABASE_URL="file:./dev.db"` 写入 `.env`。
 
     	```bash terminal icon="terminal"
     	bunx --bun prisma init --datasource-provider sqlite
@@ -59,7 +59,7 @@ mode: center
     </Step>
 
     <Step title="创建并运行数据库迁移">
-    	生成并运行初始迁移。这会将 `.sql` 迁移文件写入 `prisma/migrations`，创建一个新的 SQLite 数据库，并对其运行迁移。Bun 使用 `--bun` 运行 CLI 时[不会自动加载 `.env`](/runtime/environment-variables)，而 `prisma init` 生成的 `prisma.config.ts` 会从环境中读取 `DATABASE_URL`，因此请显式传入 `--env-file=.env`。
+    	生成并运行初始迁移。该命令会将 `.sql` 迁移文件写入 `prisma/migrations`，创建新的 SQLite 数据库，并对其运行迁移。Bun 使用 `--bun` 运行 CLI 时[不会自动加载 `.env`](/runtime/environment-variables)。`prisma init` 生成的 `prisma.config.ts` 会从环境中读取 `DATABASE_URL`，因此请显式传入 `--env-file=.env`。
 
     	```bash terminal icon="terminal"
     	 bun run --bun --env-file=.env prisma migrate dev --name init

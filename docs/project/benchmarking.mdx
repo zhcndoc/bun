@@ -3,7 +3,7 @@ title: 性能基准测试
 description: 如何对 Bun 进行基准测试  
 ---
 
-Bun 专为速度而设计。热点路径经过广泛的性能分析和基准测试。Bun 所有公开基准测试的源代码都位于 Bun 仓库的 [`/bench`](https://github.com/oven-sh/bun/tree/main/bench) 目录中。
+Bun 专为速度而设计。我们会对热点路径进行广泛的性能分析和基准测试。Bun 所有公开基准测试的源代码都位于 Bun 仓库的 [`/bench`](https://github.com/oven-sh/bun/tree/main/bench) 目录中。
 
 ## 测量时间
 
@@ -143,7 +143,7 @@ console.log(heapStats());
 
 </Accordion>
 
-JavaScript 是一种垃圾回收语言，不是计数引用。对象在所有情况下不立即释放是正常且正确的，尽管对象永远不被释放是不正常的。
+JavaScript 是一种垃圾回收语言，而非引用计数语言。对象在某些情况下不会立即释放，这是正常且正确的；但对象永远不被释放则不正常。
 
 要强制手动运行垃圾回收：
 
@@ -229,7 +229,7 @@ bun --cpu-prof script.js
 
 ### Markdown 输出
 
-使用 `--cpu-prof-md` 来生成 markdown 格式的 CPU 分析报告，这种格式便于 grep，且适合大型语言模型（LLM）分析：
+使用 `--cpu-prof-md` 来生成 Markdown 格式的 CPU 分析报告，这种格式便于 grep，且适合大型语言模型（LLM）分析：
 
 ```sh terminal icon="terminal"
 bun --cpu-prof-md script.js
@@ -257,7 +257,7 @@ bun --cpu-prof --cpu-prof-dir ./profiles script.js
 | 标志                         | 说明                                 |
 | ---------------------------- | ------------------------------------ |
 | `--cpu-prof`                 | 生成 `.cpuprofile` JSON 文件（Chrome DevTools 格式） |
-| `--cpu-prof-md`              | 生成 markdown 格式的 CPU 分析报告      |
+| `--cpu-prof-md`              | 生成 Markdown 格式的 CPU 分析报告      |
 | `--cpu-prof-name <filename>` | 设置输出文件名                        |
 | `--cpu-prof-dir <dir>`       | 设置输出目录                          |
 
@@ -269,17 +269,17 @@ bun --cpu-prof --cpu-prof-dir ./profiles script.js
 bun --heap-prof script.js
 ```
 
-`--heap-prof` 会在退出时写入完整的 V8 格式堆快照，使用 Node.js 的诊断文件名格式（`Heap.<yyyymmdd>.<hhmmss>.<pid>.<tid>.<seq>.heapprofile`）。其内容与 `v8.writeHeapSnapshot()` / `Bun.generateHeapSnapshot("v8")` 相同：通过「Memory」选项卡 →「Load」在 Chrome DevTools 中加载该文件（选择「All Files」或将文件重命名为 `.heapsnapshot`——扩展名遵循 Node 的 `--heap-prof` 文件名约定，测试框架和工具会根据此约定进行识别）。
+`--heap-prof` 会在退出时写入完整的 V8 格式堆快照，使用 Node.js 的诊断文件名格式（`Heap.<yyyymmdd>.<hhmmss>.<pid>.<tid>.<seq>.heapprofile`）。扩展名遵循 Node 的 `--heap-prof` 文件名约定。其内容与 `v8.writeHeapSnapshot()`／`Bun.generateHeapSnapshot("v8")` 相同。可通过 Chrome DevTools 的 Memory（内存）面板 → Load（加载）加载该文件。选择「All Files」（所有文件），或将文件重命名为 `.heapsnapshot`。
 
 ### Markdown 输出
 
-使用 `--heap-prof-md` 来生成 CLI 友好的 Markdown 堆分析报告：
+使用 `--heap-prof-md` 来生成适合 CLI 使用的 Markdown 堆分析报告：
 
 ```sh terminal icon="terminal"
 bun --heap-prof-md script.js
 ```
 
-<Note>如果同时指定了 `--heap-prof` 和 `--heap-prof-md`，则以 Markdown 格式为准。</Note>
+<Note>如果同时指定 `--heap-prof` 和 `--heap-prof-md`，Bun 会使用 Markdown 格式。</Note>
 
 ### 选项
 

@@ -183,7 +183,7 @@ await writer.end();
 
 当你的生产服务需要允许用户上传文件时，通常让用户直接上传到 S3 比你的服务器作为中介更可靠。
 
-为此，请为 S3 文件生成预签名 URL。预签名会生成一个带有签名的 URL，使用户能够将特定文件上传到 S3，同时不会暴露你的凭证，也不会授予他们对存储桶不必要的访问权限。
+要让用户直接上传到 S3，请为 S3 文件生成预签名 URL。生成预签名 URL 时会创建一个带签名的 URL，允许用户将指定文件上传到 S3，而不会暴露你的凭据，也不会授予他们对存储桶不必要的访问权限。
 
 默认情况下，Bun 会生成一个有效期为 24 小时的 `GET` URL。
 
@@ -273,7 +273,7 @@ const url = s3file.presign({
 
 要将用户重定向到 S3 文件的预签名 URL，请将一个 `S3File` 实例作为 body 传给 `Response` 对象。
 
-响应会将用户重定向到 S3 文件的预签名 URL，从而节省将文件下载到服务器并发送回用户所需的内存、时间和带宽成本。
+此响应会将用户重定向到 S3 文件的预签名 URL。这样可以避免将文件下载到你的服务器并发送回用户所需的内存、时间和带宽开销。
 
 ```ts s3.ts icon="/icons/typescript.svg"
 const response = new Response(s3file);
@@ -395,7 +395,7 @@ const supabase = new S3Client({
   secretAccessKey: "secret-key",
   bucket: "my-bucket",
   region: "us-west-1",
-  endpoint: "https://<account-id>.supabase.co/storage/v1/s3/storage",
+  endpoint: "https://<account-id>.supabase.co/storage/v1/s3",
 });
 ```
 
@@ -404,9 +404,7 @@ const supabase = new S3Client({
 使用虚拟主机式端点时，将 `virtualHostedStyle` 选项设置为 `true`。
 
 <Note>
-  - 如果未指定端点，Bun 会根据提供的区域和存储桶确定 AWS S3 端点。- 如果未指定
-  区域，Bun 默认使用 `us-east-1`。- 如果显式提供端点，则无需指定
-  存储桶名称。
+  - 如果未指定 endpoint，Bun 会根据提供的 region 和 bucket 确定 AWS S3 端点。 - 如果未指定 region，Bun 默认使用 `us-east-1`。 - 如果显式提供 endpoint，则无需指定 bucket 名称。
 </Note>
 
 ```ts s3.ts icon="/icons/typescript.svg" highlight={17, 25}
@@ -465,9 +463,11 @@ const r2WithEndpoint = new S3Client({
 | `bucket`           | `AWS_BUCKET`           |
 | `sessionToken`     | `AWS_SESSION_TOKEN`    |
 
-Bun 会在初始化时从 [`.env` 文件](/runtime/environment-variables) 或进程环境中读取这些环境变量（不会使用 `process.env`）。
+Bun 会在初始化时从 [`.env` 文件](/runtime/environment-variables)或进程环境中读取这些环境变量（Bun 不会为此使用 `process.env`）。
 
 你传递给 `s3.file(credentials)`、`new Bun.S3Client(credentials)` 或任何接受凭据的方法的选项会覆盖这些默认值。因此，如果你对不同的存储桶使用相同的凭据，可以在 `.env` 文件中设置一次凭据，然后只将 `bucket: "my-bucket"` 传递给 `s3.file()`。
+
+Bun 会通过 `HTTP_PROXY`、`HTTPS_PROXY`、`ALL_PROXY` 和 `NO_PROXY` 为 endpoint 选择的代理发送 S3 请求，方式与 [`fetch`](/runtime/networking/fetch#proxying-requests) 相同。
 
 ### `S3Client` 对象
 
@@ -486,7 +486,9 @@ const client = new S3Client({
   // endpoint: "http://localhost:9000", // MinIO
 });
 
-// 使用 Response 写入
+const file = client.file("my-file.txt");
+
+// Write using a Response
 await file.write(new Response("Hello World!"));
 
 // 预签名 URL
@@ -589,15 +591,15 @@ interface S3File extends Blob {
 
 与 `Bun.file()` 一样，`S3File` 继承自 [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob)，因此 `Blob` 上提供的所有方法也都可以在 `S3File` 上使用。用于从本地文件读取数据的相同 API，也可以用于从 S3 读取数据。
 
-| 方法                          | 输出类型          |
-| ----------------------------- | ----------------- |
-| `await s3File.text()`          | `string`          |
-| `await s3File.bytes()`         | `Uint8Array`      |
-| `await s3File.json()`          | `JSON`            |
-| `await s3File.stream()`        | `ReadableStream`  |
-| `await s3File.arrayBuffer()`   | `ArrayBuffer`     |
+| 方法                         | 输出             |
+| ---------------------------- | ---------------- |
+| `await s3File.text()`        | `string`         |
+| `await s3File.bytes()`       | `Uint8Array`     |
+| `await s3File.json()`        | `JSON`           |
+| `s3File.stream()`            | `ReadableStream` |
+| `await s3File.arrayBuffer()` | `ArrayBuffer`    |
 
-这意味着 `S3File` 实例可以与 `fetch()`、`Response` 以及其他接受 `Blob` 实例的 Web API 配合使用。
+由于 `S3File` 继承自 `Blob`，`S3File` 实例可与 `fetch()`、`Response` 以及其他接受 `Blob` 实例的 Web API 配合使用。
 
 ### 使用 `slice` 部分读取
 
@@ -637,7 +639,7 @@ await s3file.delete();
 - `ERR_S3_INVALID_SIGNATURE`
 - `ERR_S3_INVALID_SESSION_TOKEN`
 
-当 S3 服务本身返回错误时（也就是说，不是 Bun 返回的错误），该错误是一个 `S3Error` 实例（名称为 `"S3Error"` 的 `Error` 实例）。
+当 S3 服务本身返回错误时（也就是说，不是 Bun 返回的错误），该错误是一个 `S3Error` 实例：一个名称为 `"S3Error"` 的 `Error` 实例。
 
 ## `S3Client` 静态方法
 
@@ -658,8 +660,8 @@ const credentials = {
   // endpoint: "https://<account-id>.r2.cloudflarestorage.com", // Cloudflare R2
 };
 
-// 写入字符串
-await S3Client.write("my-file.txt", "Hello World");
+// Write string
+await S3Client.write("my-file.txt", "Hello World", credentials);
 
 // 指定类型写入 JSON
 await S3Client.write("data.json", JSON.stringify({ hello: "world" }), {
@@ -708,7 +710,7 @@ const url = S3Client.presign("my-file.txt", {
 
 要列出存储桶中的部分或全部对象（最多 1,000 个），请使用 `S3Client.list` 静态方法。
 
-```ts s3.ts icon="/icons/typescript.svg" highlight={12, 15-20, 24-29}
+```ts s3.ts icon="/icons/typescript.svg" highlight={12, 15-22, 27-35}
 import { S3Client } from "bun";
 
 const credentials = {
@@ -722,22 +724,28 @@ const credentials = {
 // 列出最多 1000 个存储桶中的对象
 const allObjects = await S3Client.list(null, credentials);
 
-// 列出 `uploads/` 前缀下最多 500 个对象，并获取所有者字段
-const uploads = await S3Client.list({
-  prefix: 'uploads/',
-  maxKeys: 500,
-  fetchOwner: true,
-}, credentials);
+// 列出 `uploads/` 前缀下最多 500 个对象，并获取每个对象的 owner 字段
+const uploads = await S3Client.list(
+  {
+    prefix: "uploads/",
+    maxKeys: 500,
+    fetchOwner: true,
+  },
+  credentials,
+);
 
 // 检查是否有更多结果
 if (uploads.isTruncated) {
-  // 列出下一批 `uploads/` 下的对象
-  const moreUploads = await S3Client.list({
-    prefix: 'uploads/',
-    maxKeys: 500,
-    startAfter: uploads.contents!.at(-1).key,
-    fetchOwner: true,
-  }, credentials);
+  // 列出 `uploads/` 前缀下的下一批对象
+  const moreUploads = await S3Client.list(
+    {
+      prefix: "uploads/",
+      maxKeys: 500,
+      startAfter: uploads.contents!.at(-1)!.key,
+      fetchOwner: true,
+    },
+    credentials,
+  );
 }
 ```
 

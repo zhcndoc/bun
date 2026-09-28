@@ -4,7 +4,7 @@ sidebarTitle: "Uint8Array 转 ReadableStream"
 mode: center
 ---
 
-从 [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) 创建 [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) 的简单方法是使用 [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) 构造函数，并将整个数组作为单个数据块加入队列。对于较大的数组，这种方式可能并不理想，因为它不会将数据以更小的数据块进行流式传输。
+从 [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) 创建 [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) 的简单做法是使用 [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) 构造函数，并将整个数组作为单个数据块入队。对于较大的数组，这种做法可能不太理想，因为它不会将数据分成较小的数据块进行流式传输。
 
 ```ts
 const arr = new Uint8Array(64);

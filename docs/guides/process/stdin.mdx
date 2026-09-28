@@ -38,8 +38,8 @@ Bun 还将 `stdin` 作为 `BunFile`（即 `Bun.stdin`）提供。使用它可以
 
 ```ts stdin.ts icon="/icons/typescript.svg"
 for await (const chunk of Bun.stdin.stream()) {
-  // chunk 是 Uint8Array
-  // 将其转换为文本（假设 ASCII 编码）
+  // chunk is Uint8Array
+  // this converts it to text (assumes UTF-8 encoding)
   const chunkText = Buffer.from(chunk).toString();
   console.log(`Chunk: ${chunkText}`);
 }

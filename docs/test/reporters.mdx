@@ -23,7 +23,7 @@ test/package-json-lint.test.ts:
  4 pass
  0 fail
  4 expect() calls
-Ran 4 tests in 1.44ms
+Ran 4 tests across 1 file. [8.00ms]
 ```
 
 当终端不支持颜色时，输出会避免使用非 ASCII 字符：
@@ -38,7 +38,7 @@ test/package-json-lint.test.ts:
  4 pass
  0 fail
  4 expect() calls
-Ran 4 tests across 1 files. [0.66ms]
+Ran 4 tests across 1 file. [9.00ms]
 ```
 
 ### 点状报告工具
@@ -52,7 +52,7 @@ bun test --reporter=dots
 
 ### JUnit XML 报告工具
 
-对于 CI/CD 环境，Bun 可以生成 JUnit XML 报告。这是一种广泛采用的测试结果格式，许多 CI/CD 系统都可以解析，包括 GitLab 和 Jenkins。
+对于 CI/CD 环境，Bun 可以生成 JUnit XML 报告。JUnit XML 是一种广泛采用的测试结果格式，许多 CI/CD 系统都可以解析，包括 GitLab 和 Jenkins。
 
 #### 使用 JUnit 报告工具
 

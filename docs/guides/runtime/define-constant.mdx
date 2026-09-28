@@ -75,7 +75,7 @@ console.log("生产模式");
 bun --define window="undefined" src/index.ts
 ```
 
-这对于服务器端渲染（SSR）很有用，也可以确保代码不依赖 `window` 对象。
+此替换适用于服务器端渲染（SSR），或确保代码不依赖 `window` 对象。
 
 ```js
 if (typeof window !== "undefined") {
@@ -142,7 +142,7 @@ console.log("Hello, world!");
 
 ## 这和设置变量有什么不同？
 
-你也可以在代码中将 `process.env.NODE_ENV` 设置为 `"production"`，但这并不能帮助消除无效代码。在 JavaScript 中，属性访问可能具有副作用。Getter 和 setter 可以是函数，甚至可以动态定义（由于原型链和 Proxy）。即使你将 `process.env.NODE_ENV` 设置为 `"production"`，静态分析工具也不能假定下一行中它仍然是 `"production"`。
+你也可以在代码中将 `process.env.NODE_ENV` 设置为 `"production"`，但这对死代码消除没有帮助。在 JavaScript 中，属性访问可能产生副作用。Getter 和 setter 可以是函数，甚至可以动态定义（由于原型链和 Proxy）。即使你将 `process.env.NODE_ENV` 设置为 `"production"`，静态分析工具也无法假定它在下一行仍然是 `"production"`。
 
 ## 这和查找替换或字符串替换有什么不同？
 

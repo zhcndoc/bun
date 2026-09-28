@@ -32,13 +32,13 @@ DATABASE_URL=postgresql://username:password@ep-adj-noun-guid.us-east-1.aws.neon.
 ```ts index.ts icon="/icons/typescript.svg"
 import { neon } from "@neondatabase/serverless";
 
-// Bun 会自动从 .env.local 加载 DATABASE_URL
-// 参考：https://bun.com/docs/runtime/environment-variables 获取更多信息
-const sql = neon(process.env.DATABASE_URL);
+// Bun automatically loads the DATABASE_URL from .env.local
+// Refer to: https://bun.com/docs/runtime/environment-variables for more information
+const sql = neon(process.env.DATABASE_URL!);
 
 const rows = await sql`SELECT version()`;
 
-console.log(rows[0].version);
+console.log(rows[0]?.version);
 ```
 
 ---

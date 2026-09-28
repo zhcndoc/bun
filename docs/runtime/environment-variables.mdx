@@ -11,7 +11,8 @@ Bun 会自动读取以下文件（按优先级升序排列）。
 
 - `.env`
 - `.env.production`, `.env.development`, `.env.test`（取决于 `NODE_ENV` 的值）
-- `.env.local`
+- `.env.local`（当 `NODE_ENV=test` 时不会加载）
+- `.env.production.local`, `.env.development.local`, `.env.test.local`（取决于 `NODE_ENV` 的值）
 
 ```ini .env icon="settings"
 FOO=hello
@@ -72,6 +73,16 @@ bun --env-file=.env.1 src/index.ts
 bun --env-file=.env.abc --env-file=.env.def run build
 ```
 
+路径不必是常规文件。Bun 会读取管道、FIFO 或设备，直到输入结束，因此无需将密钥存储在磁盘文件中，也能将其传递给进程：
+
+```sh
+bun --env-file=<(./fetch-secrets.sh) src/index.ts
+
+echo "API_KEY=..." | bun --env-file=/dev/stdin src/index.ts
+```
+
+管道只能读取一次。Bun 会在进程启动时读取管道，`Worker` 线程和 `bun test --parallel` 工作进程会复用这些值。使用相同参数再次启动的进程会再次读取该路径：例如 `--watch` 重新加载，以及继承 `execArgv` 的 `child_process.fork()` 或 `cluster.fork()` 子进程。此时管道已为空，而 FIFO 会等待新的写入方，这与 Node.js 的情况相同。
+
 ## 禁用自动加载 `.env`
 
 使用 `--no-env-file` 可禁用 Bun 自动加载 `.env` 文件，例如在生产环境或 CI/CD 流程中，如果你希望完全依赖系统环境变量。
@@ -89,7 +100,7 @@ env = false
 
 即使禁用了默认加载，通过 `--env-file` 传入的文件仍会被加载。
 
-当 Bun 以 `node` 的身份调用时（例如通过 `bun --bun`、`bunx --bun`，或指向 Bun 的 `node` 符号链接），会禁用自动加载 `.env`，以匹配 Node.js 的行为。这样，使用自身且感知运行模式的 `.env` 解析机制的工具（例如 Vite 的 `loadEnv`）就能正确选择 `.env.{mode}` 文件，而不会将 Bun 预先填充的值视为由 shell 设置的覆盖值。显式传入的 `--env-file` 参数仍会生效。
+当以 `node` 的身份调用时（例如通过 `bun --bun`、`bunx --bun`，或指向 Bun 的 `node` 符号链接调用），Bun 会禁用自动加载 `.env`，以匹配 Node.js 的行为。这样一来，Vite 的 `loadEnv` 等具有自身模式感知 `.env` 解析逻辑的工具，就可以选择正确的 `.env.{mode}` 文件，而不会将 Bun 预先填充的值视为由 shell 设置的覆盖值。Bun 仍会遵循显式指定的 `--env-file` 参数。
 
 ---
 
@@ -116,7 +127,7 @@ BAR=hello$FOO
 process.env.BAR; // => "helloworld"
 ```
 
-这对于构造连接字符串或其他复合值非常有用。
+扩展功能可用于构造连接字符串或其他复合值。
 
 ```ini .env icon="settings"
 DB_USER=postgres
@@ -196,22 +207,22 @@ Bun 读取以下环境变量来配置其行为的各个方面。
 
 | 名称                                     | 描述                                                                                                                                                                                                                                                                                                                                                                   |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NODE_TLS_REJECT_UNAUTHORIZED`           | `NODE_TLS_REJECT_UNAUTHORIZED=0` 会禁用 SSL 证书验证。适用于测试和调试，但在生产环境中使用时务必谨慎。Node.js 引入了此变量；Bun 保留该名称以确保兼容性。                                                                                                                                                                                                                 |
-| `BUN_CONFIG_VERBOSE_FETCH`               | 如果 `BUN_CONFIG_VERBOSE_FETCH=curl`，则 fetch 请求会将 URL、方法、请求标头和响应标头记录到控制台。此设置同样适用于 `node:http`。除了不输出 `curl` 内容外，`BUN_CONFIG_VERBOSE_FETCH=1` 等同于 `BUN_CONFIG_VERBOSE_FETCH=curl`。                                                                                                                                                           |
-| `BUN_RUNTIME_TRANSPILER_CACHE_PATH`      | 运行时转译器会缓存大于 4 KB 的源文件的转译输出，从而使使用 Bun 的 CLI 加载更快。如果设置了 `BUN_RUNTIME_TRANSPILER_CACHE_PATH`，缓存将写入该目录。如果将其设置为空字符串或字符串 `"0"`，则会禁用缓存。如果未设置，则缓存会写入特定于平台的缓存目录。 |
-| `TMPDIR`                                 | Bun 偶尔需要一个目录，以便在打包或执行其他操作期间存储中间资源。如果未设置，则默认为特定于平台的临时目录：Linux 上为 `/tmp`，macOS 上为 `/private/tmp`。                                                                                                                                                            |
-| `NO_COLOR`                               | 如果 `NO_COLOR=1`，则 ANSI 颜色输出会被[禁用](https://no-color.org/)。                                                                                                                                                                                                                                                                                                 |
+| `NODE_TLS_REJECT_UNAUTHORIZED`           | `NODE_TLS_REJECT_UNAUTHORIZED=0` 会禁用 SSL 证书验证。适用于测试和调试，但在生产环境中使用时务必谨慎。Node.js 引入了此变量；Bun 为了兼容性保留了该名称。                                                                                                                                                 |
+| `BUN_CONFIG_VERBOSE_FETCH`               | 如果 `BUN_CONFIG_VERBOSE_FETCH=curl`，那么 fetch 请求会将 URL、方法、请求标头和响应标头记录到控制台。此设置也适用于 `node:http`。`BUN_CONFIG_VERBOSE_FETCH=1` 与 `BUN_CONFIG_VERBOSE_FETCH=curl` 等效，但不会输出 `curl` 格式的内容。                                                                                           |
+| `BUN_RUNTIME_TRANSPILER_CACHE_PATH`      | 运行时转译器会缓存大于 4 KB 的源文件转译输出，从而加快使用 Bun 的 CLI 的加载速度。如果设置了 `BUN_RUNTIME_TRANSPILER_CACHE_PATH`，Bun 会将缓存写入该目录。如果将其设置为空字符串或字符串 `"0"`，则会禁用缓存。如果未设置，Bun 会将缓存写入平台特定的缓存目录。 |
+| `TMPDIR`                                 | 在打包或执行其他操作期间，Bun 偶尔需要一个目录来存储中间资源。如果未设置，则默认为平台特定的临时目录：Linux 上为 `/tmp`，macOS 上为 `/private/tmp`。                                                                                                                                                            |
+| `NO_COLOR`                               | 如果 `NO_COLOR=1`，则会[禁用](https://no-color.org/) ANSI 颜色输出。                                                                                                                                                                                                                                                                                                 |
 | `FORCE_COLOR`                            | 如果 `FORCE_COLOR=1`，则会强制启用 ANSI 颜色输出，即使设置了 `NO_COLOR` 也是如此。                                                                                                                                                                                                                                                                                           |
 | `BUN_CONFIG_MAX_HTTP_REQUESTS`           | 设置 fetch 和 `bun install` 发送的最大并发 HTTP 请求数。默认为 `256`。如果遇到速率限制或连接问题，请调低此值。                                                                                                                                                                                                            |
-| `BUN_CONFIG_NO_CLEAR_TERMINAL_ON_RELOAD` | 如果 `BUN_CONFIG_NO_CLEAR_TERMINAL_ON_RELOAD=true`，则 `bun --watch` 在重新加载时不会清空控制台                                                                                                                                                                                                                                                                     |
-| `DO_NOT_TRACK`                           | 禁止在发生崩溃时向 `bun.report` 上传崩溃报告。在 macOS 和 Windows 上，默认启用崩溃报告上传。不会发送其他遥测数据，不过我们计划添加一些。如果 `DO_NOT_TRACK=1`，则自动上传崩溃报告和遥测数据都会被[禁用](https://do-not-track.dev/)。                                                                      |
-| `BUN_OPTIONS`                            | 将命令行参数添加到任何 Bun 执行命令的前面。例如，`BUN_OPTIONS="--hot"` 会使 `bun run dev` 的行为类似于 `bun --hot run dev`。                                                                                                                                                                                                                                 |
+| `BUN_CONFIG_NO_CLEAR_TERMINAL_ON_RELOAD` | 如果 `BUN_CONFIG_NO_CLEAR_TERMINAL_ON_RELOAD=true`，则 `bun --watch` 重新加载时不会清空控制台                                                                                                                                                                                                                                                                     |
+| `DO_NOT_TRACK`                           | 在崩溃时禁用向 `bun.report` 上传崩溃报告。在 macOS 和 Windows 上，默认启用崩溃报告上传。Bun 不会发送其他遥测数据，不过我们计划添加一些遥测数据。如果 `DO_NOT_TRACK=1`，则会[禁用](https://do-not-track.dev/)自动上传崩溃报告和遥测数据。                                                                     |
+| `BUN_OPTIONS`                            | 将命令行参数添加到每次 Bun 执行的参数前面。例如，`BUN_OPTIONS="--hot"` 会使 `bun run dev` 的行为等同于 `bun --hot run dev`。                                                                                                                                                                                                                                 |
 
 ## 运行时转译器缓存
 
 对于大于 4 KB 的文件，Bun 会将转译后的输出缓存到 `$BUN_RUNTIME_TRANSPILER_CACHE_PATH` 或平台特定的缓存目录中。这可以让使用 Bun 的 CLI 加载得更快。
 
-该缓存是全局的，并在所有项目之间共享；它采用内容寻址，因此不会包含重复条目。可以随时安全地删除缓存，即使 Bun 进程正在运行也不例外。
+缓存是全局的，并由所有项目共享。它采用内容寻址，因此不会包含重复条目。你可以随时安全地删除缓存，即使此时有 Bun 进程正在运行。
 
 在使用 Docker 等临时文件系统时，请禁用此缓存。Bun 的 Docker 镜像会自动禁用它。
 

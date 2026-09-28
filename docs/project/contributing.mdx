@@ -37,7 +37,7 @@ sudo pacman -S base-devel cmake git go libiconv libtool make ninja pkg-config py
 ```
 
 ```bash Fedora
-sudo dnf install clang21 llvm21 lld21 cmake git golang libtool ninja-build pkg-config ruby libatomic-static libstdc++-static sed unzip which libicu-devel 'perl(Math::BigInt)'
+sudo dnf install clang23 llvm23 lld23 cmake git golang libtool ninja-build pkg-config ruby libatomic-static libstdc++-static sed unzip which libicu-devel 'perl(Math::BigInt)'
 ```
 
 ```bash openSUSE Tumbleweed
@@ -96,17 +96,17 @@ sudo zypper install ccache
 
 ## 安装 LLVM
 
-Bun 需要 LLVM 21.1.8（`clang` 是 LLVM 的一部分）。构建系统会强制使用此版本：版本不匹配会导致运行时内存分配失败。在大多数情况下，您可以通过系统包管理器安装 LLVM：
+Bun 需要 LLVM 23.1.1（`clang` 是 LLVM 的一部分）。构建系统会强制使用此版本：版本不匹配会导致运行时内存分配失败。在大多数情况下，您可以通过系统包管理器安装 LLVM：
 
 <CodeGroup>
 
 ```bash macOS (Homebrew)
-brew install llvm@21
+brew install llvm@23
 ```
 
 ```bash Ubuntu/Debian
-# LLVM 有一个适用于所有 Ubuntu 版本的自动安装脚本
-wget https://apt.llvm.org/llvm.sh -O - | sudo bash -s -- 21 all
+# LLVM has an automatic installation script that is compatible with all versions of Ubuntu
+wget https://apt.llvm.org/llvm.sh -O - | sudo bash -s -- 23 all
 ```
 
 ```bash Arch
@@ -118,17 +118,17 @@ sudo dnf install llvm clang lld-devel
 ```
 
 ```bash openSUSE Tumbleweed
-sudo zypper install clang21 lld21 llvm21
+sudo zypper install clang23 lld23 llvm23
 ```
 
 </CodeGroup>
 
-如果这些方法都不起作用，请[手动安装](https://github.com/llvm/llvm-project/releases/tag/llvmorg-21.1.8)。
+如果以上方法都不起作用，请[手动](https://github.com/llvm/llvm-project/releases/tag/llvmorg-23.1.1)安装。
 
-请确保 Clang/LLVM 21 已添加到您的路径中：
+确保 Clang/LLVM 23 位于您的路径中：
 
 ```bash
-which clang-21
+which clang-23
 ```
 
 如果没有，请手动添加：
@@ -136,14 +136,14 @@ which clang-21
 <CodeGroup>
 
 ```bash macOS (Homebrew)
-# 如果你使用 fish，请使用 fish_add_path
-# 如果你使用 zsh，请使用 path+="$(brew --prefix llvm@21)/bin"
-export PATH="$(brew --prefix llvm@21)/bin:$PATH"
+# use fish_add_path if you're using fish
+# use path+="$(brew --prefix llvm@23)/bin" if you are using zsh
+export PATH="$(brew --prefix llvm@23)/bin:$PATH"
 ```
 
 ```bash Arch
-# 如果你使用 fish，请使用 fish_add_path
-export PATH="$PATH:/usr/lib/llvm21/bin"
+# use fish_add_path if you're using fish
+export PATH="$PATH:/usr/lib/llvm23/bin"
 ```
 
 </CodeGroup>
@@ -292,7 +292,7 @@ cmake --build vendor/WebKit/WebKitBuild/Debug --target jsc && rm vendor/WebKit/W
 bun run build:local
 ```
 
-`bun run build:local` 会处理所有事务：配置 JSC、构建 JSC，以及构建 Bun。后续运行时，如果 WebKit 源代码发生变化，JSC 会进行增量重建。首次构建后，`ninja -Cbuild/debug-local` 也可以使用，并且会同时构建 Bun 和 JSC。
+`bun run build:local` 会处理所有事项：配置 JSC、构建 JSC 和构建 Bun。后续运行时，如果任何 WebKit 源码发生更改，JSC 都会增量重建。
 
 - `src/js/builtins.d.ts` 第一行
 - `.clangd` 配置中的 `CompilationDatabase` 路径改为 `build/debug-local`
@@ -332,7 +332,7 @@ fatal error: 'span' file not found
 ```txt
 The C++ compiler
 
-  "/usr/bin/clang++-21"
+  "/usr/bin/clang++-23"
 
 is not able to compile a simple test program.
 ```
@@ -385,4 +385,24 @@ bun run build --static-libatomic=off
 
 - 禁用日志：`BUN_DEBUG_QUIET_LOGS=1 bun-debug ...`（禁用所有调试日志）
 - 为特定作用域启用日志：`BUN_DEBUG_EventLoop=1 bun-debug ...`（启用 `scoped_log!(EventLoop, ...)` 输出）
-- Bun 会转译它运行的每个文件。要在调试构建中查看实际执行的源代码，请在 `/tmp/bun-debug-src/...path/to/file` 中查找。例如，`/home/bun/index.ts` 的转译版本位于 `/tmp/bun-debug-src/home/bun/index.ts`
+- Bun 会转译运行的每个文件。要在调试构建中查看实际执行的源代码，请在 `/tmp/bun-debug-src/...path/to/file` 中查找。例如，`/home/bun/index.ts` 的转译版本位于 `/tmp/bun-debug-src/home/bun/index.ts`
+
+## 贡献文档
+
+文档是 Bun 仓库 `docs/` 目录中的 MDX 文件。[bun.com/docs](https://bun.com/docs) 根据这些文件构建。
+
+### 文风
+
+文档页面介绍 Bun 的功能以及你可以用它做什么。写作时应让刚接触 Bun 的开发者读一遍页面后就能采取行动。以下指南改编自 [Next.js 文档贡献指南](https://nextjs.org/docs/community/contribution-guide#voice)：
+
+- 写简短的句子，每句话只表达一个要点。如果一句话需要多个逗号或括号，请拆分句子或改为列表。
+- 使用简单的词语：用“使用”代替“利用”，用“为了”代替“以便”。删去“请注意”和“请”等填充语。
+- 使用主动语态并指出动作主体：“Bun 读取 `bunfig.toml`”，而不是“`bunfig.toml` 被读取”。以“是”和“被”构成的句子通常是被动语态。
+- 用现在时描述当前行为：“Bun 安装该软件包”，而不是“Bun 将安装该软件包”。
+- 如果“这”或“它”可能指代多个对象，请明确说出主体：“`--isolate` 是 Jest 的默认行为”，而不是“这是 Jest 的默认行为”。
+- 用“你”称呼读者，并让 Bun（或具体工具）作为另一个动作主体：“Bun 缓存压缩包”，而不是“我们缓存压缩包”或“让我们缓存压缩包”。
+- 不要使用“容易”“简单”“只是”和“快速”。当任务很容易时，这些词没有意义；当任务并不容易时，它们会让读者气馁。请明确说明具体特性：“一条命令”“无需配置”。
+- 说明应该做什么，而不是应该避免什么：“使用 `port: 0`，让操作系统选择一个可用端口”，而不是“不要将端口写死”。直接说明限制；限制是事实，不是对读者的警告。
+- 使用性别中立的表达：“开发者”“用户”“他们”。
+- 让链接文本明确指出其目标：“请参阅 [`bun install`](/pm/cli/install)”，而不是“请参阅此处”。
+- 发布前运行每个代码示例，并根据 `main` 上的实现检查选项名称和默认值。

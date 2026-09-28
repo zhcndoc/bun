@@ -88,7 +88,7 @@ if (cookies.has("session")) {
 }
 ```
 
-#### `set(name: string, value: string): void`
+#### `set(name: string, value: string, options?: CookieInit): void`
 
 #### `set(options: CookieInit): void`
 
@@ -117,7 +117,9 @@ cookies.set(cookie);
 
 #### `delete(options: CookieStoreDeleteOptions): void`
 
-从 map 中移除一个 cookie。应用到 Response 时，这会添加一个值为空字符串且过期时间为过去时间的 cookie。只有当域名和路径与创建该 cookie 时使用的域名和路径匹配时，浏览器才会删除该 cookie。
+#### `delete(name: string, options: Omit<CookieStoreDeleteOptions, "name">): void`
+
+从 map 中移除 cookie。应用到 Response 时，删除操作会添加一个值为空字符串且过期日期已过的 cookie。只有当域和路径与创建该 cookie 时使用的域和路径匹配时，浏览器才会删除该 cookie。
 
 ```ts title="delete-cookie.ts" icon="/icons/typescript.svg"
 // 用默认域和路径通过名称删除
@@ -143,7 +145,7 @@ const json = cookies.toJSON();
 
 返回一个包含所有 cookie 变更对应的 `Set-Cookie` 标头值的数组。
 
-将此方法用于 `Bun.serve()` 以外的 HTTP 服务器。在 `Bun.serve()` 中，无需调用此方法：对 `req.cookies` map 所做的任何更改都会自动应用到响应标头中。
+将此方法用于 `Bun.serve()` 以外的 HTTP 服务器。在 `Bun.serve()` 中，无需调用此方法：Bun 会自动将你对 `req.cookies` map 所做的任何更改应用到响应标头中。
 
 ```js title="node-server.js" icon="file-code"
 import { createServer } from "node:http";
@@ -317,9 +319,9 @@ const cookie = new Bun.Cookie("session", "abc123", {
 });
 
 console.log(cookie.serialize());
-// => "session=abc123; Domain=example.com; Path=/admin; Expires=Sun, 19 Mar 2025 15:03:26 GMT; Secure; HttpOnly; SameSite=Strict"
+// => "session=abc123; Domain=example.com; Path=/admin; Expires=Wed, 19 Mar 2025 15:03:26 GMT; Secure; HttpOnly; SameSite=Strict"
 console.log(cookie.toString());
-// => "session=abc123; Domain=example.com; Path=/admin; Expires=Sun, 19 Mar 2025 15:03:26 GMT; Secure; HttpOnly; SameSite=Strict"
+// => "session=abc123; Domain=example.com; Path=/admin; Expires=Wed, 19 Mar 2025 15:03:26 GMT; Secure; HttpOnly; SameSite=Strict"
 ```
 
 #### `toJSON(): CookieInit`
@@ -413,7 +415,7 @@ class Cookie {
 
   readonly name: string;
   value: string;
-  domain?: string;
+  domain: string | null;
   path: string;
   expires?: Date;
   secure: boolean;

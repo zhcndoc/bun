@@ -60,7 +60,7 @@ Bun 采用“默认安全”策略：它只会为允许列表中的包运行生�
 | `trustedDependencies: ["pkg-a", ...]` | **仅**列出的包。默认列表会被忽略。                    |
 | `trustedDependencies: []`             | **没有**任何包，包括默认列表中的包。                 |
 
-当你想完全放弃默认允许列表，而又不想在每次安装时都传入 `--ignore-scripts`，可以设置 `trustedDependencies: []`。如果你定义了显式的 `trustedDependencies` 列表，请把你仍然需要其生命周期脚本的[默认列表](https://github.com/oven-sh/bun/blob/main/src/install/default-trusted-dependencies.txt)中的包也一并包含进去（例如 `sharp` 或 `esbuild`）——它们将不再被隐式信任。
+如果你想完全退出默认允许列表，又不想在每次安装时都传入 `--ignore-scripts`，请设置 `trustedDependencies: []`。如果你使用显式列表定义了 `trustedDependencies`，请将默认列表中仍需要运行其生命周期脚本的包（例如 `sharp` 或 `esbuild`）加入其中。Bun 将不再默认信任这些包。
 
 ---
 

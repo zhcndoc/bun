@@ -3,20 +3,24 @@ title: 错误处理
 description: 学习如何在 Bun 的开发服务器中处理错误
 ---
 
-要启用开发模式，设置 `development: true`。
+默认情况下，`Bun.serve()` 以开发模式运行。设置 `NODE_ENV=production` 或传入 `development: false` 时，会关闭开发模式。
 
 ```ts title="server.ts" icon="/icons/typescript.svg"
 Bun.serve({
-  development: true, // [!code ++]
+  development: false, // [!code ++]
   fetch(req) {
     throw new Error("woops!");
   },
 });
 ```
 
-在开发模式下，Bun 会通过内置的错误页面在浏览器中显示错误。
+在开发模式下，如果请求处理程序抛出错误，且没有 `error` 处理程序返回响应，Bun 会返回内置错误页面，其中包含错误消息、堆栈跟踪、每个堆栈帧周围的源代码以及文件路径。此页面旨在用于本地调试。
 
 <Frame>![Bun 内置的 500 错误页面](/images/exception_page.png)</Frame>
+
+<Warning>
+  开发错误页面会将源代码和文件路径发送给发起请求的任何人。部署时请设置 `NODE_ENV=production`（或设置 `development: false`），这样未捕获的错误会返回纯文本 `500` 响应。`--production` 标志不会关闭此页面：`bun build` 和 `bun install` 支持该标志，而 `bun run` 会忽略它。
+</Warning>
 
 ### `error` 回调
 

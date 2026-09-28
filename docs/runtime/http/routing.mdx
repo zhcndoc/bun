@@ -3,9 +3,9 @@ title: 路由
 description: 在 `Bun.serve` 中使用静态路径、参数和通配符定义路由
 ---
 
-使用 `routes` 属性向 `Bun.serve()` 添加路由（静态路径、参数和通配符），或使用 [`fetch`](#fetch) 方法处理未匹配的请求。
+使用 `routes` 属性（静态路径、参数和通配符）向 `Bun.serve()` 添加路由，或使用 [`fetch`](#fetch-request-handler) 方法处理未匹配的请求。
 
-`Bun.serve()` 的路由器基于 uWebSocket 的[基于树的方法](https://github.com/oven-sh/bun/blob/0d1a00fa0f7830f8ecd99c027fce8096c9d459b6/packages/bun-uws/src/HttpRouter.h#L57-L64)构建，加入了 [SIMD 加速的路由参数解码](https://github.com/oven-sh/bun/blob/main/src/jsc/bindings/decodeURIComponentSIMD.cpp#L21-L271)和 [JavaScriptCore 结构缓存](https://github.com/oven-sh/bun/blob/main/src/jsc/bindings/ServerRouteList.cpp#L100-L101)，以突破现代硬件所允许的性能极限。
+`Bun.serve()` 的路由器基于 uWebSocket 的[树形结构方案](https://github.com/oven-sh/bun/blob/0d1a00fa0f7830f8ecd99c027fce8096c9d459b6/packages/bun-uws/src/HttpRouter.h#L57-L64)构建。路由器还添加了 [SIMD 加速的路由参数解码](https://github.com/oven-sh/bun/blob/main/src/jsc/bindings/decodeURIComponentSIMD.cpp#L21-L271)和 [JavaScriptCore 结构缓存](https://github.com/oven-sh/bun/blob/main/src/jsc/bindings/ServerRouteList.cpp#L100-L101)，以充分发挥现代硬件的性能潜力。
 
 ## 基本设置
 
@@ -22,7 +22,7 @@ Bun.serve({
 });
 ```
 
-`Bun.serve()` 中的路由接收一个 `BunRequest`（继承自 [`Request`](https://developer.mozilla.org/zh-CN/docs/Web/API/Request)）并返回一个 [`Response`](https://developer.mozilla.org/zh-CN/docs/Web/API/Response) 或 `Promise<Response>`。这让发送和接收 HTTP 请求时可复用相同代码。
+`Bun.serve()` 中的路由会接收一个 `BunRequest`（继承自 [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)），并返回一个 [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) 或 `Promise<Response>`。由于路由使用这些 `Request` 和 `Response` 类型，因此发送和接收 HTTP 请求时可以更轻松地使用相同的代码。
 
 ```ts
 // 简化示例
@@ -77,7 +77,7 @@ serve({
 
 ## 路由优先级
 
-路由匹配顺序按特异性依次为：
+Bun 按具体程度从高到低匹配路由：
 
 1. 精确路由（`/users/all`）
 2. 参数路由（`/users/:id`）
@@ -100,7 +100,7 @@ Bun.serve({
 
 ## 类型安全的路由参数
 
-TypeScript 在以字符串字面量形式传入路由参数时会对其进行解析，因此访问 `request.params` 时，编辑器会显示自动补全。
+TypeScript 会解析以字符串字面量形式传入的路由参数，因此访问 `request.params` 时，编辑器会显示自动补全。
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 import type { BunRequest } from "bun";
@@ -124,7 +124,7 @@ Bun.serve({
 });
 ```
 
-Bun 会自动解码经过百分号编码的路由参数值，包括 Unicode 字符。无效的 Unicode 会被替换为 Unicode 替换字符（`\uFFFD`）。
+Bun 会自动解码百分号编码的路由参数值，包括 Unicode 字符。对于无效的 Unicode，Bun 会将其替换为 Unicode 替换字符（`\uFFFD`）。
 
 ### 静态响应
 
@@ -156,7 +156,7 @@ Bun.serve({
 
 静态响应在初始化后不分配额外内存。相比手动返回 `Response` 对象，通常能提升至少 15% 的性能。
 
-静态路由响应会在服务器对象生命周期内缓存。若要重新加载静态路由，可调用 `server.reload(options)`。
+Bun 会在服务器对象的整个生命周期内缓存静态路由响应。要重新加载静态路由，请调用 `server.reload(options)`。
 
 ### 文件响应与静态响应的区别
 
@@ -206,19 +206,19 @@ Bun.serve({
 });
 ```
 
-请求 URL 中前缀之后的部分会进行一次百分号解码，然后以相对于 `dir` 的路径打开。非规范路径（包含 `.`, `..`、空片段、`%2F`，或使用 `%XX` 序列编码了可在路径片段中直接出现的字符）会被拒绝并返回 `404`，因此提供的路径始终是路由器匹配到的路径。在 Linux 上，打开操作使用 `openat2(RESOLVE_IN_ROOT)`，因此试图逃逸出 `dir` 的符号链接会受到内核限制。
+Bun 会对请求 URL 中前缀之后的部分进行一次百分号解码，并相对于 `dir` 打开该路径。对于非规范路径，Bun 会返回 `404`，因此实际提供的路径始终是路由器所匹配的路径。如果路径中包含 `.`、`..`、空片段、`%2F`，或将可直接出现在路径片段中的字符编码为 `%XX` 序列，则该路径为非规范路径。在 Linux 上，打开文件时会使用 `openat2(RESOLVE_IN_ROOT)`，因此内核会限制符号链接，防止其指向 `dir` 之外。
 
-{% callout %}
-路由区分大小写，但 macOS 和 Windows 上的文件系统默认不区分大小写，因此，大小写不同的 URL（`/static/Admin/secret.txt`）会匹配目录通配路由，而不是同级的 `/static/admin/*` 处理程序，并且仍会打开 `admin/secret.txt`。与 nginx、Caddy 及其他静态文件服务器一样，不要将受访问控制的内容放在 `dir` 中，并依赖重叠路由来限制访问。
-{% /callout %}
+<Info>
+  路由区分大小写，但 macOS 和 Windows 上的文件系统默认不区分大小写。因此，大小写不同的 URL（`/static/Admin/secret.txt`）会匹配目录通配符，而不是同级的 `/static/admin/*` 处理程序，并仍会打开 `admin/secret.txt`。与 nginx、Caddy 和其他静态文件服务器一样，应将受访问控制的内容放在 `dir` 之外，而不要依赖重叠路由来限制访问。
+</Info>
 
 目录路由与文件路由共享响应处理路径：
 
 - **Content-Type** 根据文件扩展名设置。
-- 每个响应都会发送 **Last-Modified** 和弱 `ETag`（`W/"<size>-<mtime>"`），并会遵循 `If-Modified-Since` / `If-None-Match`，在条件满足时返回 `304 Not Modified`。
-- 支持**范围请求**，并使用 `Accept-Ranges: bytes` 和 `Content-Range`。
-- 如果请求解析到的目录路径不带结尾的 `/`，则会返回 `301` 重定向到带结尾斜杠的 URL；带结尾斜杠时，则提供该目录中的 `index.html`。
-- 缺失文件返回 `404`。
+- 每个响应都会发送 **Last-Modified** 和弱 **ETag**（`W/"<size>-<mtime>"`），并会根据 `If-Modified-Since` / `If-None-Match` 返回 `304 Not Modified`。
+- 支持 **范围请求**，并使用 `Accept-Ranges: bytes` 和 `Content-Range`。
+- 请求解析到的目录若没有尾随 `/`，则会收到重定向到尾随斜杠 URL 的 `301` 响应。若 URL 有尾随斜杠，Bun 会从该目录提供 `index.html`。
+- 缺失文件会返回 `404`。
 
 传入 `statCache: false` 可禁用按路径缓存的 `Last-Modified`（每个路由可节省约 20 KB）。
 

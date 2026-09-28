@@ -13,7 +13,7 @@ description: "在 monorepo 中跨多个包共享通用依赖版本"
 2. 使用 `catalog:` 协议引用这些版本
 3. 只需在一个地方更改版本，即可一次性更新所有软件包
 
-这对于大型单体仓库尤其重要，因为其中几十个软件包可能依赖于关键依赖项的相同版本。
+目录在大型 monorepo 中最为重要，因为其中数十个包都依赖相同版本的关键依赖项。
 
 ## 如何使用目录
 
@@ -240,7 +240,7 @@ Bun 支持两种定义目录的方式：
 
 ## 使用 `bun add` 添加到目录
 
-`bun add --catalog`（或 `--catalog=<name>`）会将条目添加到根目录，并将 `"catalog:"` 写入当前软件包。如果未传入显式版本，则会重复使用现有的目录条目。请参阅 [`bun add --catalog`](/pm/cli/add#--catalog)。
+`bun add --catalog` 会将条目添加到根目录目录中，并在当前包中写入 `"catalog:"`；`--catalog=<name>` 会将条目添加到 `catalogs.<name>` 中，并写入 `"catalog:<name>"`。除非传入显式版本，否则 Bun 会重复使用现有目录条目。参见 [`bun add --catalog`](/pm/cli/add#--catalog)。
 
 即使不使用该标志，`bun add react`（不带版本）也会在默认目录已列出 `react` 时写入 `"catalog:"`。传入版本则会改为写入具体的范围。
 
@@ -288,11 +288,11 @@ Bun 的锁文件会跟踪目录版本，因此可以确保不同环境中的安�
 
 ## 限制与注意事项
 
-- 目录引用必须匹配 `catalog` 或命名目录之一中定义的依赖项
-- 目录名称中的空字符串和空格会被忽略（视为默认目录）
-- `catalog:default` 与 `catalog:` 相同。默认目录可以定义为 `catalog` 或 `catalogs.default`，但同一个软件包同时列在两者中会导致错误
-- 目录中的无效依赖版本在 `bun install` 期间无法解析
-- `catalog:` 仅适用于根目录和工作区的 `package.json` 文件。在已发布的软件包中无法解析——使用 `bun publish` 或 `bun pm pack` 发布时，它们会将其替换为实际范围（请参阅[发布](#发布)）
+- 目录引用必须对应 `catalog` 或某个命名 `catalogs` 中定义的依赖项
+- Bun 会忽略目录名称中的空字符串和空白字符，并将其视为默认目录
+- `catalog:default` 与 `catalog:` 相同。你可以通过 `catalog` 或 `catalogs.default` 定义默认目录，但同一个包同时列在两者中会报错
+- 目录中的无效依赖版本会导致 `bun install` 解析失败
+- `catalog:` 仅适用于根目录和工作区的 `package.json` 文件。在已发布的包中使用时会导致解析失败。使用 `bun publish` 或 `bun pm pack` 发布，这些命令会将其替换为实际范围（参见[发布](#publishing)）
 
 ## 发布
 

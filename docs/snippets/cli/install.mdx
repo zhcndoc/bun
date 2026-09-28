@@ -29,7 +29,7 @@ bun install <name>@<version>
 </ParamField>
 
 <ParamField path="--omit" type="string">
-  从安装中排除 'dev'、'optional' 或 'peer' 依赖
+  从安装中排除「dev」、「optional」或「peer」依赖
 </ParamField>
 
 <ParamField path="--only-missing" type="boolean">
@@ -89,7 +89,7 @@ bun install <name>@<version>
 ### 安装过程控制
 
 <ParamField path="--dry-run" type="boolean">
-  不执行任何安装操作
+  解析依赖，但不安装软件包、不更新 package.json，也不保存锁文件（项目自身的生命周期脚本仍会运行）
 </ParamField>
 
 <ParamField path="--force" type="boolean">
@@ -163,7 +163,7 @@ bun install <name>@<version>
 ### 生命周期脚本管理
 
 <ParamField path="--ignore-scripts" type="boolean">
-  跳过项目 package.json 中的生命周期脚本（依赖的脚本不会被执行）
+  跳过所有软件包的生命周期脚本，包括项目的 package.json 和受信任的依赖项
 </ParamField>
 
 ### 帮助信息

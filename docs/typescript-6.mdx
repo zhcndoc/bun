@@ -3,7 +3,7 @@ title: TypeScript 6 和 7
 description: "如何为 TypeScript 6.0 和 7.0 配置 Bun 的类型定义，这些版本不再自动发现 @types 包。修复升级 TypeScript 后出现的 'Cannot find name Bun' 及其他缺失类型错误。"
 ---
 
-TypeScript 6.0 改变了类型定义的发现方式。如果你升级了 TypeScript 后，编辑器不再识别 `Bun`、`Request` 或来自 `@types/bun` 的其他全局变量，以下是修复方法。
+TypeScript 6.0 改变了发现类型定义的方式。如果你升级了 TypeScript，而编辑器不再识别 `@types/bun` 中的 `Bun`、`Request` 或其他全局变量，以下是修复方法。
 
 ## 变化内容
 
@@ -31,7 +31,7 @@ TypeScript 6.0 改变了类型定义的发现方式。如果你升级了 TypeScr
 }
 ```
 
-你仍然需要安装 `@types/bun` —— `types` 选项告诉 TypeScript 要包含哪些包，但包本身必须存在于 `node_modules` 中：
+你仍然需要安装 `@types/bun`。`types` 选项会告诉 TypeScript 要包含哪些包，但该包本身必须存在于 `node_modules` 中：
 
 ```sh terminal icon="terminal"
 bun add -d @types/bun

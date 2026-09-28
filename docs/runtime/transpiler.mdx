@@ -15,7 +15,7 @@ const transpiler = new Bun.Transpiler({
 
 ## `.transformSync()`
 
-使用 `.transformSync()` 方法同步转译代码。模块不会被解析，代码也不会被执行。结果是一个纯净的 JavaScript 代码字符串。
+使用 `.transformSync()` 方法同步转译代码。转译器不会解析模块或执行代码。结果是一个原生 JavaScript 代码字符串。
 
 <CodeGroup>
 ```ts transpile.ts icon="/icons/typescript.svg" 
@@ -80,7 +80,7 @@ await transpiler.transform("<div>hi!</div>", "tsx");
 
 `.transform()` 方法会在 Bun 的工作线程池中运行转译器，因此运行 100 次会将工作分散到 `Math.floor($cpu_count * 0.8)` 个线程中，而不会阻塞主 JavaScript 线程。
 
-如果你的代码使用了宏，它可能会在这个新线程中生成一份 Bun JavaScript 运行时环境的新副本。
+如果你的代码使用了宏，转译器可能会在该新线程中启动 Bun JavaScript 运行时环境的新副本。
 
 </Accordion>
 
@@ -246,7 +246,7 @@ class Bun.Transpiler {
   transform(code: string, loader?: Loader): Promise<string>
   transformSync(code: string, loader?: Loader): string
 
-  scan(code: string): {exports: string[], imports: Import}
+  scan(code: string): {exports: string[], imports: Import[]}
   scanImports(code: string): Import[]
 }
 

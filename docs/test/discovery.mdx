@@ -59,7 +59,7 @@ bun test ./test/specific-file.test.ts
 bun test --test-name-pattern addition
 ```
 
-该模式会与测试名称进行匹配，测试名称前会加上其所有父级 `describe` 块的标签，并以空格分隔。例如，定义如下的测试：
+`bun test` 会将模式与测试名称进行匹配，测试名称前缀为其所有父级 `describe` 块的标签，各标签之间以空格分隔。例如，定义如下的测试：
 
 ```ts title="math.test.ts" icon="/icons/typescript.svg"
 describe("Math", () => {
@@ -71,7 +71,7 @@ describe("Math", () => {
 });
 ```
 
-此测试会与字符串 `"Math operations should add correctly"` 进行匹配。
+对于此测试，`bun test` 会将模式与字符串 "Math operations should add correctly" 进行匹配。
 
 ### 更改根目录
 

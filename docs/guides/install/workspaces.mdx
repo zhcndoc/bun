@@ -50,7 +50,7 @@ Bun 的包管理器支持 npm 的 `"workspaces"`。Workspaces 将代码库拆分
 
 ---
 
-添加后，从项目根目录运行 `bun install` 来安装所有 workspaces 的依赖。
+添加依赖项后，请从项目根目录运行 `bun install`，为所有 workspaces 安装依赖项。
 
 ```sh terminal icon="terminal"
 bun install
@@ -58,7 +58,7 @@ bun install
 
 ---
 
-要向特定 workspace 添加 npm 依赖，请 `cd` 到该目录，然后像平常一样运行 `bun add`。Bun 会检测到你位于 workspace 中，将依赖添加到该 workspace 的 `package.json`，并更新根 lockfile。新的 workspace 默认使用[isolated installs](/pm/isolated-installs)，因此该软件包会安装到根 `node_modules/.bun` 存储中，并从 workspace 自己的 `node_modules` 创建符号链接；使用 `--linker hoisted` 则会将其提升到根 `node_modules` 中。
+要向特定 workspace 添加 npm 依赖项，请切换到该目录并像平常一样运行 `bun add`。Bun 会检测到你位于 workspace 中，将依赖项添加到该 workspace 的 `package.json`，并更新根锁定文件。新 workspaces 默认使用[隔离安装](/pm/isolated-installs)，因此 Bun 会将软件包安装到根目录的 `node_modules/.bun` 存储中，并从 workspace 自身的 `node_modules` 创建符号链接。使用 `--linker hoisted` 时，Bun 会改为将软件包提升到根目录的 `node_modules` 中。
 
 ```sh terminal icon="terminal"
 cd packages/stuff-a

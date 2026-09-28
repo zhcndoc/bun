@@ -107,7 +107,16 @@ bun test --timeout 10000
 
 ---
 
-许多其他设置在 `bunfig.toml` 的 `[test]` 部分中都有对应项，例如 `setupFiles`/`setupFilesAfterEnv` → `preload`、`testPathIgnorePatterns` → `pathIgnorePatterns`、`rootDir` → `root`、`coverageDirectory` → `coverageDir`、`coverageReporters` → `coverageReporter`，以及 `coverageThreshold` → `coverageThreshold`（使用类似 `0.9` 的小数，而不是百分比）。请参阅[测试配置](/test/configuration)。没有对应项的设置不受支持。如果缺少你需要的功能，请[提交功能请求](https://github.com/oven-sh/bun)。
+许多其他设置在 `bunfig.toml` 的 `[test]` 部分中都有对应项。例如：
+
+- `setupFiles`/`setupFilesAfterEnv` → `preload`
+- `testPathIgnorePatterns` → `pathIgnorePatterns`
+- `rootDir` → `root`
+- `coverageDirectory` → `coverageDir`
+- `coverageReporters` → `coverageReporter`
+- `coverageThreshold` → `coverageThreshold`（使用 `0.9` 这样的分数，而非百分比）
+
+请参阅[测试配置](/test/configuration)。没有对应项的设置不受支持。如果缺少你需要的功能，请[提交功能请求](https://github.com/oven-sh/bun/issues/new?template=4-feature-request.yml)。
 
 ---
 

@@ -3,7 +3,7 @@ title: 独立 HTML
 description: 将单页应用打包成一个无外部依赖的自包含 `.html` 文件
 ---
 
-Bun 可以将整个前端打包成一个 **单个 `.html` 文件**，无需任何外部依赖。JavaScript、TypeScript、JSX、CSS、图片、字体、视频、WASM —— 所有内容均内联到一个文件中。
+Bun 可以将整个前端打包成**一个 `.html` 文件**，且不依赖任何外部资源。JavaScript、TypeScript、JSX、CSS、图片、字体、视频、WASM：Bun 会将所有内容内联到一个文件中。
 
 ```bash terminal icon="terminal"
 bun build --compile --target=browser ./index.html --outdir=dist
@@ -25,9 +25,9 @@ bun build --compile --target=browser ./index.html --outdir=dist
 
 ## 真正的单文件
 
-通常，发布网页意味着管理一个资产文件夹 —— HTML、JavaScript 包、CSS 文件、图片。只移动 HTML 文件，没了其他内容就会坏掉。浏览器以前试图解决这个问题：Safari 的 `.webarchive` 和 `.mhtml` 旨在将页面保存为单文件，但实际上它们会在电脑上解包成一堆松散文件 —— 违背了初衷。
+通常，分发网页意味着需要管理一个资源文件夹——HTML、JavaScript 包、CSS 文件和图片。单独移动 HTML 文件而不带上其他文件，一切都会出错。浏览器以前也尝试过解决这个问题。Safari 的 `.webarchive` 和 Chrome 的 `.mhtml` 可以将网页保存为单个文件。实际上，只有部分浏览器能打开它们，这就失去了这样做的意义。
 
-独立 HTML 输出是一个普通的 `.html` 文件：不是归档文件，也不是文件夹。每一张图片、每一种字体、每一行 CSS 和 JavaScript 都会使用标准的 `<style>` 标签、`<script>` 标签和 `data:` URI 直接嵌入 HTML 中。任何浏览器都可以打开它，任何服务器都可以托管它。
+独立 HTML 输出是一个普通的 `.html` 文件：不是归档文件，也不是文件夹。Bun 使用标准的 `<style>` 标签、`<script>` 标签和 `data:` URI，将每张图片、每种字体以及每一行 CSS 和 JavaScript 都直接嵌入 HTML 中。任何浏览器都能打开它，任何服务器都能托管它。
 
 你可以像分发 PDF 一样分发页面：这是一个可以移动、复制、上传或分享的单一文件，无需担心路径失效或资源缺失。
 
@@ -98,9 +98,9 @@ Bun 会将 HTML 中找到的每个本地资源都进行内联：任何具有相�
 | CSS 中的 `url("./font.woff2")`                 | CSS 中的 `url(data:font/woff2;base64,...)`                           |
 | JS 中的 `import "./styles.css"`                 | 合并到 `<style>` 标签中                                               |
 
-图像、字体、WASM 二进制文件、视频、音频文件、SVG——任何通过相对路径引用的文件都会被编码为 base64，并直接嵌入 HTML 中的 `data:` URI。Bun 会根据文件扩展名检测 MIME 类型。
+图片、字体、WASM 二进制文件、视频、音频文件、SVG：Bun 会将相对路径引用的任何文件编码为 base64 格式的 `data:` URI，并直接嵌入 HTML 中。Bun 会根据文件扩展名检测 MIME 类型。
 
-外部 URL（如 CDN 链接或绝对链接）保持不变，不会被内联。
+Bun 会原样保留外部 URL（例如 CDN 链接或绝对 URL）。
 
 ## 与 React 一起使用
 
@@ -160,7 +160,7 @@ export function Counter() {
 bun build --compile --target=browser ./index.html --outdir=dist
 ```
 
-React、你的组件和你的 CSS 都打包进了 `dist/index.html`。把这唯一文件上传到任何地方即可运行。
+Bun 会将所有 React 代码、组件和 CSS 打包到 `dist/index.html` 中。将这一个文件上传到任何地方，它都能正常运行。
 
 ## 与 Tailwind CSS 一起使用
 
@@ -219,7 +219,7 @@ await Bun.build({
 bun run build.ts
 ```
 
-生成的 Tailwind CSS 会直接以内联 `<style>` 标签的形式注入 HTML 文件。
+Bun 会将生成的 Tailwind CSS 以内联 `<style>` 标签的形式直接放入 HTML 文件中。
 
 ## 工作原理
 
@@ -276,7 +276,7 @@ if (!result.success) {
 }
 ```
 
-如果省略 `outdir`，输出可以作为 `BuildArtifact` 从 `result.outputs` 获取：
+省略 `outdir` 时，输出会以 `BuildArtifact` 的形式保存在 `result.outputs` 中：
 
 ```ts icon="/icons/typescript.svg"
 const result = await Bun.build({
@@ -309,6 +309,6 @@ Bun 会在构建时将 JavaScript 中对 `process.env.API_URL` 的引用替换�
 
 ## 限制
 
-- **不支持代码拆分** —— `--splitting` 不能与 `--compile --target=browser` 一起使用
-- **大文件资产** 由于 base64 编码，体积会变大（比原二进制大33%）
-- **外部 URL**（CDN 链接、绝对 URL）保持不变，只有相对路径资源会被内联。
+- **不支持代码拆分**——`--splitting` 不能与 `--compile --target=browser` 一起使用
+- **大型资源**会增加文件大小，因为它们会被编码为 base64（与原始二进制文件相比，体积增加 33%）
+- **外部 URL**（CDN 链接、绝对 URL）会保持原样：Bun 只内联相对路径

@@ -41,7 +41,7 @@ const results = Bun.JSONL.parse(buffer);
 
 ### 错误处理
 
-如果输入包含无效 JSON 且没有成功解析任何值，`Bun.JSONL.parse()` 会抛出 `SyntaxError`。如果在发生错误前至少解析出了一个值，则会返回已解析的值，而不会抛出错误。
+如果输入包含无效 JSON，且没有成功解析任何值，`Bun.JSONL.parse()` 会抛出 `SyntaxError`。如果在出错前至少解析了一个值，则会返回已解析的值，而不会抛出异常。
 
 ```ts
 try {
@@ -55,7 +55,7 @@ try {
 
 ## `Bun.JSONL.parseChunk()`
 
-对于流式处理，`parseChunk` 会从输入中解析尽可能多的完整值，并报告解析到的位置，这样当数据以增量方式到达时（例如来自网络流），你就知道应从哪里继续解析。
+对于流式处理，`parseChunk` 会尽可能多地解析输入中的完整值，并报告解析到的位置。这样，当数据逐步到达时（例如来自网络流），你就知道从哪里继续处理。
 
 ```ts
 const chunk = '{"id":1}\n{"id":2}\n{"id":3';
@@ -147,8 +147,8 @@ async function processBinaryStream(stream: ReadableStream<Uint8Array>) {
       handleRecord(value);
     }
 
-    // 保留未消费的字节
-    buf = buf.slice(result.read);
+    // Keep unconsumed bytes
+    buf = buf.subarray(result.read);
   }
 }
 ```
@@ -182,7 +182,7 @@ const values = Bun.JSONL.parse(input);
 
 ## 性能说明
 
-- **ASCII 快速通道**：纯 ASCII 输入直接解析，无需复制，使用零分配的 `StringView`。
-- **UTF-8 支持**：非 ASCII 的 `Uint8Array` 输入通过 SIMD 加速转换为 UTF-16。
-- **BOM 处理**：`Uint8Array` 开头的 UTF-8 BOM（`0xEF 0xBB 0xBF`）自动跳过。
-- **预构建对象形状**：`parseChunk` 返回的结果对象使用缓存结构，提高属性访问速度。
+- **ASCII 快速路径**：Bun 使用零分配的 `StringView` 直接解析纯 ASCII 输入，无需复制。
+- **UTF-8 支持**：Bun 会将非 ASCII 的 `Uint8Array` 输入解码为 UTF-16。
+- **BOM 处理**：Bun 会自动跳过 `Uint8Array` 开头的 UTF-8 BOM（`0xEF 0xBB 0xBF`）。
+- **预构建对象结构**：`parseChunk` 返回的对象使用缓存结构，以加快属性访问速度。

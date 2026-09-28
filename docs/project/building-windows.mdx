@@ -33,7 +33,7 @@ winget install "Visual Studio Community 2022" --override "--add Microsoft.Visual
 
 安装 Visual Studio 后，需要安装以下工具：
 
-- LLVM 21.1.8
+- LLVM 23.1.1
 - Go
 - Rust（通过 rustup）
 - NASM
@@ -48,16 +48,16 @@ winget install "Visual Studio Community 2022" --override "--add Microsoft.Visual
 ```ps1 Scoop (x64)
 irm https://get.scoop.sh | iex
 scoop install nodejs-lts go rustup nasm ruby perl ccache
-# Scoop 在同时安装 llvm 和其他工具时似乎存在 bug
-scoop install llvm@21.1.8
+# scoop seems to be buggy if you install llvm and the rest at the same time
+scoop install llvm@23.1.1
 ```
 
-对于 Windows ARM64，请直接从 GitHub 发布页面下载 LLVM 21.1.8（这是首个包含 ARM64 Windows 构建的版本）：
+对于 Windows ARM64，请直接从 GitHub releases 下载 LLVM 23.1.1：
 
 ```ps1 ARM64
-# 下载并安装 ARM64 的 LLVM
-Invoke-WebRequest -Uri "https://github.com/llvm/llvm-project/releases/download/llvmorg-21.1.8/LLVM-21.1.8-woa64.exe" -OutFile "$env:TEMP\LLVM-21.1.8-woa64.exe"
-Start-Process -FilePath "$env:TEMP\LLVM-21.1.8-woa64.exe" -ArgumentList "/S" -Wait
+# Download and install LLVM for ARM64
+Invoke-WebRequest -Uri "https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.1/LLVM-23.1.1-woa64.msi" -OutFile "$env:TEMP\LLVM-23.1.1-woa64.msi"
+Start-Process msiexec.exe -ArgumentList "/i `"$env:TEMP\LLVM-23.1.1-woa64.msi`" /qn" -Wait
 ```
 
 <Note>
@@ -92,9 +92,6 @@ Get-Command mt
 
 ```ps1
 bun run build
-
-# 首次运行完成后，可以用下面命令构建
-ninja -Cbuild/debug
 ```
 
 成功构建后，会将 `bun-debug.exe` 写入 `build/debug` 文件夹。
@@ -107,11 +104,11 @@ ninja -Cbuild/debug
 
 ## 额外路径
 
-- WebKit 已提取到 `build/debug/cache/webkit/`。
+- 构建会将 WebKit 解压到 `$Env:BUN_INSTALL\build-cache\webkit-<version>-debug`（ARM64 上为 `webkit-<version>-arm64-debug`）；`BUN_INSTALL` 默认为 `~\.bun`。设置 `$Env:BUN_BUILD_CACHE_DIR` 可将构建缓存放到其他位置。
 
 ## 测试
 
-使用 `bun test <path>` 运行测试套件，或使用包装脚本 `bun node:test <path>`。`bun node:test` 命令会在 `bun.exe` 的单独实例中运行每个测试文件，因此测试运行器崩溃不会导致整个测试套件停止。
+使用 `bun-debug test <path>` 或包装脚本 `bun run test <path>` 运行测试套件。`bun run test` 命令会在单独的 `bun-debug.exe` 实例中运行每个测试文件，因此测试运行器崩溃不会导致整个套件停止。
 
 ```ps1
 # 使用报告器运行整个测试套件
@@ -135,14 +132,14 @@ bun-debug test "C:\bun\test\js\bun\resolve\import-meta.test.js"
 
 ## 从 Linux 交叉编译
 
-您也可以在 Linux 主机上构建 Windows 二进制文件（包括 x64 和 arm64）。构建会使用主机 LLVM 中的 `clang-cl`、`lld-link`、`llvm-lib` 和 `llvm-rc`（每个 LLVM 发行版都包含这些工具），以及用于提供头文件和导入库的 MSVC CRT/STL 与 Windows SDK 的“xwin splat”。
+你也可以在 Linux 主机上构建 Windows 二进制文件（x64 和 arm64）。构建过程使用主机 LLVM 的 `clang-cl`、`lld-link`、`llvm-lib` 和 `llvm-rc`（这些工具包含在每个 LLVM 发行版中）。对于头文件和导入库，构建还会使用 MSVC CRT/STL 和 Windows SDK 的“xwin splat”。
 
 ### 前置条件
 
-1. 与本机构建使用的相同 LLVM 版本（参见 `scripts/bootstrap.sh` 中的 `llvm_version_exact`），并确保已安装 `clang-cl`、`lld-link`、`llvm-lib` 和 `llvm-rc`。在 Debian/Ubuntu 上，`apt.llvm.org` 提供的程序包包含所有这些工具。
-2. `nasm`（仅 Windows x64 需要；BoringSSL 的 x64 汇编使用 NASM 语法）。
-3. Windows 目标所需的 Rust std（`rust-toolchain.toml` 中列出了这些目标；如果缺少，请运行 `rustup target add x86_64-pc-windows-msvc aarch64-pc-windows-msvc`）。
-4. Windows sysroot：一个包含 MSVC CRT、Windows SDK 和 ATL，并按照 Visual Studio 安装布局组织的 [xwin](https://github.com/Jake-Shadle/xwin) splat。下载这些组件即表示接受 Microsoft 针对这些组件的许可条款。
+1. 与原生构建相同版本的 LLVM（`scripts/build/ci-images/spec.ts` 中的 `pins.llvm`），并确保 `clang-cl`、`lld-link`、`llvm-lib` 和 `llvm-rc` 可用。在 Debian/Ubuntu 上，`apt.llvm.org` 软件包提供这些工具。
+2. `nasm`（仅 Windows x64 构建需要；BoringSSL 的 x64 汇编采用 NASM 语法）。
+3. Windows 目标的 Rust std（`rust-toolchain.toml` 中列出了这些目标；如果缺少，可运行 `rustup target add x86_64-pc-windows-msvc aarch64-pc-windows-msvc`）。
+4. Windows sysroot：一个 [xwin](https://github.com/Jake-Shadle/xwin) splat，其中包含 MSVC CRT、Windows SDK 和 ATL，目录结构与 Visual Studio 安装目录相同。下载这些组件即表示接受 Microsoft 对这些组件的许可条款。
 
 ```bash
 cargo install xwin # 或下载一个发布版二进制文件
@@ -156,7 +153,7 @@ ln -s include "/opt/winsysroot/Windows Kits/10/Include"
 ln -s lib "/opt/winsysroot/Windows Kits/10/Lib"
 ```
 
-构建会自动在 `/opt/winsysroot`（或 `/opt/xwin`）查找 sysroot；如果放在其他位置，请设置 `WINDOWS_SYSROOT=<path>` 或传入 `--winsysroot=<path>`（使用可由用户写入的路径也能让 configure 为您管理这些别名）。configure 会在每次交叉构建开始时验证该 splat。CI 代理会将相同的 splat 烘焙到它们的镜像中（`.buildkite/Dockerfile`、`scripts/bootstrap.sh`）；当某个代理没有该 splat 时，构建会在 configure 时将其下载到缓存目录中。
+构建过程会自动在 `/opt/winsysroot`（或 `/opt/xwin`）查找 sysroot。如果 sysroot 位于其他位置，请设置 `WINDOWS_SYSROOT=<path>` 或传入 `--winsysroot=<path>`。使用用户可写的路径，也可以让 configure 自动管理这些别名。每次交叉构建开始时，configure 都会验证 splat。CI 代理会将相同的 splat 预置到其镜像中（使用 `scripts/build/ci-images/spec.ts` 中的 `windowsSysroot` 工具）；如果代理上没有该工具，构建过程会在 configure 时将其下载到缓存目录。
 
 ### 构建
 
@@ -172,14 +169,15 @@ bun run build --profile=windows-arm64-release
 
 输出文件位于 `build/debug-windows-x64/bun-debug.exe`、`build/release-windows-aarch64/bun-profile.exe` + `bun.exe` 等路径中。等效的原始参数为：`bun run build --os=windows --arch=aarch64`。
 
-交叉编译出的可执行文件不会在主机上运行（会跳过 `--revision` 冒烟测试），因此请在 Windows 机器上或在 Wine 下测试它们。
+构建过程不会在主机上运行交叉编译出的可执行文件（会跳过 `--revision` 冒烟测试），因此请在 Windows 机器或 Wine 中测试这些文件。
 
 ### LTO
 
-x64 Release 交叉构建支持带跨语言（Rust↔C++）LTO 的 ThinLTO。该功能默认关闭，需要显式启用：
+x64 release 交叉构建使用 ThinLTO，并进行跨语言（Rust↔C++）LTO，与所有 release 构建一样（加上 `--lto=off` 可加快重新链接）：
 
-```bash
-bun run build --profile=windows-x64-release --lto=on
-```
+- Bun 的 C/C++ 使用 `-flto=thin` 进行编译
+- rustc 会生成 LLVM bitcode（`-Clinker-plugin-lto`）
+- `bun-webkit-windows-amd64-lto` ThinLTO 预构建版本是被链接的 WebKit
+- 所有内容都使用 LLVM 的 `lld-link` 进行链接，它会读取两种编译器的 bitcode：构建要求 clang 和 rustc 使用相同的主版本
 
-`--lto=on` 会使用 `-flto=thin` 编译 Bun 的 C/C++ 代码，使 rustc 生成 LLVM bitcode（`-Clinker-plugin-lto`），拉取 `bun-webkit-windows-amd64-lto` ThinLTO 预构建版本，并使用 rustc 自带的 `lld-link` 链接所有内容（其 LLVM 版本足够新，可以读取两种编译器生成的 bitcode）。arm64 不支持 LTO（没有 `-lto` WebKit 预构建版本：在 LTO 代码生成期间，LLVM 的 CodeView 发射器无法处理 ARM64 NEON 元组寄存器），`--baseline` 也不支持 LTO。
+arm64 不支持 LTO，因为没有 `-lto` WebKit 预构建版本：LLVM 的 CodeView 发射器在 LTO 代码生成期间无法处理 ARM64 NEON tuple 寄存器。

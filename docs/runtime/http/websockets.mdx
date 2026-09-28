@@ -9,7 +9,7 @@ description: Bun 中的服务器端 WebSockets
 
 **⚡️ 吞吐量提升 7 倍**
 
-Bun 的 WebSockets 速度非常快。以 Linux x64 上的[简单聊天室](https://github.com/oven-sh/bun/tree/main/bench/websocket-server/README.md)为例，Bun 每秒能处理的请求数是 Node.js + [`"ws"`](https://github.com/websockets/ws) 的 7 倍。
+Bun 的 WebSockets 速度很快。在 Linux x64 上运行的[简单聊天室](https://github.com/oven-sh/bun/tree/main/bench/websocket-server/README.md)中，Bun 每秒处理的消息数是 Node.js + [`"ws"`](https://github.com/websockets/ws) 的 7 倍。
 
 | **每秒发送消息数**             | **运行时**                      | **客户端数** |
 | ---------------------------- | ------------------------------ | ----------- |
@@ -24,7 +24,7 @@ Bun 内部的 WebSocket 实现基于 [uWebSockets](https://github.com/uNetworkin
 
 ## 启动 WebSocket 服务器
 
-以下服务器使用 `Bun.serve` 构建，并在 `fetch` 处理程序中将每个传入请求[升级](https://developer.mozilla.org/en-US/docs/Web/HTTP/Protocol_upgrade_mechanism)为 WebSocket 连接。套接字处理程序在 `websocket` 参数中声明。
+以下服务器使用 `Bun.serve` 构建，会在 `fetch` 处理程序中将每个传入请求[升级](https://developer.mozilla.org/en-US/docs/Web/HTTP/Protocol_upgrade_mechanism)为 WebSocket 连接。你可以在 `websocket` 参数中声明套接字处理程序。
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.serve({
@@ -55,9 +55,9 @@ Bun.serve({
 
 <Accordion title="为速度设计的 API">
 
-在 Bun 中，处理函数只需为服务器声明一次，而不是为每个套接字重复声明。
+在 Bun 中，你只需为每个服务器声明一次处理程序，而不是为每个套接字分别声明。
 
-你可以将单个 `WebSocketHandler` 对象传递给 `Bun.serve()`，其中包含用于处理 `open`、`message`、`close`、`drain` 和 `error` 的方法。这与客户端的 `WebSocket` 类不同，后者继承自 `EventTarget`（`onmessage`、`onopen`、`onclose`）。
+你可以将单个 `WebSocketHandler` 对象传递给 `Bun.serve()`，其中包含 `open`、`message`、`close`、`drain` 和 `error` 方法。这种设计不同于客户端的 `WebSocket` 类，后者扩展了 `EventTarget`（`onmessage`、`onopen`、`onclose`）。
 
 客户端通常只会打开少量套接字连接，因此基于事件的 API 在客户端很适用。
 
@@ -168,8 +168,7 @@ Bun.serve({
 ```
 
 <Info>
-以前，你可以像 `Bun.serve<MyData>({...})` 一样，通过 `Bun.serve` 的类型参数指定 `ws.data` 的类型。由于 [TypeScript 的一个限制](https://github.com/microsoft/TypeScript/issues/26242)，这种模式已被移除，改用 `data` 属性。
-
+以前，你可以像 `Bun.serve<MyData>({...})` 这样通过 `Bun.serve` 上的类型参数指定 `ws.data` 的类型。由于 [TypeScript 的一项限制](https://github.com/microsoft/TypeScript/issues/26242)，Bun 移除了这种写法，改用 `data` 属性。
 </Info>
 
 要从浏览器连接到此服务器，可以创建一个新的 `WebSocket`。
@@ -185,13 +184,13 @@ socket.addEventListener("message", event => {
 <Info>
 **用户身份识别**
 
-在页面上设置的 Cookie 会随 WebSocket 升级请求一起发送，并可在 `fetch` 处理程序的 `req.headers` 中访问。解析这些 Cookie 以识别连接的用户，并据此设置 `data`。
+浏览器会将页面上设置的 Cookie 与 WebSocket 升级请求一同发送。它们可在 `fetch` 处理程序中的 `req.headers` 上获取。解析这些 Cookie 以识别连接的用户，并据此设置 `data`。
 
 </Info>
 
 ### 发布/订阅
 
-Bun 的 `ServerWebSocket` 包含原生的基于主题的发布-订阅 API。各个套接字可以通过 `.subscribe()` 订阅主题（使用字符串标识符指定），并使用 `.publish()` 向该主题的所有其他订阅者发送消息（不包括自身）。这种基于主题的广播 API 类似于 [MQTT](https://en.wikipedia.org/wiki/MQTT) 和 [Redis Pub/Sub](https://redis.io/topics/pubsub)。
+Bun 的 `ServerWebSocket` 包含用于基于主题进行广播的原生发布-订阅 API。你可以使用字符串标识符指定主题。单个套接字可以通过 `.subscribe()` 订阅主题，并通过 `.publish()` 向该主题的所有其他订阅者发送消息（不包括自身）。这种基于主题的广播 API 类似于 [MQTT](https://en.wikipedia.org/wiki/MQTT) 和 [Redis Pub/Sub](https://redis.io/topics/pubsub)。
 
 ```ts server.ts icon="/icons/typescript.svg"
 const server = Bun.serve({
@@ -233,7 +232,7 @@ const server = Bun.serve({
 console.log(`监听在 ${server.hostname}:${server.port}`);
 ```
 
-调用 `.publish(data)` 会将消息发送给某个主题的所有订阅者，但不包括调用 `.publish()` 的套接字。要向某个主题的所有订阅者发送消息，请使用 `Server` 实例上的 `.publish()` 方法。
+调用 `.publish(topic, data)` 会向主题的所有订阅者发送消息，_但不包括_调用 `.publish()` 的套接字。要向主题的所有订阅者发送消息，请使用 `Server` 实例上的 `.publish()` 方法。
 
 ```ts
 const server = Bun.serve({
@@ -302,7 +301,7 @@ Bun.serve({
 
 ## 连接到 WebSocket 服务器
 
-Bun 实现了 `WebSocket` 类。创建连接至 `ws://` 或 `wss://` 服务器的 WebSocket 客户端实例类似于浏览器中的用法。
+Bun 实现了 `WebSocket` 类。创建连接至 `ws://` 或 `wss://` 服务器的 WebSocket 客户端实例，类似于浏览器中的用法。
 
 ```ts
 const socket = new WebSocket("ws://localhost:3000");
@@ -311,7 +310,7 @@ const socket = new WebSocket("ws://localhost:3000");
 const socket2 = new WebSocket("ws://localhost:3000", ["soap", "wamp"]);
 ```
 
-在浏览器中，页面上设置的 Cookie 会随 WebSocket 升级请求一起发送。这是 `WebSocket` API 的标准功能。
+浏览器会将页面上设置的 Cookie 与 WebSocket 升级请求一同发送。这是 `WebSocket` API 的标准特性。
 
 在 Bun 中，你还可以直接在构造函数中设置自定义请求头。这是 Bun 对 `WebSocket` 标准的特有扩展。_在浏览器中无法使用。_
 
@@ -338,6 +337,24 @@ socket.addEventListener("close", event => {});
 // 错误处理
 socket.addEventListener("error", event => {});
 ```
+
+### 背压管理
+
+浏览器的 `WebSocket` API 无法减慢发送速度超过你处理速度的对端：传入的消息会无限制地缓存在内存中。Bun 添加了 `pause()` 和 `resume()`，用于暂停和恢复从底层套接字读取数据，从而让发送方感受到 TCP 背压。这是 Bun 特有的扩展。_在浏览器中无法使用。_
+
+```ts
+const socket = new WebSocket("ws://localhost:3000");
+
+socket.addEventListener("message", event => {
+  if (!file.write(event.data)) {
+    // The file's buffer is full: stop reading until it drains.
+    socket.pause();
+    file.once("drain", () => socket.resume());
+  }
+});
+```
+
+`pause()` 和 `resume()` 在操作生效时（或连接中的套接字打开后生效时）返回 `true`，没有可操作的套接字时则返回 `false`；`socket.isPaused` 用于报告当前状态。调用 `pause()` 时已经解码的消息仍可能被传递。`ws` 包中的 `pause()`、`resume()` 和 `isPaused` 对应相同的方法。
 
 ---
 

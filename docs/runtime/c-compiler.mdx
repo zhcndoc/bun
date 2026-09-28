@@ -51,29 +51,30 @@ What is the answer to the universe? 42
 
 ### 基本类型
 
-`cc` 支持与 [`dlopen`](/runtime/ffi) 相同的 `FFIType` 值。
+`cc` 支持与 [`dlopen`](/runtime/ffi) 相同的 `FFIType` 值，但不包括 `buffer_length`。只有 `cc` 支持 `napi_env` 和 `napi_value`。
 
-| `FFIType`  | C 类型          | 别名                        |
-| ---------- | --------------- | --------------------------- |
-| cstring    | `char*`         |                             |
-| function   | `(void*)(*)()`  | `fn`，`callback`            |
-| ptr        | `void*`         | `pointer`，`void*`，`char*` |
-| i8         | `int8_t`        | `int8_t`                    |
-| i16        | `int16_t`       | `int16_t`                   |
-| i32        | `int32_t`       | `int32_t`，`int`            |
-| i64        | `int64_t`       | `int64_t`                   |
-| i64_fast   | `int64_t`       |                             |
-| u8         | `uint8_t`       | `uint8_t`                   |
-| u16        | `uint16_t`      | `uint16_t`                  |
-| u32        | `uint32_t`      | `uint32_t`                  |
-| u64        | `uint64_t`      | `uint64_t`                  |
-| u64_fast   | `uint64_t`      |                             |
-| f32        | `float`         | `float`                     |
-| f64        | `double`        | `double`                    |
-| bool       | `bool`          |                             |
-| char       | `char`          |                             |
-| napi_env   | `napi_env`      |                             |
-| napi_value | `napi_value`    |                             |
+| `FFIType`  | C 类型         | 别名                        |
+| ---------- | -------------- | --------------------------- |
+| buffer     | `char*`        |                             |
+| cstring    | `char*`        |                             |
+| function   | `(void*)(*)()` | `fn`, `callback`            |
+| ptr        | `void*`        | `pointer`, `void*`, `char*` |
+| i8         | `int8_t`       | `int8_t`                    |
+| i16        | `int16_t`      | `int16_t`                   |
+| i32        | `int32_t`      | `int32_t`, `int`            |
+| i64        | `int64_t`      | `int64_t`, `isize`          |
+| i64_fast   | `int64_t`      |                             |
+| u8         | `uint8_t`      | `uint8_t`                   |
+| u16        | `uint16_t`     | `uint16_t`                  |
+| u32        | `uint32_t`     | `uint32_t`                  |
+| u64        | `uint64_t`     | `uint64_t`, `usize`         |
+| u64_fast   | `uint64_t`     |                             |
+| f32        | `float`        | `float`                     |
+| f64        | `double`       | `double`                    |
+| bool       | `bool`         |                             |
+| char       | `char`         |                             |
+| napi_env   | `napi_env`     |                             |
+| napi_value | `napi_value`   |                             |
 
 ### 字符串、对象及非基本类型
 
@@ -132,12 +133,12 @@ napi_value hello(napi_env env) {
 
 ### `cc` 参考文档
 
-#### `library: string[]`
+#### `library: string | string[]`
 
-使用 `library` 数组来指定要与 C 代码进行链接的库。
+使用 `library` 指定要与 C 代码链接的库。
 
 ```ts
-type Library = string[];
+type Library = string | string[];
 
 cc({
   source: "hello.c",
@@ -178,7 +179,7 @@ cc({
 
 #### `flags: string | string[]`
 
-`flags` 是传递给 TinyCC 编译器的可选字符串数组。
+`flags` 是传递给 TinyCC 编译器的可选字符串或字符串数组。
 
 ```ts
 type Flags = string | string[];
@@ -200,3 +201,13 @@ cc({
   },
 });
 ```
+
+### 禁用 `cc`
+
+传递 `--no-ffi-cc` 可为进程禁用 C 编译器。此后，任何对 `cc()` 的调用都会抛出代码为 `ERR_FFI_CC_DISABLED` 的错误。`--no-addons` 标志也会禁用 `cc()`，此外还会禁用 `process.dlopen`。
+
+```sh
+bun --no-ffi-cc ./app.ts
+```
+
+Worker 会继承其父级的设置。Worker 也可以使用 `execArgv: ["--no-ffi-cc"]` 为自身设置此选项。可以通过 `bun build --compile --compile-exec-argv="--no-ffi-cc"` 将此选项嵌入独立可执行文件。

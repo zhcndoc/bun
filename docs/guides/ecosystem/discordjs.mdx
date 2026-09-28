@@ -26,7 +26,7 @@ bun add discord.js
 
 ---
 
-你的机器人需要有自己的账号，你可以在 Discord 的开发者门户中创建它。打开[开发者门户](https://discord.com/developers/applications)，登录并创建一个 **Application**。Discord 会自动为每个新应用添加一个机器人用户；你可以在 **Bot** 选项卡中找到它。如果你在操作时遇到困难，Discord 的[设置指南](https://discordjs.guide/legacy/preparations/app-setup)中提供了截图。
+你的机器人需要自己的账号，你可以在 Discord 的开发者门户中创建该账号。打开 [developer portal](https://discord.com/developers/applications)，登录并创建一个 **Application**。Discord 会自动为每个新应用添加一个机器人用户；你可以在 **Bot** 选项卡中找到它。如果你遇到困难，Discord.js 指南中的[设置教程](https://discordjs.guide/legacy/preparations/app-setup)提供了截图。
 
 从门户中复制两个值：
 
@@ -35,7 +35,7 @@ bun add discord.js
 
 ---
 
-机器人在被邀请到服务器之前，无法在服务器中执行任何操作。在门户的 **OAuth2** 部分，生成一个带有 `bot` 和 `applications.commands` 作用域的邀请链接，打开它，并将机器人添加到你管理的服务器中。斜杠命令需要 `applications.commands` 作用域，所以不要跳过它。最简单的起点是你自己用于测试的个人服务器，Discord 的[添加机器人指南](https://discordjs.guide/legacy/preparations/adding-your-app)也有带截图的步骤说明。
+在你邀请机器人之前，它无法在服务器中执行任何操作。在门户的 **OAuth2** 部分，生成一个包含 `bot` 和 `applications.commands` 范围的邀请 URL，打开该 URL，然后将机器人添加到你管理的服务器中。斜杠命令需要 `applications.commands` 范围，因此请务必包含它。你可以先在自己创建的个人测试服务器中进行测试；Discord.js 的[添加机器人指南](https://discordjs.guide/legacy/preparations/adding-your-app)提供了带截图的操作步骤。
 
 ---
 
@@ -53,7 +53,7 @@ DISCORD_GUILD_ID=your-server-id
 
 ---
 
-在提交任何内容之前，先将 `.env.local` 添加到 `.gitignore` 中。任何读取到 token 的人都可以控制你的机器人，所以它绝不能进入版本控制。
+在提交任何内容之前，将 `.env.local` 添加到 `.gitignore`。任何读取到令牌的人都可以控制你的机器人，因此绝不能将令牌提交到版本控制中。
 
 ```txt .gitignore icon="file-code"
 node_modules
@@ -146,7 +146,7 @@ Logged in as my-bot#1234
 
 ---
 
-当你部署时，不需要构建或打包步骤。Bun 会直接运行 `bot.ts` 及其导入的每个文件，因此你可以原样部署源码，并使用开发时相同的 `bun run bot.ts` 启动它。
+部署时，不需要构建或打包步骤。Bun 会直接运行 `bot.ts` 及其导入的每个文件，因此你可以原样部署源码，并使用开发时相同的 `bun run bot.ts` 启动它。
 
 `deploy-commands.ts` 会在你的测试服务器中注册 `/ping`，这在开发阶段是正确的作用范围。若要将机器人发布到它加入的每个服务器中，请改为全局注册：将路由改为 `Routes.applicationCommands(DISCORD_CLIENT_ID)`。全局注册不需要服务器，因此你也可以从脚本的检查和 `.env.local` 中移除 `DISCORD_GUILD_ID`。
 

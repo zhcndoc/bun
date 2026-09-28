@@ -22,11 +22,11 @@ Bun 的 CSS 解析器和打包器直接移植自 LightningCSS，其打包方式�
 
 默认情况下，Bun 的 CSS 打包目标浏览器包括：
 
-- ES2020
-- Edge 88+
+- Edge 80+
 - Firefox 78+
-- Chrome 87+
+- Chrome 80+
 - Safari 14+
+- Opera 67+
 
 ## 语法降级
 
@@ -589,7 +589,11 @@ button:not(:is(.primary, .secondary)) {
 
 ### 数学函数
 
-CSS 包含标准数学函数（`round()`、`mod()`、`rem()`、`abs()`、`sign()`）、三角函数（`sin()`、`cos()`、`tan()`、`asin()`、`acos()`、`atan()`、`atan2()`）以及指数函数（`pow()`、`sqrt()`、`exp()`、`log()`、`hypot()`）。
+CSS 包含以下数学函数：
+
+- 标准数学函数：`round()`、`mod()`、`rem()`、`abs()`、`sign()`
+- 三角函数：`sin()`、`cos()`、`tan()`、`asin()`、`acos()`、`atan()`、`atan2()`
+- 指数函数：`pow()`、`sqrt()`、`exp()`、`log()`、`hypot()`
 
 ```css title="styles.css" icon="file-code"
 .dynamic-sizing {
@@ -960,9 +964,12 @@ CSS 模块可以将类选择器组合在一起，以便在多个类之间复用�
 使用 `composes` 时需要遵循以下两条规则：
 
 <Info>
-  **组合规则：** 
-  - `composes` 属性必须写在任何常规 CSS 属性之前
-  - 只能在带有单个类名的简单选择器上使用 `composes`
+
+**组合规则：**
+
+- `composes` 属性必须位于任何常规 CSS 属性或声明之前
+- 只能在包含单个类名的简单选择器上使用 `composes`
+
 </Info>
 
 ```css title="styles.module.css" icon="file-code"

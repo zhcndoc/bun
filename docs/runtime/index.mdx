@@ -7,7 +7,7 @@ import Run from "/snippets/cli/run.mdx";
 
 Bun 运行时旨在快速启动与高效运行。
 
-Bun 使用由 Apple 为 Safari 开发的 [JavaScriptCore 引擎](https://developer.apple.com/documentation/javascriptcore)。它通常比 Node.js 和基于 Chromium 的浏览器所使用的 V8 引擎启动和运行得更快。Bun 的转译器和运行时使用 Rust 编写。在 Linux 上，Bun 的启动速度比 Node.js [快 4 倍](https://twitter.com/jarredsumner/status/1499225725492076544)。
+Bun 使用 [JavaScriptCore 引擎](https://developer.apple.com/documentation/javascriptcore)，该引擎由 Apple 为 Safari 开发。JavaScriptCore 通常比 V8 启动和运行得更快，V8 是 Node.js 和基于 Chromium 的浏览器所使用的引擎。Bun 的转译器和运行时使用 Rust 编写。在 Linux 上，Bun 的启动速度比 Node.js 快 [4 倍](https://twitter.com/jarredsumner/status/1499225725492076544)。
 
 | 命令            | 时间     |
 | --------------- | -------- |
@@ -56,7 +56,7 @@ bun --watch run dev # ✔️ 推荐这样写
 bun run dev --watch # ❌ 不推荐这样写
 ```
 
-命令末尾的标志会被 `bun` 忽略，并传递给 `"dev"` 脚本本身。
+`bun` 会忽略命令末尾的标志，并将它们传递给 `"dev"` 脚本本身。
 
 </Note>
 
@@ -70,7 +70,7 @@ bun run dev --watch # ❌ 不推荐这样写
 bun [bun 标志] run <script> [脚本标志]
 ```
 
-你的 `package.json` 可以定义与 shell 命令对应的命名 `"scripts"`。
+你的 `package.json` 可以定义与 Shell 命令对应的命名 `"scripts"`。
 
 ```json package.json icon="file-json"
 {
@@ -90,7 +90,6 @@ rm -rf dist && echo 'Done.'
 ```
 
 ```txt
-Cleaning...
 Done.
 ```
 
@@ -111,15 +110,13 @@ bun run
 ```
 
 ```txt
-quickstart scripts:
+...
+package.json scripts (2 found):
+  $ bun run clean
+    rm -rf dist && echo 'Done.'
 
- bun run clean
-   rm -rf dist && echo 'Done.'
-
- bun run dev
-   bun server.ts
-
-2 scripts
+  $ bun run dev
+    bun server.ts
 ```
 
 Bun 支持生命周期钩子。例如，如果定义了 `preclean` 和 `postclean`，则 `bun run clean` 会依次运行它们。如果 `pre<script>` 执行失败，Bun 不会运行脚本本身。
@@ -144,8 +141,8 @@ bun run --bun vite
 
 在 monorepo 中，`--filter` 参数可以一次在多个包中运行脚本。
 
-`bun run --filter <pattern> <script>` 会在 `<pattern>` 选中的每个包中执行 `<script>`，其中 `<pattern>` 可以是包名称 glob、一个 `./path`、一个 `{dir}` 目录，或类似 `foo...` 的依赖关系。
-例如，如果你有包含名为 `foo`、`bar` 和 `baz` 的包的子目录，运行
+`bun run --filter <pattern> <script>` 会在 `<pattern>` 选中的每个包中执行 `<script>`。模式可以是包名 glob、`./path`、`{dir}` 目录或类似 `foo...` 的依赖关系。
+例如，如果你有几个子目录，其中包含名为 `foo`、`bar` 和 `baz` 的包，运行
 
 ```bash terminal icon="terminal"
 bun run --filter 'ba*' <script>
@@ -188,7 +185,7 @@ This is TypeScript!
 bun --console-depth 5 run index.tsx
 ```
 
-`--console-depth` 设置 `console.log()` 输出中嵌套对象的显示深度。默认深度为 `2`。更高的值会显示更多嵌套属性，但对于复杂对象可能会产生冗长的输出。
+`--console-depth` 设置 Bun 在 `console.log()` 输出中显示嵌套对象的深度。默认深度为 `2`。更大的值会显示更多嵌套属性，但对于复杂对象可能会产生冗长的输出。
 
 ```ts console.ts icon="/icons/typescript.svg"
 const nested = { a: { b: { c: { d: "deep" } } } };
@@ -205,11 +202,11 @@ console.log(nested);
 bun --smol run index.tsx
 ```
 
-`--smol` 会使垃圾回收器更频繁地运行，这可能会降低执行速度。无论是否使用 `--smol` 标志，Bun 都会根据可用内存（考虑 cgroup 和其他内存限制）调整垃圾回收器的堆大小，因此该标志主要适用于希望堆增长得更慢的情况。
+`--smol` 会使垃圾回收器更频繁地运行，这可能会降低执行速度。无论是否使用 `--smol` 标志，Bun 都会根据可用内存（考虑 cgroups 和其他内存限制）调整垃圾回收器的堆大小。因此，该标志主要适用于希望堆增长得更慢的情况。
 
 ## 解析顺序
 
-绝对路径以及以 `./` 或 `.\\` 开头的路径始终作为源文件执行。除非使用 `bun run`，否则具有允许扩展名的名称会解析为文件，而不是 `package.json` 脚本。
+Bun 始终将绝对路径以及以 `./` 或 `.\\` 开头的路径作为源文件执行。除非使用 `bun run`，否则带有允许的扩展名的名称会解析为文件，而不是 `package.json` 脚本。
 
 当 `package.json` 脚本与文件同名时，`bun run` 会优先选择脚本。完整的解析顺序如下：
 

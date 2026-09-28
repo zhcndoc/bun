@@ -4,7 +4,7 @@ sidebarTitle: 写入响应
 mode: center
 ---
 
-使用 [`Bun.write()`](/runtime/file-io#writing-files-bun-write) 将 `Response` 写入磁盘。`Response` 的主体会被写入目标位置。
+使用 [`Bun.write()`](/runtime/file-io#writing-files-bun-write) 将 `Response` 写入磁盘。Bun 会将 `Response` 的正文写入目标位置。
 
 第一个参数是_目标位置_，例如绝对路径或 `BunFile` 实例。第二个参数是要写入的_数据_。
 

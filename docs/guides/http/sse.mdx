@@ -9,13 +9,12 @@ mode: center
 要在 Bun 中实现 SSE 端点，请返回一个正文为流式源的 `Response`，并将 `Content-Type` 标头设置为 `text/event-stream`。
 
 <Note>
-  `Bun.serve` 默认会在 **10 秒** 后关闭空闲连接。一个安静的 SSE 流会被视为空闲，因此下面的示例调用了 `server.timeout(req, 0)` 来禁用此流的超时。详情请参见
-  [`idleTimeout`](/runtime/http/server#idletimeout)。
+  `Bun.serve` 默认会在 **10 秒** 后关闭空闲连接。一个安静的 SSE 流会被视为空闲，因此下面的示例调用了 `server.timeout(req, 0)` 来禁用此流的超时。详情请参见 [`idleTimeout`](/runtime/http/server#idletimeout)。
 </Note>
 
 ## 使用异步生成器
 
-在 Bun 中，`new Response` 可以直接接受异步生成器函数；这通常是编写 SSE 端点最简单的方式。每次 `yield` 都会向客户端刷新一个数据块；如果客户端断开连接，生成器的 `finally` 代码块会运行，以便你进行清理。
+在 Bun 中，`new Response` 可直接接受异步生成器函数。异步生成器通常是编写 SSE 端点最简单的方式。每次 `yield` 都会向客户端刷新一个数据块。如果客户端断开连接，生成器的 `finally` 块会运行，以便你进行清理。
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.serve({

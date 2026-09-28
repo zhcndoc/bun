@@ -119,7 +119,7 @@ console.log(next); // => 下一个本地午夜
 
 ### 时区
 
-计划任务按照系统的**本地时区**进行解释——其方式与 crontab、launchd 和 Windows 任务计划程序读取计划的方式相同。操作系统级形式和进程内回调形式会在相同的墙上时钟时间触发。
+Bun 会按照系统的**本地时区**解释计划，方式与 crontab、launchd 和 Windows Task Scheduler 读取计划的方式相同。操作系统级形式和进程内回调形式会在同一墙上时钟时间触发。
 
 如需覆盖默认时区，请将 IANA 时区名称作为 `{ tz }` 传递给 `Bun.cron.parse()` 或进程内的 `Bun.cron(schedule, handler, options)`：
 
@@ -138,14 +138,14 @@ Bun.cron("0 9 * * *", handler, { tz: "America/New_York" });
 
 ### 月份中的日期与星期交互
 
-当**同时**指定了 day-of-month 和 day-of-week（两者都不是 `*`）时，只要**任一**条件为真，表达式就会匹配。这遵循 [POSIX cron](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/crontab.html) 标准。
+当**同时**指定月中的日期和星期几（两者都不是 `*`）时，只要**任一**条件成立，表达式就会匹配。这遵循 [POSIX cron](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/crontab.html) 标准。
 
 ```ts
 // 在每月 15 日或每周五触发
 Bun.cron.parse("0 0 15 * FRI");
 ```
 
-当只指定了一个（另一个是 `*`）时，仅使用该字段进行匹配。
+如果只指定其中一个字段（另一个为 `*`），Bun 只使用指定的字段进行匹配。
 
 ---
 
@@ -159,7 +159,7 @@ const job = Bun.cron("*/5 * * * *", async () => {
 });
 ```
 
-进程内调度是长时间运行的服务器和工作进程的轻量级选项——无需系统 cron 守护进程，在所有平台上的行为都相同，并且会在多次调用之间共享状态（数据库连接池、缓存、模块级变量）。
+进程内调度是面向长时间运行的服务器和工作进程的轻量级选项。它不需要系统 cron 守护进程，在每个平台上的工作方式都相同，并且调用之间共享状态（数据库连接池、缓存、模块级变量）。
 
 |                              | 进程内                           | [操作系统级](#bun-cron-path-schedule-title-os-level) |
 | ---------------------------- | -------------------------------- | -------------------------------------------------- |
@@ -173,15 +173,15 @@ const job = Bun.cron("*/5 * * * *", async () => {
 
 | 参数  | 类型                         | 描述                                                                                                                                                                  |
 | ---------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `schedule` | `string`                     | 一个 [cron 表达式](#cron-expression-syntax) 或类似 `"@hourly"` 的昵称。                                                                                                   |
-| `handler`  | `(this: CronJob) => unknown` | 每次触发时调用。可以返回 Promise——在该 Promise 完成前不会安排下一次触发。在 `function` 回调内部，`this` 是 `CronJob`（因此可以使用 `this.stop()`）。 |
-| `options`  | `{ tz?: string }`            | 用于解析计划的 IANA 时区名称（默认为系统时区）。                                                                                              |
+| `schedule` | `string`                     | [cron 表达式](#cron-expression-syntax)，或 `"@hourly"` 这类昵称。                                                                                                   |
+| `handler`  | `(this: CronJob) => unknown` | 每次触发时调用。可以返回 Promise；Bun 会等它完成后才安排下一次触发。在 `function` 回调内部，`this` 是 `CronJob`（因此 `this.stop()` 可以正常工作）。 |
+| `options`  | `{ tz?: string }`            | 用于解释计划的 IANA 时区名称（默认为系统时区）。                                                                                              |
 
 同步返回一个 [`CronJob`](#the-cronjob-handle)。如果表达式无效、时区名称未知，或者表达式没有未来的发生时间（例如 `"0 0 30 2 *"`，即 2 月 30 日），则抛出 `TypeError`。
 
 ### 不重叠保证
 
-只有在 handler（包括任何返回的 Promise）结束之后，才会计算下一次触发时间。如果你的 handler 需要 90 秒，而计划是 `* * * * *`，那么第二次触发将是 handler 完成后的第一个整分钟边界，而不是第一次触发后 60 秒。调用之间不会堆叠。
+Bun 仅在处理程序及其返回的 `Promise` 完成后才计算下一次触发时间。如果你的处理程序需要 90 秒，而计划是 `* * * * *`，那么第二次触发会在处理程序完成后的第一个分钟边界发生，而不是在第一次触发后 60 秒发生。调用不会堆叠。
 
 ### 错误处理
 
@@ -202,7 +202,7 @@ Bun.cron("* * * * *", async () => {
 
 ### `bun --hot`
 
-在 `bun --hot` 下，所有进程内 cron 任务会在模块图重新求值之前立刻停止。之后你源代码中的每次 `Bun.cron()` 调用都会重新注册。修改计划、修改 handler 或者直接删除那一行，都将在保存时生效，而不会泄漏定时器。
+在 `bun --hot` 模式下，Bun 会在模块图重新求值之前立即停止所有进程内 cron 任务。随后，源码中仍存在的每个 `Bun.cron()` 调用都会重新注册。无论是编辑计划、编辑处理程序，还是完全删除该行，保存后都会立即生效，且不会泄漏定时器。
 
 ### `CronJob` 句柄
 
@@ -239,7 +239,7 @@ await Bun.cron("./worker.ts", "30 2 * * MON", "weekly-report");
 | `schedule` | `string` | Cron 表达式或别名                                |
 | `title`    | `string` | 唯一任务标识符（字母数字、连字符、下划线） |
 
-使用相同的 `title` 重新注册会就地覆盖现有任务——旧的计划会被替换，而不是重复添加。
+使用相同的 `title` 重新注册会就地覆盖现有任务。Bun 会替换旧计划，而不是创建重复任务。
 
 ```ts
 await Bun.cron("./worker.ts", "0 * * * *", "my-job"); // 每小时
@@ -268,7 +268,7 @@ export default {
 
 ### Linux
 
-Bun 使用 [crontab](https://man7.org/linux/man-pages/man5/crontab.5.html) 注册任务。每个任务作为一行存储在您用户的 crontab 中，上方带有 `# bun-cron: <title>` 标记注释。
+Bun 使用 [crontab](https://man7.org/linux/man-pages/man5/crontab.5.html) 注册任务。Bun 会将每个任务作为一行写入用户的 crontab，并在其上方添加 `# bun-cron: <title>` 标记注释。
 
 crontab 条目如下所示：
 
@@ -310,13 +310,13 @@ crontab -l | grep -v "# bun-cron:" | grep -v "\-\-cron-title=" | crontab -
 
 ### macOS
 
-Bun 使用 [launchd](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html) 注册任务。每个任务作为 plist 文件安装在：
+Bun 使用 [launchd](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html) 注册任务。Bun 会将每个任务安装为 plist 文件，路径为：
 
 ```
 ~/Library/LaunchAgents/bun.cron.<title>.plist
 ```
 
-plist 使用 `StartCalendarInterval` 定义调度计划。支持包含范围、列表或步长的复杂模式 — Bun 会将它们扩展为笛卡尔积形式的多个 `StartCalendarInterval` 字典。
+plist 使用 `StartCalendarInterval` 定义计划。支持带范围、列表或步长的复杂模式。Bun 会将它们展开为多个 `StartCalendarInterval` 字典，形成笛卡尔积。
 
 **查看已注册的任务：**
 
@@ -354,17 +354,17 @@ rm ~/Library/LaunchAgents/bun.cron.weekly-report.plist
 
 ### Windows
 
-Bun 使用基于 XML 任务定义的 [Windows Task Scheduler](https://learn.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-start-page)，使用 [`CalendarTrigger`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-calendartrigger-triggergroup-element) 元素和 [`Repetition`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-repetition-triggerbasetype-element) 模式。
+Bun 使用 [Windows Task Scheduler](https://learn.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-start-page) 和基于 XML 的任务定义。Bun 会将每个任务注册为名为 `bun-cron-<title>` 的计划任务，并使用 [`CalendarTrigger`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-calendartrigger-triggergroup-element) 元素和 [`Repetition`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-repetition-triggerbasetype-element) 模式。
 
 大多数 cron 表达式都得到完全支持，包括 `@daily`、`@weekly`、`@monthly`、`@yearly`、范围 (`1-5`)、列表 (`1,15`)、命名日/月和日期模式。
 
 #### 用户上下文
 
-Bun 使用 [`S4U`（用户服务）](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-logontype-simpletype)登录类型注册任务，即使注册用户未登录，任务也会以该用户身份运行 — 与 Linux `crontab` 的行为一致。不会存储密码。
+Bun 使用 [`S4U`（Service-for-User）](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-logontype-simpletype)登录类型注册任务，即使用户未登录，任务也会以注册用户的身份运行。Linux `crontab` 的行为相同。不会存储密码。
 
-TCP/IP 网络（`fetch()`、HTTP、WebSocket、数据库连接）正常工作。唯一的限制是 S4U 任务无法访问 [Windows 身份验证的网络资源](https://learn.microsoft.com/en-us/windows/win32/taskschd/security-contexts-for-running-tasks)（SMB 文件共享、映射驱动器、Kerberos/NTLM 服务）。
+TCP/IP 网络（`fetch()`、HTTP、WebSocket、数据库连接）正常工作。唯一的限制是 S4U 任务无法访问[使用 Windows 身份验证的网络资源](https://learn.microsoft.com/en-us/windows/win32/taskschd/security-contexts-for-running-tasks)（SMB 文件共享、映射驱动器、Kerberos/NTLM 服务）。
 
-在无头服务器和 CI 环境中，如果无法解析当前用户的[安全标识符（SID）](https://learn.microsoft.com/en-us/windows/security/identity-protection/access-control/security-identifiers) — 例如由 [NSSM](https://nssm.cc/) 或类似工具创建的服务帐户 — `Bun.cron()` 将失败，并显示解释该问题的错误信息。要解决此问题，请使用普通用户帐户运行 Bun，或使用 `schtasks /create /xml <file> /tn <name> /ru SYSTEM /f` 手动创建计划任务。
+在某些无头服务器和 CI 环境中，无法解析当前用户的[安全标识符（SID）](https://learn.microsoft.com/en-us/windows/security/identity-protection/access-control/security-identifiers)，例如由 [NSSM](https://nssm.cc/) 或类似工具创建的服务帐户。在这种情况下，`Bun.cron()` 会失败并显示说明问题的错误。要解决此问题，可以将 Bun 作为普通用户帐户运行，或者使用 `schtasks /create /xml <file> /tn <name> /ru SYSTEM /f` 手动创建计划任务。
 
 #### 触发器限制
 
@@ -377,11 +377,11 @@ TCP/IP 网络（`fetch()`、HTTP、WebSocket、数据库连接）正常工作。
 
 | 模式                                    | 触发器策略                                                                                                                                           | 数量 |
 | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| `*/5 * * * *`                              | 使用 [`Repetition`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-repetition-triggerbasetype-element) (PT5M) 的单一触发器 | 1     |
-| `*/15 * * * *`                             | 使用 Repetition (PT15M) 的单一触发器                                                                                                                     | 1     |
-| `0 9 * * MON-FRI`                          | 每个工作日一个 `CalendarTrigger`                                                                                                                          | 5     |
+| `*/5 * * * *`                              | 使用 [`Repetition`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-repetition-triggerbasetype-element)（PT5M）的单个触发器 | 1     |
+| `*/15 * * * *`                             | 使用 Repetition（PT15M）的单个触发器                                                                                                                     | 1     |
+| `0 9 * * MON-FRI`                          | 一个列出全部五个工作日的 `CalendarTrigger`                                                                                                            | 1     |
 | `0,30 9-17 * * *`                          | 2 分钟 × 9 小时                                                                                                                                        | 18    |
-| `@daily`, `@weekly`, `@monthly`, `@yearly` | 单一触发器                                                                                                                                             | 1     |
+| `@daily`、`@weekly`、`@monthly`、`@yearly` | 单个触发器                                                                                                                                             | 1     |
 
 **在 Windows 上失败的表达式**（但在 Linux 和 macOS 上有效）：
 
@@ -395,7 +395,7 @@ TCP/IP 网络（`fetch()`、HTTP、WebSocket、数据库连接）正常工作。
 | `*/15 * * 6 *`    | 月份限制阻止了 Repetition：4 × 24 | 96            |
 | `0,30 * 15 * FRI` | OR 分割使触发器翻倍：2 × 24 × 2         | 96            |
 
-关键因素是表达式是否可以使用 [`Repetition`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-repetition-triggerbasetype-element) 间隔（单一触发器），或者必须展开为独立的 `CalendarTrigger` 元素。能**整除 60**的分钟步长（`*/1`、`*/2`、`*/3`、`*/4`、`*/5`、`*/6`、`*/10`、`*/12`、`*/15`、`*/20`、`*/30`）使用 Repetition，无论其他字段如何都能工作。不能整除 60 的步长（`*/7`、`*/8`、`*/9`、`*/11`、`*/13` 等）必须展开，而在 24 小时全天运行的情况下，数量很快会超过 48。
+关键因素在于表达式能否使用 [`Repetition`](https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-repetition-triggerbasetype-element) 间隔（单个触发器），还是必须展开为单独的 `CalendarTrigger` 元素。**能够整除 60** 的分钟步长（`*/1`、`*/2`、`*/3`、`*/4`、`*/5`、`*/6`、`*/10`、`*/12`、`*/15`、`*/20`、`*/30`）只有在其他四个字段均未受限制（`*`）时才会仅使用 Repetition。不能整除 60 的步长（`*/7`、`*/8`、`*/9`、`*/11`、`*/13` 等）必须展开；当 24 小时都处于启用状态时，触发器数量会迅速超过 48 个。
 
 要解决此问题，请简化表达式或限制小时范围：
 

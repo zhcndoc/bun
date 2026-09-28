@@ -17,7 +17,7 @@ const title = await view.evaluate("document.title");
 await Bun.write("page.png", await view.screenshot());
 ```
 
-在 macOS 上，`Bun.WebView` 使用系统的 `WKWebView` — 无需安装任何东西。在 Linux 和 Windows 上，它通过 Chrome DevTools Protocol 驱动已安装的 Chrome、Chromium、Edge 或 Brave。
+在 macOS 上，`Bun.WebView` 使用系统的 `WKWebView` — 无需安装任何东西。在 Linux 和 Windows 上，它会通过 Chrome DevTools Protocol 驱动已安装的 Chrome、Chromium、Edge 或 Brave；在 Windows 上，预装的 Edge 就足够了。
 
 每个视图都会在单独的渲染器进程中运行其页面。所有输入方法（`click`、`type`、`press`、`scroll`）都会分发**原生**浏览器事件，因此页面会看到 `isTrusted: true` — 与真实用户一致。
 
@@ -35,7 +35,7 @@ const view = new Bun.WebView({
 
 构造函数是同步的——它会立即返回，并在后台启动浏览器子进程。你 `await` 的第一个操作（例如 `navigate()` 或 `evaluate()`）会等待浏览器准备就绪。
 
-如果你传入 `url`，那么在构造函数返回之前视图就会开始导航。等价于在下一行调用 `view.navigate(url)`。
+如果传入 `url`，视图会在构造函数返回前开始导航，效果与在下一行调用 `view.navigate(url)` 相同。不同之处在于：构造函数会将导航的 promise 保留在内部，因此失败时不会产生拒绝。设置 `onNavigationFailed` 以便观察导航失败。
 
 ### 使用 `using` 的自动清理
 
@@ -62,8 +62,7 @@ const view = new Bun.WebView({
 共享同一个 `directory` 的视图会共享 cookies 和存储。传入 `dataStore: "ephemeral"`（默认值）以显式回到内存存储。
 
 <Note>
-  使用 Chrome 后端时，`dataStore.directory` 会映射到 `--user-data-dir`，并作用于**整个 Chrome 进程**，
-  而不是每个视图。由于 Chrome 会在每个 Bun 进程中只启动一次，因此第一个视图的目录会赢，影响后续所有视图。
+  使用 Chrome 后端时，`dataStore.directory` 会映射到 `--user-data-dir`，并应用于**整个 Chrome 进程**，而非每个视图。Bun 每个进程只生成一次 Chrome，因此第一个视图的目录会被后续所有视图使用。
 </Note>
 
 <Note>
@@ -77,12 +76,12 @@ const view = new Bun.WebView({
 
 `Bun.WebView` 支持两种渲染引擎。默认取决于你的平台：
 
-| 后端          | 引擎    | 平台                | 需求                                                                 |
-| ------------- | -------- | ------------------- | -------------------------------------------------------------------- |
-| `"webkit"`    | WKWebView | 仅 macOS            | 无 — 使用系统 `WebKit.framework`                                  |
-| `"chrome"`    | Blink     | macOS / Linux      | 已安装 Chrome、Chromium、Edge 或 Brave（或 Playwright 的 `chrome-headless-shell`） |
+| 后端       | 引擎      | 平台                    | 要求                                                                                 |
+| ---------- | --------- | ----------------------- | ------------------------------------------------------------------------------------ |
+| `"webkit"` | WKWebView | 仅 macOS                | 无 — 使用系统的 `WebKit.framework`                                                   |
+| `"chrome"` | Blink     | macOS / Linux / Windows | 已安装 Chrome、Chromium、Edge 或 Brave（或 Playwright 的 `chrome-headless-shell`） |
 
-在 macOS 上默认是 `"webkit"`；其他平台上是 `"chrome"`。在非 macOS 平台请求 `backend: "webkit"` 会抛出异常。
+在 macOS 上，默认后端是 `"webkit"`；其他平台默认使用 `"chrome"`。在非 macOS 平台请求 `backend: "webkit"` 会抛出异常。`"chrome"` 后端每个进程驱动一个浏览器，且只能从主线程使用；在 `Worker` 中构造它会抛出异常。
 
 ```ts
 // 在 macOS 上强制使用 Chrome
@@ -91,13 +90,13 @@ const view = new Bun.WebView({ backend: "chrome" });
 
 ### WebKit 后端如何工作
 
-Bun 会生成一个轻量的宿主子进程（`bun` 可执行文件本身，会以特殊模式重新执行），它在主线程上拥有 `WKWebView`。你的 Bun 进程通过 Unix socket 使用紧凑的二进制协议与它通信。宿主进程只会生成一次，并被程序中所有 `"webkit"` 视图共享。
+Bun 会生成一个轻量级宿主子进程（即 `bun` 二进制文件本身，以特殊模式重新运行），由它在主线程上管理 `WKWebView`。你的 Bun 进程通过 Unix socket 使用紧凑的二进制协议与其通信。Bun 只生成一次宿主进程，你的程序中的每个 `"webkit"` 视图都会共用它。
 
 ### Chrome 后端如何工作
 
-Bun 要么 **连接** 到一个已经运行的 Chrome（通过 WebSocket），要么 **生成** 一个无头 Chrome 子进程，并通过管道与它通信（`--remote-debugging-pipe`）。无论哪种方式，通信都使用 [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/)。
+Bun 要么**连接**到一个已经运行的 Chrome（通过 WebSocket），要么**生成**一个无头 Chrome 子进程，并通过管道与它通信（`--remote-debugging-pipe`）。无论哪种方式，通信都使用 [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/)。
 
-Chrome 会在每个 Bun 进程中生成（或连接）一次。每个 `new Bun.WebView({ backend: "chrome" })` 都会在该 Chrome 实例中通过 `Target.createTarget` 创建一个新标签页。
+Bun 每个进程只生成（或连接）一次 Chrome。每个 `new Bun.WebView({ backend: "chrome" })` 都会在该 Chrome 实例中使用 `Target.createTarget` 创建一个新标签页。
 
 #### 查找 Chrome 可执行文件
 
@@ -105,15 +104,19 @@ Chrome 会在每个 Bun 进程中生成（或连接）一次。每个 `new Bun.W
 
 1. 你在 `backend: { type: "chrome", path: "..." }` 中传入的 `path`
 2. `BUN_CHROME_PATH` 环境变量
-3. `$PATH`（`google-chrome-stable`、`google-chrome`、`chromium-browser`、`chromium`、`brave-browser`、`microsoft-edge`、`chrome`）
-4. 标准安装位置（`/Applications/Google Chrome.app`、`~/Applications/...`、`/usr/bin/...`、`/snap/bin/...`）
-5. Playwright 的缓存目录（`~/Library/Caches/ms-playwright` 或 `~/.cache/ms-playwright`）中的 `chrome-headless-shell`
+3. `$PATH`（`google-chrome-stable`、`google-chrome`、`chromium-browser`、`chromium`、`brave-browser`、`microsoft-edge`、`chrome`；在 Windows 上为 `chrome`、`chromium`、`brave`、`msedge`）
+4. 标准安装位置（`/Applications/Google Chrome.app`、`~/Applications/...`、`/usr/bin/...`、`/snap/bin/...`；在 Windows 上为 `%ProgramFiles%`、`%ProgramFiles(x86)%` 和 `%LOCALAPPDATA%` 下的 `Application\*.exe` 目录）
+5. Playwright 的缓存（`~/Library/Caches/ms-playwright`、`~/.cache/ms-playwright` 或 `%LOCALAPPDATA%\ms-playwright`）中的 `chrome-headless-shell`
 
-如果找不到，会在构造函数中抛出。
+如果 Bun 找不到 Chrome，构造函数会抛出异常。
+
+<Note>
+  Microsoft Edge 无法在 Windows `LocalSystem` 帐户下启动：它会立即退出，并且第一个操作会以 "Chrome process closed the pipe" 拒绝。仅能使用 Edge 的服务或 CI 代理需要以普通用户帐户运行 Bun。
+</Note>
 
 #### 连接到已在运行的 Chrome {#existing-chrome}
 
-默认情况下，在生成之前，Bun 会通过从标准 profile 目录读取 `DevToolsActivePort` 文件来检查某个 Chrome 家族浏览器是否已经在运行并启用了远程调试。如果找到，Bun 会通过 WebSocket 连接到该浏览器，而不是再生成一个 — 你的视图会作为标签页打开在现有浏览器中。
+默认情况下，在生成浏览器之前，Bun 会从标准配置文件目录读取 `DevToolsActivePort` 文件，以检查是否**已经有**启用了远程调试的 Chrome 系浏览器在运行。如果找到，Bun 会通过 WebSocket 连接到该浏览器，而不是生成新浏览器 — 你的视图会作为标签页在现有浏览器中打开。
 
 要在运行中的 Chrome 中启用远程调试，请访问 `chrome://inspect/#remote-debugging` 并打开开关，或者使用 `--remote-debugging-port=9222` 启动 Chrome。使用 `chrome://inspect` 开关时，Chrome 会在每次建立新连接时请求权限。
 
@@ -230,10 +233,10 @@ const items = await view.evaluate("[...document.querySelectorAll('li')].map(li =
 const user = await view.evaluate("({ name: 'bun', ok: true })");
 ```
 
-脚本会被包装为 `await (<your script>)`，因此：
+Bun 会将脚本包装为 `await (<your script>)`，因此：
 
-- 它必须是一个**表达式**，而不是语句序列。要包含多条语句请用 IIFE 包裹：`evaluate("(() => { let x = foo(); return x + 1 })()")`。
-- 如果它计算为一个 `Promise`，会等待该 promise 并返回其解析值。
+- 它必须是一个**表达式**，而不是语句序列。若要运行多个语句，请将它们包装在 IIFE 中：`evaluate("(() => { let x = foo(); return x + 1 })()")`。
+- 如果计算结果是一个 `Promise`，`evaluate()` 会等待该 promise，并返回其解析后的值。
 
 结果会在页面侧通过 `JSON.stringify`，在 Bun 侧通过 `JSON.parse` 来往返传递。数组和普通对象会以真实结构返回；`undefined`、函数和 symbol 会解析为 `undefined`；循环引用会导致拒绝。
 
@@ -272,7 +275,7 @@ PNG 会忽略 `quality`。`"webp"` 只在 `backend: "chrome"` 时可用 — WebK
 
 ### 返回类型
 
-`encoding` 选项控制图片字节如何返回给你：
+`encoding` 选项控制 Bun 如何返回图片字节：
 
 | `encoding`           | 返回内容                       | 说明                                                                                                    |
 | -------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------- |
@@ -291,7 +294,7 @@ console.log(`<img src="data:image/png;base64,${b64}">`);
 
 #### 终端图形的共享内存
 
-`encoding: "shmem"` 专为 Kitty 的 [终端图形协议](https://sw.kovidgoyal.net/kitty/graphics-protocol/) `t=s` 传输模式设计 — Bun 会把图片写入一个 POSIX 共享内存段并返回其名称；终端直接读取，并在完成后取消链接（unlinks）。无需通过管道复制。
+`encoding: "shmem"` 专为 Kitty 的[终端图形协议](https://sw.kovidgoyal.net/kitty/graphics-protocol/) `t=s` 传输模式设计。Bun 会将图片写入 POSIX 共享内存段并返回其名称。终端会直接读取它，并在完成后取消链接。无需通过管道复制。
 
 ```ts
 const { name, size } = await view.screenshot({ encoding: "shmem" });
@@ -305,7 +308,7 @@ process.stdout.write(`\x1b_Gf=100,t=s,a=T,S=${size};${btoa(name)}\x1b\\`);
 
 ## 输入模拟
 
-所有输入方法都会分发**原生**浏览器事件。页面会收到 `pointerdown`/`mousedown`/`keydown`/`wheel` 事件，且带有 `isTrusted: true`；CSS `:active` 与 `:hover` 状态会生效，并且默认行为（表单提交、链接导航、文本选择）会像真实用户操作那样准确触发。
+所有输入方法都会分发**原生**浏览器事件。页面会收到 `isTrusted: true` 的 `pointerdown`/`mousedown`/`keydown`/`wheel` 事件。CSS `:active` 和 `:hover` 状态会生效。默认操作（表单提交、链接导航、文本选择）会与用户实际操作时完全一样地触发。
 
 ### 点击
 
@@ -339,7 +342,7 @@ await view.click("button.primary", { timeout: 5000 });
 
 该检查会在页面侧以 `requestAnimationFrame` 的频率运行。如果该元素在 `timeout` 毫秒内始终未变为可操作（默认 `30000`），promise 会以类似 `timeout waiting for '#submit' to be actionable` 的错误拒绝。
 
-选择器作为数据传递，而不是插值进脚本，因此包含引号或 JavaScript 语法的选择器是安全的。
+Bun 会将选择器作为数据传递，而不是将其插入脚本中，因此包含引号或 JavaScript 语法的选择器也是安全的。
 
 ### 输入文本
 
@@ -365,7 +368,7 @@ await view.press("a", { modifiers: ["Meta"] }); // Cmd+A / Ctrl+A
 
 任意单个字符（例如 `"a"`）与 `modifiers` 组合使用时，会发送键盘组合键。
 
-在 WebKit 后端中，大多数命名按键（不带修饰键）会映射到 `DeleteBackward`、`MoveLeft` 和 `InsertNewline` 等编辑命令，并在页面应用这些命令后解析。`Escape`、`Space` 以及任何带修饰键的按键会回退为原始的 `keydown`/`keyup` 事件 — 页面可以观察到这些事件中的 `keydown`，但没有完成屏障，因此如果需要观察效果，请随后调用 `evaluate()`。
+在 WebKit 后端上，大多数命名按键（不带修饰键）会映射到 `DeleteBackward`、`MoveLeft` 和 `InsertNewline` 等编辑命令，并在页面应用这些命令后解析。`Escape`、`Space` 和带有修饰键的任何按键都会回退到原始的 `keydown`/`keyup` 事件。这些按键会触发页面可观察到的 `keydown`，但没有完成屏障。如果需要观察结果，请接着调用 `evaluate()`。
 
 修饰键名称：`"Shift"`、`"Control"`（或 `"Ctrl"`）、`"Alt"`（或 `"Option"`）、`"Meta"`（或 `"Cmd"` / `"Command"`）。
 
@@ -406,7 +409,7 @@ await view.resize(1920, 1080);
 
 ### 镜像到 Bun 的控制台
 
-传入 `globalThis.console`（实际对象，按引用）后，页面侧 `console.log("hi")` 会以 Bun 的格式化器把 `hi` 输出到你的 stdout；`console.error` 输出到 stderr。此路径会直接通过 Bun 的控制台实现分发，不会为每次调用引入额外的 JavaScript 开销。
+传入 `globalThis.console`（实际对象，按引用传递）。页面侧的 `console.log("hi")` 会使用 Bun 的格式化程序将 `hi` 打印到 stdout，`console.error` 则会输出到 stderr。此路径通过 Bun 的控制台实现直接分发，不会产生每次调用都要承担的 JavaScript 开销。
 
 ```ts
 const view = new Bun.WebView({
@@ -432,7 +435,7 @@ const view = new Bun.WebView({
 - **Chrome 后端**：原始的 CDP [`RemoteObject`](https://chromedevtools.github.io/devtools-protocol/tot/Runtime/#type-RemoteObject) — 一个包含 `type`、`className`、`description`，以及（在可用时）`preview.properties` 数组的对象。
 - **WebKit 后端**：对象经过 `JSON.stringify` 往返后的结果。函数、循环引用以及其他不可序列化值会回退为 `String(...)` 的强制转换。
 
-如果你不传 `console`，页面侧的控制台输出会被丢弃。
+如果你没有传入 `console`，Bun 会丢弃页面侧的控制台输出。
 
 <Note>
   顺序保证：你传递给 `evaluate()` 的脚本中的 `console.log(...)` 会在该
@@ -471,7 +474,7 @@ await view.cdp("DOM.focus", { nodeId });
 
 ### 订阅事件
 
-`Bun.WebView` 继承自 `EventTarget`。在 Chrome 后端下，CDP 事件会作为 DOM 事件分发：`type` 为 CDP 方法名，`data` 为解析后的 `params` 对象：
+`Bun.WebView` 扩展了 `EventTarget`。使用 Chrome 后端时，视图会将 CDP 事件作为 DOM 事件分发，其 `type` 为 CDP 方法名称，`data` 为解析后的 `params` 对象：
 
 ```ts
 await view.navigate("about:blank");
@@ -484,7 +487,7 @@ view.addEventListener("Network.responseReceived", event => {
 await view.navigate("https://example.com");
 ```
 
-如果没有为某个事件注册监听器，它会在 JSON `params` 解析之前就被丢弃，因此如果你只监听一两种事件类型，开启“啰嗦”的域（例如 `Network`）也不会太贵。
+对于没有注册监听器的事件，Bun 会在解析其 JSON `params` 之前就将其丢弃，因此如果你只监听一两种事件类型，启用像 `Network` 这样的高频事件域也不会造成开销。
 
 在 WebKit 后端上，`cdp()` 会抛出 `ERR_METHOD_NOT_IMPLEMENTED` — 没有 DevTools Protocol 的桥接。`EventTarget` 接口仍然可用于你自己对 `dispatchEvent()` 的调用。
 
@@ -498,7 +501,7 @@ await view.navigate("https://example.com");
 view.close();
 ```
 
-关闭是同步且可重复调用（幂等）的。它会销毁页面的渲染器进程，并用 `Error("WebView closed")` 拒绝视图上所有待处理的 promise，同时让之后对该视图的所有方法调用都会抛出 `ERR_INVALID_STATE`。
+关闭操作是同步且幂等的。它会销毁页面的渲染器进程，以 `Error("WebView closed")` 拒绝该视图上所有待处理的 promise，并使之后的每次方法调用都抛出 `ERR_INVALID_STATE`。这些拒绝会被标记为已处理：你持有的 promise 仍可以捕获到拒绝，但没有被任何对象持有的待处理操作不会触发 `unhandledRejection`。
 
 `view[Symbol.dispose]` 和 `view[Symbol.asyncDispose]` 都指向 `close()`，所以 `using` / `await using` 可以正常工作。
 
@@ -518,7 +521,7 @@ Bun 会在进程退出时自动调用它，因此浏览器子进程不会在你�
 
 ### 子进程死亡
 
-如果浏览器子进程意外终止（崩溃、因 OOM 被杀死、收到 `SIGKILL`），每个视图上的所有待处理 promise 都会拒绝，并附带描述其终止方式的错误（`"Chrome killed by signal 9"`、`"WebView host process died"`），而对这些视图的后续操作会抛出异常。
+如果浏览器子进程意外死亡（崩溃、被 OOM-kill、`SIGKILL`），每个视图上所有待处理的 promise 都会以描述其死亡原因的错误拒绝（`"Chrome killed by signal 9"`、`"WebView host process died"`）。对这些视图进行后续操作会抛出异常。
 
 ---
 
@@ -557,9 +560,9 @@ Bun 会在进程退出时自动调用它，因此浏览器子进程不会在你�
 | 选项     | 类型                      | 描述                                                                                                                                            |
 | -------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `type`   | `"chrome"` \| `"webkit"`  | **必填。** 使用哪个引擎。                                                                                                                     |
-| `path`   | `string`                  | （`chrome` only）Chrome/Chromium 可执行文件的路径。强制进入生成模式。                                                                             |
-| `argv`   | `string[]`                | （`chrome` only）额外的启动参数，会在默认参数之后追加。强制进入生成模式。                                                                    |
-| `url`    | `string` \| `false`       | （`chrome` only）现有 Chrome 的 DevTools 端点 `ws://` URL；或传 `false` 跳过自动探测并始终生成。见 [上文](#existing-chrome)。 |
+| `path`   | `string`                  | （仅限 `chrome`）Chrome/Chromium 可执行文件的路径。强制进入生成模式。                                                                             |
+| `argv`   | `string[]`                | （仅限 `chrome`）额外的启动参数，会在默认参数之后追加。强制进入生成模式。                                                                    |
+| `url`    | `string` \| `false`       | （仅限 `chrome`）现有 Chrome 的 DevTools 端点 `ws://` URL；或传 `false` 跳过自动探测并始终生成。见[上文](#existing-chrome)。 |
 | `stdout` | `"inherit"` \| `"ignore"` | 把子进程的 stdout 转发到 Bun。默认 `"ignore"`。                                                                                              |
 | `stderr` | `"inherit"` \| `"ignore"` | 把子进程的 stderr 转发到 Bun。默认 `"ignore"`。                                                                                              |
 

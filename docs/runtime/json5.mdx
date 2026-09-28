@@ -133,7 +133,7 @@ console.log(pretty);
 // }
 ```
 
-`space` 参数可为数字（空格数）或字符串（用作缩进字符）：
+`space` 参数可以是数字（空格数），也可以是字符串（用作每一层的缩进字符串）：
 
 ```ts
 // 使用制表符缩进
@@ -250,7 +250,7 @@ bun --hot server.ts
 
 ## 打包工具集成
 
-使用 Bun 进行打包时，导入的 JSON5 文件会在构建时解析，并作为 JavaScript 模块包含在内：
+使用 Bun 打包时，打包工具会在构建时解析导入的 JSON5 文件，并将它们作为 JavaScript 模块包含在内：
 
 ```bash terminal icon="terminal"
 bun build app.ts --outdir=dist
@@ -264,7 +264,7 @@ bun build app.ts --outdir=dist
 
 ### 动态导入
 
-JSON5 文件也支持动态导入：
+你可以动态导入 JSON5 文件：
 
 ```ts
 const { default: config } = await import("./config.json5");

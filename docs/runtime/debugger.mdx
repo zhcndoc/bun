@@ -55,7 +55,7 @@ bun --inspect=localhost:4000/prefix server.ts
 
 ## 调试器
 
-Several debugging tools can connect to this server.
+有多种调试工具可以连接到此服务器。
 
 ### `debug.bun.sh`
 
@@ -128,7 +128,7 @@ Visual Studio Code 对 Bun 脚本的调试支持仍处于实验阶段。要使�
 
 ### 以 curl 命令打印 fetch 和 node:http 请求
 
-将 `BUN_CONFIG_VERBOSE_FETCH` 设置为 `curl`，即可将每个 `fetch()` 和 `node:http` 请求打印为单行 `curl` 命令。你可以将其复制并粘贴到终端中，以复现该请求。
+将 `BUN_CONFIG_VERBOSE_FETCH` 设置为 `curl`，即可将每个 `fetch()` 和 `node:http` 请求打印为单行 `curl` 命令。你可以将该命令复制并粘贴到终端中，以重现此请求。
 
 ```ts index.ts icon="/icons/typescript.svg"
 process.env.BUN_CONFIG_VERBOSE_FETCH = "curl";
@@ -209,7 +209,7 @@ await fetch("https://example.com", {
 
 Bun 会转译每个文件，这可能导致堆栈跟踪指向转译后的输出。为避免这种情况，Bun 会为它转译的每个文件生成并提供带 sourcemap 的文件。当你在控制台中看到堆栈跟踪时，可以点击文件路径并跳转到原始源代码，即使该代码是用 TypeScript 或 JSX 编写的，或者经过了其他转换。
 
-Bun 会在运行时按需转译文件时加载 sourcemap，也会在使用 `bun build` 预先编译文件时加载 sourcemap。
+Bun 在按需转译文件时会在运行时加载 sourcemaps；使用 `bun build` 预先编译文件时也会加载 sourcemaps。
 
 ### 带语法高亮的源代码预览
 
@@ -226,14 +226,14 @@ console.log(Bun.inspect(err, { colors: true }));
 ```ts icon="file-code"
 1 | // 创建一个错误
 2 | const err = new Error("Something went wrong");
-                ^
+                    ^
 error: Something went wrong
-      at file.js:2:13
+      at /path/to/file.js:2:17
 ```
 
 ### V8 堆栈跟踪
 
-Bun 使用 JavaScriptCore 作为其引擎，但 Node.js 生态系统中的许多工具以及 npm 都期望使用 V8，而不同的 JavaScript 引擎对 `error.stack` 的格式化方式各不相同。由于 Bun 旨在成为 Node.js 的直接替代品，因此它会按照 V8 的方式格式化 `error.stack`。当你使用期望 V8 堆栈跟踪的库时，这一点尤为重要。
+Bun 使用 JavaScriptCore 作为其引擎，但 Node.js 生态系统和 npm 中的许多内容都依赖 V8。JavaScript 引擎在格式化 `error.stack` 的方式上各不相同。由于 Bun 旨在成为 Node.js 的直接替代品，因此它会像 V8 一样格式化 `error.stack`。使用依赖 V8 堆栈跟踪的库时，这一点尤为重要。
 
 #### V8 堆栈跟踪 API
 
@@ -291,7 +291,7 @@ console.log(err.stack);
 ```ts index.ts icon="/icons/typescript.svg"
 const fn = () => {
   function myInner() {
-    throw err;
+    throw new Error("here!");
   }
 
   try {
@@ -311,18 +311,12 @@ fn();
 
 ```txt
 Error: here!
-    at myInner (file.js:4:15)
-    at fn (file.js:8:5)
-    at module code (file.js:17:1)
-    at moduleEvaluation (native)
-    at moduleEvaluation (native)
-    at <anonymous> (native)
+    at myInner (/path/to/index.ts:3:15)
+    at fn (/path/to/index.ts:7:5)
+    at /path/to/index.ts:18
 
 -- captureStackTrace --
 
 Error: here!
-    at module code (file.js:17:1)
-    at moduleEvaluation (native)
-    at moduleEvaluation (native)
-    at <anonymous> (native)
+    at /path/to/index.ts:18
 ```

@@ -100,7 +100,7 @@ Bun.markdown.html("## Hello World", { headings: { ids: true } });
 
 ## `Bun.markdown.render()`
 
-解析 Markdown 并使用自定义 JavaScript 回调渲染。这样可以完全控制输出格式——你可以生成带自定义类的 HTML、React 元素、ANSI 终端输出或任何其他字符串格式。
+解析 Markdown 并使用自定义 JavaScript 回调进行渲染。这些回调让你可以完全控制输出格式。你可以生成带有自定义类的 HTML、ANSI 终端输出，或任何其他字符串格式。
 
 ```ts
 const result = Bun.markdown.render("# Hello **world**", {
@@ -118,7 +118,7 @@ const result = Bun.markdown.render("# Hello **world**", {
 1. **`children`** — 元素累积的内容字符串
 2. **`meta`**（可选）— 带有元素特定元数据的对象
 
-返回一个字符串替代元素渲染。返回 `null` 或 `undefined` 则完全忽略该元素。如果未注册元素回调，则其子元素会原样通过。
+返回一个字符串以替换元素的渲染结果。返回 `null` 或 `undefined` 可完全从输出中省略该元素。如果元素没有回调，其子元素将原样传递。
 
 ### 块级回调
 
@@ -331,9 +331,9 @@ const el = Bun.markdown.react(
 
 #### 可覆盖元素列表
 
-解析器产生的每个 HTML 标签都可以被替换：
+你可以覆盖解析器生成的每个 HTML 标签：
 
-| 选项         | Props                        | 描述                                             |
+| 选项         | 属性                         | 描述                                             |
 | ------------ | ---------------------------- | ------------------------------------------------ |
 | `h1`–`h6`    | `{ id?, children }`          | 标题。启用 `headings: { ids: true }` 时带有 `id` |
 | `p`          | `{ children }`               | 段落                                             |

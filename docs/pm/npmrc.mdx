@@ -13,9 +13,9 @@ Bun 会从 [`.npmrc`](https://docs.npmjs.com/cli/v10/configuring-npm/npmrc) 文�
 4. `BUN_CONFIG_REGISTRY` / `NPM_CONFIG_REGISTRY` 和 `BUN_CONFIG_TOKEN` / `NPM_CONFIG_TOKEN` 环境变量
 5. `--registry` 等命令行标志
 
-`.npmrc` 中的凭据（`//<registry>/:_authToken` 等）会根据主机和路径与 registry 进行匹配，即使 registry URL 本身是在 `bunfig.toml` 中设置的
+Bun 会将 `.npmrc` 中的凭据（`//<registry>/:_authToken` 等）按主机和路径匹配到注册表，即使你在 `bunfig.toml` 中设置了注册表 URL 也是如此。
 
-值可以引用环境变量：`${NAME}` 会被替换为该变量的值（如果未设置则保持原样），而 `${NAME?}` 在未设置时会变为空字符串
+值可以引用环境变量。Bun 会将 `${NAME}` 替换为该变量的值；如果变量未设置，则保留原样。如果变量未设置，`${NAME?}` 会变为空字符串。
 
 <Note>
   我们建议将你的 `.npmrc` 文件迁移到 Bun 的 [`bunfig.toml`](/runtime/bunfig) 格式，该格式支持更多选项，包括 Bun 专属选项。
@@ -49,7 +49,7 @@ install.registry = "http://localhost:4873/"
 @myorg:registry=http://localhost:4873/
 ```
 
-对应的 `bunfig.toml` 选项是在 [`install.scopes`](/runtime/bunfig#install-registry) 中添加一个键：
+对应的 `bunfig.toml` 选项是在 [`install.scopes`](/runtime/bunfig#install-scopes) 中添加一个键：
 
 ```toml bunfig.toml icon="settings"
 [install.scopes]
@@ -76,7 +76,7 @@ myorg = "http://localhost:4873/"
 //http://localhost:4873/:_auth=${NPM_AUTH}
 ```
 
-支持的选项包括：
+Bun 支持以下选项：
 
 - `_authToken`
 - `username`
@@ -84,16 +84,17 @@ myorg = "http://localhost:4873/"
 - `_auth`（经过 base64 编码的 username:password，例如 `btoa(username + ":" + password)`）
 - `email`
 
-对应的 `bunfig.toml` 选项是在 [`install.scopes`](/runtime/bunfig#install-registry) 中添加一个键：
+对应的 `bunfig.toml` 选项是在 [`install.scopes`](/runtime/bunfig#install-scopes) 中添加一个键：
 
 ```toml bunfig.toml icon="settings"
 [install.scopes]
+# 与 .npmrc 中的 _password 不同，password 未经过 base64 编码；Bun 会为你编码
 myorg = { url = "http://localhost:4873/", username = "myusername", password = "$NPM_PASSWORD" }
 ```
 
 ### `link-workspace-packages`：控制工作区包的安装
 
-控制本地可用时工作区包的安装方式：
+控制 Bun 在工作区包可在本地获取时如何安装它们：
 
 ```ini .npmrc icon="npm"
 link-workspace-packages=true
@@ -133,7 +134,7 @@ ignore-scripts=true
 
 ### `dry-run`：预览变更但不安装
 
-显示将要安装的内容，但不会实际安装任何内容：
+显示 Bun 在不实际安装任何内容的情况下会安装什么：
 
 ```ini .npmrc icon="npm"
 dry-run=true
@@ -187,7 +188,7 @@ cafile=/path/to/ca-bundle.crt
 
 ### `omit` 和 `include`：控制依赖类型
 
-控制安装哪些依赖类型：
+控制 Bun 安装哪些类型的依赖：
 
 ```ini .npmrc icon="npm"
 # 忽略开发依赖
@@ -205,7 +206,7 @@ include=dev
 
 ### `install-strategy` 和 `node-linker`：安装策略
 
-控制软件包在 `node_modules` 中的布局方式。为了兼容其他包管理器，Bun 同时接受 npm 的 `install-strategy` 和 pnpm/yarn 的 `node-linker`。有关托举布局和隔离布局的差异，请参阅[隔离安装](/pm/isolated-installs)。
+控制 Bun 在 `node_modules` 中如何组织软件包。为兼容其他包管理器，Bun 同时接受 npm 的 `install-strategy` 和 pnpm/yarn 的 `node-linker`。有关托举式和隔离式布局的区别，请参阅[隔离安装](/pm/isolated-installs)。
 
 **npm 的 `install-strategy`：**
 
@@ -240,7 +241,7 @@ node-linker=node-modules
 
 ### `public-hoist-pattern` 和 `hoist-pattern`：控制托举
 
-控制哪些包被托举到根节点的 `node_modules`：
+控制 Bun 将哪些软件包托举到根目录的 `node_modules`：
 
 ```ini .npmrc icon="npm"
 # 匹配该模式的包将被托举到根目录
@@ -253,8 +254,8 @@ public-hoist-pattern[]=*prettier*
 # 控制通用的托举行为
 hoist-pattern=*
 
-# isolated linker only: disable the node_modules/.bun/node_modules fallback,
-# so store packages only resolve declared deps (plus the root node_modules).
-# Hoisted installs ignore this setting.
+# 仅适用于 isolated linker：禁用 node_modules/.bun/node_modules 回退机制，
+# 使存储包只解析已声明的依赖项（以及根目录的 node_modules）。
+# 托举式安装会忽略此设置。
 hoist=false
 ```

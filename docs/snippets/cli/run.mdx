@@ -28,8 +28,8 @@ bun run <文件或脚本>
 
 ### 工作空间管理
 
-<ParamField path="--elide-lines" type="number" default="10">
-  使用 --filter 时显示的脚本输出行数（默认：10）。设置为 0 显示所有行
+<ParamField path="--elide-lines" type="number" default="0">
+  使用 --filter 时，将每个脚本的输出截断为最后 N 行。默认值 0 表示显示所有行
 </ParamField>
 
 <ParamField path="--filter" type="string">
@@ -63,8 +63,8 @@ bun run <文件或脚本>
 </ParamField>
 
 <ParamField path="--interactive" type="boolean">
-  打开兼容 Node.js 的 REPL（<code>node:repl</code>）。与 <code>-e</code> 结合使用时，会启动 REPL，然后执行脚本。在 <code>--interactive</code> 下，<code>-e</code> 是原始 JavaScript（与{" "}
-  <code>node -i -e</code> 的行为一致）；如需使用 TypeScript，请使用 <code>bun repl</code>。这与 <code>bun repl</code> 不同，后者是 Bun 的原生 REPL。
+  打开兼容 Node.js 的 REPL（<code>node:repl</code>）。与 <code>-e</code> 结合使用时，会启动 REPL，然后执行脚本。在 <code>--interactive</code> 模式下，<code>-e</code> 是原始 JavaScript（与{" "}
+  <code>node -i -e</code> 相同）。要使用 TypeScript，请运行 <code>bun repl</code>。这与 <code>bun repl</code> 不同，后者是 Bun 的原生 REPL。
 </ParamField>
 
 <ParamField path="--smol" type="boolean">
@@ -76,11 +76,11 @@ bun run <文件或脚本>
 </ParamField>
 
 <ParamField path="--no-deprecation" type="boolean">
-  抑制所有自定义弃用警告
+  禁止显示所有弃用警告
 </ParamField>
 
 <ParamField path="--throw-deprecation" type="boolean">
-  确定弃用警告是否会导致错误
+  将弃用警告作为错误抛出
 </ParamField>
 
 <ParamField path="--title" type="string">
@@ -92,7 +92,11 @@ bun run <文件或脚本>
 </ParamField>
 
 <ParamField path="--no-addons" type="boolean">
-  调用 <code>process.dlopen</code> 时抛出错误，并禁用导出条件 <code>node-addons</code>
+  如果调用 <code>process.dlopen</code> 或 <code>bun:ffi</code> <code>cc()</code>，则抛出错误，并禁用导出条件 <code>node-addons</code>
+</ParamField>
+
+<ParamField path="--no-ffi-cc" type="boolean">
+  如果调用 <code>bun:ffi</code> <code>cc()</code>，则抛出错误（禁用 C 编译器）
 </ParamField>
 
 <ParamField path="--unhandled-rejections" type="string">
@@ -139,7 +143,7 @@ bun run <文件或脚本>
 ### 依赖与模块解析
 
 <ParamField path="--preload" type="string">
-  在其他模块加载之前导入模块。别名：<code>-r</code>
+  在 Bun 加载其他模块之前导入一个模块。别名：<code>-r</code>
 </ParamField>
 
 <ParamField path="--require" type="string">
@@ -176,7 +180,7 @@ bun run <文件或脚本>
 </ParamField>
 
 <ParamField path="--main-fields" type="string">
-  在 <code>package.json</code> 中查找的主要字段，默认依赖于 --target
+  要在 <code>package.json</code> 中查找的主字段
 </ParamField>
 
 <ParamField path="--preserve-symlinks" type="boolean">
@@ -187,8 +191,8 @@ bun run <文件或脚本>
   解析主入口点时保留符号链接
 </ParamField>
 
-<ParamField path="--extension-order" type="string" default=".tsx,.ts,.jsx,.js,.json">
-  默认值：<code>.tsx,.ts,.jsx,.js,.json</code>
+<ParamField path="--extension-order" type="string" default=".tsx,.ts,.jsx,.cts,.cjs,.js,.mjs,.mts,.json,.node">
+  默认值：<code>.tsx,.ts,.jsx,.cts,.cjs,.js,.mjs,.mts,.json,.node</code>
 </ParamField>
 
 ### 转译与语言特性
@@ -198,7 +202,7 @@ bun run <文件或脚本>
 </ParamField>
 
 <ParamField path="--define" type="string">
-  解析时替换 K:V，例如 <code>--define process.env.NODE_ENV:"development"</code>。值以 JSON 格式解析。别名：<code>-d</code>
+  解析时替换 K:V，例如 <code>--define process.env.NODE_ENV:"development"</code>。Bun 会将值解析为 JSON。别名：<code>-d</code>
 </ParamField>
 
 <ParamField path="--drop" type="string">
@@ -212,7 +216,7 @@ bun run <文件或脚本>
 </ParamField>
 
 <ParamField path="--no-macros" type="boolean">
-  禁止在打包器、转译器和运行时执行宏
+  在打包器、转译器和运行时中禁用宏执行
 </ParamField>
 
 <ParamField path="--jsx-factory" type="string">

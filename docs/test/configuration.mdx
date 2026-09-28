@@ -87,7 +87,7 @@ mock.module("./external-api", () => ({
 
 ### 路径忽略模式
 
-`pathIgnorePatterns` 使用 glob 模式从测试发现过程中完全排除文件和目录。与只影响覆盖率报告的 `coveragePathIgnorePatterns` 不同，`pathIgnorePatterns` 会阻止匹配的路径被发现并作为测试运行。
+`pathIgnorePatterns` 使用 glob 模式，将文件和目录完全排除在测试发现范围之外。与仅影响覆盖率报告的 `coveragePathIgnorePatterns` 不同，`pathIgnorePatterns` 会阻止 Bun 发现匹配的路径，并将其作为测试运行。
 
 当项目包含子模块、第三方托管代码或其他包含 `*.test.ts` 文件、但不希望被 `bun test` 识别的目录时，可以使用此选项。
 
@@ -135,7 +135,7 @@ pathIgnorePatterns = [
 ```
 
 <Note>
-  命令行 `--path-ignore-patterns` 标志会完全覆盖 `bunfig.toml` 的值——两者不会合并。
+  命令行 `--path-ignore-patterns` 标志会完全覆盖 `bunfig.toml` 中的值。Bun 不会合并两者。
 </Note>
 
 ## 报告器
@@ -213,7 +213,7 @@ bun test --smol
 concurrentTestGlob = "**/concurrent-*.test.ts"  # 对匹配此模式的文件并发运行
 ```
 
-匹配该模式的测试文件的行为就像传入了 `--concurrent` 标志：这些文件中的每个测试都会并发运行。可以使用此配置逐步将测试套件迁移到并发执行，或者在其余测试保持串行运行的同时，并发运行某一类测试（例如集成测试）。
+匹配此模式的测试文件，其行为就像传入了 `--concurrent` 标志：这些文件中的每个测试都会并发运行。你可以用它逐步将测试套件迁移到并发执行，也可以让某一类测试（例如集成测试）并发运行，同时让其余测试保持顺序执行。
 
 `--concurrent` CLI 标志会覆盖此设置，无论 glob 模式如何，都会强制所有测试并发运行。
 
@@ -287,14 +287,14 @@ coverageSkipTestFiles = true  # 从覆盖率报告中排除测试文件
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
-# 简单阈值 - 适用于行、函数和语句
+# Simple threshold - applies to lines and functions
 coverageThreshold = 0.8
 
-# 详细阈值
-coverageThreshold = { lines = 0.9, functions = 0.8, statements = 0.85 }
+# Detailed thresholds
+coverageThreshold = { lines = 0.9, functions = 0.8 }
 ```
 
-设置任何阈值都会启用 `fail_on_low_coverage`，即当实际覆盖率低于阈值时，测试运行会失败。
+设置阈值后，当启用了覆盖率且任何文件的行覆盖率或函数覆盖率低于该阈值时，`bun test` 会以代码 1 退出。Bun 接受 `statements` 键，但目前不会强制执行该阈值。此检查适用于任何覆盖率报告器。
 
 #### 阈值示例
 
@@ -305,9 +305,8 @@ coverageThreshold = 0.9
 
 # 不同指标不同要求
 coverageThreshold = {
-  lines = 0.85,      # 85% 行覆盖率
-  functions = 0.90,  # 90% 函数覆盖率
-  statements = 0.80  # 80% 语句覆盖率
+  lines = 0.85,      # 85% line coverage
+  functions = 0.90   # 90% function coverage
 }
 ```
 
@@ -331,7 +330,7 @@ coveragePathIgnorePatterns = [
 ]
 ```
 
-匹配任意这些模式的文件都会从覆盖率计算和报告中排除。参见[代码覆盖率](/test/code-coverage)。
+Bun 会将匹配任一模式的文件排除在覆盖率计算和报告之外。请参阅[代码覆盖率](/test/code-coverage)。
 
 #### 常见忽略模式
 
@@ -370,7 +369,7 @@ coveragePathIgnorePatterns = [
 
 ### Source Map 处理
 
-Bun 会转译每个文件，因此覆盖率结果会先经过 source map 处理，然后再生成报告。`coverageIgnoreSourcemaps` 可选择不执行此处理，但结果会令人困惑：在转译过程中，Bun 可能会移动代码并重命名变量。此选项主要用于调试覆盖率问题。
+Bun 会转译每个文件，因此覆盖率结果会在报告前经过 sourcemap 处理。`coverageIgnoreSourcemaps` 会选择退出此处理，但这会导致结果难以理解：在转译期间，Bun 可能会移动代码并重命名变量。此选项主要用于调试覆盖率问题。
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -430,7 +429,7 @@ smol = true
 coverage = true
 coverageReporter = ["text", "lcov"]
 coverageDir = "./coverage"
-coverageThreshold = { lines = 0.85, functions = 0.90, statements = 0.80 }
+coverageThreshold = { lines = 0.85, functions = 0.90 }
 coverageSkipTestFiles = true
 coveragePathIgnorePatterns = [
   "**/*.spec.ts",

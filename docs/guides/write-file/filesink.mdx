@@ -6,7 +6,7 @@ mode: center
 
 Bun 提供了用于向文件递增写入的 API。适用于大文件，或需要在较长时间内持续向文件写入数据的场景。
 
-在 `BunFile` 上调用 `.writer()` 可获取一个 `FileSink` 实例。它会缓冲数据；调用 `.flush()` 将缓冲区写入磁盘。你可以多次写入并刷新。
+在 `BunFile` 上调用 `.writer()` 以获取 `FileSink` 实例。`FileSink` 会缓冲数据。调用 `.flush()` 将缓冲区写入磁盘。你可以多次写入和刷新。
 
 ```ts
 const file = Bun.file("/path/to/file.txt");

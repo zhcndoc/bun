@@ -54,12 +54,12 @@ mode: center
     	```
 
     	<Note>
-    		确保启动命令对应您的应用入口点。如果您在 `package.json` 中有启动脚本，也可以使用 `CMD ["bun", "run", "start"]`。
+    		请确保启动命令与应用的入口点对应。如果您的 `package.json` 中有启动脚本，也可以使用 `CMD ["bun", "run", "start"]` 作为启动命令。
 
-    		如果您的应用没有依赖项，可以省略 `COPY package.json bun.lock ./` 和 `RUN bun install --production --frozen-lockfile` 行（对于没有依赖项的项目，Bun 不会写入 `bun.lock`）。
+    		如果您的应用没有依赖项，可以省略 `COPY package.json bun.lock ./` 和 `RUN bun install --production --frozen-lockfile` 这两行。对于没有依赖项的项目，Bun 不会写入 `bun.lock`。
     	</Note>
 
-    	在项目根目录中创建一个新的 `.dockerignore` 文件。它列出了要从容器镜像中_排除_的文件和目录，例如 `node_modules`，这样可以让构建更快、镜像更小：
+    	在项目根目录中创建一个新的 `.dockerignore` 文件。此文件列出要从容器映像中_排除_的文件和目录，例如 `node_modules`。排除这些文件和目录可以加快构建速度并减小映像体积：
 
     	```docker .dockerignore icon="Docker"
     	node_modules
@@ -86,8 +86,8 @@ mode: center
     	推送镜像之前，请创建一个用于存放镜像的 [ECR 仓库](https://aws.amazon.com/ecr/)。
 
     	以下命令：
-    	- 在 `us-east-1` 区域创建名为 `bun-lambda-demo` 的 ECR 仓库
-    	- 将仓库 URI 导出为环境变量。这是可选的，但可以简化后续步骤。
+    	- 在 `us-east-1` 区域中创建名为 `bun-lambda-demo` 的 ECR 仓库
+    	- 将仓库 URI 导出为环境变量。导出是可选的，但可以让后续步骤更加简单。
 
     	```bash terminal icon="terminal"
     	export ECR_URI=$(aws ecr create-repository --repository-name bun-lambda-demo --region us-east-1 --query 'repository.repositoryUri' --output text)

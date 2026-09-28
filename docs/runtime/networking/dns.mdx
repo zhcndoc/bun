@@ -25,9 +25,9 @@ dns.prefetch("bun.com", 443);
 
 `Bun.dns.lookup()` 接受一个 `backend` 选项，用于选择解析器实现：
 
-- `"c-ares"`：异步解析器 [c-ares](https://c-ares.org/)。它会直接读取 `/etc/resolv.conf`，因此不会查询诸如 `systemd-resolved` 之类的 NSS 模块。这是 Linux 上 `Bun.dns.lookup()` 的默认设置
-- `"system"`：平台自身的解析器（macOS 上使用非阻塞系统 API，在其他平台上则使用线程池中的 `getaddrinfo`）。这是 macOS、Windows 和 Android 上的默认设置
-- `"getaddrinfo"`（别名为 `"libc"`）：线程池中的 POSIX `getaddrinfo(3)` 函数
+- `"c-ares"`：异步解析器 [c-ares](https://c-ares.org/)。它会直接读取 `/etc/resolv.conf`，因此不会查询 `systemd-resolved` 等 NSS 模块。此后端是 Linux 上 `Bun.dns.lookup()` 的默认后端。
+- `"system"`：平台自带的解析器（macOS 上的非阻塞系统 API，以及其他平台上的线程池 `getaddrinfo`）。此后端是 macOS、Windows 和 Android 上的默认后端。
+- `"getaddrinfo"`（别名 `"libc"`）：在线程池中调用 POSIX `getaddrinfo(3)` 函数。
 
 ```ts
 import { dns } from "bun";
@@ -43,7 +43,7 @@ Bun 会缓存 DNS 查找结果，从而加快与同一主机的重复连接。
 
 缓存最多保存 256 个条目，每个条目的最长有效期为 30 秒。如果与某个主机的连接失败，Bun 会从缓存中移除该主机的条目。与同一主机的并发连接会共享一次 DNS 查找。
 
-以下操作会自动使用此缓存：
+Bun 会在以下场景中自动使用此缓存：
 
 - `bun install`
 - `fetch()`
@@ -62,7 +62,7 @@ import { dns } from "bun";
 dns.prefetch("my.database-host.com", 5432);
 ```
 
-数据库驱动就是一个很好的例子：在应用启动时预获取数据库主机的 DNS 记录，这样等应用的其余部分加载完成时，DNS 查找可能已经完成。
+数据库驱动是一个很好的例子：在应用程序启动时预获取数据库主机的 DNS 条目。等应用程序的其余部分加载完成时，查找可能已经完成。
 
 ### `dns.prefetch`
 

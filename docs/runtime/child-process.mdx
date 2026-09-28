@@ -95,7 +95,7 @@ console.log(output); // "Hello from ReadableStream!"
 
 ## 输出流
 
-从 `stdout` 和 `stderr` 属性中读取子进程的输出。默认情况下，这些属性是 `ReadableStream` 的实例。
+从 `stdout` 和 `stderr` 属性读取子进程的输出。默认情况下，`stdout` 是 `ReadableStream` 的一个实例；`stderr` 继承自父进程，因此 `proc.stderr` 为 `undefined`。传入 `stderr: "pipe"`，也可以为它获取一个 `ReadableStream`。
 
 ```ts
 const proc = Bun.spawn(["bun", "--version"]);
@@ -170,7 +170,7 @@ console.log(`CPU 时间（内核态）: ${usage.cpuTime.system} 微秒`);
 
 ## 使用 cgroups 限制资源（Linux）
 
-在 Linux 上，传入 `cgroup` 可在[控制组](https://docs.kernel.org/admin-guide/cgroup-v2.html)内启动子进程。子进程在开始执行前就会加入 cgroup，因此配置在其中的限制——内存、pids、CPU——会从第一条指令开始生效，并应用于该子进程随后生成的每个进程。当超过内存限制时，内核会在 cgroup _内部_ OOM-kill 一个进程，而不是从父进程回收内存。
+在 Linux 上，传入 `cgroup` 可在[控制组](https://docs.kernel.org/admin-guide/cgroup-v2.html)内启动子进程。子进程会在开始执行前加入 cgroup，因此在 cgroup 上配置的限制（内存、pids、CPU）从第一条指令起就会生效。这些限制也适用于子进程随后启动的每个进程。超过内存限制时，内核会在 cgroup 内部对进程执行 OOM 终止，而不是从父进程回收内存。
 
 cgroup 是 `/sys/fs/cgroup` 下的一个目录；使用普通文件操作创建并配置它，然后传入其路径（或已打开的目录文件描述符）：
 
@@ -187,7 +187,7 @@ const proc = Bun.spawn({
 });
 ```
 
-同一个目录可以传递给任意数量的 spawn；限制适用于它们的总使用量。同时支持 cgroup v1 和 v2 层级结构。创建 cgroup 通常需要 root 权限或一个已委派的子树。在其他平台上，此选项会被忽略；在 Linux 上，如果无法加入 cgroup，spawn 会失败。
+可以将同一个目录传递给任意数量的 `spawn`；限制会应用于它们的总用量。Bun 同时支持 cgroup v1 和 v2 层级结构。创建 cgroup 通常需要 root 权限或一个已委派的子树。在其他平台上，Bun 会忽略此选项；在 Linux 上，如果子进程无法加入 cgroup，`spawn` 就会失败。
 
 ## 使用 AbortSignal
 
@@ -231,7 +231,7 @@ const proc = Bun.spawn({
 });
 ```
 
-`killSignal` 选项也控制在 `AbortSignal` 触发时发送的信号。
+`killSignal` 选项也控制当 `AbortSignal` 中止时 Bun 发送的信号。
 
 ## 使用 maxBuffer
 
@@ -246,8 +246,7 @@ const result = Bun.spawnSync({
 // 进程退出
 ```
 
-Bun 会在超过限制后立即停止读取，因此返回的输出只可能因那次超过限制的单次读取而超出
-`maxBuffer`，绝不会因为进程在终止生效前设法写入的内容而进一步超出。这与 Node.js 的行为一致。
+一旦超过限制，Bun 就会停止读取。因此，返回的输出最多只会因那次超过限制的读取而超出 `maxBuffer`，不会超过进程在终止生效前设法写入的任何额外内容。这与 Node.js 的行为一致。
 
 ## 进程间通信（IPC）
 
@@ -278,7 +277,7 @@ const childProc = Bun.spawn(["bun", "child.ts"], {
 childProc.send("I am your father"); // 父进程也可向子进程发送消息
 ```
 
-子进程使用 `process.send()` 向父进程发送消息，并通过 `process.on("message")` 接收消息。这与 Node.js 中 `child_process.fork()` 使用的是同一套 API。
+子进程使用 `process.send()` 向父进程发送消息，并通过 `process.on("message")` 接收消息。Node.js 在 `child_process.fork()` 中使用相同的 API。
 
 ```ts child.ts
 process.send("Hello from child as string");
@@ -300,8 +299,8 @@ process.send({ message: "Hello from child as object" });
 
 `serialization` 选项控制两个进程间通信的序列化格式：
 
-- `advanced`：（默认）消息使用 JSC 的 `serialize` API 序列化，支持克隆[所有 `structuredClone` 支持的类型](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm) ，但不支持对象所有权转移。
-- `json`：消息使用 `JSON.stringify` 和 `JSON.parse` 序列化，支持对象类型比 `advanced` 少。
+- `advanced`：（默认）Bun 使用 JSC `serialize` API 序列化消息，该 API 支持克隆 [`structuredClone` 支持的所有内容](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm)。此格式不支持转移对象的所有权。
+- `json`：Bun 使用 `JSON.stringify` 和 `JSON.parse` 序列化消息，相比 `advanced`，它支持的对象类型较少。
 
 断开与父进程的 IPC 通道可调用：
 
@@ -365,7 +364,7 @@ await proc.exited;
 proc.terminal.close();
 ```
 
-提供 `terminal` 选项时：
+传入 `terminal` 选项时：
 
 - 子进程中 `process.stdout.isTTY` 为 `true`
 - `stdin`、`stdout` 和 `stderr` 都绑定到终端
@@ -431,21 +430,22 @@ await proc2.exited;
 
 传入已有的 `Terminal` 对象时：
 
-- 终端可跨多个进程复用
-- 你负责何时关闭终端
-- `exit` 回调在调用 `terminal.close()` 时触发，而非每个子进程退出时
-- 使用 `proc.exited` 侦测每个子进程退出
+- 可以在多个 spawn 之间复用终端
+- 可以自行控制何时关闭终端
+- `exit` 回调会在调用 `terminal.close()` 时触发，而不是在每个子进程退出时触发
+- 使用 `proc.exited` 检测各个子进程的退出状态
 
 ### 平台差异
 
-`Bun.Terminal` 在 Linux 和 macOS 上使用 `openpty()`，在 Windows 上使用 ConPTY（`CreatePseudoConsole`）。核心行为在每个平台上都相同：子进程看到的是 TTY，`write()` 的内容会到达子进程的 stdin，子进程的输出会到达 `data` 回调，`resize()` 会更新子进程所看到的终端大小。但有一些细节存在差异：
+`Bun.Terminal` 在 Linux 和 macOS 上使用 `openpty()`，在 Windows 上使用 ConPTY（`CreatePseudoConsole`）。所有平台上的核心行为都相同：子进程会看到一个 TTY，`write()` 会将数据写入子进程的 stdin，子进程输出会传递给 `data` 回调，`resize()` 会更新子进程看到的终端视图。部分细节有所不同：
 
-- **Windows 上没有 termios。** `inputFlags`、`outputFlags`、`localFlags` 和 `controlFlags` 始终读取为 `0`，设置它们也不会产生任何效果。`setRawMode()` 会记录该标志，但不会影响子进程；子进程会自行控制其控制台模式。
-- **Windows 上没有子进程时不会回显。** 在 POSIX 系统上，即使没有附加进程，内核行规程也会将 `write()` 写入的内容回显到 `data` 回调。ConPTY 没有行规程；输入会被缓冲，等待下一个读取者。如果需要回显，请启动一个会回显输入的进程。
-- **ConPTY 会重新编码输出。** ConPTY 将子进程的输出渲染到虚拟屏幕，并发出描述结果的 VT 转义序列，因此 `data` 回调接收到的转义序列在语义上等价，但字节内容并不完全相同。颜色和文本会保留；光标定位和重置序列可能会被重新排序或合并。ConPTY 还会在任何子进程输出之前发出一段简短的 VT 初始化序列（`\x1b[?9001h\x1b[?1004h…`）。
-- **Windows 上的输入 `\r` 不会转换为 `\n`。** POSIX 的 `ICRNL` 会将输入中的回车符转换为换行符；ConPTY 会原样传递 `\r`。
-- **在 ConPTY 下，子进程中的 `process.on('SIGWINCH')` 不会触发**，除非子进程以原生模式读取 stdin。调用 `resize()` 后，`process.stdout.columns`/`rows` 仍会更新。这是 libuv 的限制，会影响任何基于 libuv 的子进程（包括 Node.js）。
-- 在 Windows 11 24H2（版本 26100）之前的系统上，`terminal.close()` 可能无法及时终止仍在运行的子进程，因为在这些版本中，[`ClosePseudoConsole`](https://learn.microsoft.com/en-us/windows/console/closepseudoconsole) 会阻塞，直到 conhost 通过管道刷新完其输出。如果需要在子进程仍在运行时拆除终端，请先终止附加的进程。
+- **Windows 上没有 termios。** `inputFlags`、`outputFlags`、`localFlags` 和 `controlFlags` 始终读取为 `0`，设置这些值也不会产生效果。`setRawMode()` 会记录该标志，但不会影响子进程；子进程会自行控制其控制台模式。
+- **Windows 上没有子进程时不会回显。** 在 POSIX 上，即使没有附加进程，内核行规程也会将 `write()` 输入回显到 `data` 回调。ConPTY 没有行规程；它会缓冲输入，等待下一个读取方。如果需要回显，请启动一个会回显输入的进程。
+- **ConPTY 会重新编码输出。** ConPTY 会将子进程的输出渲染到虚拟屏幕，并发出描述渲染结果的 VT 序列。因此，`data` 回调接收的转义序列在语义上等效，但字节内容不完全相同。ConPTY 会保留颜色和文本，但可能会重新排序或合并光标定位和重置序列。在任何子进程输出之前，ConPTY 还会发出一段简短的 VT 初始化序列（`\x1b[?9001h\x1b[?1004h…`）。
+- **Windows 上的输入 `\r` 不会转换为 `\n`。** POSIX 的 `ICRNL` 会在输入时将回车映射为换行；ConPTY 则会原样传递 `\r`。
+- **在 ConPTY 下，子进程中的 `process.on('SIGWINCH')` 不会触发**，除非子进程以原生模式读取 stdin。调用 `resize()` 后，`process.stdout.columns`/`rows` 会更新。缺少此信号是 libuv 的限制，影响所有基于 libuv 的子进程（包括 Node.js）。
+- 在 Windows 11 24H2（内部版本 26100）之前，`terminal.close()` 可能无法及时终止仍在运行的子进程。延迟来自 [`ClosePseudoConsole`](https://learn.microsoft.com/en-us/windows/console/closepseudoconsole)：在这些版本中，它会阻塞，直到 conhost 将输出刷新到管道中。如果需要在子进程仍运行时拆除终端，请先杀死附加的进程。
+- **Windows 10 或 Windows Server 2019 上的鼠标跟踪不起作用。** 这些版本中内置的 ConPTY（conhost 内部版本 17763 至 19045）早于 [microsoft/terminal#4856](https://github.com/microsoft/terminal/pull/4856)，会丢弃子进程写入的鼠标跟踪启用序列（`\x1b[?1000h`、`\x1b[?1002h`、`\x1b[?1006h`）。这些序列永远不会到达 `data` 回调，因此外部终端不会报告鼠标事件，子进程也不会收到鼠标事件。Windows 11 和 Server 2022 会转发这些序列，但只有在子进程写入这些序列前启用了 VT 输入模式（例如使用 `process.stdin.setRawMode(true)`）时才会转发。
 
 ---
 
@@ -453,9 +453,9 @@ await proc2.exited;
 
 `Bun.spawnSync` 是 `Bun.spawn` 的阻塞式等价 API。它支持相同的输入和参数，并返回一个 `SyncSubprocess` 对象，该对象在几个方面不同于 `Subprocess`。
 
-1. 含有表示进程是否以零退出码退出的 `success` 属性。
-2. `stdout` 和 `stderr` 是 `Buffer` 实例，而非 `ReadableStream`。
-3. 没有 `stdin` 属性。若需增量写入输入流，请使用 `Bun.spawn`。
+1. 返回的对象包含一个 `success` 属性，用于指示进程是否以零退出码退出。
+2. `stdout` 和 `stderr` 属性是 `Buffer` 的实例，而不是 `ReadableStream`。
+3. 没有 `stdin` 属性。使用 `Bun.spawn` 可向子进程的输入流增量写入数据。
 
 ```ts
 const proc = Bun.spawnSync(["echo", "hello"]);
@@ -528,7 +528,7 @@ namespace SpawnOptions {
     onExit?(
       subprocess: Subprocess,
       exitCode: number | null,
-      signalCode: number | null,
+      signalCode: NodeJS.Signals | number | null,
       error?: ErrorLike,
     ): void | Promise<void>;
     ipc?(message: any, subprocess: Subprocess): void;
@@ -540,7 +540,8 @@ namespace SpawnOptions {
     timeout?: number;
     killSignal?: string | number;
     maxBuffer?: number;
-    terminal?: TerminalOptions; // PTY（POSIX）/ConPTY（Windows）支持
+    cgroup?: string | number; // Linux only; cgroup directory path or open directory fd
+    terminal?: TerminalOptions | Terminal; // Bun.spawn only (spawnSync throws); PTY (POSIX) / ConPTY (Windows) support
   }
 
   type Readable =
@@ -577,7 +578,7 @@ interface Subprocess extends AsyncDisposable {
   readonly pid: number;
   readonly exited: Promise<number>;
   readonly exitCode: number | null;
-  readonly signalCode: NodeJS.Signals | null;
+  readonly signalCode: NodeJS.Signals | number | null;
   readonly killed: boolean;
 
   kill(exitCode?: number | NodeJS.Signals): void;
@@ -595,7 +596,7 @@ interface SyncSubprocess {
   exitCode: number;
   success: boolean;
   resourceUsage: ResourceUsage;
-  signalCode?: string;
+  signalCode?: NodeJS.Signals | number;
   exitedDueToTimeout?: true;
   pid: number;
 }
@@ -612,6 +613,10 @@ interface TerminalOptions {
 
 interface Terminal extends AsyncDisposable {
   readonly closed: boolean;
+  inputFlags: number; // termios c_iflag
+  outputFlags: number; // termios c_oflag
+  localFlags: number; // termios c_lflag
+  controlFlags: number; // termios c_cflag
   write(data: string | BufferSource): number;
   resize(cols: number, rows: number): void;
   setRawMode(enabled: boolean): void;

@@ -23,7 +23,7 @@ foo.size; // 字节数
 foo.type; // MIME 类型
 ```
 
-该引用遵循 [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) 接口，因此内容可以以多种格式读取。
+该引用符合 [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) 接口，因此你可以使用多种格式读取内容。
 
 ```ts
 const foo = Bun.file("foo.txt");
@@ -173,7 +173,7 @@ writer.write("那是最好的时代\n");
 writer.write("那是最坏的时代\n");
 ```
 
-这些数据块会在内部进行缓冲。要将缓冲区刷新到磁盘，请使用 `.flush()`。该方法会返回已刷新的字节数。
+`FileSink` 会在内部缓冲这些数据块。要将缓冲区刷新到磁盘，请使用 `.flush()`。它会返回已刷新的字节数。
 
 ```ts
 writer.flush(); // 将缓存写入磁盘
@@ -192,7 +192,7 @@ const writer = file.writer({ highWaterMark: 1024 * 1024 }); // 1MB
 writer.end();
 ```
 
-默认情况下，`bun` 进程会一直保持运行，直到使用 `.end()` 显式关闭此 `FileSink`。如果不想使用此行为，可以对实例调用 `"unref"`。
+默认情况下，`bun` 进程会保持运行，直到你使用 `.end()` 显式关闭此 `FileSink`。要选择不采用此行为，请对实例调用 "unref"。
 
 ```ts
 writer.unref();
@@ -291,8 +291,10 @@ interface BunFile {
   stream(): ReadableStream;
   arrayBuffer(): Promise<ArrayBuffer>;
   json(): Promise<any>;
-  writer(params: { highWaterMark?: number }): FileSink;
+  bytes(): Promise<Uint8Array>;
+  writer(params?: { highWaterMark?: number }): FileSink;
   exists(): Promise<boolean>;
+  delete(): Promise<void>;
 }
 
 export interface FileSink {

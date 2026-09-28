@@ -20,20 +20,20 @@ await $`cat < ${response} | wc -c`; // 1256
 
 ## 特性
 
-- **跨平台**：支持 Windows、Linux 和 macOS。无需安装 `rimraf` 或 `cross-env`，你可以使用 Bun Shell。`ls`、`cd` 和 `rm` 等常见 shell 命令均已原生实现。
-- **熟悉易用**：Bun Shell 是一个类 bash shell，支持重定向、管道和环境变量。
-- **Glob**：原生支持 Glob 模式，包括 `**`、`*` 和 `{expansion}`。
-- **模板字面量**：模板字面量可以执行 shell 命令，并插入变量和表达式。
+- **跨平台**：可在 Windows、Linux 和 macOS 上运行。无需安装 `rimraf` 或 `cross-env`，你可以使用 Bun Shell。它原生实现了 `ls`、`cd` 和 `rm` 等常见 shell 命令。
+- **熟悉易用**：Bun Shell 是一个类似 bash 的 shell，支持重定向、管道和环境变量。
+- **Glob**：Bun Shell 原生支持 glob 模式，包括 `**`、`*` 和 `{expansion}`。
+- **模板字面量**：模板字面量可执行 shell 命令，并插入变量和表达式。
 - **安全性**：Bun Shell 默认会转义所有字符串，防止 shell 注入攻击。
-- **JavaScript 互操作性**：使用 `Response`、`ArrayBuffer`、`Blob`、`Bun.file(path)` 及其他 JavaScript 对象作为标准输入、标准输出和标准错误。
-- **Shell 脚本**：Bun Shell 可以运行 shell 脚本（`.bun.sh` 文件）。
-- **自定义解释器**：Bun Shell 是一种使用 Rust 编写的微型编程语言，拥有自己的词法分析器、解析器和解释器。
+- **JavaScript 互操作**：使用 `Response`、`ArrayBuffer`、`Blob`、`Bun.file(path)` 和其他 JavaScript 对象作为 stdin、stdout 和 stderr。
+- **Shell 脚本**：Bun Shell 可运行 shell 脚本（`.sh` 文件）。
+- **自定义解释器**：Bun Shell 是一种使用 Rust 编写的小型编程语言，拥有自己的词法分析器、解析器和解释器。
 
 ---
 
 ## 快速入门
 
-最简单的 shell 命令是 `echo`。执行时使用 `$` 模板字面量标签：
+从 `echo` 开始。要运行它，请使用 `$` 模板字面量标签：
 
 ```js
 import { $ } from "bun";
@@ -157,7 +157,7 @@ console.log(buffer.toString()); // Hello World!\n
 - `Buffer`、`Uint8Array`、`Uint16Array`、`Uint32Array`、`Int8Array`、`Int16Array`、`Int32Array`、`Float32Array`、`Float64Array`、`ArrayBuffer`、`SharedArrayBuffer`（写入底层缓冲区）
 - `Bun.file(path)`、`Bun.file(fd)`（写入文件）
 
-### 示例：重定向输入自 JavaScript 对象 (`<`)
+### 示例：从 JavaScript 对象重定向输入 (`<`)
 
 要将 JavaScript 对象用作 stdin，请使用 `<` 操作符：
 
@@ -254,21 +254,21 @@ import { $ } from "bun";
 await $`echo Hash of current commit: $(git rev-parse HEAD)`;
 ```
 
-输出会作为文本插入，因此你可以使用它来声明 shell 变量：
+Bun Shell 会将输出作为文本插入，因此你可以用它来声明 shell 变量：
 
 ```js
 import { $ } from "bun";
 
 await $`
   REV=$(git rev-parse HEAD)
-  docker built -t myapp:$REV
+  docker build -t myapp:$REV .
   echo Done building docker image "myapp:$REV"
 `;
 ```
 
 <Note>
 
-因为 Bun 内部使用了输入模板字面量的特殊 [`raw`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#raw_strings) 属性，所以使用反引号进行命令替换不起作用：
+由于 Bun 在内部使用输入模板字面量上的特殊 [`raw`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#raw_strings) 属性，因此使用反引号语法进行命令替换不起作用：
 
 ```ts icon="file-code"
 import { $ } from "bun";
@@ -314,7 +314,7 @@ const foo = "bar123";
 await $`FOO=${foo + "456"} bun -e 'console.log(process.env.FOO)'`; // bar123456\n
 ```
 
-输入默认被转义，防止 shell 注入攻击：
+Bun Shell 默认会转义输入，防止 shell 注入攻击：
 
 ```js
 import { $ } from "bun";
@@ -360,8 +360,10 @@ $.env({ FOO: "bar" });
 // 全局设置的 $FOO
 await $`echo $FOO`; // bar
 
-// 局部设置的 $FOO
-await $`echo $FOO`.env(undefined); // ""
+$.env();
+
+// 默认的 $FOO
+await $`echo $FOO`; // ""
 ```
 
 ### 修改工作目录
@@ -426,7 +428,7 @@ for await (let line of $`echo "Hello World!"`.lines()) {
 }
 ```
 
-也能在命令执行完后用 `.lines()`：
+你也可以在管道命令上使用 `.lines()`：
 
 ```js
 import { $ } from "bun";
@@ -438,7 +440,7 @@ for await (let line of $`cat list.txt | grep ${search}`.lines()) {
 }
 ```
 
-### 读取输出为 Blob
+### 将输出读取为 Blob
 
 使用 `.blob()` 以 Blob 形式读取输出：
 
@@ -475,11 +477,7 @@ console.log(result); // Blob(13) { size: 13, type: "text/plain" }
 - `dirname`
 - `basename`
 
-**部分实现：**
-
-- `mv`：移动文件和目录（尚缺跨设备支持）
-
-**尚未实现但计划中的：**
+**尚未实现，但已列入计划：**
 
 - 详见 [Issue #9716](https://github.com/oven-sh/bun/issues/9716)。
 
@@ -558,11 +556,11 @@ Bun Shell 是一种使用 Rust 实现的小型编程语言，拥有手写的词�
 
 ---
 
-## Bun shell 的安全性
+## Bun Shell 的安全性
 
 根据设计，Bun Shell _不会调用系统 shell_，例如 `/bin/sh`。它是 Bash 的重新实现，运行在同一个 Bun 进程中。
 
-在解析命令参数时，将所有**插值变量**视为单一字面字符串。
+解析命令参数时，Bun Shell 会将所有_插值变量_视为单个字面字符串。
 
 这可以防止**命令注入**：
 
@@ -575,12 +573,11 @@ const userInput = "my-file.txt; rm -rf /";
 await $`ls ${userInput}`;
 ```
 
-在这里，`userInput` 会被视为单个字符串，因此 `ls` 会尝试读取名为
-`my-file.txt; rm -rf /` 的单个目录的内容。
+在这里，Bun Shell 会将 `userInput` 视为单个字符串，因此 `ls` 会尝试读取名为 `my-file.txt; rm -rf /` 的单个目录的内容。
 
 ### 安全注意事项
 
-虽然默认情况下可以防止命令注入，但在某些场景下，你仍需负责安全性。
+虽然 Bun Shell 默认会防止命令注入，但在某些情况下，你仍需自行负责安全性。
 
 与 `Bun.spawn` 或 `node:child_process.exec()` API 类似，你可以有意执行一个会使用参数生成新 shell 的命令（例如 `bash -c`）。
 

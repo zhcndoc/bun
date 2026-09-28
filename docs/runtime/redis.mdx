@@ -190,10 +190,10 @@ Bun 为 [Redis Pub/Sub](https://redis.io/docs/latest/develop/pubsub/) 协议提�
 ```typescript publisher.ts icon="/icons/typescript.svg"
 import { RedisClient } from "bun";
 
-const writer = new RedisClient("redis://localhost:6739");
+const writer = new RedisClient("redis://localhost:6379");
 await writer.connect();
 
-writer.publish("general", "Hello everyone!");
+await writer.publish("general", "Hello everyone!");
 
 writer.close();
 ```
@@ -203,7 +203,7 @@ writer.close();
 ```typescript subscriber.ts icon="/icons/typescript.svg"
 import { RedisClient } from "bun";
 
-const listener = new RedisClient("redis://localhost:6739");
+const listener = new RedisClient("redis://localhost:6379");
 await listener.connect();
 
 await listener.subscribe("general", (message, channel) => {
@@ -224,8 +224,7 @@ bun run publisher.ts
 ```
 
 <Note>
-订阅会接管 `RedisClient` 连接：已订阅的客户端只能调用
-`RedisClient.prototype.subscribe()`。要向 Redis 发送其他命令，请使用 `.duplicate()` 创建单独的连接：
+订阅会占用 `RedisClient` 连接：具有订阅的客户端只能调用订阅方法（`subscribe()`、`psubscribe()`、`unsubscribe()`、`punsubscribe()`）、`pubsub()` 和 `ping()`。要向 Redis 发送其他命令，请使用 `.duplicate()` 创建单独的连接：
 
 ```ts redis.ts icon="/icons/typescript.svg"
 import { RedisClient } from "bun";
@@ -334,15 +333,16 @@ console.log(client.bufferedAmount);
 
 客户端会自动将 Redis 响应转换为 JavaScript 值：
 
-- 整数类型返回 JavaScript 数字
-- 大块字符串返回 JavaScript 字符串
-- 简单字符串返回 JavaScript 字符串
-- 空字符串返回 `null`
-- 数组返回 JavaScript 数组
-- 错误响应抛出对应错误对象，包含错误代码
-- 布尔类型（RESP3）返回 JavaScript 布尔值
-- 映射类型（RESP3）返回 JavaScript 对象
-- 集合类型（RESP3）返回 JavaScript 数组
+- Integer 响应会作为 JavaScript 数字返回
+- Bulk 字符串会作为 JavaScript 字符串返回
+- Simple 字符串会作为 JavaScript 字符串返回
+- Null Bulk 字符串和 Null 数组会作为 `null` 返回
+- 数组响应会作为 JavaScript 数组返回
+- Big number 响应（RESP3）会作为 `BigInt` 返回。非整数文本的负载会作为字符串返回。`getBuffer` 会将负载作为 `Buffer` 返回
+- 错误响应会抛出带有相应错误代码的 JavaScript 错误
+- 布尔响应（RESP3）会作为 JavaScript 布尔值返回
+- Map 响应（RESP3）会作为 JavaScript 对象返回
+- Set 响应（RESP3）会作为 JavaScript 数组返回
 
 特殊命令特别处理：
 
@@ -379,7 +379,10 @@ const client = new RedisClient("redis://localhost:6379", {
   // 连接超时（毫秒），默认 10000
   connectionTimeout: 5000,
 
-  // 空闲超时（毫秒），默认 0（不超时）
+  // Idle timeout in milliseconds (default: 0 = no timeout). Bun counts it
+  // from the last data the server sent. Sending does not reset it. When it
+  // fires, Bun closes the connection and runs onclose. Bun does not reconnect
+  // on its own, even with autoReconnect: true. Call connect() to reconnect.
   idleTimeout: 30000,
 
   // 断线后是否自动重连，默认 true
@@ -410,12 +413,12 @@ const client = new RedisClient("redis://localhost:6379", {
 
 连接断开时，客户端会自动尝试使用指数退避算法重连：
 
-1. 客户端从较短的延迟（50 毫秒）开始，每次尝试将延迟时间加倍
-2. 重连延迟最长为 2000 毫秒（2 秒）
-3. 客户端最多尝试重连 `maxRetries` 次（默认：20）
-4. 断线期间执行的命令：
-   - 如果 `enableOfflineQueue` 为 true（默认值），则会进入队列
-   - 如果 `enableOfflineQueue` 为 false，则会立即被拒绝
+1. 客户端从较短的延迟（50ms）开始，每次尝试都会将延迟加倍
+2. 客户端将重连延迟上限设为 2000ms（2 秒）
+3. 客户端最多尝试重连 `maxRetries` 次（默认值：20）
+4. 断开连接期间，客户端会：
+   - 如果 `enableOfflineQueue` 为 true（默认值），则将命令加入队列
+   - 如果 `enableOfflineQueue` 为 false，则立即拒绝命令
 
 ---
 
@@ -471,9 +474,10 @@ try {
 
 常见错误码：
 
-- `ERR_REDIS_CONNECTION_CLOSED` - 服务器连接关闭
-- `ERR_REDIS_AUTHENTICATION_FAILED` - 认证失败
-- `ERR_REDIS_INVALID_RESPONSE` - 收到服务器无效响应
+- `ERR_REDIS_CONNECTION_CLOSED` - 与服务器的连接已关闭
+- `ERR_REDIS_AUTHENTICATION_FAILED` - 无法通过服务器的身份验证
+- `ERR_REDIS_INVALID_RESPONSE` - 收到来自服务器的无效响应
+- `ERR_REDIS_SERVER_ERROR` - 服务器发送了错误回复，可能是拒绝某条命令，或者在订阅者模式下关闭连接
 
 ---
 
@@ -559,13 +563,13 @@ async function getSession(sessionId) {
 
 ## 实现说明
 
-Bun 的 Redis 客户端使用 Rust 实现，并采用 Redis 序列化协议（RESP3）。它会通过指数退避机制自动重新连接，并对命令进行流水线处理，因此可以连续发送多个命令，而无需等待之前命令的响应。
+Bun 的 Redis 客户端使用 Rust 实现，并使用 Redis 序列化协议（RESP3）。它会使用指数退避算法自动重连。它还会对命令进行流水线处理，因此可以在不等待先前命令响应的情况下发送多个命令。
 
 ## 限制及未来规划
 
 我们计划在未来版本中解决的限制：
 
-- 事务（MULTI/EXEC）必须通过原始命令执行
+- 事务（MULTI/EXEC）需要使用原始命令
 
 不支持的功能：
 

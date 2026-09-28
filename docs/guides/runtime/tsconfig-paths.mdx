@@ -19,7 +19,7 @@ Bun 会读取你 `tsconfig.json` 文件中的 `paths` 字段以重新写入导�
 
 ---
 
-使用此 `tsconfig.json` 后，以下导入路径会被重新写入：
+使用此 `tsconfig.json`，Bun 会重写以下导入：
 
 ```ts tsconfig.ts icon="/icons/typescript.svg"
 import { z } from "my-custom-name"; // 从 "zod" 导入

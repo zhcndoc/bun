@@ -118,7 +118,7 @@ bun list
 ```
 
 ```txt
-/path/to/project node_modules (135)
+/path/to/project node_modules (135 installed)
 ├── eslint@8.38.0
 ├── react@18.2.0
 ├── react-dom@18.2.0
@@ -135,7 +135,7 @@ bun list --all
 ```
 
 ```txt
-/path/to/project node_modules (135)
+/path/to/project node_modules (135 installed)
 ├── @eslint-community/eslint-utils@4.4.0
 ├── @eslint-community/regexpp@4.5.0
 ├── @eslint/eslintrc@2.0.2
@@ -159,13 +159,13 @@ bun list --trusted
 ```
 
 ```txt
-/path/to/project node_modules (135)
+/path/to/project node_modules (135 installed)
 └── esbuild@0.21.5
 ```
 
 ## licenses
 
-列出每个已安装的软件包，并按照从 `node_modules` 中各软件包的 `package.json` 读取的许可证进行分组。没有 `license` 字段的软件包会列在 `Unknown` 下。只能通过 `devDependencies` 访问的软件包会标记为 `(dev)`。
+列出所有已安装的软件包，并按许可证分组；许可证信息取自 `node_modules` 中每个软件包的 `package.json`。对于没有 `license` 字段的软件包，Bun 会将其列在 `Unknown` 下。Bun 会为仅通过 `devDependencies` 可访问的软件包标记 `(dev)`。
 
 ```bash terminal icon="terminal"
 bun pm licenses
@@ -174,6 +174,8 @@ bun pm licenses ls
 ```
 
 ```txt
+bun pm licenses v1.3.0 (a4b2f86f)
+
 MIT (2)
 ├── path-parse@1.0.6
 └── resolve@1.9.0
@@ -183,11 +185,13 @@ Unknown (4)
 ├── no-deps@1.0.0
 ├── no-deps@1.0.1
 └── one-dep@1.0.0
+
+6 packages across 2 licenses (checked 6 packages in bun.lock) [4.00ms]
 ```
 
 | Flag                           | Description                                                                     |
 | ------------------------------ | ------------------------------------------------------------------------------- |
-| `--json`                       | 按许可证为键打印 JSON 对象                                            |
+| `--json`                       | 将 JSON 对象按许可证作为键输出                                            |
 | `--long`                       | 同时打印每个软件包的 `author`、`description` 和 `homepage`               |
 | `--prod`、`-p`                 | 跳过 `devDependencies`（等同于 `--omit=dev`）                                   |
 | `--dev`、`-D`                  | 仅列出由 `devDependencies` 引入的内容                                        |
@@ -214,9 +218,77 @@ bun pm licenses --json --prod
 }
 ```
 
-在工作区根目录中，会列出每个工作区的依赖；在工作区软件包内部，则只列出该软件包的依赖。使用 [`bun why`](/pm/cli/why) 可查明是什么引入了意外的软件包。
+在工作区根目录中，Bun 会列出每个工作区的依赖。在工作区软件包内部，Bun 只会列出该软件包的依赖。使用 [`bun why`](/pm/cli/why) 查明是什么引入了意料之外的软件包。
 
-需要同时存在 `bun.lock` 和 `node_modules`。锁文件中存在但 `node_modules` 中缺失的软件包（例如执行 `bun install --production` 后）会被跳过，并显示警告。
+需要同时存在 `bun.lock` 和 `node_modules`。对于存在于锁文件中、但在 `node_modules` 中缺失的软件包（例如运行 `bun install --production` 后），Bun 会跳过并打印警告。
+
+## diff
+
+显示软件包两个版本之间的变化：已修改文件和行的摘要、值得再次检查的 `package.json` 变更（新的安装脚本、依赖、入口点、二进制文件），然后显示每个文件的统一差异。每一侧都可以是注册表规格、本地文件夹或 `.tgz`。
+
+```bash terminal icon="terminal"
+bun pm diff react                     # the version in bun.lock → latest
+bun pm diff react@18.2.0 19.0.0       # two published versions
+bun pm diff react@18.2.0..19.0.0      # same thing
+bun pm diff ./vendored-pkg pkg@2.1.0  # a folder against a published version
+bun pm diff                           # in a package folder: what is published → this folder
+```
+
+```txt
+is-number@6.0.0 → is-number@7.0.0
+4 files changed, 0 added, 0 removed  (+73 -44 lines)
+
+  ! engines changed: { "node": ">=0.10.0" } → { "node": ">=0.12.0" }
+
+diff --bun a/index.js b/index.js
+--- a/index.js
++++ b/index.js
+@@ -9,10 +9,10 @@
+ module.exports = function(num) {
+   if (typeof num === 'number') {
+-    return num - num === 0;
++    return num - num === 0;
+   }
+...
+```
+
+在终端中，代码会按含义进行比较，并按原样显示。每个 `.js`/`.mjs`/`.cjs`/`.jsx`/`.ts`/`.tsx` 文件的两侧都会被解析并以统一的规范形式重新打印（等价语法会折叠，不可达代码会丢弃）；该规范形式决定_发生了什么变化_，而差异块显示_原始_行——注释、类型、JSX 和名称均保持原样：
+
+- `1 + 1` 与 `2`、`'a'` 与 `"a"`、`!0` 与 `true`、重新换行的调用、整个文件的重新格式化，或在各处保持一致的局部重命名（打包器将 `utils` 改为 `utils$1`）都不算变化——两侧的局部变量会根据用法进行匹配，而非根据名称。以这种方式折叠的行会计入文件标头（`3 folded`），没有剩余内容的文件会显示为 `formatting only`。
+- 注释编辑、类型标注变更或任何控制流变化都算作变化，并以作者原本的措辞显示。
+- 含义发生变化的未更改文本——变得不可达的代码，或因其他位置的条件翻转而重新激活的死代码——会标记为 `~`。
+- 压缩后的包没有可读的原始内容，因此会用未压缩的重新打印结果代替（每行一个声明、调用和属性，并按原始文件中的 `line:col` 标注）；相同的折叠比较方式会决定发生了什么变化，同时两个构建版本的压缩器以不同方式分配的短名称会被同步重命名；`dist/*.min.js` 的差异会精确缩小到实际变化的行，而不是显示成一对巨大的 `-`/`+`。`.json` 和 `.css` 文件会按规范打印形式（`normalized`）进行比较和显示，因此围绕一处编辑的重新格式化只算一处编辑；打印结果完全相同则显示为 `formatting only`。
+- 末尾的摘要会列出审查者首先关注的内容：新的 `install`/`postinstall` 脚本、依赖和入口点变更、新导入 `child_process`/`fs`/`net`/`http`/`vm`/… 的文件、新的软件包导入、`eval()`/`new Function()`/`process.env`/`fetch()` 用法增加、新增的可执行文件，以及发布内容中出现的终端转义序列或双向文本控制字符。`*.map` 文件会摘要为已重新生成，而不显示具体内容。超过 64 MB 的文件会按文本进行差异比较（`too large to normalize`）。
+- 行颜色会遵循终端设置：亮色或暗色模式取自 `COLORFGBG`，或通过查询终端背景颜色（OSC 11）确定；当 `COLORTERM=truecolor` 时会使用精确颜色。
+- 软件包中的任何内容都不能控制你的终端：文件内容中的控制字符、转义序列和双向文本覆盖字符会显示为 `␛`、`^M`、`‹U+202E›`。权限变更会显示为 `mode 644 → 755` / `new file mode 100755`。
+
+若要查看软件包的部分内容，可指定文件：将其作为规格的 `:path` 后缀、单独的 `:path` 参数，或在两侧参数之后添加额外参数。路径可以精确匹配文件、目录、软件包中任意位置的文件名，或 glob：
+
+```bash
+$ bun pm diff axios@1.6.0:lib/adapters 1.6.1          # one directory
+$ bun pm diff axios@1.6.0 axios@1.6.1 dist/node/axios.cjs README.md
+$ bun pm diff lodash :trimEnd.js                       # installed → latest, one file
+$ bun pm diff react-dom@18.2.0 18.3.1 '*.min.js'
+$ bun pm diff react-dom@18.2.0 18.3.1 'cjs/**/*.production.min.js'
+```
+
+对于包含 `package.json` 的本地文件夹，Bun 会按照 `bun pm pack` 发布文件夹的方式读取它——包括 `files` 字段、`.npmignore` / `.gitignore` 和 `bin`——因此将检出目录与注册表版本进行差异比较时，对比的是实际将发布的内容，而不是 `node_modules/`、`vendor/` 或构建输出。
+
+通过管道传输或设置 `NO_COLOR` 时，输出会是实际文件内容的纯文本统一补丁（因此 `bun pm diff a b > changes.patch` 可应用该补丁）；`--raw` 也会在终端中关闭重新打印。
+
+| Flag                     | Description                                                                                          |
+| ------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `--raw`、`--unformatted` | 按原始字节进行比较；跳过 JS/CSS/JSON 的重新打印                                                   |
+| `--minify`               | 同时折叠等价语法（`!0`/`true`、引号风格、多余括号），仅比较含义 |
+| `--unminify`             | 在每个 JS 文件中同步重命名短局部变量，而不只是看起来经过压缩的文件                   |
+| `-w`、`--ignore-space`   | 在终端中，对于仅空白字符不同的文件，显示为 `whitespace only`，而不是差异块       |
+| `--stat`                 | 每个文件用一行显示变更数量和条形图，而不是差异块                                   |
+| `--name-only`            | 仅列出存在差异的文件，并标记为新增（`A`）、修改（`M`）或删除（`D`）                             |
+| `-U <n>`、`--unified`    | 每处变更周围的上下文行数（默认为 3）                                                      |
+| `--diff <spec>`          | 以兼容 npm 的方式指定一侧；可指定两次                                                |
+| `--json`                 | 输出一个 JSON 文档：包含 `from`/`to`、每个文件的 `status`/计数/`patch`、纯文本 `notes` 和 `totals`   |
+
+只提供一个名称且不指定版本时，左侧为此项目的 `bun.lock` 解析到的版本，右侧为 `latest`，因此 `bun pm diff <pkg>` 可以回答“更新此软件包会引入什么？”。注册表、作用域和身份验证设置与 `bun install` 一样，来自 `bunfig.toml` / `.npmrc`；在项目外部，只接受注册表规格以及绝对路径或 `./` 路径。
 
 ## whoami
 

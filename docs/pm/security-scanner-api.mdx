@@ -20,7 +20,7 @@ scanner = "@oven/bun-security-scanner" # 示例名称，请替换为您扫描器
 
 - 在安装前扫描所有软件包
 - 显示安全警告和公告
-- 如果发现致命公告，则取消安装
+- 如果扫描器发现致命公告，则取消安装
 
 ---
 
@@ -43,7 +43,7 @@ scanner = "@oven/bun-security-scanner" # 示例名称，请替换为您扫描器
 
 ## 使用预构建扫描器
 
-Security companies publish Bun security scanners as npm packages.
+安全公司会将 Bun 安全扫描器作为 npm 包发布。
 
 ### 安装扫描器
 
@@ -54,7 +54,7 @@ bun add -d @oven/bun-security-scanner
 ```
 
 <Note>
-  `@oven/bun-security-scanner` 是一个示例包名，不是真实存在的包。请将其替换为您要使用的扫描器，并查阅该扫描器的文档以了解准确的包名和安装说明。大多数扫描器使用 `bun add` 安装。
+  `@oven/bun-security-scanner` 是示例包名，并非真实的软件包。请将其替换为您想要使用的扫描器，并查阅该扫描器的文档以获取确切的包名和安装说明。您可以使用 `bun add` 安装大多数扫描器。
 </Note>
 
 ### 配置扫描器
@@ -87,6 +87,6 @@ bun install
 
 ## 相关链接
 
-- [配置 (bunfig.toml)](/runtime/bunfig#install-security-scanner)
-- [包管理器](/installation)
-- [安全扫描器模板](https://github.com/oven-sh/security-scanner-template)。
+- [配置（bunfig.toml）](/runtime/bunfig#install-security-scanner)
+- [包管理器](/pm/cli/install)
+- [安全扫描器模板](https://github.com/oven-sh/security-scanner-template)

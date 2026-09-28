@@ -1,0 +1,128 @@
+---
+title: ModuleGraph
+description: 使用 Bun.ModuleGraph 在单个进程中运行同一应用的多个实例。每个实例都有全新的模块状态以及自己的计时器和 I/O；编译后的代码则会共享。
+---
+
+<Warning>`Bun.ModuleGraph` 是实验性功能。</Warning>
+
+`Bun.ModuleGraph` 会再次将模块加载到当前全局环境中。每个图都有自己的模块实例、自己的 `require.cache`，以及你传入 `globals` 的名称所对应的值。已解析的代码和字节码会在图之间共享；ES 模块也会共享 JIT 编译后的代码。图通过 `import()` 导入的第一个模块是该图的主模块：其中 `import.meta.main` 和 `require.main === module` 为 true，而图中的其他模块则不会。
+
+```ts host.ts icon="/icons/typescript.svg"
+// 租户自己的 `process`：它的模块代码看到的是这个对象。
+const tenantProcess = Object.create(process, { env: { value: { TENANT: "a" }, enumerable: true } });
+
+const graph = new Bun.ModuleGraph({
+  globals: { process: tenantProcess }, // 图中模块的自由标识符
+  onError(error, kind) {
+    console.error("tenant failed", kind, error);
+  },
+});
+
+const app = await graph.import("./app.ts");
+await graph.run(() => app.handle(new Request("http://localhost/")));
+
+graph.dispose();
+```
+
+## 图打开的资源归图所有
+
+图有自己的计时器和 I/O 上下文。它的代码打开的一切资源都归图所有：
+
+- 计时器
+- `Bun.serve` 和 `Bun.listen` 服务器、套接字、`fetch()` 请求、WebSocket
+- 监听器
+- 子进程，包括 `Bun.$`
+- worker
+- 数据库连接
+- 通过 `Bun.file().writer()`、`bun:sqlite` 和 `node:sqlite` 打开的文件
+- 它的代码创建的图
+
+此上下文会像 `AsyncLocalStorage` 一样，随代码异步传递：经过 `await`、计时器、套接字处理程序和事件监听器时都会如此。
+
+`graph.dispose()` 会关闭所有这些资源。从那时起，该图将不再接收任何事件，就像已终止的 worker 一样：
+
+- 不会调用任何 `close` 处理程序、`onExit` 或 `'error'` 事件。
+- 正在进行中的 `fetch()` 或连接不会被拒绝。
+- 等待请求、子进程退出、文件读取、压缩、`crypto.subtle`、DNS 查询、`Bun.build` 或流的 promise 永远不会完成。
+- 仍会调用 `FinalizationRegistry` 清理回调。
+
+图已排队的微任务和 `process.nextTick` 回调仍会运行一次。无论这些代码启动什么操作，都不会真正启动：不会拨号建立连接，不会绑定 UDP 套接字，也不会有人能够连接到它监听的服务器。它的 promise 会保持 pending 状态，而不是被拒绝，因此在失败时重试的代码会停在那里。
+
+宿主对图对象的引用也会失效。`dispose()` 之后不要使用图的套接字、worker、子进程、流或 `Response`。对这些对象进行操作可能会失败，也可能永远无法完成：`await worker.terminate()`、`server.close(callback)` 或等待子进程的 `'exit'` 都可能永远等待。对于图打开的数据库，宿主会收到“Database has closed”。已缓冲但尚未写入的内容会被丢弃。
+
+`dispose()` 会释放图持有的资源，但它不是沙箱：
+
+- 遗留代码通过 `Bun.spawn` 或 `child_process.spawn()` 启动的进程会先启动，然后再被终止，因此非常短的命令可能会先执行完毕。
+- `Bun.spawnSync` 和 `fs.writeFileSync` 等同步调用会运行至完成。
+- `node:http` 或 `node:https` 请求会通过 `Agent` 发送，而 `Agent` 打开的资源归创建该 `Agent` 的脚本所有。没有 `agent` 的请求会通过共享的 `http.globalAgent` 发送（参见[共享的内容](#what-is-shared)）。这类请求不归图所有：遗留代码发出的请求仍会发出，正在进行中的请求不会被中止，其 `'response'` 和 `'error'` 回调在 `dispose()` 之后仍会被调用。希望请求随图停止的代码应传入自己创建的 `Agent`。
+- `node:quic` 目前尚未涵盖：图的代码打开的端点在 `dispose()` 之后仍会保持打开状态，其处理程序也会继续运行。打开端点的代码应在图被销毁之前关闭它。
+- 脚本持有的文件描述符由脚本自行管理：包括通过 `fs.openSync()` 打开的文件描述符，以及 `FileHandle` 或 `node:fs` 流内部的文件描述符。`dispose()` 不会关闭它们，就像终止 worker 不会关闭它们一样。打开文件描述符的代码应在图被销毁之前将其关闭。未关闭的 `FileHandle` 被垃圾回收时会关闭，并像在任何程序中一样报告：Node 的 `ERR_INVALID_STATE`（“A FileHandle object was closed during garbage collection”）会作为未捕获异常报告给进程。
+
+原生插件会共享，但它们的异步工作也归图所有。Node-API 异步工作项或线程安全函数会在创建它的代码所属图的上下文中完成。`dispose()` 之后，插件的完成回调仍会运行，因此可以释放它分配的资源。但它不能调用 JavaScript：`napi_call_function` 等调用会返回 `napi_cannot_run_js`，就像 worker 正在终止时一样。它为已销毁图完成的 promise 会保持 pending 状态。它为宿主或其他图完成的 promise 则会正常完成。
+
+线程安全函数只会在创建它的图存续期间保持进程运行，无论是哪个脚本请求的（`napi_ref_threadsafe_function`）。在该图销毁后获取的引用会一直保持有效，直到它被释放。它的调用始终会在创建它的图的上下文中运行。如果插件为所有人保留一个线程安全函数，并通过它调用你的 JavaScript 回调，请先在宿主中加载该插件，这样该函数就属于宿主。
+
+## 销毁
+
+`graph.dispose()` 也会丢弃图的模块注册表和 `require.cache`。仍被引用的图代码会继续工作，而仍在其上下文中运行的代码（例如它已排队的 tick）发生错误时，仍会传递给 `onError`。从那时起：
+
+- `graph.import()`、`graph.run()` 和图的 `require()` 会以 `ERR_INVALID_STATE` 失败。
+- 宿主调用图中某个函数时，该函数中的 `import()` 也会以相同方式失败。
+- 已销毁图的遗留代码执行的 `import()` 会保持 pending 状态。
+- 图中尚未运行的模块将永远不会运行。
+
+`dispose()` 不会使任何 promise 完成。尚未完成的 `import()` 可能会被拒绝，也可能永远无法完成：模块正在等待的资源（例如计时器或请求）已随图一起销毁。可能会在导入期间销毁图的宿主，应像下面所示那样，对导入操作进行竞速处理，就像处理调用一样。
+
+## 调用图中的代码
+
+无论函数由哪个图定义，它都会在调用者的上下文中运行。宿主直接调用的代码会在宿主的上下文中运行，而一个图的代码调用另一个图的函数时，该函数会在另一个图的上下文中运行。使用 `run()` 进入图自身的上下文：
+
+```ts
+app.start(); // 它打开的资源归宿主所有
+graph.run(() => app.start()); // 它打开的资源归图所有
+```
+
+`run()` 返回的 promise 归图所有：如果图在它完成之前被销毁，它就永远不会完成。当宿主等待图的异步函数，且期间可能销毁该图时，应将其与宿主自己的 promise 竞速：
+
+```ts
+const disposed = Promise.withResolvers<never>();
+const response = await Promise.race([graph.run(() => app.handle(request)), disposed.promise]);
+// 其他地方：graph.dispose(); disposed.reject(new Error("tenant was disposed"));
+```
+
+`Bun.ModuleGraph.current` 是调用代码当前运行所在的图；如果调用代码在宿主中运行，则其值为 `undefined`。通过 `globals` 由多个图共享的宿主函数可以使用它来区分调用者。
+
+因此，图调用的宿主函数（例如通过 `globals` 传入的函数）会在该图的上下文中运行。它启动的异步工作归该图所有，并会在 `dispose()` 时随图一起被丢弃。对于无论调用者发生什么情况都必须完成的工作（例如审计日志或计费），请使用在宿主中获取的快照离开图的上下文：
+
+```ts
+import { AsyncLocalStorage } from "node:async_hooks";
+
+const asHost = AsyncLocalStorage.snapshot(); // 在宿主中、任何图之外获取
+const graph = new Bun.ModuleGraph({
+  globals: { record: (entry: string) => asHost(() => appendToAuditLog(entry)) },
+});
+```
+
+## 错误
+
+未捕获的异常和未处理的拒绝会传递给发生异常或拒绝的图的 `onError`，而不是进程级处理程序。此上下文与拥有代码所打开资源的上下文相同：图的模块及其启动的一切都会在图的上下文中运行，宿主通过 `run()` 调用的代码也一样。
+
+抛出错误的是谁并不重要，重要的是错误发生在哪里。宿主直接调用图的函数时，该函数会在宿主的上下文中运行，因此它之后抛出的错误归宿主所有；通过 `run()` 调用它，错误才会归图所有。图的代码调用宿主函数时，该函数会在图的上下文中运行，因此它在那里抛出的错误归图所有。
+
+`run()` 会将函数抛出的错误重新抛给调用者。如果调用者也没有捕获该错误，它仍归图所有：该错误是在图的上下文中抛出的，无论之后它经过了什么调用栈。
+
+没有任何代码主动抛出的错误归发生错误的资源的所有者所有。图打开的套接字在没有 `error` 处理程序的情况下发生错误时，会报告给图的 `onError`。
+
+`graph.import()` 会将 promise 返回给调用者。如果模块在求值时抛出错误，该 promise 会被拒绝；如果没有人处理该 promise，它就会成为调用者未处理的拒绝，就像无法解析的说明符或对已销毁图执行 `import()` 一样。
+
+`onError` 本身会在创建该图的上下文中运行：对于宿主创建的图，该上下文是宿主；对于由某个图的代码创建的图，该上下文则是外层图。它抛出、拒绝或启动的内容归该上下文所有，因此处理程序中未捕获的错误会继续传递给宿主，而不会回到同一个处理程序。
+
+没有指定 `onError` 的图会将错误交给创建它时所在上下文的图的 `onError`，并依此向上直到宿主。某个图的代码创建了该图，或者该图的代码调用的宿主函数创建了该图时，该图就是在此图的上下文中创建的。
+
+## 共享的内容
+
+全局对象、`globalThis` 属性、插件和原生插件由所有图和宿主共享。除非通过 `globals` 替换 `process`，否则 `process` 也会共享。图在宿主拥有的对象上注册的监听器属于该对象，因此在 `dispose()` 之后仍会存在。这包括共享 `process` 上的信号、`process.stdin` 和 `'exit'` 监听器，以及宿主传入的事件发射器上的监听器。`ModuleGraph` 用于相互隔离你信任的应用实例，但它不是安全沙箱。
+
+`http.globalAgent` 和 `https.globalAgent` 也会共享。连接归打开它的 `Agent` 所有，而 `Agent` 归创建它的脚本所有，因此图在没有 `agent` 的情况下发出的请求会使用不属于该图的连接：`dispose()` 不会关闭它，该连接会像宿主的任何连接一样使进程保持运行。希望连接随图一起销毁的代码应传入自己创建的 `Agent`。
+
+`bun test` 中的 `mock.module()` 也是共享资源之一：它会影响图之后加载的模块。已经加载该模块的图会继续保留已有实例。

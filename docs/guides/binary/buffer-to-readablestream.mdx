@@ -4,7 +4,7 @@ sidebarTitle: "Buffer 转 ReadableStream"
 mode: center
 ---
 
-从 [`Buffer`](https://nodejs.org/api/buffer.html) 创建 [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) 的一种简单方法是使用 `ReadableStream` 构造函数，并将整个数组作为单个块加入队列。对于较大的缓冲区，这种方式可能并不理想，因为它不会以更小的块流式传输数据。
+从 [`Buffer`](https://nodejs.org/api/buffer.html) 创建 [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) 的简单做法是使用 `ReadableStream` 构造函数，并将整个数组作为单个块入队。对于较大的缓冲区，这种做法可能不理想，因为它不会以较小的块流式传输数据。
 
 ```ts
 const buf = Buffer.from("hello world");

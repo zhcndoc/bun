@@ -5,7 +5,7 @@ mode: center
 ---
 
 <Note>
-  你可以将 Vite 与 Bun 一起使用，但许多项目通过切换到 [HTML 导入](/bundler/html-static) 获得更快的构建速度并减少数百个依赖。
+  你可以将 Vite 与 Bun 一起使用，但许多项目通过切换到 [HTML 导入](/bundler/fullstack) 来加快构建速度并减少数百个依赖项。
 </Note>
 
 ---
@@ -45,7 +45,7 @@ bun install
 
 使用 `bunx` 和 `vite` CLI 启动开发服务器。
 
-`--bun` 标志告诉 Bun 使用 `bun` 而非 `node` 来运行 Vite 的 CLI；默认情况下 Bun 会遵循 Vite 的 `#!/usr/bin/env node` [shebang 行](<https://en.wikipedia.org/wiki/Shebang_(Unix)>)。
+`--bun` 标志会告诉 Bun 使用 `bun` 而不是 `node` 来运行 Vite 的 CLI。默认情况下，Bun 会遵循 Vite 的 `#!/usr/bin/env node` [shebang 行](<https://en.wikipedia.org/wiki/Shebang_(Unix)>)。
 
 ```bash terminal icon="terminal"
 bunx --bun vite

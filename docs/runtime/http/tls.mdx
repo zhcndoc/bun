@@ -14,7 +14,7 @@ Bun.serve({
 });
 ```
 
-`key` 和 `cert` 字段需要的是 TLS 密钥和证书的_内容_，而_不是证书文件的路径_。它们可以是字符串、`BunFile`、`TypedArray` 或 `Buffer`。
+`key` 和 `cert` 字段需要的是 TLS 密钥和证书的_内容_，而_不是文件路径_。每个字段都可以是字符串、`BunFile`、`TypedArray`、`Buffer` 或由这些类型组成的数组。Bun 只会使用数组中的最后一组密钥／证书；要提供多个证书，请传入一个 `tls` 对象数组，每个对象都包含一个 `serverName`（参见下方的 [服务器名称指示（SNI）](#server-name-indication-sni)）。
 
 ```ts
 Bun.serve({
@@ -81,7 +81,7 @@ Bun.serve({
 });
 ```
 
-要允许多个服务器名称，传入一个包含多个对象的数组给 `tls`，每个对象包含一个 `serverName` 字段。
+要允许使用多个服务器名称，请向 `tls` 传入一个包含多个对象的数组，每个对象都包含一个 `serverName` 字段。
 
 ```ts
 Bun.serve({

@@ -80,12 +80,12 @@ mode: center
     	```
 
     	<Note>
-    		确保启动命令对应你的应用入口文件。如果你在 `package.json` 中配置了 start 脚本，也可以使用 `CMD ["bun", "run", "start"]`。
+    		确保启动命令与应用的入口点相对应。如果你的 `package.json` 中有启动脚本，启动命令也可以是 `CMD ["bun", "run", "start"]`。
 
-    		如果你的应用没有依赖项，可以省略 `COPY package.json bun.lock ./` 和 `RUN bun install --production --frozen-lockfile` 行（对于没有依赖项的项目，Bun 不会写入 `bun.lock`）。
+    		如果你的应用没有依赖项，可以省略 `COPY package.json bun.lock ./` 和 `RUN bun install --production --frozen-lockfile` 这两行。对于没有依赖项的项目，Bun 不会写入 `bun.lock`。
     	</Note>
 
-    	在项目根目录中创建一个新的 `.dockerignore` 文件。该文件列出了要从容器镜像中_排除_的文件和目录，例如 `node_modules`，从而使构建更快、镜像更小：
+    	在项目根目录中创建一个新的 `.dockerignore` 文件。该文件列出了要从容器镜像中_排除_的文件和目录，例如 `node_modules`。排除它们可以让构建更快、镜像更小：
 
     	```docker .dockerignore icon="Docker"
     	node_modules

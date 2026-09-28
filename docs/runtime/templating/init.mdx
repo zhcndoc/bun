@@ -46,8 +46,8 @@ bun init my-app
 
 AI Agent 规则（可通过设置环境变量 `$BUN_AGENT_RULE_DISABLED=1` 禁用）：
 
-- 检测到 Claude CLI 时创建 `CLAUDE.md` 文件（通过 `CLAUDE_CODE_AGENT_RULE_DISABLED` 环境变量禁用）
-- 检测到 Cursor 时创建 `.cursor/rules/*.mdc` 文件，告知 [Cursor AI](https://cursor.sh) 使用 Bun 而不是 Node.js 和 npm
+- 当 `bun init` 检测到 Claude CLI 时创建一个 `CLAUDE.md` 文件（可通过 `CLAUDE_CODE_AGENT_RULE_DISABLED` 环境变量禁用）
+- 当 `bun init` 检测到 Cursor 时创建一个 `.cursor/rules/*.mdc` 文件（可通过 `CURSOR_AGENT_RULE_DISABLED` 环境变量禁用）；该文件会告诉 [Cursor AI](https://cursor.sh) 使用 Bun，而不是 Node.js 和 npm
 
 传递 `-y` 或 `--yes`，即可在不显示提示的情况下接受默认值。
 

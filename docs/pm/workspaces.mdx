@@ -92,9 +92,35 @@ bun install --filter "./packages/pkg-*" --filter "!pkg-c" # 或 --filter "!./pac
 
 工作区有几个主要优点。
 
-- **代码可以拆分为逻辑部分。** 如果一个包依赖另一个包，请将其添加为 `package.json` 中的依赖项。如果包 `b` 依赖于 `a`，`bun install` 会将本地的 `packages/a` 目录安装到 `node_modules` 中，而不是从 npm 注册表下载它。
-- **依赖可以去重。** 如果 `a` 和 `b` 共享某个依赖项，该依赖项会被 _提升_ 到根目录的 `node_modules` 目录中。这样可以节省磁盘空间，并减少同时安装同一包多个版本所造成的“依赖地狱”。
-- **在多个包中运行脚本。** 使用 [`--filter` 标志](/pm/filter) 可同时在多个包中运行 `package.json` 脚本，或使用 `--workspaces` 在所有工作区中运行脚本。
+- **将代码拆分为逻辑部分。** 如果一个包依赖于另一个包，请在 `package.json` 中将其添加为依赖项。如果包 `b` 依赖于 `a`，`bun install` 会将本地 `packages/a` 目录安装到 `node_modules`，而不是从 npm 注册表下载它。
+- **Bun 可以对依赖进行去重。** 如果 `a` 和 `b` 共享一个依赖，Bun 会将它_提升_到根目录的 `node_modules` 目录。这可以节省磁盘空间，并尽可能避免同时安装同一个包的多个版本所导致的“依赖地狱”。
+- **在多个包中运行脚本。** 使用 [`--filter` 标志](/pm/filter) 一次在多个包中运行 `package.json` 脚本，或使用 `--workspaces` 在所有工作区中运行脚本。
+
+## 自包含工作区
+
+使用提升式链接器时，多个工作区共享的依赖会被提升到根目录的 `node_modules`。有些工具无法处理这种情况：Electron 打包器和无服务器打包器会遍历、精简并重新打包_单个工作区_的 `node_modules`，并期望每个依赖都实际存在于该目录下。可以在此类工作区的 `package.json` 中将其标记为自包含（使用 Yarn 所用的相同键；只有 `"workspaces"` 的值会改变布局）：
+
+```json title="apps/desktop/package.json" icon="file-json"
+{
+  "name": "desktop",
+  "installConfig": { "hoistingLimits": "workspaces" }
+}
+```
+
+也可以在根目录的 `package.json` 中，紧挨着工作区 glob 的位置进行配置：
+
+```json title="package.json" icon="file-json"
+{
+  "workspaces": {
+    "packages": ["apps/*", "packages/*"],
+    "selfContained": ["apps/desktop"]
+  }
+}
+```
+
+（条目可以是工作区路径或包名称）
+
+对于该工作区，`bun install` 会将其视为提升屏障——它直接或间接依赖的所有内容（包括通过它所依赖的其他工作区引入的内容）都不会被放置在 `apps/desktop/node_modules` 之上，因此该目录包含完整的依赖树；这些包会以实际副本的形式安装，而不是从缓存创建硬链接／克隆，因此重写这些包的工具不会影响缓存或其他项目。其他所有工作区仍会像往常一样将依赖提升到根目录。锁文件不会记录此设置。Bun 每次安装时都会从 `package.json` 中读取该设置，包括使用 `--frozen-lockfile` 时，因此无论是否启用此设置，锁文件都相同。此设置对隔离式链接器无效，因为在该模式下，每个包本来就只会解析自身的依赖。
 
 ## 使用 Catalogs 共享版本
 

@@ -65,7 +65,7 @@ Ran 2 tests across 1 file. [15.00ms]
 
 ---
 
-每个测试都有一个名称：即传递给 `test` 函数的第一个参数。还可以使用 `describe` 将测试分组到测试套件中。
+每个测试都有一个名称：它是 `test` 函数的第一个参数。你也可以使用 `describe` 将测试分组成测试套件。
 
 ```ts
 import { test, expect, describe } from "bun:test";
@@ -85,7 +85,7 @@ describe("math", () => {
 
 要按名称筛选测试，请使用 `-t`/`--test-name-pattern` 标志。
 
-`-t add` 只会运行名称中包含 "add" 的测试。该模式会匹配使用 `test` 定义的测试名称，以及使用 `describe` 定义的测试套件名称。
+`-t add` 只会运行名称中包含 “add” 的测试。该模式会匹配使用 `test` 定义的测试名称，以及使用 `describe` 定义的测试套件名称。
 
 ```sh terminal icon="terminal"
 bun test -t add

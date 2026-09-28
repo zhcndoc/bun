@@ -4,7 +4,7 @@ sidebarTitle: 发布-订阅服务器
 mode: center
 ---
 
-Bun 的服务端 `WebSocket` API 原生支持发布-订阅功能。使用 `socket.subscribe(<name>)` 将套接字订阅到一组命名频道；使用 `socket.publish(<name>, <message>)` 向频道发布消息。
+Bun 服务端的 `WebSocket` API 内置原生发布-订阅功能。使用 `socket.subscribe(<name>)` 让套接字订阅一组命名频道；使用 `server.publish(<name>, <message>)` 向频道发布消息。
 
 这段代码片段实现了一个单频道聊天服务器。
 

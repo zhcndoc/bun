@@ -5,7 +5,7 @@ sidebarTitle: 在 Railway 上部署
 mode: center
 ---
 
-Railway 是一个基础设施平台：你可以配置基础设施，在本地基于它进行开发，然后将应用部署到云端。它支持零配置从 GitHub 部署、自动处理 SSL，并提供数据库。
+Railway 是一个基础设施平台：你可以配置基础设施，在本地基于它进行开发，然后部署到云端。Railway 可零配置地从 GitHub 部署，自动处理 SSL，并配置数据库。
 
 本指南将部署一个可选配 PostgreSQL 数据库的 Bun 应用，使用的配置与以下模板相同。
 
@@ -71,7 +71,7 @@ railway add --service bun-react-db --variables DATABASE_URL=\${{Postgres.DATABAS
 
 </Step>
 <Step title="步骤 5">
-服务创建并连接后，将应用部署到 Railway。默认情况下，服务只能在 Railway 的私有网络中访问，因此请生成一个公共域名，以便让您的应用可公开访问。
+创建并连接服务后，将应用部署到 Railway。默认情况下，服务只能通过 Railway 的私有网络访问，因此请生成一个公共域名，让您的应用可供公众访问。
 
 ```bash terminal icon="terminal"
 # 部署您的应用
@@ -84,7 +84,7 @@ railway domain
 </Step>
 </Steps>
 
-您的应用现已上线。`railway up` 部署的是您的本地目录，而不是 GitHub 仓库；如果希望 Railway 在每次 GitHub 推送时自动部署，请使用 `railway service source connect --repo <owner>/<repo> --branch <branch>` 将服务连接到您的仓库。
+您的应用现已上线。`railway up` 部署的是您的本地目录，而不是 GitHub 仓库。若要让 Railway 在每次 GitHub 推送时自动部署，请使用 `railway service source connect --repo <owner>/<repo> --branch <branch>` 将服务连接到您的仓库。
 
 ---
 
@@ -94,9 +94,9 @@ railway domain
 <Step title="步骤 1">
 创建新项目
 
-1. 打开 [Railway 仪表盘](http://railway.com/dashboard?utm_medium=integration&utm_source=docs&utm_campaign=bun)
-2. 点击 **"+ 新建"** → **"GitHub 仓库"**
-3. 选择您的代码仓库
+1. 前往 [Railway Dashboard](https://railway.com/dashboard?utm_medium=integration&utm_source=docs&utm_campaign=bun)
+2. 点击 **“+ New”** → **“GitHub repo”**
+3. 选择您的仓库
 
 </Step>
 <Step title="步骤 2">
@@ -104,10 +104,10 @@ railway domain
 
 <Note>如果应用不使用数据库，此步骤可跳过，直接进行步骤 3。</Note>
 
-1. 点击 **"+ 新建"** → **"数据库"** → **"添加 PostgreSQL"**
-2. 数据库创建完成后，选择您的服务（不是数据库）
-3. 转到 **"变量"** 标签页
-4. 点击 **"+ 创建新变量"** → **"添加引用"**
+1. 点击 **“+ New”** → **“Database”** → **“Add PostgreSQL”**
+2. Railway 创建数据库后，选择您的服务（而不是数据库）
+3. 前往 **“Variables”** 标签页
+4. 点击 **“+ New Variable”** → **“Add Reference”**
 5. 从 postgres 中选择 `DATABASE_URL`
 
 </Step>
@@ -115,8 +115,8 @@ railway domain
 生成公共域名
 
 1. 选择您的服务
-2. 转到 **"设置"** 标签页
-3. 在 **"网络"** 区块，点击 **"生成域名"**
+2. 转到 **“设置”** 标签页
+3. 在 **“网络”** 区块，点击 **“生成域名”**
 
 </Step>
 </Steps>

@@ -37,7 +37,7 @@ test("示例测试", () => {
 
 ## 每个作用域的设置与拆卸
 
-使用 `beforeAll` 和 `afterAll` 执行每个作用域的设置与拆卸逻辑。作用域由钩子定义的位置决定。
+使用 `beforeAll` 和 `afterAll` 执行每个作用域的设置与拆卸逻辑。钩子的定义位置决定其作用域。
 
 ### 限定在 describe 块内
 
@@ -93,7 +93,7 @@ describe("测试组", () => {
 
 ### `onTestFinished`
 
-使用 `onTestFinished` 来在单个测试完成后运行回调。它会在所有 `afterEach` 钩子之后运行。
+使用 `onTestFinished` 在单个测试完成后运行回调。该回调会在所有 `afterEach` 钩子之后运行。
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, onTestFinished } from "bun:test";
@@ -207,8 +207,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  // 每个测试后清除所有模拟
-  mock.restore();
+  // Clear all mocks after each test
+  mock.clearAllMocks();
 });
 ```
 
@@ -217,7 +217,7 @@ afterEach(() => {
 所有生命周期钩子都支持异步函数：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
-import { beforeAll, afterAll, test } from "bun:test";
+import { beforeAll, afterAll, test, expect } from "bun:test";
 
 beforeAll(async () => {
   // 异步设置
@@ -239,7 +239,7 @@ test("异步测试", async () => {
 
 ## 嵌套钩子
 
-钩子可以嵌套。它们按以下顺序运行：
+你可以嵌套钩子。它们按以下顺序运行：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { describe, beforeAll, beforeEach, afterEach, afterAll, test } from "bun:test";
@@ -283,7 +283,7 @@ describe("外层 describe", () => {
 
 ## 错误处理
 
-如果 `beforeAll` 钩子抛出错误，其作用域内的所有测试都会被跳过：
+如果 `beforeAll` 钩子抛出异常，测试运行器会跳过该钩子作用域内的所有测试：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { beforeAll, test } from "bun:test";

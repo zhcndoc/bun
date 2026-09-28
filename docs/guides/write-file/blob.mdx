@@ -8,7 +8,8 @@ mode: center
 
 ```ts
 const path = "/path/to/file.txt";
-await Bun.write(path, "Lorem ipsum");
+const data = new Blob(["Lorem ipsum"]);
+await Bun.write(path, data);
 ```
 
 ---

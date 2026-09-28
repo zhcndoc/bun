@@ -12,7 +12,7 @@ Bun 支持两种自动重载方式：
 
 ## `--watch` 模式
 
-Watch 模式适用于 `bun test`，以及运行 TypeScript、JSX 和 JavaScript 文件时。
+观察模式可与 `bun test` 和 `bun build` 配合使用，也可用于运行 TypeScript、JSX 和 JavaScript 文件。
 
 在 `--watch` 模式下运行文件：
 
@@ -36,7 +36,7 @@ Bun 使用操作系统原生的文件系统监视 API（如 kqueue 或 inotify�
 
 </Note>
 
-以下示例演示了 Bun 在编辑文件时的实时重载，VSCode 被配置为[每次按键保存文件](https://code.visualstudio.com/docs/editor/codebasics#_save-auto-save)。
+以下示例展示了 Bun 如何在你编辑文件时实时重载文件，并且 VSCode 已配置为[每次按键时](https://code.visualstudio.com/docs/editor/codebasics#_save-auto-save)保存文件。
 
 ```sh terminal icon="terminal"
 bun run --watch watchy.tsx
@@ -77,9 +77,9 @@ bun --watch test
 </Note>
 
 <Note>
-  在每次重启之前，`bun run --watch` 都会运行你的脚本为终止信号注册的处理程序（默认为
-  `SIGTERM`，与 Node.js 发送给其监视进程的信号一致）。使用 **`--watch-kill-signal`** 可以选择其他信号，例如
-  `bun --watch --watch-kill-signal SIGINT index.ts`。
+  每次重启前，`bun run --watch` 都会运行你的脚本为终止信号注册的处理程序。默认信号为
+  `SIGTERM`，与 Node.js 发送给其监视进程的信号相同。使用 **`--watch-kill-signal`** 可选择其他
+  信号，例如 `bun --watch --watch-kill-signal SIGINT index.ts`。
 </Note>
 
 ---
@@ -89,14 +89,14 @@ bun --watch test
 使用 `bun --hot` 在使用 Bun 执行代码时启用热重载。与 `--watch` 模式不同，Bun 不会完全重启整个进程。它会检测代码变化，并使用新代码更新其内部模块缓存。
 
 <Note>
-  这与浏览器中的热重载不同。许多框架都提供“热重载”体验，你可以编辑并保存前端代码（例如 React 组件），然后在不刷新页面的情况下看到浏览器中的变化。Bun 的 `--hot` 是这种体验在服务器端的对应实现。要在浏览器中实现热重载，请使用 [Vite](https://vite.dev) 等框架。
+  Bun 的 `--hot` 与浏览器中的热重载并不相同。许多框架都提供“热重载”体验，让你可以编辑并保存前端代码（例如 React 组件），并在不刷新页面的情况下在浏览器中看到更改。Bun 的 `--hot` 是这种体验在服务器端的对应实现。若要在浏览器中实现热重载，请使用 [Vite](https://vite.dev) 等框架。
 </Note>
 
 ```bash terminal icon="terminal"
 bun --hot server.ts
 ```
 
-从入口文件（本例中的 `server.ts`）开始，Bun 会构建一个包含所有导入源文件的注册表（不包括 `node_modules` 中的文件），并监视这些文件的变化。当文件发生变化时，Bun 会执行“软重载”。所有文件都会重新求值，但全局状态（尤其是 `globalThis` 对象）会保留。
+以入口文件（本例中为 `server.ts`）为起点，Bun 会构建一个包含所有导入源文件（不包括 `node_modules` 中的文件）的注册表，并监视这些文件的变化。当文件发生变化时，Bun 会执行“软重载”。Bun 会重新求值所有文件，但全局状态（尤其是 `globalThis` 对象）会保留。
 
 ```ts title="server.ts" icon="/icons/typescript.svg"
 // 让 TypeScript 不报错
@@ -115,13 +115,13 @@ setInterval(function () {}, 1000000);
 如果你用 `bun --hot server.ts` 运行这个文件，每次保存文件时你都会看到重载计数递增。
 
 ```bash terminal icon="terminal"
-bun --hot index.ts
+bun --hot server.ts
 ```
 
 ```txt
-重载了 1 次
-重载了 2 次
-重载了 3 次
+Reloaded 0 times
+Reloaded 1 times
+Reloaded 2 times
 ```
 
 像 `nodemon` 这样的传统文件监视器会重启整个进程，因此 HTTP 服务器和其他有状态对象都会丢失。相比之下，`bun --hot` 无需重启进程即可反映更新后的代码。
@@ -153,7 +153,7 @@ Bun.serve({
 
 - 重置内部的 `require` 缓存和 ES 模块注册表（`Loader.registry`）
 - 同步运行垃圾回收（以减少内存泄漏，但会牺牲一定运行时性能）
-- 重新从头转译所有代码（包括 sourcemaps）
+- 重新从头转译所有代码（包括源映射）
 - 使用 JavaScriptCore 重新求值代码
 
 目前的实现并非特别优化，会重新转译未发生变化的文件，也没有尝试增量编译。这只是一个起点。

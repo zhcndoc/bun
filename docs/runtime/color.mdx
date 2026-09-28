@@ -97,7 +97,7 @@ Bun.color([255, 0, 0, 255], "ansi"); // "\u001b[38;2;255;0;0m"
 
 `"ansi-16m"` 格式输出 24 位 ANSI 颜色，可以显示 1600 万种颜色，但需要支持该功能的现代终端。
 
-它会将输入颜色转换为 RGBA，然后将其输出为 ANSI 颜色。
+Bun 会将输入颜色转换为 RGBA，然后将其作为 ANSI 颜色输出。
 
 ```ts
 Bun.color("red", "ansi-16m"); // "\x1b[38;2;255;0;0m"
@@ -259,7 +259,7 @@ console.log(color("#f00", "css"));
 bun build ./client-side.ts
 ```
 
-`bun build` 会将以下内容写入 `client-side.js`：
+`bun build` 将以下内容输出到标准输出：
 
 ```js
 // client-side.ts

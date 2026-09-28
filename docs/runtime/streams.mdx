@@ -26,7 +26,7 @@ const stream = new ReadableStream({
 });
 ```
 
-可以使用 `for await` 语法逐块读取 `ReadableStream` 的内容。
+你可以使用 `for await` 语法逐块读取 `ReadableStream` 的内容。
 
 ```ts
 for await (const chunk of stream) {
@@ -41,9 +41,9 @@ for await (const chunk of stream) {
 
 ## 直接 `ReadableStream`
 
-Bun 实现了一个经过优化的 `ReadableStream`，避免了不必要的数据复制和队列管理。
+Bun 实现了优化版的 `ReadableStream`，避免了不必要的队列管理。
 
-在传统的 `ReadableStream` 中，数据块是被 _入队_ 的。每个数据块都会被复制到一个队列中，直到流准备好发送更多数据时才会被读取。
+使用传统的 `ReadableStream` 时，你需要将数据块入队。流会将每个数据块添加到队列中，直到流准备好发送更多数据时，这些数据块才会留在队列中。
 
 ```ts
 const stream = new ReadableStream({
@@ -55,7 +55,7 @@ const stream = new ReadableStream({
 });
 ```
 
-使用直接 `ReadableStream` 时，数据块会直接写入流中。不会发生排队，也不需要将数据块复制到内存中。`controller` API 也反映了这一点：调用 `.write()` 而不是 `.enqueue()`。
+使用直接 `ReadableStream` 时，你可以直接将数据块写入流中，不会发生排队。`controller` API 也体现了这一点：你调用 `.write()` 而不是 `.enqueue()`。
 
 ```ts
 const stream = new ReadableStream({
@@ -63,15 +63,24 @@ const stream = new ReadableStream({
   pull(controller) {
     controller.write("hello");
     controller.write("world");
+    controller.close();
   },
 });
 ```
 
-当使用直接 `ReadableStream` 时，目标端会处理所有的数据块队列。流的消费者将收到与传给 `controller.write()` 完全一致的内容，不进行任何编码或修改。
+使用直接 `ReadableStream` 时，目标端会处理所有数据块的排队。目标端会接收你传递给 `controller.write()` 的字节。从 JavaScript 读取流时，Bun 会缓冲写入内容，并以 `Uint8Array` 数据块的形式传递（字符串会进行 UTF-8 编码）。
+
+### 结束流
+
+所有内容写入完毕后，调用 `controller.close()`（或 `controller.end()`）。每个目标端都会刷新已缓冲的内容，并在此时结束。`controller.close(error)` 则会使流失败：不会再刷新任何内容，消费者会因 `error` 而拒绝。
+
+接收整个消息体的目标端（`Bun.serve`、`fetch`、`Bun.write`、`Bun.spawn` stdin、`.text()` 等）会调用一次 `pull()`。如果它返回一个 promise，那么在该 promise 处于待定状态期间，流会保持打开；当 promise 兑现时，流会结束，效果相当于 `pull()` 最后调用了 `controller.close()`；如果 promise 被拒绝，流会因该原因而出错。`pull()` 若不返回 promise 且不关闭流，则流会保持打开，直到有内容调用 `controller.close()`，因此你可以保留 controller，并从事件中写入内容。
+
+通过 reader（`getReader()`、`for await`、`pipeTo()`、`tee()`）读取流时，`pull()` 则是一种需求信号：在之前调用返回的 promise 仍处于待定状态时不会再次调用，而是会在后续读取时再次调用，直到 `controller.close()`。
 
 ### 处理背压
 
-`controller.write()` 返回已写入的字节数；当目标端的内部缓冲区已满时（例如，一个速度较慢的 HTTP 客户端），则返回一个**待处理的 `Promise<number>`**。无论哪种情况，数据块都会被接受；该 Promise 会在目标端完成排空后解析，因此只需对结果使用 `await` 即可：
+`controller.write()` 会返回已写入的字节数；如果目标端的内部缓冲区已满（例如，HTTP 客户端速度较慢），则会返回一个**待定的 `Promise<number>`**。无论哪种情况，数据块都会被接收。目标端断开连接后（例如，HTTP 客户端断开连接），`write()` 会返回 `0`。当目标端缓冲区排空后，promise 就会兑现，因此只需对结果使用 `await`：
 
 ```ts
 const stream = new ReadableStream({
@@ -85,9 +94,11 @@ const stream = new ReadableStream({
 });
 ```
 
-`await controller.flush(true)` 与此等效，可以在写入返回 Promise 后使用。
+`await controller.flush(true)` 效果相同，也可以在写入返回 `Promise` 后使用它。
 
-对于默认的（非 `direct`）`ReadableStream` 和异步生成器响应体，Bun 会自动应用这种背压机制——当目标端出现积压时，生产者会暂停。
+从 JavaScript 读取流时（`getReader()`、`pipeTo()`、`for await`），当有 `highWaterMark` 字节（默认为 64 KiB）等待 reader 读取时，缓冲区就会被视为已满。将 `{ highWaterMark }` 作为 `ReadableStream` 构造函数的第二个参数传入，即可更改此值。`reader.cancel(reason)` 会调用源的 `cancel(reason)`。
+
+对于默认（非 `direct`）的 `ReadableStream` 和异步生成器响应体，Bun 会自动应用此背压：当目标端积压时，它会暂停生产者。
 
 ---
 
@@ -119,7 +130,20 @@ const response = new Response({
 await response.text(); // "helloworld"
 ```
 
-如需更精细地控制流，`yield` 会返回直接的 `ReadableStream` 控制器。
+消息体只包含生成器 `yield` 的值。与 `for await` 一样，生成器的返回值不属于消息体。
+
+```ts
+const response = new Response(
+  (async function* () {
+    yield "hello";
+    return "ignored";
+  })(),
+);
+
+await response.text(); // "hello"
+```
+
+如需更精细地控制流，`yield` 会返回直接 `ReadableStream` 的 controller。
 
 ```ts
 const response = new Response({
@@ -179,7 +203,7 @@ sink.write(Buffer.from("lo").buffer);
 sink.end();
 ```
 
-调用 `.end()` 后，无法再向 `ArrayBufferSink` 写入数据。但是，在缓冲流时，你可能希望继续写入数据，并定期调用 `.flush()` 刷新内容（例如写入 `WritableStream`）。要实现此功能，请向 `start` 方法传入 `stream: true`。
+调用 `.end()` 后，就不能再向 `ArrayBufferSink` 写入数据。不过，在缓冲流时，你可能希望继续写入数据，并定期对内容调用 `.flush()`（例如，写入 `WritableStream`）。为此，请向 `start` 方法传入 `stream: true`。
 
 ```ts
 const sink = new Bun.ArrayBufferSink();

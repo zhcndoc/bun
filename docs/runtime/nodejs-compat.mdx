@@ -7,7 +7,7 @@ Bun 每天都在向实现 100% 的 Node.js API 兼容性迈进。Next.js、Expre
 
 **如果某个包在 Node.js 中可以运行，但在 Bun 中无法运行，我们会将其视为 Bun 的 bug。** [提交问题](https://bun.com/issues)，我们会修复它。
 
-此页面会定期更新，反映 Bun 对 _Node.js v26_ 的最新兼容状态。
+我们会定期更新此页面。它反映了 Bun 与 _Node.js v26_ 兼容性的最新状态。
 
 ## 内置 Node.js 模块
 
@@ -21,7 +21,7 @@ Bun 每天都在向实现 100% 的 Node.js API 兼容性迈进。Next.js、Expre
 
 ### [`node:console`](https://nodejs.org/api/console.html)
 
-🟢 完全实现。输出会直接写入 stdout/stderr 文件描述符，并使用 Bun 自己的检查器进行格式化，因此替换 `process.stdout.write` 无法捕获这些输出，并且对象布局与 `util.inspect` 不同；`console.trace()` 写入 stdout，而 `console.time*()` 写入 stderr。
+🟢 完全实现。Bun 会直接将控制台输出写入 stdout/stderr 文件描述符，并使用自己的检查器进行格式化。因此，替换 `process.stdout.write` 无法捕获输出，并且对象布局与 `util.inspect` 不同。`console.trace()` 会写入 stdout，而 `console.time*()` 会写入 stderr。
 
 ### [`node:dgram`](https://nodejs.org/api/dgram.html)
 
@@ -29,11 +29,11 @@ Bun 每天都在向实现 100% 的 Node.js API 兼容性迈进。Next.js、Expre
 
 ### [`node:diagnostics_channel`](https://nodejs.org/api/diagnostics_channel.html)
 
-🟡 已实现 `channel()`、`subscribe()`、`tracingChannel()` 以及 `http` 客户端、`http2` 和 `dgram` 内置通道。缺少 `boundedChannel()` 以及 `http.server.*`、`net`、`module`、`console`、`child_process` 和 `worker_threads` 内置通道；`Channel` 不会因其订阅者而保持活动状态，因此请保留对它的引用。
+🟡 已实现 `channel()`、`subscribe()`、`tracingChannel()` 以及 `http` 客户端、`http2` 和 `dgram` 内置通道。缺少 `boundedChannel()` 以及 `http.server.*`、`net`、`module`、`console`、`child_process` 和 `worker_threads` 内置通道。订阅者不会使 `Channel` 保持存活，因此请保留对它的引用。
 
 ### [`node:dns`](https://nodejs.org/api/dns.html)
 
-🟢 完全实现。缺少 `resolveTlsa`；`Resolver` 的 `maxTimeout` 选项会被忽略，并且回调风格的 `Resolver` 类无法被子类化（`dns.promises.Resolver` 可以）。
+🟢 完全实现。缺少 `resolveTlsa`。Bun 会忽略 `Resolver` 的 `maxTimeout` 选项。
 
 ### [`node:events`](https://nodejs.org/api/events.html)
 
@@ -45,23 +45,23 @@ Bun 每天都在向实现 100% 的 Node.js API 兼容性迈进。Next.js、Expre
 
 ### [`node:http`](https://nodejs.org/api/http.html)
 
-🟢 完全实现。`http.Server` 不继承 `net.Server`；`listen(handle)` 以及 `listen()` 的 `fd`、`ipv6Only` 和 `signal` 选项会被忽略，服务器上的 `keepAlive`／`keepAliveInitialDelay` 也不会执行任何操作。
+🟢 完全实现。`http.Server` 不会继承 `net.Server`。Bun 会忽略 `listen(handle)` 以及 `listen()` 的 `fd`、`ipv6Only` 和 `signal` 选项。服务器上的 `keepAlive`／`keepAliveInitialDelay` 不执行任何操作。
 
 ### [`node:https`](https://nodejs.org/api/https.html)
 
-🟡 已实现 `request`、`get`、`Agent` 和 `globalAgent`，包括连接池。`https.Server` 是带有 TLS 选项的 `http.Server`，而不是 `tls.Server`：请求套接字不是 `tls.TLSSocket`（`encrypted`、`authorized` 和 `servername` 可用；缺少 `getPeerCertificate()` 和 `getCipher()`），并且不支持 `setSecureContext()`、`addContext()`、`SNICallback` 和 `handshakeTimeout`。
+🟡 已实现 `request`、`get`、`Agent` 和 `globalAgent`，包括连接池。客户端套接字是 `tls.TLSSocket`。`https.Server` 是带有 TLS 选项的 `http.Server`，而不是 `tls.Server`。其请求套接字（`req.socket`）不是 `tls.TLSSocket`：`encrypted`、`authorized` 和 `servername` 可用，但缺少 `getPeerCertificate()` 和 `getCipher()`。不支持 `setSecureContext()`、`addContext()`、`SNICallback` 和 `handshakeTimeout`。
 
 ### [`node:os`](https://nodejs.org/api/os.html)
 
-🟢 完全实现。`userInfo()` 从环境变量（`USER`、`SHELL`、`HOME`）中读取 `username`、`shell` 和 `homedir`，而不是从 passwd 数据库中读取；在 Linux arm64 上，`machine()` 返回 `"arm64"` 而不是 `"aarch64"`。
+🟢 完全实现。`userInfo()` 从环境变量（`USER`、`SHELL`、`HOME`）中读取 `username`、`shell` 和 `homedir`，而不是从 passwd 数据库读取。在 Linux arm64 上，`machine()` 返回 `"arm64"` 而不是 `"aarch64"`。
 
 ### [`node:path`](https://nodejs.org/api/path.html)
 
-🟢 完全实现。`matchesGlob()` 使用 `Bun.Glob` 语义，而不是 minimatch（`*` 会匹配点文件，不支持 extglob），并且 `path.win32` 在涉及设备路径和保留名称的少数边界情况下与 Node 不同。
+🟢 完全实现。`matchesGlob()` 使用 `Bun.Glob` 语义，而不是 minimatch（`*` 会匹配点文件，不支持 extglobs）。在涉及设备路径和保留名称的少数边缘情况下，`path.win32` 与 Node 有所不同。
 
 ### [`node:punycode`](https://nodejs.org/api/punycode.html)
 
-🟢 完全实现。Node.js 测试套件 100% 通过，_Node.js 已弃用_。
+🟢 完全实现。Node.js 测试套件 100% 通过。_已被 Node.js 弃用_。
 
 ### [`node:querystring`](https://nodejs.org/api/querystring.html)
 
@@ -77,11 +77,11 @@ Bun 每天都在向实现 100% 的 Node.js API 兼容性迈进。Next.js、Expre
 
 ### [`node:string_decoder`](https://nodejs.org/api/string_decoder.html)
 
-🟢 完全实现。Node.js 测试套件 100% 通过。`end()` 不接受字符串参数，并且 `StringDecoder` 无法通过 `class extends` 进行子类化。
+🟢 完全实现。Node.js 测试套件 100% 通过。`end()` 不接受字符串参数。
 
 ### [`node:timers`](https://nodejs.org/api/timers.html)
 
-🟢 完全实现。导出的内容与全局变量是相同的函数；`node:timers/promises`（包括 `scheduler.wait()` 和 `scheduler.yield()`）也已实现。
+🟢 完全实现。导出的函数与全局函数相同。`node:timers/promises`（包括 `scheduler.wait()` 和 `scheduler.yield()`）也已实现。
 
 ### [`node:tty`](https://nodejs.org/api/tty.html)
 
@@ -97,11 +97,11 @@ Bun 每天都在向实现 100% 的 Node.js API 兼容性迈进。Next.js、Expre
 
 ### [`node:async_hooks`](https://nodejs.org/api/async_hooks.html)
 
-🟡 已实现 `AsyncLocalStorage` 和 `AsyncResource`。`createHook`、`executionAsyncId`、`triggerAsyncId` 和 `executionAsyncResource` 是存根（不会调用钩子，除了 `process.nextTick` 的 `init` 外，并且异步 id 始终为 `0`）；Node.js [强烈不建议](https://nodejs.org/docs/latest/api/async_hooks.html#async-hooks)使用这些 API，而应使用 `AsyncLocalStorage`。`AsyncLocalStorage` 上下文不会传播到 `MessagePort`、`BroadcastChannel` 或 `Worker` 事件中。
+🟡 已实现 `AsyncLocalStorage` 和 `AsyncResource`。`createHook`、`executionAsyncId`、`triggerAsyncId` 和 `executionAsyncResource` 是存根：除了 `process.nextTick` 的 `init` 事件之外，Bun 不会调用钩子，并且异步 ID 始终为 `0`。Node.js [强烈不建议](https://nodejs.org/docs/latest/api/async_hooks.html#async-hooks)使用这些 API，建议改用 `AsyncLocalStorage`。Bun 不会将 `AsyncLocalStorage` 上下文传播到 `MessagePort`、`BroadcastChannel` 或 `Worker` 事件中。
 
 ### [`node:child_process`](https://nodejs.org/api/child_process.html)
 
-🟡 IPC 可以发送 `net.Socket`、`net.Server` 和 `dgram.Socket` 句柄（包括向 Node.js 进程发送以及从 Node.js 进程接收），但不能发送 `http` 服务器套接字；`serialization: "advanced"` 仅适用于 Bun 进程之间，因此 Node.js ↔ Bun IPC 请使用 JSON 序列化。缺少 `subprocess.channel.ref()`／`unref()`；一个子进程的 `stdout`／`stderr` 不能作为另一个子进程的 `stdio` 传入，并且 `spawnSync` 不会在 `output` 中返回额外的 `stdio` 管道。
+🟡 IPC 可以发送 `net.Socket`、`net.Server` 和 `dgram.Socket` 句柄（包括向 Node.js 进程发送和从 Node.js 进程接收），但不能发送 `http` 服务器套接字。`serialization: "advanced"` 仅适用于 Bun 进程之间，因此 Node.js 与 Bun 之间的 IPC 请使用 JSON 序列化。缺少 `subprocess.channel.ref()`／`unref()`。无法将某个子进程的 `stdout`／`stderr` 作为另一个子进程的 `stdio` 传入，并且 `spawnSync` 不会在 `output` 中返回额外的 `stdio` 管道。
 
 ### [`node:cluster`](https://nodejs.org/api/cluster.html)
 
@@ -109,79 +109,79 @@ Bun 每天都在向实现 100% 的 Node.js API 兼容性迈进。Next.js、Expre
 
 ### [`node:crypto`](https://nodejs.org/api/crypto.html)
 
-🟡 缺少 `encapsulate`／`decapsulate`（ML-KEM 密钥可通过 `crypto.subtle` 使用）；`argon2()` 和自定义引擎（`setEngine()`）会抛出异常，`setFips()` 不执行任何操作，`secureHeapUsed()` 返回 `undefined`。Bun 的加密功能由 BoringSSL 支持，而 BoringSSL 缺少 `ed448`、`x448`、`rsa-pss`、`dsa` 和 `dh` 密钥类型，除 P-224／256／384／521 之外的 EC 曲线（不支持 `secp256k1`），以及 CCM、OCB、XTS 和 `chacha20-poly1305` 密码。
+🟡 缺少 `encapsulate`／`decapsulate`（可以通过 `crypto.subtle` 使用 ML-KEM 密钥）。已实现 `argon2()` 和 `argon2Sync()`。自定义引擎（`setEngine()`）会抛出异常，`setFips()` 不执行任何操作，而 `secureHeapUsed()` 返回 `undefined`。Bun 的加密功能基于 BoringSSL，后者不支持 `ed448`、`x448`、`rsa-pss`、`dsa`、`dh` 和 `ml-kem-512` 密钥类型；除 P-224／256／384／521 之外的 EC 曲线（不支持 `secp256k1`）；以及 CCM、OCB、XTS 和 `chacha20-poly1305` 密码算法。`DiffieHellman` 类（`createDiffieHellman()`、`getDiffieHellman()`）可用。
 
 ### [`node:domain`](https://nodejs.org/api/domain.html)
 
-🟡 缺少 `Domain` 的 `members`。domain 只会捕获在 `run()`／`bind()` 内同步抛出的错误，或由传递给 `add()` 的 emitter 发出的错误；来自计时器、`process.nextTick`、promise 和其他异步回调的错误不会被路由到该 domain。
+🟡 缺少 `Domain` `members`。domain 只会捕获在 `run()`／`bind()` 内同步抛出的错误，或传递给 `add()` 的事件发射器发出的错误。Bun 不会将来自计时器、`process.nextTick`、promise 和其他异步回调的错误路由到 domain。
 
 ### [`node:http2`](https://nodejs.org/api/http2.html)
 
-🟢 客户端和服务器均已实现。Node.js 测试套件通过率为 94%。`maxDeflateDynamicTableSize`、`peerMaxConcurrentStreams`、`streamResetBurst`／`streamResetRate` 和 `maxOriginSetSize` 选项会被接受但忽略。
+🟢 客户端和服务器均已实现。Node.js 测试套件通过率为 94%。`maxDeflateDynamicTableSize`、`peerMaxConcurrentStreams` 和 `streamResetBurst`／`streamResetRate` 选项会被接受但忽略。
 
 ### [`node:module`](https://nodejs.org/api/module.html)
 
-🟡 缺少 `Module#load()`、`registerHooks`、`findPackageJSON`、`stripTypeScriptTypes`、`getSourceMapsSupport`／`setSourceMapsSupport`。支持覆盖 `require.cache`、`require.extensions` 和 `module._resolveFilename`。`syncBuiltinESMExports`、`module._load`、`module._pathCache` 和 `module.register` 不执行任何操作（我们建议改用 [`Bun.plugin`](/runtime/plugins)），并且 `findSourceMap` 始终返回 `undefined`。
+🟡 缺少 `Module#load()`、`registerHooks`、`findPackageJSON`、`stripTypeScriptTypes`、`getSourceMapsSupport`／`setSourceMapsSupport`。支持覆盖 `require.cache`、`require.extensions` 和 `module._resolveFilename`。`syncBuiltinESMExports`、`module._load`、`module._pathCache` 和 `module.register` 不执行任何操作（我们建议改用 [`Bun.plugin`](/runtime/plugins)）。`findSourceMap` 始终返回 `undefined`。
 
 ### [`node:net`](https://nodejs.org/api/net.html)
 
-🟢 完全实现，包括 `BlockList`、`SocketAddress`、`autoSelectFamily`、Unix 域套接字和 `server.listen({ fd })`。`new net.Socket({ fd })` 无法从现有文件描述符读取（只能进行只写包装），`server.listen(handle)` 仅接受 `{ fd }`，并且缺少 `blockList.toJSON()`／`fromJSON()`。
+🟢 完全实现，包括 `BlockList`、`SocketAddress`、`autoSelectFamily`、Unix 域套接字和 `server.listen({ fd })`。`new net.Socket({ fd })` 无法从现有文件描述符读取（只能进行只写封装）。`server.listen(handle)` 只接受 `{ fd }`。缺少 `blockList.toJSON()`／`fromJSON()`。
 
 ### [`node:perf_hooks`](https://nodejs.org/api/perf_hooks.html)
 
-🟡 已实现 `monitorEventLoopDelay()`、`createHistogram()`、`timerify()` 和 `PerformanceObserver`（`mark`、`measure`、`function`、`net`、`http` 和 `http2` 条目）。不会发出 `gc`、`dns` 或 `resource` 条目，`eventLoopUtilization()` 始终返回零，并且 `performance.nodeTiming` 包含占位值。只有导入 `node:perf_hooks` 后，全局 `performance` 对象中 Node 特有的新增内容才会出现。
+🟡 已实现 `monitorEventLoopDelay()`、`createHistogram()`、`timerify()` 和 `PerformanceObserver`（`mark`、`measure`、`function`、`net`、`http` 和 `http2` 条目）。Bun 永远不会发出 `gc`、`dns` 或 `resource` 条目。`eventLoopUtilization()` 始终返回零，而 `performance.nodeTiming` 包含占位值。只有导入 `node:perf_hooks` 后，全局 `performance` 对象才会出现 Node 专属的扩展。
 
 ### [`node:process`](https://nodejs.org/api/process.html)
 
-🟡 见 [`process`](#process) 全局变量部分。
+🟡 参见 [`process`](#process) 全局变量部分。
 
 ### [`node:sys`](https://nodejs.org/api/util.html)
 
-🟡 见 [`node:util`](#node-util)。
+🟢 参见 [`node:util`](#node-util)。
 
 ### [`node:tls`](https://nodejs.org/api/tls.html)
 
-🟡 缺少 `pskCallback`、OCSP stapling（`requestOCSP`）、服务器的 `'newSession'`／`'resumeSession'` 事件以及会话票据密钥（`ticketKeys` 会被忽略），因此跨进程的会话恢复无法工作。Bun 使用 BoringSSL，因此 `tlsSocket.renegotiate()` 始终失败，而 `getEphemeralKeyInfo()`／`getSharedSigalgs()` 不会返回任何信息。
+🟡 缺少 `pskCallback`、OCSP 装订（`requestOCSP`）、服务器的 `'newSession'`／`'resumeSession'` 事件以及会话票据密钥（`ticketKeys` 会被忽略）。因此，跨进程的会话恢复无法使用。Bun 使用 BoringSSL，因此 `tlsSocket.renegotiate()` 始终会失败，而 `getEphemeralKeyInfo()`／`getSharedSigalgs()` 不会返回任何信息。
 
 ### [`node:util`](https://nodejs.org/api/util.html)
 
-🟡 缺少 `diff`、`transferableAbortSignal`、`transferableAbortController`。`debuglog()` 会忽略其 `callback` 参数，返回的函数没有 `enabled` 属性。
+🟢 完全实现。缺少 `diff`（在 Node.js 中为实验性功能）、`transferableAbortSignal` 和 `transferableAbortController`。`debuglog()` 会忽略其 `callback` 参数，且返回的函数没有 `enabled` 属性。
 
 ### [`node:v8`](https://nodejs.org/api/v8.html)
 
-🟡 已实现 `writeHeapSnapshot`、`getHeapSnapshot`、`getHeapStatistics`、`getHeapSpaceStatistics`、`GCProfiler` 和 `startupSnapshot`；堆统计描述的是 JavaScriptCore 的单一堆，并且 `setFlagsFromString` 会忽略传入的标志。`serialize` 和 `deserialize` 使用 JavaScriptCore 的 wire 格式，而不是 V8 的格式。缺少 `queryObjects`、`startCpuProfile`、`startHeapProfile`、`Serializer`／`Deserializer`、`takeCoverage`／`stopCoverage` 和 `promiseHooks`。如需进行性能分析，请改用 [`bun:jsc`](/project/benchmarking#javascript-heap-stats)。
+🟡 已实现 `writeHeapSnapshot`、`getHeapSnapshot`、`getHeapStatistics`、`getHeapSpaceStatistics`、`GCProfiler` 和 `startupSnapshot`。堆统计信息描述的是 JavaScriptCore 的单个堆，并且 `setFlagsFromString` 会忽略传入的标志。`serialize` 和 `deserialize` 使用 JavaScriptCore 的线格式，而不是 V8 的格式。缺少 `queryObjects`、`startCpuProfile`、`startHeapProfile`、`Serializer`／`Deserializer`、`takeCoverage`／`stopCoverage` 和 `promiseHooks`。如需性能分析，请改用 [`bun:jsc`](/project/benchmarking#javascript-heap-stats)。
 
 ### [`node:vm`](https://nodejs.org/api/vm.html)
 
-🟡 已实现核心功能和 ES 模块，包括 `vm.Script`、`vm.createContext`、`vm.runInContext`、`vm.runInNewContext`、`vm.runInThisContext`、`vm.compileFunction`、`vm.isContext`、`vm.Module`、`vm.SourceTextModule`、`vm.SyntheticModule`（无需 `--experimental-vm-modules` 即可导出）以及对 `importModuleDynamically` 的支持。支持 `timeout`、`breakOnSigint`、`cachedData`、`microtaskMode` 和 `codeGeneration` 选项。返回 `vm.Module` promise 的 `importModuleDynamically` 回调会将 `import()` 解析为模块对象，而不是其命名空间，并且 `vm.measureMemory()` 会为每个上下文报告整个堆的数值。
+🟢 完全实现，包括 `vm.Script`、`vm.createContext`、`vm.runInContext`、`vm.runInNewContext`、`vm.runInThisContext`、`vm.compileFunction`、`vm.isContext`、ES 模块类 `vm.Module`、`vm.SourceTextModule` 和 `vm.SyntheticModule`（无需 `--experimental-vm-modules` 即可导出），以及对 `importModuleDynamically` 的支持。支持 `timeout`、`breakOnSigint`、`cachedData`、`microtaskMode` 和 `codeGeneration` 选项。如果 `importModuleDynamically` 回调返回一个解析为 `vm.Module` 的 promise，`import()` 会解析为模块对象，而不是其命名空间。`vm.measureMemory()` 会报告每个上下文的整个堆数据。
 
 ### [`node:wasi`](https://nodejs.org/api/wasi.html)
 
-🟡 部分实现。`WASI` 支持 `args`、`env`、`preopens`、`wasiImport` 和 `start()`，并且 `bun ./program.wasm` 可以直接运行 WASI 命令。缺少 `getImportObject()`（请使用 `wasiImport`）、`initialize()` 和 `sock_accept` 导入；`version`、`returnOnExit`、`stdin`、`stdout` 和 `stderr` 选项会被忽略，因此 `proc_exit` 会退出 Bun 进程。
+🟡 部分实现。`WASI` 支持 `args`、`env`、`preopens`、`wasiImport` 和 `start()`，并且 `bun ./program.wasm` 可以直接运行 WASI 命令。缺少 `getImportObject()`（请使用 `wasiImport`）、`initialize()` 和 `sock_accept` 导入项。Bun 会忽略 `version`、`returnOnExit`、`stdin`、`stdout` 和 `stderr` 选项，因此 `proc_exit` 会退出 Bun 进程。
 
 ### [`node:worker_threads`](https://nodejs.org/api/worker_threads.html)
 
-🟡 `Worker` 会忽略 `resourceLimits` 和 `trackUnmanagedFds` 选项，而 `execArgv` 只会在 worker 中设置 `process.execArgv`。`worker.performance.eventLoopUtilization()` 是存根。缺少 `moveMessagePortToContext` 和 `locks`。
+🟡 `Worker` 会忽略 `resourceLimits` 和 `trackUnmanagedFds` 选项。部分 `execArgv` 标志会在 worker 中生效，例如 `--no-addons`、`--stack-trace-limit` 和 `--tls-min-v1.3`。其他标志，例如 `--conditions` 和 `--no-deprecation`，只会设置 `process.execArgv`。`worker.performance.eventLoopUtilization()` 是存根。缺少 `moveMessagePortToContext` 和 `locks`。
 
 ### [`node:inspector`](https://nodejs.org/api/inspector.html)
 
-🟡 部分实现。`Session` 支持 `Profiler` 域（包括精确覆盖率）、`Runtime.enable` 和 `NodeTracing`，可通过 `node:inspector` 和 `node:inspector/promises` 使用；其他 `Session` 命令（例如 `Runtime.evaluate`）以及 `HeapProfiler` 域尚未实现。`open()`、`url()`、`close()` 和 `waitForDebugger()` 已实现；`open()` 提供 `Debugger` 和 `Runtime` 域，并且在 worker 中会抛出异常。缺少 `Network`。
+🟡 部分实现。`Session` 支持 `Profiler` 域（包括精确覆盖率）、`Runtime.enable` 和 `NodeTracing`，可通过 `node:inspector` 和 `node:inspector/promises` 使用。调用 `open()` 后，`Session` 还会将 `Debugger.enable` 和 `Debugger.setBreakpointByUrl` 等 `Debugger` 配置命令转发到检查器服务器。不会返回诸如 `breakpointId` 之类的结果。其他 `Session` 命令（例如 `Runtime.evaluate`）和 `HeapProfiler` 域尚未实现。`open()`、`url()`、`close()` 和 `waitForDebugger()` 均已实现。`open()` 会提供 `Debugger` 和 `Runtime` 域，并且在 worker 中会抛出异常。缺少 `Network`。
 
 ### [`node:repl`](https://nodejs.org/api/repl.html)
 
-🟡 大部分已实现。`bun --interactive` 会启动兼容 Node.js 的 REPL。不会显示结果预览（该功能需要基于 V8 inspector 的无副作用求值），制表符补全会跳过 `let`／`const`／`class` 绑定，并且部分 V8 特有的错误消息和堆栈帧措辞有所不同。
+🟡 大部分已实现。`bun --interactive` 会启动兼容 Node.js 的 REPL。REPL 不会显示结果预览（这需要基于 V8 检查器的无副作用求值）。Tab 自动补全会跳过 `let`／`const`／`class` 绑定，并且部分 V8 专属错误消息和堆栈帧措辞有所不同。
 
 ### [`node:sqlite`](https://nodejs.org/api/sqlite.html)
 
-🟢 完全实现。`backup()` 会同步运行，并在复制期间阻塞事件循环（Node 会在工作线程上运行该操作）。作为数据库路径的 `Buffer`／`Uint8Array` 必须是有效的 UTF-8（Node 会直接传递原始字节；Bun 会对非 UTF-8 内容拒绝并返回 `ERR_INVALID_ARG_VALUE`）。在 macOS 上，Bun 使用系统的 `libsqlite3.dylib`；`loadExtension()`（以及在较旧的 macOS 版本上，`createSession()`／`applyChangeset()`）需要完整的 SQLite 构建版本——请在打开数据库前调用 `require("bun:sqlite").Database.setCustomSQLite(path)`。
+🟢 完全实现。`backup()` 同步运行，并会在复制期间阻塞事件循环（Node 会在 worker 线程中运行它）。`Buffer`／`Uint8Array` 数据库路径必须是有效的 UTF-8（Node 会原样传递原始字节；Bun 会对非 UTF-8 路径抛出 `ERR_INVALID_ARG_VALUE`）。在 macOS 上，Bun 使用系统的 `libsqlite3.dylib`。`loadExtension()` 需要完整的 SQLite 构建版本，较旧 macOS 版本上的 `createSession()`／`applyChangeset()` 也需要该版本。如需使用完整的 SQLite 构建版本，请在打开数据库前调用 `require("bun:sqlite").Database.setCustomSQLite(path)`。
 
 ### [`node:test`](https://nodejs.org/api/test.html)
 
-🟡 部分实现。在 `bun test` 下运行测试文件时，进程内 API 可以工作：测试、套件、子测试、钩子、`t.plan()`、`t.assert`、`assert.register()`、`t.waitFor()`、`getTestContext()`、`expectFailure` 以及 `t.mock`（函数／方法／getter／setter／属性 mock 和 mock 计时器）。`run()` 需要显式的 `files` 列表，并会在 `bun test` 子进程中运行每个文件；其大多数选项（`globPatterns`、`watch`、`coverage`、`shard`、`only`、`testNamePatterns` 等）都会抛出 `ERR_NOT_IMPLEMENTED`。缺少 `node:test/reporters`、快照测试、`mock.module()`、`t.runOnly()`、代码覆盖率、`--test-only`、测试级别的 `signal` 中止以及 Node 的 `--test` CLI runner 模式。`test.only()`／`{only: true}` 会被接受，但不会进行筛选。`concurrency` 会被验证，但子测试始终串行运行。请改用 [`bun:test`](/test)。
+🟡 部分实现。在测试文件通过 `bun test` 运行时，进程内 API 可用：tests、suites、subtests、hooks、`t.plan()`、`t.assert`、`assert.register()`、`t.waitFor()`、`getTestContext()`、`expectFailure` 和 `t.mock`（函数／方法／getter／setter／属性 mock 和 mock 计时器）。`run()` 需要显式的 `files` 列表，并会在 `bun test` 子进程中运行每个文件。其大多数选项（`globPatterns`、`watch`、`coverage`、`shard`、`only`、`testNamePatterns` 等）都会抛出 `ERR_NOT_IMPLEMENTED`。缺少 `node:test/reporters`、快照测试、`mock.module()`、`t.runOnly()`、代码覆盖率、`--test-only`、测试级别的 `signal` 中止功能，以及 Node 的 `--test` CLI 运行模式。虽然接受 `test.only()`／`{only: true}`，但不会据此筛选测试。`concurrency` 会经过验证，但 subtests 始终串行运行。请改用 [`bun:test`](/test)。
 
 ### [`node:trace_events`](https://nodejs.org/api/tracing.html)
 
-🟢 完全实现。支持 `createTracing()`、`getEnabledCategories()` 以及 `--trace-events-enabled`、`--trace-event-categories` 和 `--trace-event-file-pattern` 标志；跟踪信息会在退出时写入。部分类别记录的信息少于 Node.js（例如 `node.async_hooks` 只记录计时器，而 `v8` 类别是占位实现，因为 JavaScriptCore 没有 V8 GC 或编译事件）。
+🟢 完全实现。支持 `createTracing()`、`getEnabledCategories()` 以及 `--trace-events-enabled`、`--trace-event-categories` 和 `--trace-event-file-pattern` 标志。Bun 会在退出时写入跟踪数据。部分类别记录的信息少于 Node.js。例如，`node.async_hooks` 只记录计时器，而 `v8` 类别仅为占位项，因为 JavaScriptCore 没有 V8 GC 或编译事件。
 
 ### [`node:quic`](https://github.com/nodejs/node/blob/main/doc/api/quic.md)
 
@@ -251,6 +251,10 @@ Bun 每天都在向实现 100% 的 Node.js API 兼容性迈进。Next.js、Expre
 
 🟢 完全实现。
 
+### [`CloseEvent`](https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent)
+
+🟢 完全实现。
+
 ### [`CompressionStream`](https://developer.mozilla.org/en-US/docs/Web/API/CompressionStream)
 
 🟢 完全实现。
@@ -283,6 +287,10 @@ Bun 每天都在向实现 100% 的 Node.js API 兼容性迈进。Next.js、Expre
 
 🟢 完全实现。
 
+### [`ErrorEvent`](https://developer.mozilla.org/en-US/docs/Web/API/ErrorEvent)
+
+🟢 完全实现。
+
 ### [`Event`](https://developer.mozilla.org/en-US/docs/Web/API/Event)
 
 🟢 完全实现。
@@ -298,6 +306,10 @@ Bun 每天都在向实现 100% 的 Node.js API 兼容性迈进。Next.js、Expre
 ### [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch)
 
 🟢 完全实现。`integrity` 选项会被忽略。
+
+### [`File`](https://developer.mozilla.org/en-US/docs/Web/API/File)
+
+🟢 完全实现。`File` 对象会将 `Blob` 报告为其 `constructor` 和 `Symbol.toStringTag`。
 
 ### [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)
 
@@ -331,6 +343,10 @@ Bun 每天都在向实现 100% 的 Node.js API 兼容性迈进。Next.js、Expre
 
 🟢 完全实现。缺少 `module.isPreloading`。
 
+### [`navigator`](https://nodejs.org/api/globals.html#navigator)
+
+🟡 已实现 `userAgent`、`platform` 和 `hardwareConcurrency`。缺少 `language`、`languages` 和 `locks`。`Navigator` 类不是全局变量。
+
 ### [`PerformanceEntry`](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceEntry)
 
 🟢 完全实现。
@@ -345,7 +361,7 @@ Bun 每天都在向实现 100% 的 Node.js API 兼容性迈进。Next.js、Expre
 
 ### [`PerformanceObserver`](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceObserver)
 
-🟡 可以观察 `mark` 和 `measure` 条目。Node 专属的条目类型（`function`、`http`、`net` 等）只会传递给 `node:perf_hooks` 的 `PerformanceObserver`，并且永远不会发出 `gc`、`dns` 和 `resource` 条目。
+🟡 可以观察 `mark` 和 `measure` 条目。Bun 只会将 Node 专属条目类型（`function`、`http`、`net` 等）传递给 `node:perf_hooks` 的 `PerformanceObserver`，并且永远不会发出 `gc`、`dns` 或 `resource` 条目。
 
 ### [`PerformanceObserverEntryList`](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceObserverEntryList)
 
@@ -357,15 +373,19 @@ Bun 每天都在向实现 100% 的 Node.js API 兼容性迈进。Next.js、Expre
 
 ### [`performance`](https://developer.mozilla.org/en-US/docs/Web/API/performance)
 
-🟡 已实现 `now()`、`timeOrigin`、`mark()`、`measure()` 和 `getEntries()`。Node.js 的新增内容（`eventLoopUtilization()`、`nodeTiming`、`timerify()`）只有在加载 `node:perf_hooks` 后才会存在；`eventLoopUtilization()` 始终返回零，而 `nodeTiming` 包含占位值。
+🟡 已实现 `now()`、`timeOrigin`、`mark()`、`measure()` 和 `getEntries()`。只有加载 `node:perf_hooks` 后，Node.js 扩展项（`eventLoopUtilization()`、`nodeTiming`、`timerify()`）才会存在。`eventLoopUtilization()` 始终返回零，而 `nodeTiming` 包含占位值。
 
 ### [`process`](https://nodejs.org/api/process.html)
 
-🟡 大部分已实现。`process.binding`（部分依赖它的包所使用的 Node.js 内部绑定）已部分实现：`buffer`、`config`、`constants`、`fs`、`natives`、`tty_wrap`、`util` 和 `uv` 可用，其余会抛出异常。在 macOS 和 Linux 上设置 `process.title` 不执行任何操作。`getActiveResourcesInfo()`、`_getActiveHandles()` 和 `_getActiveRequests()` 始终返回空数组，`setSourceMapsEnabled()` 不执行任何操作，`process.report.writeReport()` 不会写入任何内容。缺少 `sourceMapsEnabled` 和 `addUncaughtExceptionCaptureCallback`。
+🟡 大部分已实现。`process.binding`（某些包所依赖的 Node.js 内部绑定）部分实现：可用项包括 `buffer`、`config`、`constants`、`crypto/x509`、`fs`、`http_parser`、`natives`、`tty_wrap`、`util` 和 `uv`，其余项会抛出异常。在 macOS 和 Linux 上设置 `process.title` 不执行任何操作。`getActiveResourcesInfo()`、`_getActiveHandles()` 和 `_getActiveRequests()` 始终返回空数组，`setSourceMapsEnabled()` 不执行任何操作，并且 `process.report.writeReport()` 不会写入任何内容。缺少 `sourceMapsEnabled` 和 `addUncaughtExceptionCaptureCallback`。
 
 ### [`queueMicrotask()`](https://developer.mozilla.org/en-US/docs/Web/API/queueMicrotask)
 
 🟢 完全实现。
+
+### [`QuotaExceededError`](https://developer.mozilla.org/en-US/docs/Web/API/QuotaExceededError)
+
+🔴 未实现。
 
 ### [`ReadableByteStreamController`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableByteStreamController)
 
@@ -419,6 +439,10 @@ Bun 每天都在向实现 100% 的 Node.js API 兼容性迈进。Next.js、Expre
 
 🟢 完全实现。只有 `ArrayBuffer` 和 `MessagePort` 可以被传输，并且克隆的 `Error` 会丢失其 `cause`。
 
+### [`Storage`](https://developer.mozilla.org/en-US/docs/Web/API/Storage)
+
+🔴 未实现。Bun 没有 `Storage`、`localStorage` 或 `sessionStorage` 全局变量。
+
 ### [`SubtleCrypto`](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto)
 
 🟢 完全实现，包括 `supports()`、`getPublicKey()`、`encapsulate*()`／`decapsulate*()` 方法、`ML-DSA`、`ML-KEM-768`／`ML-KEM-1024`、`SHA3-*` 和 `ChaCha20-Poly1305`。缺少 `Ed448`、`X448`、`AES-OCB`、`Argon2*`、`cSHAKE*`、`KMAC*`、`KT128`／`KT256`、`TurboSHAKE*` 和 `ML-KEM-512` 算法（这些算法在 Node.js 中均为实验性功能）。
@@ -455,6 +479,10 @@ Bun 每天都在向实现 100% 的 Node.js API 兼容性迈进。Next.js、Expre
 
 🟢 完全实现。
 
+### [`URLPattern`](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern)
+
+🟢 完全实现。
+
 ### [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams)
 
 🟢 完全实现。
@@ -462,6 +490,10 @@ Bun 每天都在向实现 100% 的 Node.js API 兼容性迈进。Next.js、Expre
 ### [`WebAssembly`](https://nodejs.org/api/globals.html#webassembly)
 
 🟢 完全实现。Memory64 默认处于禁用状态（设置 `BUN_JSC_useWasmMemory64=1` 可启用）。
+
+### [`WebSocket`](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
+
+🟢 完全实现。`binaryType` 默认为 `"nodebuffer"`，因此二进制消息会以 `Buffer` 的形式到达。Node.js 的默认值为 `"blob"`。
 
 ### [`WritableStream`](https://developer.mozilla.org/en-US/docs/Web/API/WritableStream)
 

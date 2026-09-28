@@ -124,7 +124,7 @@ rewriter.on("div", {
 });
 ```
 
-`transform(response)` 会立即返回；重写会在后台继续进行，你可以从返回的 `Response` 中读取结果。读取结果会控制重写的速度：流式输入（文件、`fetch()` 响应、`ReadableStream`）只会以返回 body 被消费的速度读取，因此缓慢的读取者不会导致整个文档累积在内存中。如果没有读取 body，重写仍会运行每个处理器直到文档末尾，并缓冲输出，直到 body 被读取。由于重写的生命周期会超出 `transform()`，异步处理器抛出的错误（或其返回的被拒绝的 Promise）会拒绝响应 body，而不会从 `transform()` 抛出：
+`transform(response)` 会立即返回。重写会在后台继续进行，你可以从返回的 `Response` 中读取结果。读取操作会控制重写的速度：流式输入（文件、`fetch()` 响应、`ReadableStream`）只会以与返回 body 消耗速度相同的速度被读取，因此读取较慢时，不会将整个文档都累积在内存中。如果没有读取 body，重写仍会运行所有处理器直到文档末尾，并缓冲输出，直到有人读取。由于重写的生命周期会超过 `transform()`，异步处理器抛出的错误（或其返回的被拒绝的 Promise）会导致响应 body 被拒绝，而不是从 `transform()` 抛出：
 
 ```ts
 try {
@@ -149,7 +149,7 @@ new HTMLRewriter()
 // microtask. Pass a Response instead and await its body
 ```
 
-如果处理器的 Promise 在微任务检查点内完成（任何不需要事件循环的操作，包括 `process.nextTick` 和已经解析的 Promise），则它仍可与 `transform(string)` 一起使用。如果处理器可能需要等待实际工作，请传入 `Response`。
+如果处理器返回的 Promise 在一个微任务检查点内完成，那么它仍可与 `transform(string)` 配合使用。任何不需要事件循环的操作都符合此条件，包括 `process.nextTick` 和已解决的 Promise。如果处理器可能需要等待实际工作，请传入 `Response`。
 
 ### CSS 选择器支持
 
@@ -193,7 +193,7 @@ rewriter.on("*", handler);
 
 ### 元素操作
 
-所有元素修改方法都会返回元素实例，因此可以链式调用：
+所有元素修改方法都会返回元素实例，因此你可以链式调用：
 
 ```ts
 rewriter.on("div", {
@@ -323,22 +323,22 @@ rewriter.onDocument({
 
 ### Response 处理
 
-转换 Response 时：
+转换 Response 时，HTMLRewriter 会：
 
-- 保留状态码、头部和其他响应属性
-- 转换 body，保持流式能力
-- 自动处理内容编码（如 gzip）
-- 转换后标记原始响应体为已使用
-- 头部被克隆到新响应上。
+- 保留状态码、headers 和其他响应属性
+- 转换 body，同时保留流式处理能力
+- 自动处理 content-encoding（例如 gzip）
+- 转换后将原始响应 body 标记为已使用
+- 将 headers 克隆到新响应中
 
 ## 错误处理
 
-错误通过哪个通道传递，取决于你调用的重载，而不是时机。`transform()` 本身会针对以下情况抛出错误：
+调用的重载决定错误通过哪种通道传递，而不是由时机决定。`transform()` 本身会在以下情况下抛出错误：
 
 - `on()` 方法中的选择器语法无效
 - 输入类型无效（例如传入 Symbol）
-- body 已使用错误，以及输入 body 已经失败或中止
-- 对 `string`／`ArrayBuffer` 输入，内容处理器引发的任何错误，因为这些输入必须在 `transform()` 返回前生成结果——包括需要事件循环的处理器（参见[元素处理器](#element-handlers)）
+- body 已被使用的错误，以及输入 body 已失败或中止的情况
+- `string` / `ArrayBuffer` 输入时内容处理器引发的任何错误，因为必须在 `transform()` 返回前生成结果。需要事件循环的处理器也是如此（参见[元素处理器](#element-handlers)）
 
 ```ts
 try {
@@ -363,7 +363,7 @@ try {
 }
 ```
 
-如果处理器创建了 Promise，却既不返回也不等待该 Promise，则该 Promise 的拒绝不会通过上述任何一个通道传递：与任何脱离上下文的拒绝一样，它会进入进程全局的 `unhandledRejection` 路径。Bun 的早期版本可能会从 `transform()` 本身暴露该错误。
+如果处理器创建了 Promise，却既不返回也不等待它，那么该 Promise 的拒绝不会通过任何一种通道传递。与任何脱离处理流程的拒绝一样，它会进入进程全局的 `unhandledRejection` 路径。Bun 的早期版本可能会从 `transform()` 本身抛出此错误。
 
 ---
 

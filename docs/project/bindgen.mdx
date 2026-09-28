@@ -24,9 +24,10 @@ pub fn add(global: &JSGlobalObject, a: i32, b: i32) -> JsResult<i32> {
     match a.checked_add(b) {
         Some(v) => Ok(v),
         None => {
-            // 绑定函数可以直接传播内存不足和 JS 异常；
-            // 其他失败（例如此处的整数溢出）必须转换为抛出的错误。记得提供描述性信息。
-            Err(global.throw_pretty(format_args!("Integer overflow while adding")))
+            // Binding functions can propagate out-of-memory and JS exceptions
+            // directly; other failures (like this integer overflow) must be
+            // converted into a thrown error. Remember to be descriptive.
+            Err(global.throw(format_args!("Integer overflow while adding")))
         }
     }
 }
@@ -57,7 +58,7 @@ export const add = fn({
 declare function add(a: number, b: number = -1): number;
 ```
 
-代码生成器会生成一个 C++ thunk，用于验证和强制转换 JS 参数，然后调用 Rust 实现。在 Rust 端，生成的模块可通过 `crate::r#gen::<basename>` 访问（对于 `bindgen_test.bind.ts`，即 `crate::r#gen::bindgen_test`）。要构造一个包装原生实现的 `JSFunction`，请使用 `generated::create_add_callback(global)`：
+代码生成器会生成一个 C++ thunk，用于验证并转换 JS 参数，然后调用 Rust 实现。在 Rust 端，bindgen 不会生成任何内容；thunk 调用的分发 shim（`src/runtime/hw_exports.rs` 中的 `bindgen_Bindgen_test_dispatchAdd1`，它会调用 `add`）和 `src/jsc/bindings/GeneratedBindings.rs` 中的 `create_*_callback` 模块都是手写的。该模块可通过 `crate::r#gen::<basename>` 访问（对于 `bindgen_test.bind.ts`，即 `crate::r#gen::bindgen_test`）。要构造一个包装原生实现的 `JSFunction`，请使用 `generated::create_add_callback(global)`：
 
 ```rust
 use crate::r#gen::bindgen_test as generated;
@@ -65,11 +66,9 @@ use crate::r#gen::bindgen_test as generated;
 let js_fn: JSValue = generated::create_add_callback(global);
 ```
 
-在 `src/js/` 中的 JS 文件里，`$bindgenFn("bindgen_test.bind.ts", "add")` 会返回一个指向该实现的句柄。
+在 `src/js/` 中的 JS 文件里，`$bindgenFn("bindgen_test.bind.ts", "add")` 会通过 `src/runtime/hw_exports.rs` 中手写的 `js2native_bindgen_<basename>_<fn>` 导出，返回一个指向该实现的句柄。
 
-导出的 bindgen 函数在 Rust 端会使用 snake_case 命名
-（`requiredAndOptionalArg` → `required_and_optional_arg`），生成的回调构造函数也遵循相同的命名约定
-（`create_required_and_optional_arg_callback`）。
+导出的 bindgen 函数在 Rust 端会转换为 snake_case（`requiredAndOptionalArg` → `required_and_optional_arg`）。手写的回调构造函数遵循相同的命名约定（`create_required_and_optional_arg_callback`）。
 
 ## 字符串
 
@@ -176,7 +175,7 @@ WebIDL 强烈建议枚举值使用 kebab-case，以与现有 Web API 保持一�
 
 ## 属性
 
-属性可以链式附加到 `t.*` 类型上。对于所有类型：
+你可以将属性链式添加到 `t.*` 类型上。所有类型都支持：
 
 - `.required`（仅用于字典参数）
 - `.optional`（仅用于函数参数）
@@ -202,7 +201,7 @@ pub fn required_and_optional_arg(a: bool, b: Option<usize>, c: i32, d: Option<u8
 }
 ```
 
-根据类型的不同，还提供了更多属性。详情请参阅自动补全中的类型定义。这三个属性中只能应用一个，并且必须最后应用。
+根据类型的不同，还提供了更多属性。详情请参阅自动补全中的类型定义。你只能应用这三种属性中的一种，并且必须将它放在最后。
 
 ### 整数属性
 
@@ -256,4 +255,4 @@ TODO。
 
 ## 类
 
-TODO。
+TODO

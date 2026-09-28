@@ -17,7 +17,7 @@ query.get();
 { message: "Hello world" }
 ```
 
-API 是同步的，并且速度很快。感谢 [better-sqlite3](https://github.com/JoshuaWise/better-sqlite3) 及其贡献者对 `bun:sqlite` 的 API 提供了启发。
+API 是同步的，并且速度很快。感谢 [better-sqlite3](https://github.com/JoshuaWise/better-sqlite3) 及其贡献者为 `bun:sqlite` 的 API 提供了启发。
 
 功能包括：
 
@@ -119,7 +119,7 @@ const db = new Database();
 db.close(false);
 ```
 
-通过 `.query()` 创建的语句由 `Database` 所有，无论使用哪种方式都会立即被终结。底层连接（以及数据库文件句柄）会在最后一个未完成的 `.prepare()` 语句被终结后释放。
+`Database` 拥有通过 `.query()` 创建的语句，并会立即将它们终结。最后一个未完成的 `.prepare()` 语句被终结后，Bun 会释放底层连接（以及数据库文件句柄）。
 
 要终结**所有**未完成的语句、立即释放连接，并在 SQLite 报告关闭错误时抛出异常，请调用 `.close(true)`：
 
@@ -129,12 +129,11 @@ const db = new Database();
 db.close(true);
 ```
 
-使用已被 `close()` 终结的语句会抛出 `Database has closed`，但 `toString()` 除外：它会返回空字符串；`finalize()` 也除外：它仍然可以安全调用。
+使用被 `close()` 终结的语句会抛出 `Database has closed`。有两个例外：`toString()` 会返回空字符串，`finalize()` 仍可安全调用。
 
 <Note>
-  `close()` 可以安全地多次调用，但第一次调用后不会产生任何效果（不过在调用
-  `close(false)` 后调用 `close(true)` 仍会终结所有剩余的 `.prepare()` 语句）。如果
-  `Database` 在未关闭的情况下被垃圾回收，连接会在从其创建的每个语句也都被终结或回收后释放。
+  `close()` 可以安全地多次调用，但第一次调用后不会再产生效果。有一个例外：在调用 `close(false)` 后调用
+  `close(true)`，仍会终结所有剩余的 `.prepare()` 语句。如果 `Database` 在未关闭的情况下被垃圾回收，Bun 会在由它创建的所有语句都被终结或回收后释放连接。
   `using` 语句会调用 `close(true)`。
 </Note>
 
@@ -179,7 +178,7 @@ const query = db.query(`select "Hello world" as message`);
 <Note>
 **“缓存”是什么意思？**
 
-这里的缓存指的是**已编译的预处理语句**（SQL 字节码），而不是查询结果。当你多次使用相同的 SQL 字符串调用 `db.query()` 时，Bun 会返回同一个已缓存的 `Statement` 对象，而不是重新编译 SQL。缓存会保存最近使用的 `Database.MAX_QUERY_CACHE_SIZE` 个 SQL 字符串（默认值为 20）；被移出的语句仍然可以继续使用，但之后使用相同字符串调用 `db.query()` 时会重新编译出一个新的语句。
+这里的缓存指的是**编译后的预处理语句**（SQL 字节码），而不是查询结果。使用相同的 SQL 字符串多次调用 `db.query()` 时，Bun 会返回同一个缓存的 `Statement` 对象，而不是重新编译 SQL。缓存中保留最近使用的 `Database.MAX_QUERY_CACHE_SIZE`（默认值为 20）个 SQL 字符串。被逐出缓存的语句仍然可以工作，但之后再次使用相同字符串调用 `db.query()` 时，会重新编译一个新的语句。
 
 使用不同的参数值重复使用已缓存的语句是安全的：
 
@@ -203,7 +202,7 @@ const query = db.prepare("SELECT * FROM foo WHERE bar = ?");
 
 ## WAL 模式
 
-SQLite 支持[预写日志模式](https://www.sqlite.org/wal.html)（WAL），该模式可以显著提升性能，尤其是在存在许多并发读取者和单个写入者时。建议大多数应用启用 WAL 模式。
+SQLite 支持[预写式日志模式](https://www.sqlite.org/wal.html)（WAL），它能显著提升性能，尤其是在有多个并发读取者和单个写入者时。我们建议大多数应用启用 WAL 模式。
 
 启用 WAL 模式，请在程序开始时执行此 pragma 查询：
 
@@ -212,15 +211,16 @@ db.run("PRAGMA journal_mode = WAL;");
 ```
 
 <Accordion title="什么是 WAL 模式？">
-  在 WAL 模式下，对数据库的写入会直接写入一个名为“WAL 文件”（`-wal`）的独立文件中。此外，还会创建一个共享内存索引文件（`-shm`）来协调读取操作。之后，WAL 文件会被整合到主数据库文件中。可以将其理解为待处理写入的缓冲区。有关更详细的概述，请参阅 [SQLite 文档](https://www.sqlite.org/wal.html)。
+  在 WAL 模式下，对数据库的写入会直接写入一个名为“WAL 文件”（`-wal`）的独立文件。SQLite 还会创建一个共享内存索引文件（`-shm`）以协调读取。之后，SQLite 会将 WAL 文件中的内容整合到主数据库文件中。可以把 WAL 文件看作待处理写入的缓冲区。有关更详细的概述，请参阅 [SQLite
+  文档](https://www.sqlite.org/wal.html)。
 </Accordion>
 
 ### WAL 附属文件清理
 
-在基于文件的数据库中使用 WAL 模式时，SQLite 会在数据库旁创建两个附属文件：预写日志（`-wal`）和共享内存索引（`-shm`）。这些文件是否在 `.close()` 后自动删除取决于你的平台：
+使用基于文件的数据库启用 WAL 模式时，SQLite 会在数据库旁创建两个附属文件：预写式日志（`-wal`）和共享内存索引（`-shm`）。SQLite 是否会在 `.close()` 后自动删除这些文件，取决于你的平台：
 
-- **macOS**：Bun 使用系统提供的 SQLite，而 Apple 构建的 SQLite 启用了持久化 WAL。`-wal` 和 `-shm` 文件在关闭后**仍会保留**。这不是 bug——这是 Apple 对系统 SQLite 的配置方式。
-- **Linux** 和 **Windows**：Bun 静态链接了自带的 SQLite 构建版本，该版本遵循上游默认设置。当没有其他连接处于打开状态时，附属文件通常会在关闭后被删除。
+- **macOS**：Bun 使用系统提供的 SQLite，Apple 构建时启用了持久化 WAL。`-wal` 和 `-shm` 文件在关闭后会**保留**。这不是 bug——这是 Apple 配置系统 SQLite 的方式。
+- **Linux** 和 **Windows**：Bun 静态链接了自己的 SQLite 构建版本，该版本遵循上游默认设置。没有其他连接处于打开状态时，SQLite **通常会在关闭后删除**附属文件。
 
 若要确保在所有平台上都清理附属文件，请在关闭前禁用 WAL 持久化并运行截断检查点：
 
@@ -259,7 +259,7 @@ const query = db.query(`SELECT ?1, ?2;`);
 const query = db.query(`SELECT $param1, $param2;`);
 ```
 
-执行查询时绑定参数值。`Statement` 可以通过多种方法执行，返回不同形式的结果。
+执行查询时，将值绑定到这些参数。你可以通过几种不同的方法执行 `Statement`，每种方法都会以不同形式返回结果。
 
 ### 绑定参数值
 
@@ -326,14 +326,14 @@ query.get({ $message: "Hello world" });
 { $message: "Hello world" }
 ```
 
-内部调用 [`sqlite3_reset`](https://www.sqlite.org/capi3ref.html#sqlite3_reset)，然后重复调用 [`sqlite3_step`](https://www.sqlite.org/capi3ref.html#sqlite3_step)，直到其不再返回 `SQLITE_ROW`。如果查询不返回任何行，则返回 `null`。
+内部会先调用 [`sqlite3_reset`](https://www.sqlite.org/capi3ref.html#sqlite3_reset)，随后重复调用 [`sqlite3_step`](https://www.sqlite.org/capi3ref.html#sqlite3_step)，直到它不再返回 `SQLITE_ROW`。如果查询没有返回任何行，结果为 `null`。
 
 ### `.run()`
 
 使用 `.run()` 运行查询，并返回一个包含执行元数据的对象。这对于修改架构的查询（例如 `CREATE TABLE`）或批量写入操作非常有用。
 
 ```ts db.ts icon="/icons/typescript.svg" highlight={2}
-const query = db.query(`create table foo;`);
+const query = db.query(`create table foo (bar text);`);
 query.run();
 ```
 
@@ -375,9 +375,9 @@ true
 true
 ```
 
-作为性能优化，类构造函数不会被调用，默认初始化器不会运行，私有字段也无法访问。这更类似于 `Object.create`，而不是 `new`：类的原型会被分配给对象，因此其方法、获取器和设置器都能正常工作。
+作为一项性能优化，Bun 不会调用类构造函数或运行默认初始化器，并且无法访问私有字段。这更像是 `Object.create`，而不是 `new`：Bun 会将类的原型指定给对象，因此其方法、获取器和设置器都能正常工作。
 
-数据库列被设置为类实例的属性。
+Bun 会将数据库列设为类实例上的属性。
 
 ### `.iterate()` (`@@iterator`)
 
@@ -411,11 +411,8 @@ query.values(2);
 ```
 
 ```txt
-[
-  [ "Iron Man", 2008 ],
-  [ "The Avengers", 2012 ],
-  [ "Ant-Man: Quantumania", 2023 ],
-]
+[ [ "Hello world" ] ]
+[ [ 2 ] ]
 ```
 
 内部调用 [`sqlite3_reset`](https://www.sqlite.org/capi3ref.html#sqlite3_reset)，并重复调用 [`sqlite3_step`](https://www.sqlite.org/capi3ref.html#sqlite3_step) 直到返回 `SQLITE_DONE`。
@@ -486,9 +483,9 @@ const results = query.all("hello", "goodbye");
 
 ## 整数
 
-SQLite 支持有符号 64 位整数，但 JavaScript 仅支持有符号 52 位整数，或使用 `bigint` 支持任意精度整数。
+SQLite 支持有符号 64 位整数，但 JavaScript 只支持有符号 53 位整数或使用 `bigint` 表示的任意精度整数。
 
-`bigint` 输入在任何地方都受支持，但默认情况下，`bun:sqlite` 将整数返回为 `number` 类型。如果需要处理大于 2^53 的整数，请在创建 `Database` 实例时将 `safeIntegers` 选项设置为 `true`。这还会验证传递给 `bun:sqlite` 的 `bigint` 值不会超过 64 位。
+所有位置都支持输入 `bigint`，但默认情况下，`bun:sqlite` 会将整数作为 `number` 类型返回。如果需要处理大于 2^53 的整数，请在创建 `Database` 实例时将 `safeIntegers` 选项设为 `true`。该选项还会验证传递给 `bun:sqlite` 的 `bigint` 值是否超出 64 位范围。
 
 ### `safeIntegers: true`
 
@@ -531,7 +528,7 @@ BigInt value '81129638414606663681390495662081' is out of range
 
 ### `safeIntegers: false`（默认）
 
-当 `safeIntegers` 为 `false` 时，`bun:sqlite` 将整数返回为 `number` 类型，并截断超出 53 位的所有位：
+当 `safeIntegers` 为 `false` 时，`bun:sqlite` 会将整数作为 `number` 类型返回，并将超出 53 位的整数四舍五入到最接近的可表示 `number`：
 
 ```ts db.ts icon="/icons/typescript.svg" highlight={3}
 import { Database } from "bun:sqlite";
@@ -561,7 +558,7 @@ const insertCats = db.transaction(cats => {
 
 目前还没有插入任何猫。`db.transaction()` 返回一个新函数（`insertCats`），该函数会_包装_执行查询的函数。
 
-要执行事务，请调用此函数。参数会传递给被包装的函数，而被包装函数的返回值会由事务函数返回。被包装的函数还可以访问事务执行位置所定义的 `this` 上下文。
+要执行事务，请调用此函数。事务函数会将其参数传递给被包装的函数，并返回被包装函数的返回值。被包装的函数还可以访问执行事务时定义的 `this` 上下文。
 
 ```ts db.ts icon="/icons/typescript.svg" highlight={3}
 const insert = db.prepare("INSERT INTO cats (name) VALUES ($name)");
@@ -575,10 +572,10 @@ const count = insertCats([{ $name: "Keanu" }, { $name: "Salem" }, { $name: "Croo
 console.log(`Inserted ${count} cats`);
 ```
 
-驱动程序会在调用 `insertCats` 时自动[开始](https://www.sqlite.org/lang_transaction.html)事务，并在被包装的函数返回时提交事务。如果抛出异常，事务会回滚。异常会像往常一样继续向上传播，不会被捕获。
+调用 `insertCats` 时，驱动会自动[开始](https://www.sqlite.org/lang_transaction.html)事务，并在被包装的函数返回时提交事务。如果抛出异常，驱动会回滚事务。异常会照常传播；驱动不会捕获它。
 
 <Note>
-**嵌套事务** — 事务函数中可调用其他事务函数。此时内层事务会变成 SQLite 的[保存点（savepoint）](https://www.sqlite.org/lang_savepoint.html)。
+**嵌套事务**——你可以在其他事务函数内部调用事务函数。此时，内部事务会成为一个[保存点](https://www.sqlite.org/lang_savepoint.html)。
 
 <Accordion title="查看嵌套事务示例">
 
@@ -647,6 +644,8 @@ Database.setCustomSQLite("/path/to/libsqlite.dylib");
 const db = new Database();
 db.loadExtension("myext");
 ```
+
+Worker 可以使用完全相同的路径重复调用 `setCustomSQLite()`。SQLite 加载后，Bun 会拒绝不同的路径。
 
 </Note>
 

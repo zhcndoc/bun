@@ -47,15 +47,15 @@ console.log(data);
 
 Bun 的 TOML 解析器实现了完整的 [TOML v1.1.0 规范](https://github.com/toml-lang/toml/releases/tag/1.1.0)，并通过了完整的官方 [toml-test](https://github.com/toml-lang/toml-test) 一致性测试套件。
 
-- **字符串**：基本字符串（`"..."`）和字面量字符串（`'...'`），包括多行字符串，以及所有转义序列（`\uHHHH`、`\UHHHHHHHH` 和 TOML 1.1 中的 `\xHH` 与 `\e`）
-- **整数**：十进制、十六进制（`0x`）、八进制（`0o`）和二进制（`0b`）。无法无损表示为 JavaScript 数字的整数（超出 ±(2^53 - 1)）会抛出异常
+- **字符串**：基本字符串（`"..."`）和字面字符串（`'...'`），包括多行字符串，以及所有转义序列（`\uHHHH`、`\UHHHHHHHH` 和 TOML 1.1 中的 `\xHH` 与 `\e`）
+- **整数**：十进制、十六进制（`0x`）、八进制（`0o`）和二进制（`0b`）。超出 ±(2^53 - 1) 的整数会抛出错误，因为 JavaScript 数字无法无损表示它们
 - **浮点数**：包括 `inf` 和 `nan`
 - **布尔值**：`true` 和 `false`
-- **日期/时间**：带偏移量的日期时间、本地日期时间、本地日期和本地时间，会以源文本字符串的形式返回
-- **数组**：包括混合类型数组和嵌套数组
+- **日期/时间**：以 [Temporal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal) 对象返回——带偏移量的日期时间对应 `Temporal.Instant`，本地日期时间对应 `Temporal.PlainDateTime`，本地日期对应 `Temporal.PlainDate`，本地时间对应 `Temporal.PlainTime`
+- **数组**：包括混合类型和嵌套数组
 - **表**：标准表（`[table]`）和内联表（`{ key = "value" }`），包括 TOML 1.1 多行内联表
 - **表数组**：`[[array]]`
-- **点号键**：`a.b.c = "value"`
+- **点分键**：`a.b.c = "value"`
 - **注释**：使用 `#`
 
 ```ts
@@ -81,6 +81,25 @@ role = "backend"
 `);
 ```
 
+#### 日期/时间
+
+TOML 的四种日期/时间类型分别一一对应一种 Temporal 类型。Temporal 支持纳秒精度；按照 TOML 规范的允许范围，超过九位数的小数秒会被截断：
+
+```ts
+const doc = Bun.TOML.parse(`
+created = 1979-05-27T00:32:00-07:00  # offset date-time
+meeting = 1979-05-27T07:32:00       # local date-time
+birthday = 1979-05-27               # local date
+opens = 07:32:00                    # local time
+`);
+
+doc.created; // Temporal.Instant (an offset date-time specifies an instant;
+//              the written offset normalizes away: 1979-05-27T07:32:00Z)
+doc.meeting; // Temporal.PlainDateTime
+doc.birthday; // Temporal.PlainDate
+doc.opens; // Temporal.PlainTime
+```
+
 #### 错误处理
 
 如果 TOML 无效，`Bun.TOML.parse()` 会抛出 `SyntaxError`：
@@ -96,8 +115,7 @@ try {
 
 ### `Bun.TOML.stringify()`
 
-将 JavaScript 对象序列化为 TOML 文档。标量键位于前面，
-随后是 `[table]` 和 `[[array-of-tables]]` 部分：
+将 JavaScript 对象序列化为 TOML 文档。标量键位于前面，随后是 `[table]` 和 `[[array-of-tables]]` 部分：
 
 ```ts
 Bun.TOML.stringify({
@@ -118,10 +136,7 @@ Bun.TOML.stringify({
 // x = 2
 ```
 
-顶层值必须是对象——TOML 文档就是一个表。`Date`
-值会转换为 TOML 带偏移量的日期时间。由于 TOML 无法表示
-`null` 值、`BigInt` 和循环结构，遇到这些值时会抛出异常；`undefined`、
-函数和符号属性会被跳过（在数组中则会抛出异常，因为 TOML 数组不能包含空位）。
+顶层值必须是一个对象——TOML 文档是一个表。`Temporal.Instant`、`Temporal.PlainDateTime`、`Temporal.PlainDate` 和 `Temporal.PlainTime` 值会转换为对应的 TOML 日期/时间字面量，因此 `stringify(parse(doc))` 可以往返保留日期/时间类型。`Temporal.ZonedDateTime` 会转换为带偏移量的日期时间，`Date` 会转换为 UTC 时区中的带偏移量日期时间。TOML 没有用于时区或日历注解的语法，因此这些注解会被丢弃（写入 ISO 字段）；其年份为四位数，因此超出 0000–9999 范围的日期值和无效的 `Date` 会抛出错误。由于 TOML 无法表示这些值，`null` 值、`BigInt`、循环结构、`Temporal.PlainYearMonth`、`Temporal.PlainMonthDay` 和 `Temporal.Duration` 也会抛出错误；`undefined`、函数和 symbol 属性会被跳过（在数组中会抛出错误，因为 TOML 数组不能有空位），将其中任意一种作为顶层值传入时会返回 `undefined`，与 `JSON.stringify` 的行为相同。
 
 ---
 

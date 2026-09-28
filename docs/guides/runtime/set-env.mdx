@@ -18,8 +18,9 @@ process.env.API_TOKEN; // => "secret"
 Bun 会自动读取以下文件（按优先级递增顺序列出）。
 
 - `.env`
-- `.env.production`、`.env.development`、`.env.test`（取决于 `NODE_ENV` 的值）
+- `.env.production`, `.env.development`, `.env.test`（取决于 `NODE_ENV` 的值）
 - `.env.local`（当 `NODE_ENV=test` 时不会加载）
+- `.env.production.local`, `.env.development.local`, `.env.test.local`（取决于 `NODE_ENV` 的值）
 
 ```ini .env icon="settings"
 FOO=hello

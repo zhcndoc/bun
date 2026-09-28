@@ -41,7 +41,7 @@ router.match("/");
 }
 ```
 
-查询参数会被解析并返回在 `query` 属性中。
+路由器会解析查询参数，并将其返回在 `query` 属性中。
 
 ```ts
 router.match("/settings?foo=bar");
@@ -77,7 +77,7 @@ router.match("/blog/my-cool-post");
 }
 ```
 
-`.match()` 方法也接受 `Request` 和 `Response` 对象；它们的 `url` 属性用于解析路由。
+`.match()` 方法也接受 `Request` 和 `Response` 对象；路由器会使用它们的 `url` 属性来解析路由。
 
 ```ts
 router.match(new Request("https://example.com/blog/my-cool-post"));

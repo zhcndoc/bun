@@ -46,7 +46,7 @@ declare var self: Worker;
 
 你可以在工作线程代码中使用 `import` 和 `export` 语法。与浏览器不同，使用 ES 模块时无需传递 `{type: "module"}`。
 
-如果工作线程的脚本解析失败，`Worker` 对象会触发一个 `"error"` 事件。
+如果工作线程的脚本无法解析，Bun 会在 `Worker` 对象上触发一个 `"error"` 事件。
 
 ```js
 const worker = new Worker("/not-found.js");
@@ -55,7 +55,7 @@ worker.addEventListener("error", event => {
 });
 ```
 
-传递给 `Worker` 的路径会相对于项目根目录解析（类似于在命令行运行 `bun ./path/to/file.js`）。
+Bun 会相对于项目根目录解析传递给 `Worker` 的说明符（就像输入 `bun ./path/to/file.js` 一样）。
 
 ### `preload` - 在 worker 启动前加载模块
 
@@ -97,7 +97,7 @@ const worker = new Worker(url);
 
 ### `"open"` 事件
 
-创建工作线程并准备好接收消息时，会触发 `"open"` 事件。（浏览器中不存在此事件。）
+Bun 会在工作线程创建完成并准备好接收消息时触发 `"open"` 事件。（浏览器中不存在此事件。）
 
 ```ts index.ts icon="/icons/typescript.svg"
 const worker = new Worker(new URL("worker.ts", import.meta.url).href);
@@ -107,11 +107,28 @@ worker.addEventListener("open", () => {
 });
 ```
 
-Bun 会将消息排队，直到工作线程准备就绪，因此无需等待 `"open"` 事件即可发送消息。
+在工作线程的脚本运行前发送的消息会进入队列，直到脚本运行后才会发送，因此你无需等待 `"open"` 事件再发送消息。这些消息会传递给脚本运行期间安装的处理器。如果脚本没有安装处理器，消息就会被丢弃。
+
+与浏览器中一样，无论是否已存在 `"message"` 处理器，消息都会在工作线程脚本的同步部分运行后立即分发；如果分发消息时没有处理器，消息就会被丢弃。请在第一个顶层 `await` 之前安装 `self.onmessage` / `self.addEventListener("message", ...)`：
+
+```ts worker.ts icon="file-code"
+declare var self: Worker;
+
+// 在任何 `await` 之前安装：启动期间发送的消息不会遗漏
+self.onmessage = (event: MessageEvent) => {
+  console.log(event.data);
+};
+
+const config = await loadConfig();
+```
+
+静态导入的模块中的顶层 `await` 也同样适用。静态导入会在工作线程自身的代码运行前求值，因此，如果导入图中的任何模块在顶层使用了 `await`，消息就会在工作线程的第一行代码运行前开始分发，此时再在第一行安装处理器已经太晚了。请在安装处理器后使用动态 `import()` 加载这类模块，或使用 `node:worker_threads`。
+
+[`node:worker_threads`](https://nodejs.org/api/worker_threads.html) 在这方面与 Bun 和 Node.js 中的行为一致：`parentPort` 会将消息保留在队列中，直到附加 `"message"` 监听器（以及每次最后一个监听器被移除时），因此，在 `parentPort.on("message", ...)` 之前运行 `await init()` 的工作线程仍会按顺序接收所有消息。
 
 ## 使用 `postMessage` 发送消息
 
-要发送消息，请使用 [`worker.postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Worker/postMessage) 和 [`self.postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage)。消息使用 [HTML 结构化克隆算法](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm) 进行序列化。
+要发送消息，请使用 [`worker.postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Worker/postMessage) 和 [`self.postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/DedicatedWorkerGlobalScope/postMessage)。Bun 使用 [HTML Structured Clone Algorithm](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm) 序列化消息。
 
 ### 性能优化
 
@@ -207,11 +224,11 @@ worker.terminate();
 
 ### `process.exit()`
 
-工作线程可以调用 `process.exit()` 自行终止，但这不会终止主进程。与 Node.js 相同，`process.on('beforeExit', callback)` 和 `process.on('exit', callback)` 会在工作线程中触发（不会在主线程触发），退出代码会通过 `"close"` 事件传递。
+工作线程可以通过 `process.exit()` 自行终止。这不会终止主进程。与 Node.js 中一样，`process.on('beforeExit', callback)` 和 `process.on('exit', callback)` 会在工作线程而非主线程上触发。Bun 会将退出代码传递给 `"close"` 事件。
 
 ### `"close"` 事件
 
-当工作线程被标记为已终止时，会触发 `"close"` 事件；工作线程本身可能需要一些时间才能完全退出。`CloseEvent` 包含传递给 `process.exit()` 的退出代码；如果因其他原因关闭，则退出代码为 0。
+Bun 会在工作线程被标记为终止时触发 `"close"` 事件。工作线程完全退出可能需要一些时间。`CloseEvent` 包含传递给 `process.exit()` 的退出代码；如果因其他原因关闭，则为 0。
 
 ```ts index.ts icon="/icons/typescript.svg"
 const worker = new Worker(new URL("worker.ts", import.meta.url).href);
@@ -249,7 +266,7 @@ worker.unref();
 worker.ref();
 ```
 
-你也可以通过向 `Worker` 传入 `options` 对象来设置：
+或者，也可以在传递给 `Worker` 的 `options` 对象中传入 `ref: false`，这与调用 `worker.unref()` 等效：
 
 ```ts index.ts icon="/icons/typescript.svg"
 const worker = new Worker(new URL("worker.ts", import.meta.url).href, {

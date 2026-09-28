@@ -24,7 +24,7 @@ Bun 自带一个快速且与 Jest 兼容的测试运行器。测试在 Bun 运�
 bun test
 ```
 
-测试使用 JavaScript 或 TypeScript 编写，并采用类似 Jest 的 API。请参阅[编写测试](/test/writing-tests)。
+你可以使用类似 Jest 的 API，以 JavaScript 或 TypeScript 编写测试。请参阅[编写测试](/test/writing-tests)。
 
 ```ts math.test.ts icon="/icons/typescript.svg"
 import { expect, test } from "bun:test";
@@ -106,7 +106,7 @@ JUnit XML 是 CI/CD 管道中报告测试结果的流行格式。
 
 ## 超时设置
 
-使用 `--timeout` 标志以毫秒为单位指定_每个测试_的超时时间。如果测试超时，则会被标记为失败。默认值为 `5000`。
+使用 `--timeout` 标志指定每个测试的超时时间，单位为毫秒。如果测试超时，Bun 会将其标记为失败。默认值为 `5000`。
 
 ```bash terminal icon="terminal"
 # 默认值是 5000
@@ -141,7 +141,7 @@ bun test --concurrent --max-concurrency 4
 bun test --concurrent
 ```
 
-这有助于防止资源耗尽。默认限制为 20。
+此限制有助于在运行大量并发测试时防止资源耗尽。默认值为 20。
 
 ### `test.concurrent`
 
@@ -201,7 +201,7 @@ test.failing.each([1, 2, 3])("chained qualifiers %d", input => {
 
 ## 重试失败的测试
 
-使用 `--retry` 标志自动重试失败的测试，最多指定次数。如果测试失败后，在后续尝试中通过，则报告为通过。
+使用 `--retry` 标志自动重试失败的测试，最多重试指定次数。如果测试失败后在后续尝试中通过，Bun 会将其报告为通过。
 
 ```sh terminal icon="terminal"
 bun test --retry 3
@@ -244,7 +244,7 @@ bun test --rerun-each 100
 bun test --randomize
 ```
 
-使用 `--randomize` 时，用于随机化的种子会显示在测试摘要中：
+使用 `--randomize` 时，Bun 会在测试摘要中显示用于随机化的种子：
 
 ```sh terminal icon="terminal"
 bun test --randomize
@@ -369,15 +369,15 @@ Bun 兼容流行的 UI 测试库：
 
 ## 大型代码库
 
-对于包含数千个测试文件的测试套件，`bun test` 提供了多个可组合使用的调节项——工作进程、隔离级别、跨机器分片以及基于耗时的调度。每项内容都在[并行与隔离测试运行](/test/parallel)中进行了深入介绍；以下大致按照收益高低说明它们如何配合使用：
+对于包含数千个测试文件的测试套件，`bun test` 提供了多个可组合使用的调优选项：工作进程、隔离级别、跨机器分片，以及基于运行时长的调度。[并行与隔离测试运行](/test/parallel)深入介绍了每一项。以下按大致收益顺序介绍它们的配合方式：
 
 **1. 使用每个核心：[`--parallel`](/test/parallel#--parallel)。** 每个核心使用一个工作进程，文件一次分配一个。
 
-**2. 决定所需的隔离程度。** `--parallel` 为每个文件提供一个全新的全局环境，这是安全的默认设置，也是 Jest/Vitest 的行为。如果你的文件之间不会泄漏状态（它们已经能够在共享一个全局环境的普通 `bun test` 下通过），[`--parallel --no-isolate`](/test/parallel#every-file-is-isolated-unless-you-opt-out) 会让每个工作进程只评估一次导入和预加载脚本，而不是每个文件评估一次。对于由许多小文件组成的测试套件，这是最大的单项性能提升——请参阅[对比方式](/test/parallel#how-it-compares)。
+**2. 决定需要多少隔离。** `--parallel` 会为每个文件提供全新的全局环境，这是安全的默认设置，也是 Jest/Vitest 的做法。如果文件之间不会泄漏状态（它们在共享同一个全局环境的普通 `bun test` 下已经可以通过），[`--parallel --no-isolate`](/test/parallel#every-file-is-isolated-unless-you-opt-out) 可让每个工作进程只评估一次导入和预加载脚本，而不是每个文件评估一次。对于由许多小文件组成的测试套件，这通常是最大的性能提升。请参阅[对比方式](/test/parallel#how-it-compares)。
 
-**3. 跨机器拆分：[`--shard=i/n`](/test/parallel#splitting-a-suite-across-ci-machines-with---shard)。** 该方式具有确定性且无需协调器；每个 CI 作业运行一个切片，并且每个切片仍会在本地使用 `--parallel`。
+**3. 跨机器拆分：[`--shard=i/n`](/test/parallel#splitting-a-suite-across-ci-machines-with---shard)。** 确定性拆分，无需协调器。每个 CI 作业运行一个分片，而每个分片仍会在本地使用 `--parallel`。
 
-**4. 按耗时而非数量进行平衡：[`--timings`](/test/parallel#balancing-with---timings)。** 有了记录的耗时后，分片会被切分，使每个分片的总耗时大致相同（采用最长处理时间优先的方式，同时将路径相邻的文件放在一起，以保持工作进程的模块缓存处于热状态）。每个工作进程会先启动其耗时最长的文件，空闲工作进程则会获取剩余文件中耗时最长的文件——因此运行不会因为某个碰巧最后启动的长耗时文件而被拖慢。
+**4. 按耗时而非数量均衡：[`--timings`](/test/parallel#balancing-with---timings)。** 有了记录的耗时数据后，Bun 会拆分分片，使每个分片的总耗时大致相同。拆分采用最长处理时间优先的方式，同时将路径相邻的文件放在一起，以保持工作进程的模块缓存处于预热状态。每个工作进程会先启动耗时最长的文件，空闲工作进程则会接手剩余文件中耗时最长的文件。这样，偶然最后启动的某个长文件就不会拖慢整个运行过程。
 
 **5. 自动保持耗时数据最新：`--update-timings`。** 每个分片会写入其运行文件的耗时；下一次运行会读取所有这些数据。在 GitHub Actions 中，看起来如下：
 
@@ -420,7 +420,7 @@ jobs:
           key: bun-test-timings-${{ github.run_id }}
 ```
 
-每个分片都必须读取相同的一组耗时文件，这样各分片的耗时总和才能覆盖整个测试套件。这也是为什么一次运行会读取上一次运行的文件（从缓存中恢复），并将自身的数据写入其他位置，以避免仍在运行的兄弟分片获取这些数据（如上面的 `next/`）。如果第 2 步适用于你，请将 `--no-isolate` 添加到 `bun test` 命令中。
+每个分片必须读取相同的一组耗时文件，这样各分片的耗时才能汇总为整个测试套件的耗时。因此，一次运行会读取上次运行的文件（从缓存中恢复），并将自身的文件写入其他仍在运行的同级分片无法读取的位置（如上方的 `next/`）。如果第 2 步适用于你，请在 `bun test` 命令中添加 `--no-isolate`。
 
 **6. 在文件内部：[`test.concurrent`](#concurrent-test-execution)** 适用于将大部分时间花在等待上的 I/O 密集型测试。
 
@@ -444,7 +444,7 @@ Bun 的测试运行器非常快速。
 
 ### 行为
 
-检测到 AI 代理环境时：
+当 Bun 检测到 AI 代理环境时：
 
 - 只详细显示测试失败信息
 - 隐藏通过、跳过及待办测试指示符

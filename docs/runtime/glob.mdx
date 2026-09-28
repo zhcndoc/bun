@@ -120,7 +120,7 @@ glob.match("baz.ts"); // => true
 glob.match("bat.ts"); // => false
 ```
 
-你可以使用字符范围（例如 `[0-9]`、`[a-z]`），以及否定运算符 `^` 或 `!` 来匹配除括号中字符之外的任意字符（例如 `[^ab]`、`[!a-z]`）。
+可以使用字符范围（例如 `[0-9]`、`[a-z]`）。取反运算符 `^` 或 `!` 用于匹配括号中字符以外的任意内容（例如 `[^ab]`、`[!a-z]`）。
 
 ```ts
 const glob = new Glob("ba[a-z][0-9][^4-9].ts");
@@ -161,18 +161,20 @@ glob.match("index.ts"); // => false
 
 ## Node.js 的 `fs.glob()` 兼容性
 
-Bun 同时实现了 Node.js 的 `fs.glob()` 函数，并增加了附加功能：
+Bun 还实现了 Node.js 的 `fs.glob()` 函数：
 
 ```ts
 import { glob, globSync, promises } from "node:fs";
 
-// 模式数组
-const files = await promises.glob(["**/*.ts", "**/*.js"]);
+// Array of patterns
+const files = await Array.fromAsync(promises.glob(["**/*.ts", "**/*.js"]));
 
-// 排除模式
-const filtered = await promises.glob("**/*", {
-  exclude: ["node_modules/**", "*.test.*"],
-});
+// Exclude patterns
+const filtered = await Array.fromAsync(
+  promises.glob("**/*", {
+    exclude: ["node_modules/**", "**/*.test.*"],
+  }),
+);
 ```
 
 这三个函数均支持：

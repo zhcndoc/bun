@@ -4,14 +4,14 @@ description: 使用 Bun 的 FFI 模块高效地从 JavaScript 调用本地库
 ---
 
 <Warning>
-  `bun:ffi` 是 **实验性质**的，存在已知的错误和限制，不应该在生产环境中依赖使用。与本地代码交互的最稳定方式是编写一个 [Node-API 模块](/runtime/node-api)。
+  `bun:ffi` 是**实验性的**，存在已知的错误和限制。请勿在生产环境中依赖它。从 Bun 与本地代码交互最稳定的方式是编写一个 [Node-API 模块](/runtime/node-api)。
 </Warning>
 
 使用内置的 `bun:ffi` 模块从 JavaScript 高效地调用本地库。它适用于任何支持 C ABI 的语言，包括 Zig、Rust、C/C++、C#、Nim 和 Kotlin。
 
 ---
 
-## dlopen 用法 (`bun:ffi`)
+## dlopen 用法（`bun:ffi`）
 
 打印 `sqlite3` 的版本号：
 
@@ -48,7 +48,7 @@ console.log(`SQLite 3 版本: ${sqlite3_libversion()}`);
 
 <Image src="/images/ffi.png" height="400" />
 
-`dlopen`、`linkSymbols`、`CFunction` 和 `JSCallback` 由 Bun 的 JavaScript 引擎（JavaScriptCore）原生实现：参数转换、参数数量处理和结果装箱都在引擎内部完成，并且热点调用点会通过 DFG/FTL JIT 层编译为直接的原生调用，不会为每个参数使用 JavaScript 补充层。[TinyCC](https://github.com/TinyCC/tinycc) 是一个小型且快速的 C 编译器，仅内嵌用于 [`cc()`](/runtime/c-compiler)，用于编译你在运行时提供的 C 源代码。
+Bun 的 JavaScript 引擎（JavaScriptCore）原生实现了 `dlopen`、`linkSymbols`、`CFunction` 和 `JSCallback`。参数转换、元数处理和结果装箱都在引擎内部完成。热点调用点会通过 DFG/FTL JIT 层编译成直接的本地调用，不需要逐参数的 JavaScript 垫片。Bun 嵌入了 [TinyCC](https://github.com/TinyCC/tinycc)，这是一款小巧快速的 C 编译器，仅用于 [`cc()`](/runtime/c-compiler)，它可以在运行时编译你提供的 C 源代码。
 
 ---
 
@@ -136,13 +136,13 @@ clang++ -dynamiclib add.cpp -o libadd.dylib
 | ptr           | `void*`               | `pointer`、`void*`、`char*`     |
 | i8            | `int8_t`              | `int8_t`                        |
 | i16           | `int16_t`             | `int16_t`                       |
-| i32           | `int32_t`             | `int32_t`、`int`                |
-| i64           | `int64_t`             | `int64_t`                       |
+| i32           | `int32_t`             | `int32_t`, `int`                |
+| i64           | `int64_t`             | `int64_t`, `isize`              |
 | i64_fast      | `int64_t`             |                                 |
 | u8            | `uint8_t`             | `uint8_t`                       |
 | u16           | `uint16_t`            | `uint16_t`                      |
 | u32           | `uint32_t`            | `uint32_t`                      |
-| u64           | `uint64_t`            | `uint64_t`                      |
+| u64           | `uint64_t`            | `uint64_t`, `usize`             |
 | u64_fast      | `uint64_t`            |                                 |
 | f32           | `float`               | `float`                         |
 | f64           | `double`              | `double`                        |
@@ -154,11 +154,7 @@ clang++ -dynamiclib add.cpp -o libadd.dylib
 
 `buffer` 参数必须是 `TypedArray` 或 `DataView`。
 
-`buffer_length` 是 `buffer` 的长度孪生参数：传入与 `buffer` 参数相同的 `TypedArray`/`DataView`，
-被调用方会接收到该视图的**字节长度**，类型为无符号 64 位整数。引擎会在调用时从同一对象读取指针和长度，
-因此二者始终一致——这是自行传入 `view.byteLength` 无法获得的原子快照（在 JavaScript 中预先读取的长度，
-对于可调整大小、可增长或已转移的缓冲区，可能会变得过时）。它仅可用作参数，并且与 napi 类型一样，
-不适用于 `cc()`。
+`buffer_length` 是 `buffer` 的配对长度参数：传入你为 `buffer` 参数传入的**同一个** `TypedArray`/`DataView`，被调用函数会将该视图的**字节长度**作为无符号 64 位整数接收。引擎会在调用时从同一个对象读取指针和长度，因此两者始终一致。你无法通过自行传入 `view.byteLength` 获得这种原子快照，因为在 JavaScript 中提前读取的长度可能会因可调整大小、可增长或已转移的缓冲区而过时。`buffer_length` 仅可用作参数，并且与 napi 类型一样，不能在 `cc()` 中使用。
 
 ```ts
 const {
@@ -171,10 +167,7 @@ const chunk = new TextEncoder().encode("hello");
 write_all(1, chunk, chunk); // buf 和 len 都来自 `chunk`
 ```
 
-`napi_env` 和 `napi_value` 仅在 [`cc()`](/runtime/c-compiler) 源代码中有效。在此环境中，
-编译后的 trampoline 会将 `napi_env` 参数填充为模块的环境（传递到该位置的 JavaScript 参数是占位符，
-会被忽略），而 `napi_value` 会将 JavaScript 值原样传递。 在 `dlopen`、`linkSymbols`、`JSCallback`
-或 `CFunction` 描述符中使用任一类型都会抛出 `TypeError`。
+`napi_env` 和 `napi_value` 仅在 [`cc()`](/runtime/c-compiler) 源代码中有效。在那里，编译后的跳板函数会用模块的环境填充 `napi_env` 参数；在该位置传入的 JavaScript 参数只是占位符，会被忽略。`napi_value` 会原样传递 JavaScript 值。在 `dlopen`、`linkSymbols`、`JSCallback` 或 `CFunction` 描述符中使用任一类型都会抛出 `TypeError`。
 
 ---
 
@@ -215,7 +208,7 @@ const myString = new CString(ptr);
 const myString = new CString(ptr, 0, byteLength);
 ```
 
-`new CString()` 返回一个普通字符串（`typeof myString === "string"`，`myString === "hello"` 可以正常工作），它是 C 字符串的克隆，因此即使 `ptr` 已被释放，也可以安全地继续使用它。
+`new CString()` 返回普通字符串（`typeof myString === "string"`，`myString === "hello"` 可正常使用）。该字符串是 C 字符串的副本，因此即使 `ptr` 已释放，你仍然可以安全地使用它。
 
 ```ts
 const myString = new CString(ptr);
@@ -225,13 +218,13 @@ my_library_free(ptr);
 console.log(myString);
 ```
 
-在 `returns` 中使用时，`FFIType.cstring` 会将指针强制转换为 JavaScript `string`。在 `args` 中使用时，`FFIType.cstring` 接受 `ptr` 所接受的所有内容，**并且**还额外接受一个 JavaScript 字符串——引擎会将其转码为一个以 null 结尾的 UTF-8 缓冲区，该缓冲区的生命周期持续到调用结束，因此你不需要自行将其编码为 `Buffer`：
+在 `returns` 中使用时，`FFIType.cstring` 会将指针强制转换为 JavaScript `string`。在 `args` 中使用时，`FFIType.cstring` 接受 `ptr` 所接受的一切，**并且**还接受直接传入的 JavaScript 字符串。引擎会将字符串转码为以 null 结尾的 UTF-8 缓冲区，该缓冲区在调用期间有效，因此你无需自行将其编码为 `Buffer`：
 
 ```ts
 symbols.puts("Hello, world!"); // args: ["cstring"] — 直接传入字符串
 ```
 
-**`cstring` 返回值的生命周期。** 该指针就是 C 函数返回的指针——它指向由本地端拥有的内存（静态内存、由本地端管理的缓冲区，或由其分配的堆内存）；引擎在返回时不会复制任何内容，而 JavaScript 字符串会从中克隆出来。唯一的别名情况是：C 函数返回了一个由你作为 JavaScript 字符串传入的 `cstring` 参数派生出的指针：该参数被转码到引擎为此次调用提供的缓冲区中，因此应将此类返回指针视为仅在下一次 FFI 调用重新使用该缓冲区之前有效（这是返回输入内容的函数所遵循的常见 C 规则）。请通过返回的字符串或 `new CString` 克隆它，而不要持有原始地址。
+**`cstring` 返回值的生命周期。** 指针就是 C 函数返回的内容：由原生端拥有的内存（静态内存、它管理的缓冲区或它分配的堆内存）。返回时引擎不会复制任何内容，JavaScript 字符串会从该内存中克隆出来。唯一的别名情况是，C 函数返回了一个_源自你以 JavaScript 字符串形式传入的 `cstring` 参数_的指针。引擎会将该参数转码到仅在本次调用期间有效的缓冲区，因此应将此类返回指针视为仅在下一次 FFI 调用复用该缓冲区之前有效（这是返回输入内容的函数通常遵循的 C 规则）。请克隆它（通过返回的字符串或 `new CString`），不要持有原始地址。
 
 ---
 
@@ -239,7 +232,7 @@ symbols.puts("Hello, world!"); // args: ["cstring"] — 直接传入字符串
 
 <Note>不支持异步函数</Note>
 
-要从 JavaScript 调用函数指针，请使用 `CFunction`，例如使用从已加载的 Node-API (napi) 模块中获取的指针。
+要从 JavaScript 调用函数指针，请使用 `CFunction`，例如使用从已加载的 Node-API（napi）模块中获取的指针。
 
 ```ts
 import { CFunction } from "bun:ffi";
@@ -307,7 +300,7 @@ const {
   },
 });
 
-const searchIterator = new JSCallback((ptr, length) => /hello/.test(new CString(ptr, length)), {
+const searchIterator = new JSCallback((ptr, length) => /hello/.test(new CString(ptr, 0, Number(length))), {
   returns: "bool",
   args: ["ptr", "usize"],
 });
@@ -330,10 +323,10 @@ setTimeout(() => {
 
 `JSCallback` 实验性支持线程安全回调。如果要将回调函数传递到创建它的线程之外的其他线程，则需要使用此功能。通过可选的 `threadsafe` 参数启用它。
 
-线程安全回调可以从**任意线程**调用——包括由原生库创建、且 Bun 事先并不了解的线程。引擎会在线程安全回调所在线程上复制 C 参数，并将调用封送到 JavaScript 线程，在那里转换参数（64 位整数和指针会以精确的 BigInt 形式传入）并执行你的函数。由于从 C 的角度来看，调用是异步的，因此返回给 C 调用方的值是未指定的：你可以声明非 `void` 的 `returns`（下面的示例使用 `"bool"`），但 C 端必须将线程安全回调视为返回 `void`，并忽略其返回值。
+线程安全回调可从**任何线程**调用，包括由你的本地库生成、Bun 不会以其他方式获知的线程。引擎会在线程安全回调所在的调用线程上复制 C 参数，并将调用转发到 JavaScript 线程。在那里，引擎会像处理普通回调一样转换参数（`i64`/`u64`/`usize` 参数会以 BigInt 形式传入；指针会以 number 形式传入），并运行你的函数。由于从 C 的角度来看，调用是异步的，因此返回给 C 调用方的值未指定。你可以声明非 `void` 的 `returns`（下例使用 `"bool"`），但 C 端必须将线程安全回调视为返回 `void`，并忽略其返回值。
 
 ```ts
-const searchIterator = new JSCallback((ptr, length) => /hello/.test(new CString(ptr, length)), {
+const searchIterator = new JSCallback((ptr, length) => /hello/.test(new CString(ptr, 0, Number(length))), {
   returns: "bool",
   args: ["ptr", "usize"],
   threadsafe: true, // 可选，默认为 `false`
@@ -371,9 +364,9 @@ Bun 在 JavaScript 中将[指针](<https://en.wikipedia.org/wiki/Pointer_(comput
 
 <Accordion title="64 位指针如何存放在 JavaScript 数字中？">
 
-64 位处理器最多支持 [52 位可寻址空间](https://en.wikipedia.org/wiki/64-bit_computing#Limits_of_processors)。[JavaScript 数字](https://en.wikipedia.org/wiki/Double-precision_floating-point_format#IEEE_754_double-precision_binary_floating-point_format:_binary64)支持 53 位可用空间，因此还剩下约 11 位额外空间。
+64 位处理器最多支持 [52 位可寻址空间](https://en.wikipedia.org/wiki/64-bit_computing#Limits_of_processors)。[JavaScript 数字](https://en.wikipedia.org/wiki/Double-precision_floating-point_format#IEEE_754_double-precision_binary_floating-point_format:_binary64)支持 53 位可用空间，因此还剩下 1 位额外空间。
 
-**为什么不用 `BigInt`？** `BigInt` 速度更慢。JavaScript 引擎会单独分配 `BigInt`，因此它们无法放入普通的 JavaScript 值中。如果将 `BigInt` 传递给函数，它会被转换为 `number`。
+**为什么不用 `BigInt`？** `BigInt` 更慢。JavaScript 引擎会单独分配 `BigInt`，因此它无法装入常规 JavaScript 值。如果将 `BigInt` 传递给函数，Bun 会将其转换为 `number`。
 
 **Windows 注意事项**：Windows API 类型 HANDLE 不表示虚拟地址，将 `ptr` 用于 HANDLE _不会_ 按预期工作。请使用 `u64` 来安全地表示 HANDLE 值。
 
@@ -453,7 +446,7 @@ console.log(
 
 #### 来自 C、Rust、Zig 等
 
-要从 C 或 FFI 跟踪 `TypedArray` 不再被使用的时机，请将回调和可选的上下文指针传递给 `toArrayBuffer` 或 `toBuffer`。当垃圾回收器释放底层的 `ArrayBuffer` JavaScript 对象后，回调会在之后被调用。
+要从 C 或 FFI 中跟踪何时不再使用 `TypedArray`，请向 `toArrayBuffer` 或 `toBuffer` 传递一个回调和一个可选的上下文指针。垃圾回收器释放底层的 JavaScript `ArrayBuffer` 对象后，Bun 会调用该回调。该回调可能会在垃圾回收线程而非 JavaScript 线程上运行，因此不得回调 JavaScript，也不得假设存在特定线程的状态。
 
 预期的签名与 [JavaScriptCore 的 C API](https://developer.apple.com/documentation/javascriptcore/jstypedarraybytesdeallocator?language=objc) 一致：
 
@@ -496,7 +489,7 @@ toArrayBuffer(
 
 ### 指针对齐
 
-如果接口期望的是与 `char` 或 `u8` 不同大小的指针，确保 `TypedArray` 也是对应的大小。`u64*` 和 `[8]u8*` 并不完全等价，因对齐关系不同。
+如果接口期望的是与 `char` 或 `u8` 不同大小的指针，确保 `TypedArray` 也是对应的大小。`u64*` 和 `[8]u8*` 并不完全等价，因为对齐要求不同。
 
 ### 传递指针
 

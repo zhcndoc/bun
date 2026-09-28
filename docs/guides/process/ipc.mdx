@@ -54,7 +54,7 @@ process.on("message", message => {
 
 ---
 
-默认情况下，消息使用 JSC 的 `serialize` API 进行序列化，该 API 支持 [`structuredClone` 支持的所有内容](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm)，包括字符串、类型化数组和对象。此 API 不支持转移对象的所有权。
+默认情况下，Bun 使用 JSC `serialize` API 序列化消息。此 API 支持 [`structuredClone` 支持的所有内容](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm)，包括字符串、类型化数组和对象。此 API 不支持转移对象的所有权。
 
 ```ts child.ts icon="/icons/typescript.svg"
 // 发送字符串

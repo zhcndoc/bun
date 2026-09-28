@@ -17,7 +17,7 @@ console.log(Bun.version);
 
 ## 推荐的 `compilerOptions`
 
-Bun 支持顶层 await、JSX 以及带有 `.ts` 扩展名的导入，而 TypeScript 默认不允许这些功能。以下 `compilerOptions` 适用于 Bun 项目，因此你可以使用这些功能，而不会收到 TypeScript 的编译器警告。
+Bun 支持顶层 await、JSX 和带有 `.ts` 扩展名的导入，而 TypeScript 默认不允许这些功能。我们建议在 Bun 项目中使用以下 `compilerOptions`，这样你就可以使用这些功能，而不会收到 TypeScript 编译器警告。
 
 ```jsonc
 {

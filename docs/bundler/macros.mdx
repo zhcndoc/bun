@@ -3,7 +3,7 @@ title: 宏
 description: 使用 Bun 宏在打包时运行 JavaScript 函数
 ---
 
-宏是会在打包时运行的 JavaScript 函数。它们的返回值会直接内联到你的打包文件中。
+宏是打包时运行的 JavaScript 函数。Bun 会将它们的返回值直接内联到你的 bundle 中。
 
 作为一个简单示例，考虑下面这个返回随机数的函数。
 
@@ -22,10 +22,10 @@ console.log(`你的随机数是 ${random()}`);
 ```
 
 <Note>
-  宏使用导入属性语法进行标记。这是一项处于第 3 阶段的 TC39 提案，用于向导入语句附加额外的元数据。
+  宏使用导入属性语法标记，这是一项 Stage 4 TC39 提案，用于为导入语句附加额外元数据。
 </Note>
 
-使用 `bun build` 打包该文件。打包后的文件会输出到 stdout。
+使用 `bun build` 打包文件。Bun 会将打包后的文件打印到 stdout。
 
 ```bash terminal icon="terminal"
 bun build ./cli.tsx
@@ -35,11 +35,11 @@ bun build ./cli.tsx
 console.log(`你的随机数是 ${0.6805550949689833}`);
 ```
 
-`random` 函数的源代码不会出现在打包文件中的任何位置。相反，它会在打包过程中运行，并且调用（`random()`）会被替换为其结果。由于源代码从未包含在打包文件中，因此宏可以安全地执行读取数据库等需要特权的操作。
+`random` 函数的源代码不会出现在 bundle 中。相反，该函数会在打包期间运行，Bun 会将调用（`random()`）替换为其结果。由于源代码不会包含在 bundle 中，宏可以安全地执行读取数据库等特权操作。
 
 ## 何时使用宏
 
-对于那些原本需要编写一次性构建脚本来完成的小任务，在打包时执行代码可能更易于维护。它与其余代码共存，与其余构建过程一同运行，会自动并行执行，而且如果它失败，构建也会失败。
+对于一些原本需要编写一次性构建脚本才能完成的小任务，在打包时执行代码会更易于维护。它与其余代码放在一起，也会随其余构建流程一起运行。Bun 会自动并行执行宏；如果宏执行失败，构建也会失败。
 
 不过，如果你发现自己在打包时运行大量代码，考虑改为运行服务器。
 
@@ -47,12 +47,12 @@ console.log(`你的随机数是 ${0.6805550949689833}`);
 
 宏是带有以下注解之一的导入语句：
 
-- `with { type: 'macro' }` — 导入属性，一项处于第 3 阶段的 ECMAScript 提案
-- `assert { type: 'macro' }` — 导入断言，这是导入属性的早期形式，现已被弃用（但已得到许多浏览器和运行时的支持）
+- `with { type: 'macro' }` — 导入属性，是一项 Stage 4 ECMAScript 提案
+- `assert { type: 'macro' }` — 导入断言，是导入属性的早期形式，现已被弃用（但一些浏览器和运行时已经支持它）
 
 ## 安全注意事项
 
-必须使用 `{ type: "macro" }` 显式导入宏，才能在打包时运行。如果未调用这些宏导入，它们不会产生任何影响；这与可能产生副作用的常规 JavaScript 导入不同。
+必须使用 `{ type: "macro" }` 显式导入宏，宏才会在打包时运行。这些导入只有在调用时才会生效，不同于可能产生副作用的普通 JavaScript 导入。
 
 你可以使用 `--no-macros` 标志完全禁用宏。它会产生如下构建错误：
 
@@ -64,7 +64,7 @@ foo();
 ./hello.js:3:1 53
 ```
 
-为减少恶意包的潜在攻击面，宏不能从 `node_modules/**/*` 内部调用。如果包试图调用宏，会看到如下错误：
+为减少恶意包可能造成的攻击面，Bun 不允许 `node_modules/**/*` 中的代码调用宏。如果某个包尝试调用宏，你会看到类似这样的错误：
 
 ```
 error: For security reasons, macros cannot be run from node_modules.
@@ -111,7 +111,7 @@ import { macro } from "my-package" with { type: "macro" }; // 宏导入
 
 当 Bun 的转译器看到宏导入时，它会使用 Bun 的 JavaScript 运行时调用该函数，并将返回值转换为 AST 节点。
 
-宏会在访问阶段由转译器同步运行，此时插件尚未运行，转译器也尚未生成 AST。宏按照导入顺序运行。转译器会等待每个宏完成后再继续，并等待宏返回的任何 Promise。
+宏会在转译器的访问阶段同步运行，此时转译器已经将文件解析为 AST。它们按照调用在文件中出现的顺序运行；转译器只有在遇到对某个宏模块导出的函数的调用时，才会加载或运行该宏模块。转译器会等待每个宏完成后再继续，并会等待宏返回的任何 Promise。
 
 Bun 的打包器是多线程的，因此宏会在多个生成的 JavaScript“工作线程”中并行执行。
 
@@ -159,10 +159,10 @@ export async function getText() {
 
 转译器实现了特殊逻辑，用于序列化 `Response` 和 `Blob` 等常见数据格式。
 
-- **Response**：Bun 会读取 `Content-Type` 并据此进行序列化；例如，类型为 `application/json` 的 Response 会被解析为对象，而 `text/plain` 会被内联为字符串。类型无法识别或未定义的 Response 会被编码为 base64。
+- **Response**：Bun 会读取 `Content-Type` 并据此进行序列化。例如，它会将类型为 `application/json` 的 Response 解析为对象，并将 `text/plain` 内联为字符串。对于类型无法识别或未定义的 Response，Bun 会使用 base64 编码。
 - **Blob**：与 Response 一样，序列化方式取决于 `type` 属性。
 
-`fetch` 返回的是 `Promise<Response>`，可以直接返回。
+`fetch` 的结果是 `Promise<Response>`，因此宏可以直接返回它。
 
 ```ts title="macro.ts" icon="/icons/typescript.svg"
 export function getObject() {
@@ -195,7 +195,7 @@ export function howLong() {
 }
 ```
 
-但是，如果 `foo` 的值在打包时已知（例如，它是一个常量或另一个宏的结果），那么这种用法就是允许的：
+但是，如果 `foo` 的值在打包时已知（例如，它是一个常量或另一个宏的结果），那么就允许这样调用：
 
 ```ts title="index.ts" icon="/icons/typescript.svg"
 import { getText } from "./getText.ts" with { type: "macro" };
@@ -233,7 +233,7 @@ export function getGitCommitHash() {
 }
 ```
 
-构建时，`getGitCommitHash` 调用会被替换为调用该函数的结果：
+打包时，Bun 会将 `getGitCommitHash` 调用替换为调用该函数的结果：
 
 <CodeGroup>
 
@@ -250,7 +250,7 @@ console.log(`当前 Git 提交哈希是 3ee3259104e4507cf62c160f0ff5357ec4c7a7f8
 </CodeGroup>
 
 <Info>
-  你可能在想 “为什么不直接用 `process.env.GIT_COMMIT_HASH`？”可以用，但你能用环境变量做下面这个吗？
+  你可能会想：“为什么不使用 `process.env.GIT_COMMIT_HASH`？”当然也可以。但你能用环境变量做到这件事吗？
 </Info>
 
 ### 在打包时执行 fetch() 请求
@@ -283,7 +283,7 @@ export async function extractMetaTags(url: string) {
 }
 ```
 
-`extractMetaTags` 函数会在打包时被移除，并替换为函数调用的结果：fetch 请求会在打包时执行，结果会被嵌入到打包产物中。由于抛出错误的分支不可达，因此也会被移除。
+Bun 会在打包时擦除 `extractMetaTags` 函数，并将其替换为函数调用的结果。fetch 请求会在打包时发生，Bun 会将结果嵌入 bundle 中。启用 `minify` 语法选项后，由于抛出错误的分支不可达，Bun 也会将其消除。
 
 <CodeGroup>
 

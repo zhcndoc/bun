@@ -33,7 +33,7 @@ Bun 支持 `package.json` 中 npm 的 `"overrides"` 和 Yarn 的 `"resolutions"`
 
 ```txt tree layout of node_modules icon="list-tree"
 node_modules
-├── foo@1.2.3
+├── foo@2.3.4
 └── bar@4.5.6
 ```
 
@@ -58,11 +58,11 @@ node_modules
 }
 ```
 
-`"overrides"` 只从根目录的 `package.json` 中读取，不会从工作区软件包中读取。它们同样适用于 `peerDependencies`。
+Bun 只会从根目录的 `package.json` 读取 overrides，而不会从工作区包中读取。Overrides 也会应用于 `peerDependencies`。
 
 ## `"resolutions"`
 
-`"resolutions"` 是 Yarn 对 `"overrides"` 的替代方案，语法类似。Bun 支持它，以便更轻松地从 Yarn 迁移。
+`"resolutions"` 是 Yarn 对 `"overrides"` 的替代方案，语法类似。Bun 支持它，以帮助项目从 Yarn 迁移。
 
 {/* prettier-ignore */}
 ```json package.json icon="file-json"
@@ -95,7 +95,7 @@ node_modules
 
 ## 嵌套覆盖
 
-规则可以限定到一个父包，因此它只应用于该包的直接依赖项。npm 对象形式、pnpm 的 `>` 形式，以及带版本范围的父包均受支持：
+你可以将规则限定到一个父包，因此它仅适用于该包的直接依赖项。Bun 接受 npm 对象形式、pnpm 的 `>` 形式，以及带版本范围的父包：
 
 ```json package.json icon="file-json"
 {
@@ -113,7 +113,7 @@ node_modules
 
 对象中的`"."`会覆盖 `micromatch` 本身，其效果类似于顶层的`"micromatch"`规则
 
-`"resolutions"`接受 Yarn 的路径形式。为兼容性支持 `**`，但无论哪种形式，都只会影响父包的直接依赖项：
+`"resolutions"` 接受 Yarn 的路径形式。Bun 为了兼容性接受 `**`，但无论哪种形式，该规则都只会影响父包的直接依赖项：
 
 ```json package.json icon="file-json"
 {
@@ -144,10 +144,10 @@ node_modules
 }
 ```
 
-选择器会与每个依赖包所_声明_的范围进行比较，而不是与解析后的版本进行比较。`"semver@<7.5.2"`会应用于声明了 `^7.3.0` 的依赖包（它仍可能选择 `7.3.x`），但不会应用于声明了 `^7.5.2` 的依赖包。使用 dist-tag、`catalog:`、`workspace:`、git 或 URL 说明符的依赖包永远不会匹配选择器
+Bun 会将选择器与每个依赖方_声明_的范围进行比较，而不是与解析后的版本进行比较。`"semver@<7.5.2"` 会应用于声明 `^7.3.0` 的依赖方（它仍可能选择 `7.3.x`），但不会应用于声明 `^7.5.2` 的依赖方。使用 dist-tag、`catalog:`、`workspace:`、git 或 URL 说明符的依赖方永远不会匹配选择器。
 
 ## 限制
 
-- 只支持一层父包。`a>b>c`、`a/b/c` 以及更深层的对象嵌套会被忽略，并显示警告
-- 不支持 pnpm 的`"pkg@"`（空选择器）和`"-"`（移除依赖项）形式，这些形式会被跳过，并显示警告
-- 包含嵌套规则或版本范围规则的锁文件会以 `lockfileVersion` 3 的形式写入，旧版本的 Bun 无法读取该格式
+- Bun 仅支持一层父包。它会忽略 `a>b>c`、`a/b/c` 和更深层的对象嵌套，并发出警告。
+- Bun 不支持 pnpm 的 `"pkg@"`（空选择器）和 `"-"`（移除依赖项）形式，并会跳过它们，同时发出警告。
+- Bun 会将包含嵌套规则或版本范围规则的锁文件写为 `lockfileVersion` 3，较旧版本的 Bun 无法读取。

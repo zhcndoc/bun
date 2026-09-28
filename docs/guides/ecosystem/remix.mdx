@@ -4,9 +4,9 @@ sidebarTitle: 使用 Remix 和 Bun
 mode: center
 ---
 
-[Remix 3](https://github.com/remix-run/remix) 是一个由独立软件包构建的 Web 框架（路由器、HTML 渲染、会话、表单解析等），这些软件包会作为 `remix` 软件包一起分发。在处于 beta 阶段期间，它以 npm 上的 `next` 标签发布，并且其服务器可以直接运行在 Bun 上。
+[Remix 3](https://github.com/remix-run/remix) 是一个由独立软件包构建的 Web 框架：路由器、HTML 渲染、会话、表单解析等。这些软件包以 `remix` 软件包的形式一起分发。Remix 3 在处于 beta 阶段期间以 npm 上的 `next` 标签发布。其服务器无需修改即可在 Bun 上运行。
 
-<Note>本指南介绍 Remix 3。Remix 2 项目应改用 `create-remix` 创建。</Note>
+<Note>本指南介绍 Remix 3。若要创建 Remix 2 项目，请改用 `create-remix`。</Note>
 
 ---
 
@@ -46,7 +46,7 @@ bun --watch server.ts
 Server listening on http://localhost:44100
 ```
 
-打开 [http://localhost:44100](http://localhost:44100) 查看起始页面。路由位于 `app/routes.ts` 和 `app/router.ts` 中，起始主页由 `app/actions/home-page.tsx` 渲染。
+打开 [http://localhost:44100](http://localhost:44100) 查看起始页面。路由位于 `app/routes.ts` 和 `app/router.ts` 中。`app/actions/home-page.tsx` 会渲染起始主页。
 
 ---
 
@@ -73,12 +73,12 @@ Server listening on http://localhost:44100
 ```
 
 <Note>
-  生成的 `hmr` 脚本（`hmr.ts`）也会加载 `remix/node-tsx`，而它依赖 `module.registerHooks()`。Bun 尚未实现该 API（参见 [Node.js 兼容性](/runtime/nodejs-compat#node-module)），因此该脚本无法在 Bun 下运行；而 `bun --watch` 会在发生更改时重启服务器。
+  生成的 `hmr` 脚本（`hmr.ts`）也会加载 `remix/node-tsx`，而它依赖 `module.registerHooks()`。Bun 尚未实现此 API，因此该脚本无法在 Bun 下运行。请参阅 [Node.js 兼容性](/runtime/nodejs-compat#node-module)。`bun --watch` 会在发生更改时重启服务器。
 </Note>
 
 ---
 
-路由器是一个 `fetch` 处理器，因此也可以使用 [`Bun.serve()`](/runtime/http/server) 提供应用服务，而不是使用 `node:http`。
+路由器是一个 `fetch` 处理程序，因此你也可以使用 [`Bun.serve()`](/runtime/http/server) 而不是 `node:http` 来提供应用服务。
 
 ```ts server.ts icon="/icons/typescript.svg"
 import { router } from "./app/router.ts";

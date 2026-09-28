@@ -79,7 +79,7 @@ Bun 作为一个单一的、无依赖的二进制文件提供，包含运行时�
 - 测试运行器：支持 Jest，TypeScript 优先，含快照、DOM 和监听模式。
 - 打包器：支持 JS/TS/JSX 的原生打包，含代码拆分、插件和 HTML 导入。
 
-通过上方卡片探索每个模块。每个章节包括概览、快速示例、参考文档及最佳实践，方便快速浏览和深入学习。
+通过上方的卡片探索各个领域。每个部分都按照概述、简短示例、参考资料和最佳实践进行组织，便于快速浏览和深入了解。
 
 ---
 
@@ -93,7 +93,7 @@ Bun 是一个面向 JavaScript 和 TypeScript 应用的一体化工具包。它�
 bun run index.tsx  # 默认支持 TS 和 JSX
 ```
 
-`bun` 命令行工具还实现了测试运行器、脚本运行器以及兼容 Node.js 的包管理器，速度都显著快于现有工具，并且几乎无需修改即可用于现有的 Node.js 项目。
+`bun` 命令行工具还实现了测试运行器、脚本运行器和兼容 Node.js 的包管理器。这三者都比现有工具快得多，而且你可以在现有 Node.js 项目中使用它们，几乎无需修改。
 
 ```bash terminal icon="terminal"
 bun run start                 # 运行 `start` 脚本
@@ -105,7 +105,7 @@ bunx cowsay 'Hello, world!'   # 执行一个包
 
 ## 什么是运行时？
 
-JavaScript（更正式地说是 ECMAScript）只是编程语言的一个 _规范_。任何人都可以写一个 JavaScript _引擎_，输入有效的 JavaScript 程序并执行它。当前最流行的两个引擎是 V8（Google 研发）和 JavaScriptCore（Apple 研发），二者都是开源的。
+JavaScript（或者更正式地说，ECMAScript）仅仅是编程语言的一份_规范_。任何人都可以编写一个 JavaScript _引擎_，用于读取并执行有效的 JavaScript 程序。目前使用最广泛的两个引擎是 V8（由 Google 开发）和 JavaScriptCore（由 Apple 开发）。两者都是开源的。
 
 但大多数 JavaScript 程序并不是在真空中运行的。它们需要一种访问外部世界的方式，才能执行有用的任务。这正是 _运行时_ 的作用所在。运行时实现了额外的 API，并将这些 API 提供给它们所执行的 JavaScript 程序。
 

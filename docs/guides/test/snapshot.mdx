@@ -46,7 +46,7 @@ test
 
 ---
 
-`snap.test.ts.snap` 文件是一个 JavaScript 文件，它导出传入 `expect()` 的值的序列化版本。`{foo: "bar"}` 对象已按照 Jest 的快照格式进行了美化打印，该格式并非严格 JSON（注意末尾的逗号）。
+`snap.test.ts.snap` 文件是一个 JavaScript 文件，其中导出了传入 `expect()` 的值的序列化版本。Bun 会按照 Jest 的快照格式美化打印 `{foo: "bar"}` 对象，该格式并非严格的 JSON（请注意末尾的逗号）。
 
 ```js snap.test.ts.snap icon="file-code"
 // Bun Snapshot v1, https://bun.sh/docs/test/snapshots

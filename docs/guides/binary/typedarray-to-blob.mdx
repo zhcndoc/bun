@@ -4,7 +4,7 @@ sidebarTitle: "Uint8Array 转 Blob"
 mode: center
 ---
 
-一个 [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) 可以由多个“块”数组构造，每个块可以是字符串、二进制数据结构（包括 `Uint8Array`）或另一个 `Blob`。
+你可以从一组“数据块”构造 [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob)，其中每个数据块都是字符串、二进制数据结构（包括 `Uint8Array`）或另一个 `Blob`。
 
 ```ts
 const arr = new Uint8Array([0x68, 0x65, 0x6c, 0x6c, 0x6f]);

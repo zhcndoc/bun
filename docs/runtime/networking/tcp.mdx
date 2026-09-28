@@ -81,7 +81,7 @@ Bun.listen({
 });
 ```
 
-`key` 和 `cert` 字段期望的是 TLS 私钥和证书的**内容**。类型可以是字符串、`BunFile`、`TypedArray` 或 `Buffer`。
+`key` 和 `cert` 字段需要提供 TLS 密钥和证书的_内容_。它们可以是字符串、`BunFile`、`TypedArray`、`Buffer` 或这些类型组成的数组。
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.listen({
@@ -151,7 +151,7 @@ const socket = await Bun.connect({
 
 ## 热重载
 
-TCP 服务器和连接都能热重载新的处理器。
+你可以使用新的处理器对 TCP 服务器和套接字进行热重载。
 
 <CodeGroup>
 
@@ -188,7 +188,7 @@ socket.reload({
 
 ## 缓冲
 
-Bun 中的 TCP sockets 不会缓冲数据，因此对性能敏感的代码应自行缓冲写入。例如：
+Bun 中的 TCP 套接字不会缓冲数据，因此对性能敏感的代码应自行缓冲写入。例如：
 
 ```ts
 socket.write("h");
@@ -232,7 +232,7 @@ queueMicrotask(() => {
 ```
 
 <Note>
-**缓冲合并（Corking）**
+**缓冲合并**
 
-计划支持缓冲合并功能，但目前必须通过 `drain` 事件手动管理背压。
+计划支持缓冲合并功能。目前必须通过 `drain` 处理器手动管理背压。
 </Note>

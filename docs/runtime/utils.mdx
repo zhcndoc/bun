@@ -27,14 +27,14 @@ Bun.revision;
 
 ## `Bun.main`
 
-当前程序入口文件的绝对路径（用 `bun run` 执行的文件）。
+当前程序入口点的绝对路径（即你通过 `bun run` 执行的文件）。
 
 ```ts script.ts
 Bun.main;
 // /path/to/script.ts
 ```
 
-使用此属性可以判断脚本是否被直接执行，而不是被其他脚本导入。
+使用此属性可确定脚本是直接运行，还是由另一个脚本导入。
 
 ```ts
 if (import.meta.path === Bun.main) {
@@ -44,7 +44,7 @@ if (import.meta.path === Bun.main) {
 }
 ```
 
-这类似于 Node.js 中的 [`require.main = module` 技巧](https://stackoverflow.com/questions/6398196/detect-if-called-through-require-or-directly-by-command-line)。
+此检查类似于 Node.js 中的 [`require.main = module` 技巧](https://stackoverflow.com/questions/6398196/detect-if-called-through-require-or-directly-by-command-line)。
 
 ## `Bun.sleep()`
 
@@ -124,13 +124,13 @@ const id = randomUUIDv7();
 // => "0192ce11-26d5-7dc3-9305-1426de888c5a"
 ```
 
-UUID v7 是一个 128 位值，编码了当前时间戳、随机值和计数器。时间戳用最低 48 位编码，随机值和计数器编码于剩余位。
+UUID v7 是一种 128 位值，其中编码了当前时间戳、一个随机值和一个计数器。时间戳使用最高有效的 48 位进行编码，随机值和计数器则使用剩余位进行编码。
 
-`timestamp` 参数默认为当前的毫秒级时间。当时钟向前移动时，计数器会重新初始化为一个新的伪随机整数（12 位计数器的最高位保持为 0，因此在回绕前至少还剩 2048 个值）。如果时钟没有超过上一次生成 UUID 时的时间戳，Bun 会复用上一次生成的时间戳并递增计数器。如果计数器发生回绕，Bun 会将生成的时间戳向前推进，而不是让计数器回绕，从而确保返回的 UUID 始终严格递增（RFC 9562 §6.2）。计数器具有原子性且支持线程安全，因此在同一进程中、同一时间戳下从多个 Worker 调用 `Bun.randomUUIDv7()` 不会产生冲突的计数器值。
+`timestamp` 参数默认为当前时间（以毫秒为单位）。当时钟前进时，Bun 会将计数器重新设定为一个新的伪随机整数。Bun 在重新设定计数器时会将其 12 位中的最高位清零，因此在回绕之前至少还剩 2048 个值。如果时钟尚未前进到超过上次发出的时间戳，Bun 会重用上次发出的时间戳并递增计数器。如果计数器回绕，Bun 会将发出的时间戳向前推进，而不是让计数器回绕，因此返回的 UUID 会保持严格递增（RFC 9562 §6.2）。计数器是原子操作且线程安全的，因此同一进程中多个 Worker 在同一时间戳下调用 `Bun.randomUUIDv7()` 时，不会产生冲突的计数器值。
 
-当传入显式的 `timestamp` 时，Bun 会原样编码该值，并为其维护一个独立的计数器，因此使用显式时间戳的调用不会读取或修改默认路径使用的单调状态。使用相同显式时间戳的重复调用会递增该独立计数器（并在回绕时推进生成的时间戳），因此它们仍可排序；使用不同显式时间戳的调用会重新初始化该计数器。
+传入显式的 `timestamp` 时，Bun 会原样编码该值，并为其跟踪单独的计数器，因此显式时间戳调用不会观察或更改默认路径使用的单调状态。使用相同的显式时间戳重复调用时，会递增该独立计数器；计数器回绕时，也会向前推进发出的时间戳，因此生成的 UUID 始终可排序。使用不同的显式时间戳调用时，会重新设定该计数器。
 
-UUID 的后 8 字节为加密安全的随机值，使用与 `crypto.randomUUID()` 相同的随机数生成器（基于 BoringSSL，底层依赖硬件随机数生成器）。
+UUID 的最后 8 个字节（除两个变体位外）是一个密码学安全的随机值。`Bun.randomUUIDv7()` 使用与 `crypto.randomUUID()` 相同的随机数生成器。该生成器来自 BoringSSL。BoringSSL 的随机性则来自平台专用的系统随机数生成器，而底层硬件通常会提供该生成器。
 
 ```ts
 namespace Bun {
@@ -274,7 +274,7 @@ Bun.deepEquals(a, b); // => true
 Bun.deepEquals(a, b, true); // => false
 ```
 
-严格模式认为以下情况不相等：
+在严格模式下，Bun 会将以下情况视为不相等：
 
 ```ts
 // undefined 值
@@ -305,14 +305,13 @@ Bun.deepEquals(new Foo(), { a: 1 }, true); // false
 - `<` 转为 `&lt;`
 - `>` 转为 `&gt;`
 
-此函数针对大型输入进行了优化。在 M1X 上，其处理速度为 480 MB/s -
-20 GB/s，具体取决于需要转义的数据量以及是否包含非 ASCII 文本。非字符串类型会在转义前转换为字符串。
+此函数针对大型输入进行了优化。在 M1 Max 上，其处理速度为 480 MB/s 至 20 GB/s，具体取决于要转义的数据量以及是否包含非 ASCII 文本。Bun 会先将非字符串类型转换为字符串，再进行转义。
 
 ## `Bun.stringWidth()`
 
 <Note>大约比 `string-width` 快 6,756 倍的替代方案</Note>
 
-获取字符串在终端显示时占用列数。支持 ANSI 转义码、表情符号和宽字符。
+获取字符串在终端中显示时所占的列数。支持 ANSI 转义码、表情符号和宽字符。
 
 示例：
 
@@ -324,7 +323,7 @@ Bun.stringWidth("\u001b[31mhello\u001b[0m", { countAnsiEscapeCodes: true }); // 
 
 用于在终端中对齐文本，或检查字符串是否包含 ANSI 转义码。
 
-该 API 与 "string-width" npm 包保持一致，因此现有代码可以在 Bun 和该 npm 包之间相互迁移。
+此 API 与 "string-width" npm 包相同，因此你可以将现有代码移植到 Bun，反之亦然。
 
 在[此基准测试](https://github.com/oven-sh/bun/blob/5147c0ba7379d85d4d1ed0714b84d6544af917eb/bench/snippets/string-width.mjs#L13)中，对于长度大于约 500 个字符的输入，`Bun.stringWidth` 比 `string-width` npm 包快约 6,756 倍。非常感谢 [sindresorhus](https://github.com/sindresorhus) 在 `string-width` 方面所做的工作。
 
@@ -405,10 +404,10 @@ npm/string-width 35,000 chars ascii+emoji        96.93 ms/iter  (94.39 ms … 10
 npm/string-width      8 chars ansi+emoji          3.92 µs/iter     (3.45 µs … 4.57 µs)   4.09 µs   4.57 µs   4.57 µs
 npm/string-width     80 chars ansi+emoji         24.46 µs/iter     (22.87 µs … 4.2 ms)  23.54 µs  25.89 µs  27.41 µs
 npm/string-width    800 chars ansi+emoji        259.62 µs/iter (246.76 µs … 480.12 µs) 258.65 µs 349.84 µs 372.55 µs
-npm/string-width    8,000 chars ansi+emoji          5.46 ms/iter     (5.41 ms … 5.57 ms)   5.48 ms   5.55 ms   5.57 ms
-npm/string-width 40,000 chars ansi+emoji        108.91 ms/iter  (107.55 ms … 109.5 ms) 109.25 ms  109.5 ms  109.5 ms
+npm/string-width  8,000 chars ansi+emoji          5.46 ms/iter     (5.41 ms … 5.57 ms)   5.48 ms   5.55 ms   5.57 ms
+npm/string-width 40,000 chars ansi+emoji        108.91 ms/iter (107.55 ms … 109.5 ms) 109.25 ms  109.5 ms  109.5 ms
 npm/string-width     19 chars ansi+emoji+ascii    6.53 µs/iter     (6.35 µs … 6.75 µs)   6.54 µs   6.75 µs   6.75 µs
-npm/string-width    190 chars ansi+emoji+ascii   55.52 µs/iter  (52.59 µs … 352.73 µs)  54.19 µs  80.77 µs 167.21 µs
+npm/string-width    190 chars ansi+emoji+ascii   55.52 µs/iter (52.59 µs … 352.73 µs)  54.19 µs  80.77 µs 167.21 µs
 npm/string-width  1,900 chars ansi+emoji+ascii  701.71 µs/iter (653.94 µs … 893.78 µs)  715.3 µs 855.37 µs  872.9 µs
 npm/string-width 19,000 chars ansi+emoji+ascii   27.19 ms/iter   (26.89 ms … 27.41 ms)  27.28 ms  27.41 ms  27.41 ms
 npm/string-width 95,000 chars ansi+emoji+ascii     3.68 s/iter        (3.66 s … 3.7 s)    3.69 s     3.7 s     3.7 s
@@ -642,21 +641,21 @@ dec.decode(decompressedSync);
 
 ## `Bun.inspect()`
 
-将对象序列化为 `string`，格式与 `console.log` 打印一致。
+将对象序列化为 `string`，其格式与 `console.log` 打印出的内容完全相同。
 
 ```ts
 const obj = { foo: "bar" };
-const str = Bun.inspect(obj);
-// => '{\nfoo: "bar" \n}'
+Bun.inspect(obj);
+// => '{\n  foo: "bar",\n}'
 
 const arr = new Uint8Array([1, 2, 3]);
-const str = Bun.inspect(arr);
+Bun.inspect(arr);
 // => "Uint8Array(3) [ 1, 2, 3 ]"
 ```
 
 ### `Bun.inspect.custom`
 
-Bun 用于实现 `Bun.inspect` 的符号。重写它可以自定义对象的打印方式。它与 Node.js 中的 `util.inspect.custom` 完全相同。
+Bun 用于实现 `Bun.inspect` 的符号。重写它可自定义 Bun 打印对象的方式。它与 Node.js 中的 `util.inspect.custom` 完全相同。
 
 ```ts
 class Foo {
@@ -779,7 +778,7 @@ await Bun.readableStreamToFormData(stream, multipartFormBoundary);
 
 ## `Bun.resolveSync()`
 
-使用 Bun 内部的[模块解析](/runtime/module-resolution)算法解析文件路径或模块说明符。第一个参数是要解析的路径，第二个参数是“根目录”。如果未找到匹配项，则会抛出一个 `Error`。
+使用 Bun 的内部[模块解析](/runtime/module-resolution)算法解析文件路径或模块说明符。第一个参数是要解析的路径，第二个参数是“根目录”。如果没有匹配项，则会抛出一个 `Error`。
 
 ```ts
 Bun.resolveSync("./foo.ts", "/path/to/project");
@@ -963,7 +962,7 @@ namespace Bun {
 
 ---
 
-## `serialize` & `deserialize` in `bun:jsc`
+## `serialize` 和 `deserialize` 来自 `bun:jsc`
 
 要将 JavaScript 值保存到 SharedArrayBuffer 中并取回，请使用 `"bun:jsc"` 模块中的 `serialize` 和 `deserialize`。
 
@@ -975,7 +974,7 @@ const obj = deserialize(buf);
 console.log(obj); // => { foo: "bar" }
 ```
 
-在内部，[`structuredClone`](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone) 和 [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) 以相同的方式进行序列化和反序列化。这将底层的 [HTML 结构化克隆算法](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm) 作为 SharedArrayBuffer 暴露给 JavaScript。
+在内部，[`structuredClone`](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone) 和 [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) 使用相同的方式进行序列化和反序列化。`serialize` 和 `deserialize` 将底层的 [HTML 结构化克隆算法](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm)作为 SharedArrayBuffer 暴露给 JavaScript。
 
 ---
 

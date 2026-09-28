@@ -11,12 +11,12 @@ Bun 会尽可能使用现有的配置文件，例如 `package.json` 和 `tsconfi
 
 将 `bunfig.toml` 放在项目根目录中，与 `package.json` 放在一起。
 
-若要进行全局配置，你也可以在以下路径之一创建 `.bunfig.toml` 文件：
+如需全局配置 Bun 的包管理器，也可以在以下任一路径创建 `.bunfig.toml` 文件：
 
 - `$HOME/.bunfig.toml`
 - `$XDG_CONFIG_HOME/.bunfig.toml`
 
-如果 Bun 同时找到全局和本地的 `bunfig`，它会对两者进行浅合并，本地配置会覆盖全局配置。在适用的情况下，CLI 标志会覆盖 `bunfig` 设置。
+只有包管理器命令（`bun install`、`bun add`、`bun remove`、`bun update`、`bun pm`、`bunx` 等）会读取全局文件。如果 Bun 同时找到全局和本地 `bunfig`，则会加载二者；本地文件中设置的键会覆盖全局文件中的同名键。适用时，CLI 标志会覆盖 `bunfig` 设置。
 
 ## 运行时
 
@@ -107,7 +107,7 @@ Bun 支持以下加载器：
 
 ### `telemetry`
 
-`telemetry` 字段用于启用或禁用分析功能。默认情况下，分析功能处于启用状态。它等同于 `DO_NOT_TRACK` 环境变量。
+`telemetry` 字段用于启用或禁用分析功能。默认情况下，遥测处于启用状态。此设置等同于 `DO_NOT_TRACK` 环境变量。
 
 我们目前不会收集分析数据；此设置仅控制匿名崩溃报告。我们计划收集诸如哪些 Bun API 使用最频繁、或 `bun build` 花费多长时间等信息。
 
@@ -133,7 +133,7 @@ file = false
 
 在生产环境或 CI/CD 流程中，如果你希望完全依赖系统环境变量，可以使用此配置。
 
-即使禁用了默认加载，通过 `--env-file` 显式传入的文件仍会被加载。
+即使禁用了默认加载，Bun 仍会加载通过 `--env-file` 显式传入的文件。
 
 ### `console`
 
@@ -156,7 +156,7 @@ depth = 3
 
 ### `serve.port`
 
-`Bun.serve` 监听的默认端口。默认为 `3000`。也可以通过 `BUN_PORT` 或 `PORT` 环境变量，或 `--port` 标志进行设置。
+`Bun.serve` 监听的默认端口。默认值为 `3000`。你也可以通过 `BUN_PORT` 或 `PORT` 环境变量，或 `--port` 标志进行设置。
 
 ```toml title="bunfig.toml" icon="settings"
 [serve]
@@ -192,7 +192,7 @@ preload = ["./setup.ts"]
 
 ### `test.pathIgnorePatterns`
 
-使用 glob 模式从测试发现中排除文件和目录。匹配的目录会在扫描期间被裁剪，因此不会遍历其内容。当项目包含带有 `*.test.ts` 文件、但不希望被 `bun test` 发现的子模块或第三方代码时，可以使用此配置。
+使用 glob 模式从测试发现中排除文件和目录。测试运行器会在扫描期间剪除匹配的目录，因此不会遍历其中的内容。如果项目包含带有 `*.test.ts` 文件、且不希望被 `bun test` 发现的子模块或 vendored 代码，可以使用此设置。
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -230,11 +230,11 @@ coverage = false
 coverageThreshold = 0.9
 ```
 
-可以分别为行级、函数级和语句级覆盖率设置阈值。
+你可以为行覆盖率和函数覆盖率分别设置阈值。Bun 接受 `statements` 键，但目前不会强制执行该阈值。
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
-coverageThreshold = { lines = 0.7, functions = 0.8, statements = 0.9 }
+coverageThreshold = { lines = 0.7, functions = 0.8 }
 ```
 
 ### `test.coverageSkipTestFiles`
@@ -275,7 +275,7 @@ coveragePathIgnorePatterns = [
 
 ### `test.coverageReporter`
 
-默认情况下，覆盖率报告会打印到控制台。若要生成 CI 和其他工具可以读取的持久化报告，请使用 `lcov`。
+默认情况下，测试运行器会将覆盖率报告打印到控制台。如需生成 CI 和其他工具可读取的持久化报告，请使用 `lcov`。
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -333,7 +333,7 @@ rerunEach = 3
 
 ### `test.retry`
 
-所有测试的默认重试次数。失败的测试最多会重试指定次数。每个测试中的 `{ retry: N }` 会覆盖此值。默认 `0`（不重试）。
+所有测试的默认重试次数。测试运行器最多会重试失败的测试指定次数。每个测试的 `{ retry: N }` 设置会覆盖此值。默认 `0`（不重试）。
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -357,7 +357,7 @@ concurrentTestGlob = "**/concurrent-*.test.ts"
 
 ### `test.onlyFailures`
 
-启用后，输出中只会显示失败的测试，从而减少大型测试套件中的噪音。默认 `false`。
+启用后，输出中只显示失败的测试，从而减少大型测试套件中的冗余信息。默认 `false`。
 
 ```toml title="bunfig.toml" icon="settings"
 [test]
@@ -430,7 +430,7 @@ peer = true
 
 是否让 `bun install` 在“生产模式”下运行。默认 `false`。
 
-在生产模式下，不会安装 `"devDependencies"`，并且锁文件会被冻结（与 [`install.frozenLockfile`](#install-frozenlockfile) 相同）。使用 `--production` CLI 标志可为单次安装启用此模式。由于锁文件会被冻结，在该设置启用期间，`bun add`、`bun remove` 和 `bun update` 都会失败。
+在生产模式下，Bun 不会安装 `"devDependencies"`，并会冻结锁文件（与 [`install.frozenLockfile`](#install-frozenlockfile) 相同）。使用 `--production` CLI 标志可为单次安装启用此模式。由于生产模式会冻结锁文件，因此启用该模式时，`bun add`、`bun remove` 和 `bun update` 会失败。
 
 ```toml title="bunfig.toml" icon="settings"
 [install]
@@ -441,7 +441,7 @@ production = false
 
 是否在 `package.json` 中设置精确版本号。默认 `false`。
 
-默认情况下，Bun 使用插入符号范围；如果某个包的 `latest` 版本是 `2.4.1`，Bun 会将 `^2.4.1` 写入你的 `package.json`，这表示接受从 `2.4.1` 到（但不包括）`3.0.0` 的任何版本。
+默认情况下，Bun 使用 caret 范围。如果某个包的 `latest` 版本为 `2.4.1`，Bun 会在你的 `package.json` 中写入 `^2.4.1`。该范围接受从 `2.4.1` 起、但不包括 `3.0.0` 的任何版本。
 
 ```toml title="bunfig.toml" icon="settings"
 [install]
@@ -508,11 +508,20 @@ prefer = "online"
 
 有效值：
 
-| 值          | 描述                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------ |
-| `"online"`  | 默认。按需检查注册表中是否有过期包。                                                         |
-| `"offline"` | 跳过过期检查，并从本地缓存解析包。等同于 `--prefer-offline`。                                 |
-| `"latest"`  | 始终向 npm 检查最新的匹配版本。等同于 `--prefer-latest`。                                    |
+| 值           | 描述                                                                                                                       |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `"online"`  | 默认值。根据需要检查注册表中的包是否过期。                                                                           |
+| `"offline"` | 跳过过期检查，并从本地缓存解析包。等同于 `--prefer-offline`（`bun install` 也支持此选项）。 |
+| `"latest"`  | 始终向 npm 查询最新的匹配版本。等同于 `--prefer-latest`。                                                 |
+
+### `install.offline`
+
+当设置为 `true` 时，`bun install` 永远不会访问网络：包元数据和 tarball 必须已在缓存中，缺少任何内容都会报错。默认 `false`。等同于 `bun install --offline`。如需使用更宽松的“尽可能使用缓存”行为，请参阅 `install.prefer = "offline"` / `--prefer-offline`。
+
+```toml title="bunfig.toml" icon="settings"
+[install]
+offline = true
+```
 
 ### `install.frozenLockfile`
 
@@ -525,7 +534,7 @@ frozenLockfile = false
 
 ### `install.dryRun`
 
-是否实际安装依赖。默认 `false`。当设置为 `true` 时，等同于向所有 `bun install` 命令传入 `--dry-run`。
+是否让 `bun install` 解析依赖但不安装。默认 `false`。当设置为 `true` 时，等同于向所有 `bun install` 命令传入 `--dry-run`。
 
 ```toml title="bunfig.toml" icon="settings"
 [install]
@@ -635,7 +644,7 @@ disableManifest = false
 save = true
 ```
 
-是否在 `bun.lock` 旁边生成非 Bun 锁文件。（始终会创建 `bun.lock`。）唯一支持的值是 `"yarn"`。
+是否在 `bun.lock` 之外同时生成非 Bun 锁文件。（Bun 始终会创建 `bun.lock`。）`"yarn"` 是唯一受支持的值。
 
 ```toml title="bunfig.toml" icon="settings"
 [install.lockfile]
@@ -662,7 +671,7 @@ linker = "hoisted"
 
 ### `install.globalStore`
 
-当使用 `"isolated"` 链接器时，会在全局虚拟存储 `<cache>/links/` 中跨项目共享包安装，并将 `node_modules/.bun/<pkg>@<ver>` 链接到其中，而不是将每个包实际展开到项目中。这样在 `rm -rf node_modules` 之后的热安装会快一个数量级。默认 `false`。也可以通过 `BUN_INSTALL_GLOBAL_STORE` 环境变量设置。
+使用 `"isolated"` 链接器时，可在 `<cache>/links/` 下的全局虚拟存储中共享多个项目之间的包安装。Bun 会将 `node_modules/.bun/<pkg>@<ver>` 链接到存储中，而不是将每个包实际写入项目目录。这样，在执行 `rm -rf node_modules` 后进行热安装，速度可提高一个数量级。默认 `false`。你也可以通过 `BUN_INSTALL_GLOBAL_STORE` 环境变量进行设置。
 
 请参阅[全局虚拟存储](/pm/global-store)。
 
@@ -673,7 +682,7 @@ globalStore = true
 
 ### `install.publicHoistPattern`
 
-在使用 `"isolated"` 链接器时，匹配这些 glob 模式的包会被提升到根 `node_modules` 目录，以便项目中的任何包都能解析它们。默认 `[]`。类似于 pnpm 的 `public-hoist-pattern`。
+使用 `"isolated"` 链接器时，Bun 会将匹配这些 glob 模式的包提升到根 `node_modules` 目录，使项目中的任何包都可以解析它们。默认 `[]`。与 pnpm 的 `public-hoist-pattern` 类似。
 
 ```toml title="bunfig.toml" icon="settings"
 [install]
@@ -682,7 +691,7 @@ publicHoistPattern = ["*eslint*", "*prettier*"]
 
 ### `install.hoistPattern`
 
-使用 `"isolated"` 链接器时，匹配这些 glob 模式的包会被提升到虚拟存储中的备用目录（`node_modules/.bun/node_modules`），以便虚拟存储中的其他包可以解析它们。默认情况下，每个包都会被提升到该目录，相当于 `["*"]`。类似于 pnpm 的 `hoist-pattern`。
+使用 `"isolated"` 链接器时，Bun 会将匹配这些 glob 模式的包提升到虚拟存储中的回退目录（`node_modules/.bun/node_modules`），使虚拟存储中的其他包可以解析它们。默认情况下，Bun 会将所有包提升到此目录中，等同于 `["*"]`。与 pnpm 的 `hoist-pattern` 类似。
 
 ```toml title="bunfig.toml" icon="settings"
 [install]
@@ -691,7 +700,7 @@ hoistPattern = ["*"]
 
 ### `install.hoist`
 
-使用 `"isolated"` 链接器时，Bun 会创建 `node_modules/.bun/node_modules`，这是一个备用目录，其中包含指向每个已安装包的符号链接（或者仅包含匹配 `install.hoistPattern` 的包）。该目录位于存储中每个包的向上解析路径上，因此包仍然可以解析自己未声明的依赖（“幻影依赖”）。设置 `hoist = false` 可完全跳过此目录的创建：此时，存储包中的未声明导入会失败，除非该包被链接到项目根目录的 `node_modules` 中（例如直接依赖、匹配 `publicHoistPattern` 的包或工作区包）。由于 `.bun` 位于其中，这些包仍处于解析路径上。项目自身的 `node_modules` 符号链接不会改变。默认 `true`。等同于 pnpm 的 `hoist` 设置，包括根 `node_modules` 的这一注意事项；其优先级高于 `install.hoistPattern`。
+使用 `"isolated"` 链接器时，Bun 会创建 `node_modules/.bun/node_modules`。此回退目录包含指向每个已安装包的符号链接；如果设置了 `install.hoistPattern`，则只包含指向匹配包的符号链接。该目录位于存储中每个包的向上解析路径上，因此包仍可解析自己未声明的依赖（“幽灵依赖”）。将 `hoist = false` 可完全跳过此目录的创建。此时，除非导入的包已链接到项目根目录的 `node_modules`（即直接依赖、匹配 `publicHoistPattern` 的包或工作区包），否则存储中包的未声明导入会失败。项目自身的 `node_modules` 符号链接不会改变。默认 `true`。等同于 pnpm 的 `hoist` 设置，包括此处提到的根 `node_modules` 注意事项；其优先级高于 `install.hoistPattern`。
 
 此设置仅适用于 `"isolated"` 链接器。提升式安装不受影响：在那里，扁平的 `node_modules` 树本身就是布局，而不是由此开关控制的内容。
 
@@ -741,7 +750,7 @@ scanner = "@oven/bun-security-scanner" # 示例名称，请替换为你的扫描
 
 ### `install.minimumReleaseAge`
 
-配置 npm 包版本的最短存续时间（以秒为单位）。发布距今短于此阈值的包版本会在安装期间被过滤。默认 `null`（禁用）。
+配置 npm 包版本的最短发布时间（秒）。安装过程中，Bun 会筛除发布时间早于此阈值的包版本。默认 `null`（禁用）。
 
 ```toml title="bunfig.toml" icon="settings"
 [install]
@@ -753,7 +762,7 @@ minimumReleaseAge = 259200
 
 ### `install.minimumReleaseAgeExcludes`
 
-排除在 `minimumReleaseAge` 检查之外的包名数组。默认 `[]`。
+从 `minimumReleaseAge` 检查中排除的包名数组。默认 `[]`。
 
 ```toml title="bunfig.toml" icon="settings"
 [install]
@@ -790,9 +799,9 @@ shell = "bun"
 
 ### `run.bun` — 自动将 `node` 别名为 `bun`
 
-设为 `true` 时，会在所有由 `bun run` 或 `bun` 调用的脚本或可执行文件的 `$PATH` 前添加一个指向 `bun` 二进制的 `node` 符号链接。
+当设置为 `true` 时，对于由 `bun run` 或 `bun` 调用的所有脚本或可执行文件，Bun 会在 `$PATH` 前添加一个指向 `bun` 二进制文件的 `node` 符号链接。
 
-运行 `node` 的脚本会改为运行 `bun`，无需修改脚本。此功能支持递归生效，因此运行另一个脚本且该脚本又运行 `node` 时，也会运行 `bun`；指向 `node` 的 shebang 同样适用。
+运行 `node` 的脚本会改为运行 `bun`，无需修改脚本。此行为会递归应用，因此，如果某个脚本运行另一个会运行 `node` 的脚本，该脚本也会运行 `bun`。此别名也适用于指向 `node` 的 shebang。
 
 默认情况下，如果 `$PATH` 中尚无 `node`，此功能启用。
 
@@ -828,7 +837,7 @@ bun run --bun dev
 silent = true
 ```
 
-未启用此选项时，正在运行的命令会打印到控制台：
+如果不使用此选项，Bun 会将正在运行的命令打印到控制台：
 
 ```sh terminal icon="terminal"
 bun run dev
@@ -839,7 +848,7 @@ echo "正在运行 \"dev\"..."
 正在运行 "dev"...
 ```
 
-启用此选项后，不会打印正在运行的命令：
+使用此选项后，Bun 不会打印正在运行的命令：
 
 ```sh
 bun run dev
@@ -859,7 +868,7 @@ bun run --silent dev
 
 ### `run.elide-lines` - 截断过滤后的输出
 
-使用 `--filter` 时，每个脚本显示的脚本输出行数。默认值为 `10`。设为 `0` 可显示全部行。等同于 `--elide-lines` 标志。
+在终端中使用 `--filter` 时，将每个脚本的输出截断为最后 N 行。默认 `0`（显示所有行）。等同于 `--elide-lines` 标志。
 
 ```toml title="bunfig.toml" icon="settings"
 [run]
@@ -870,7 +879,7 @@ elide-lines = 10
 
 设为 `true` 时，Bun 会监视启动它的进程，并在该父进程消失后立即退出，即使父进程被强制终止而来不及转发信号。当 Bun 自身退出时，也会终止所有后代进程，以确保它启动的进程不会继续运行。适用于由可能被强制终止的监控程序（Electron、CI 运行器或轻量级 shim）启动 Bun 的情况。
 
-在 Linux 上，此功能使用 `prctl(PR_SET_PDEATHSIG)` 和 `/proc` 后代进程遍历；在 macOS 上，使用事件循环的 kqueue 中的 `EVFILT_PROC`/`NOTE_EXIT` 和 libproc 后代进程遍历；在 Windows 上，使用针对父进程句柄的线程池等待以及关闭时终止进程的 Job Object。
+在 Linux 上，Bun 使用 `prctl(PR_SET_PDEATHSIG)` 和 `/proc` 后代进程遍历。在 macOS 上，Bun 使用事件循环 kqueue 上的 `EVFILT_PROC`/`NOTE_EXIT` 和 libproc 后代进程遍历。在 Windows 上，Bun 使用父进程句柄的线程池等待和关闭时终止进程的 Job Object。
 
 等同于 `--no-orphans` CLI 标志或 `BUN_FEATURE_FLAG_NO_ORPHANS=1` 环境变量。
 

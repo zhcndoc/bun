@@ -5,7 +5,7 @@ description: "使用 --filter 标志在 monorepo 中按模式选择包"
 
 `--filter`（或 `-F`）标志按模式选择 monorepo 中的包。模式可以是包名称 glob、`./path` glob、`{dir}` 目录选择器或 `...` 依赖关系。
 
-`bun run`、`bun install`、`bun add`、`bun remove`、`bun update`、`bun outdated`、`bun prune` 和 `bun pm licenses` 均支持该标志。对于包管理器命令，请将标志放在子命令之后（`bun install --filter api`），因为 `bun --filter <pattern> <word>` 会将 `<word>` 作为脚本运行。
+该标志可与 `bun run`、`bun install`、`bun add`、`bun remove`、`bun update`、`bun outdated`、`bun prune` 和 `bun pm licenses` 一起使用。对于包管理器命令，请将标志放在子命令之后（`bun install --filter api`），因为 `bun --filter <pattern> <word>` 会将 `<word>` 作为脚本运行。
 
 ---
 
@@ -52,7 +52,7 @@ bun outdated --filter '{./packages/apps}'
 
 多个 `--filter` 标志会组合使用：选择所有与正向模式匹配的内容，再排除与 `!` 模式匹配的内容。没有匹配任何内容的模式会打印警告。对于 `bun add`、`bun remove`、`bun update`、`bun prune` 和 `bun pm licenses`，如果完全没有选择工作区，则会报错。
 
-Given a monorepo with workspaces `pkg-a`, `pkg-b`, and `pkg-c` under `./packages`:
+对于 `./packages` 下包含工作区 `pkg-a`、`pkg-b` 和 `pkg-c` 的 monorepo：
 
 ```bash terminal icon="terminal"
 # 安装除 `pkg-c` 以外所有工作区的依赖
@@ -124,7 +124,7 @@ bun --filter '{./packages/apps}' dev
 bun --filter '*' --filter '!docs' lint
 ```
 
-没有 `name` 的 `package.json` 只能通过 `./path` 模式选择。如果所选包中没有任何包包含该脚本，`bun run` 会退出并报错（传入 `--if-present` 则会改为以 0 退出）。
+只有 `./path` 模式可以选择没有 `name` 的 `package.json`。如果选中的包都没有该脚本，`bun run` 会以错误退出（传入 `--if-present` 则会以 0 退出）。
 
 ### 在工作区中运行脚本
 
@@ -160,9 +160,9 @@ bun run --parallel --no-exit-on-error --filter '*' test
 bun run --parallel --filter '*' build lint
 ```
 
-每行输出都会以包名和脚本名称作为前缀（`pkg-a:build | ...`）。不使用 `--filter`/`--workspaces` 时，前缀仅为脚本名称（`build | ...`）。当某个包的 `package.json` 没有 `name` 字段时，Bun 会改用相对于工作区根目录的路径。
+Bun 会在每行输出前加上包名和脚本名（`pkg-a:build | ...`）。如果没有使用 `--filter`/`--workspaces`，则只会加上脚本名作为前缀（`build | ...`）。如果某个包的 `package.json` 没有 `name` 字段，Bun 会改用相对于工作区根目录的路径。
 
-使用 `--if-present` 与 `--workspaces` 一起，可跳过没有指定脚本的包，而不报错。
+将 `--if-present` 与 `--workspaces` 一起使用，可以跳过没有指定脚本的包，而不报错。
 
 ### 依赖顺序
 

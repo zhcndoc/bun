@@ -14,9 +14,9 @@ description: Bun 中的 console 对象
 
 你可以配置 `console.log()` 打印嵌套对象的深度：
 
-- **CLI 标志**：使用 `--console-depth <number>` 为单次运行设置深度
+- **命令行标志**：使用 `--console-depth <number>` 设置单次运行的深度
 - **配置**：在 `bunfig.toml` 中设置 `console.depth`，使其在多次运行中保持生效
-- **默认值**：对象默认检查到 `2` 层深度
+- **默认值**：Bun 检查对象的深度为 `2` 层
 
 ```js
 const nested = { a: { b: { c: { d: "deep" } } } };

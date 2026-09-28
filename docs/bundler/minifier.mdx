@@ -3,7 +3,7 @@ name: 压缩器
 description: 使用 Bun 的 JavaScript 和 TypeScript 压缩器减少包大小
 ---
 
-Bun 内置了一个快速的 JavaScript 和 TypeScript 压缩器，可以根据代码库情况将包大小减少 80% 甚至更多，同时提升输出代码的运行速度。该压缩器执行了数十种优化，包括常量折叠、死代码消除和语法转换。与其他压缩器不同，Bun 的压缩器还能让 `bun build` 运行更快，因为打印的代码更少。
+Bun 内置了一个快速的 JavaScript 和 TypeScript 压缩器。根据代码库的不同，它可以将包体积减少 80% 或更多。它还可以让输出代码运行得更快。压缩器会执行数十种优化，包括常量折叠、死代码消除和语法转换。与其他压缩器不同，Bun 的压缩器能让 `bun build` 运行得更快，因为需要打印的代码更少。
 
 ## CLI 用法
 
@@ -31,7 +31,7 @@ bun build ./index.ts --production --outfile=out.js
 
 `--production` 标志还会：
 
-- 设置 `process.env.NODE_ENV` 为 `production`
+- 将 `process.env.NODE_ENV` 设置为 `production`
 - 启用生产模式下的 JSX 导入和转换
 
 ### 细粒度控制
@@ -119,19 +119,17 @@ false
 通过逻辑规则简化布尔表达式。
 
 ```ts Input
-!!x
-x === true
-x && true
-x || false
+if (!!x) y;
+if (x && true) y;
+if (x || false) y;
 !true
 !false
 ```
 
 ```js Output
-x
-x
-x
-x
+if(x)y;
+if(x)y;
+if(x)y;
 !1
 !0
 ```
@@ -546,12 +544,12 @@ x ? !1 : !0
 移除不必要的双重否定。
 
 ```ts Input
-!!x
+if (!!x) y;
 !!!x
 ```
 
 ```js Output
-x
+if(x)y;
 !x
 ```
 
@@ -687,15 +685,15 @@ function calculateSum(firstNumber, secondNumber) {
 ```
 
 ```js Output
-function a(b,c){const d=b+c;return d}
+function n(t,u){const c=t+u;return c}
 ```
 
 **命名策略：**
 
-- 使用频率最高的标识符获得最短名称（a, b, c…）
-- 单字母：a-z（共 26 个）
-- 双字母：aa-zz（676 个）
-- 必要时使用三字母及以上
+- 使用频率最高的标识符会获得最短的名称；Bun 会根据每个字符在源码中的出现频率对字母排序，因此最先使用的名称通常是 t、e 和 n 这样的字母，而不是 a、b、c
+- 单字符：a-z、A-Z 和 `_`（共 53 个名称；单独的 `$` 已保留）
+- 双字符：第二个字符也可以是数字（最多 3,456 个名称）
+- 根据需要使用三个或更多字符
 
 **保留标识符：**
 
@@ -718,7 +716,7 @@ let x = 10;
 ```
 
 ```js Output
-function add(a,b){return a+b;}let x=10;
+function add(a,b){return a+b}let x=10;
 ```
 
 ### 分号优化
@@ -939,7 +937,7 @@ new Array(x, y)
 
 **模式：** `--minify-syntax`
 
-将与 `void 0` 的宽松相等转换为 `null`，因为等价。
+将与 `void 0` 的宽松相等转换为 `null`，因为两者等价。
 
 ```ts Input
 x == void 0
@@ -1195,7 +1193,7 @@ await Bun.build({
 
 同时使用三种压缩模式：
 
-```ts input.ts (158 bytes)
+```ts input.ts (176 bytes)
 const myVariable = 42;
 
 const myFunction = () => {
@@ -1208,8 +1206,8 @@ const output = myFunction();
 ```
 
 ```js output.js
-// 使用 --minify 输出（49 字节，减少 69%）
-const a=42,b=()=>{const c=!0,d=void 0;return c?a:d},e=b();
+// Output with --minify (20 bytes, 89% reduction)
+var t=()=>42,e=t();
 ```
 
 ## 何时使用压缩

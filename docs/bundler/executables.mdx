@@ -27,7 +27,7 @@ Bun 的打包器支持 `--compile` 标志，用于从 TypeScript 或 JavaScript 
 console.log("Hello world!");
 ```
 
-这会将 `cli.ts` 打包成一个可以直接运行的可执行文件：
+Bun 会将 `cli.ts` 打包为可直接运行的可执行文件：
 
 ```bash terminal icon="terminal"
 ./mycli
@@ -37,7 +37,7 @@ console.log("Hello world!");
 Hello world!
 ```
 
-所有导入的文件和包都会被打包进可执行文件中，同时包含一份 Bun 运行时。所有内置的 Bun 和 Node.js API 都被支持。
+Bun 会将所有导入的文件和包以及一份 Bun 运行时副本打包到可执行文件中。所有内置的 Bun 和 Node.js API 均受支持。
 
 ---
 
@@ -51,41 +51,15 @@ Hello world!
   <Tab title="命令行">
     ```bash icon="terminal" terminal
     bun build --compile --target=bun-linux-x64 ./index.ts --outfile myapp
-
-    # 支持 2013 年以前的 CPU，使用 baseline 版本（nehalem）
-    bun build --compile --target=bun-linux-x64-baseline ./index.ts --outfile myapp
-
-    # 仅支持 2013 年及之后的 CPU，使用 modern 版本（haswell）
-    # modern 版本速度更快，但 baseline 兼容性更广。
-    bun build --compile --target=bun-linux-x64-modern ./index.ts --outfile myapp
     ```
 
   </Tab>
   <Tab title="JavaScript">
     ```ts build.ts icon="/icons/typescript.svg"
-    // 标准 Linux x64
     await Bun.build({
       entrypoints: ["./index.ts"],
       compile: {
         target: "bun-linux-x64",
-        outfile: "./myapp",
-      },
-    });
-
-    // 基线版（2013 年前 CPU）
-    await Bun.build({
-      entrypoints: ["./index.ts"],
-      compile: {
-        target: "bun-linux-x64-baseline",
-        outfile: "./myapp",
-      },
-    });
-
-    // 现代版（2013 年及以后 CPU，更快）
-    await Bun.build({
-      entrypoints: ["./index.ts"],
-      compile: {
-        target: "bun-linux-x64-modern",
         outfile: "./myapp",
       },
     });
@@ -123,33 +97,17 @@ Hello world!
     ```bash icon="terminal" terminal
     bun build --compile --target=bun-windows-x64 ./path/to/my/app.ts --outfile myapp
 
-    # 支持 2013 年以前的 CPU，使用 baseline 版本（nehalem）
-    bun build --compile --target=bun-windows-x64-baseline ./path/to/my/app.ts --outfile myapp
-
-    # 仅支持 2013 年及以后 CPU，使用 modern 版本（haswell）
-    bun build --compile --target=bun-windows-x64-modern ./path/to/my/app.ts --outfile myapp
-
-    # 注意：如果未提供 .exe 扩展名，Bun 会自动为 Windows 可执行文件添加该扩展名
+    # note: if no .exe extension is provided, Bun adds it automatically for Windows executables
     ```
 
   </Tab>
   <Tab title="JavaScript">
     ```ts build.ts icon="/icons/typescript.svg"
-    // 标准 Windows x64
     await Bun.build({
       entrypoints: ["./path/to/my/app.ts"],
       compile: {
         target: "bun-windows-x64",
         outfile: "./myapp", // 自动加上 .exe 后缀
-      },
-    });
-
-    // 基线版或现代版
-    await Bun.build({
-      entrypoints: ["./path/to/my/app.ts"],
-      compile: {
-        target: "bun-windows-x64-baseline",
-        outfile: "./myapp",
       },
     });
     ```
@@ -228,21 +186,20 @@ Hello world!
 
 `--target` 值的各个部分可以按任意顺序出现，只要它们使用 `-` 分隔即可。
 
-| --target             | 操作系统 | 架构  | 现代架构 | 基线架构 | Libc  |
-| -------------------- | -------- | ----- | -------- | -------- | ----- |
-| bun-linux-x64        | Linux    | x64   | ✅       | ✅       | glibc |
-| bun-linux-arm64      | Linux    | arm64 | ✅       | N/A      | glibc |
-| bun-windows-x64      | Windows  | x64   | ✅       | ✅       | -     |
-| bun-windows-arm64    | Windows  | arm64 | ✅       | N/A      | -     |
-| bun-darwin-x64       | macOS    | x64   | ✅       | ✅       | -     |
-| bun-darwin-arm64     | macOS    | arm64 | ✅       | N/A      | -     |
-| bun-linux-x64-musl   | Linux    | x64   | ✅       | ✅       | musl  |
-| bun-linux-arm64-musl | Linux    | arm64 | ✅       | N/A      | musl  |
+| --target             | 操作系统 | 架构  | Libc  |
+| -------------------- | -------- | ----- | ----- |
+| bun-linux-x64        | Linux    | x64   | glibc |
+| bun-linux-arm64      | Linux    | arm64 | glibc |
+| bun-windows-x64      | Windows  | x64   | -     |
+| bun-windows-arm64    | Windows  | arm64 | -     |
+| bun-darwin-x64       | macOS    | x64   | -     |
+| bun-darwin-arm64     | macOS    | arm64 | -     |
+| bun-linux-x64-musl   | Linux    | x64   | musl  |
+| bun-linux-arm64-musl | Linux    | arm64 | musl  |
 
-<Warning>
-  在 x64 平台上，Bun 使用需要 CPU 支持 AVX2 指令的 SIMD 优化。Bun 的 `-baseline` 版本适用于不支持这些指令的旧款 CPU。Bun 安装程序会检测应使用哪个版本，但进行交叉编译时，你可能不知道目标 CPU 的具体情况。这主要影响 Windows x64 和 Linux x64，在 Darwin x64 上则很少遇到。如果你或你的用户看到
-  `"Illegal instruction"` 错误，可能需要使用 baseline 版本。
-</Warning>
+<Note>
+  在 x64 上，Bun 提供一个面向 Nehalem（SSE4.2）的二进制文件，并在运行时选择 AVX2/AVX-512 代码路径。为保持向后兼容，仍接受 `-baseline` 和 `-modern` 目标后缀，但它们都会解析为同一个二进制文件；你无需根据目标 CPU 选择其中一个。
+</Note>
 
 ---
 
@@ -337,7 +294,7 @@ Bun 会在构建时将这些常量内联到二进制文件中，因此它们不�
 
 <Frame>![字节码性能比较](https://github.com/user-attachments/assets/dc8913db-01d2-48f8-a8ef-ac4e984f9763)</Frame>
 
-字节码编译将大文件的解析开销从运行时转移到打包时，提升了启动速度，但稍微增加了 `bun build` 命令的时长，不影响源码可读性。
+字节码编译会将大型输入文件的解析开销从运行时转移到打包时。你的应用启动更快，但 `bun build` 命令会稍微变慢。字节码编译不会隐藏源代码。
 
 <Note>字节码编译在搭配 `--compile` 时同时支持 `cjs` 和 `esm` 格式。</Note>
 
@@ -348,6 +305,92 @@ Bun 会在构建时将这些常量内联到二进制文件中，因此它们不�
 `--sourcemap` 参数会嵌入使用 zstd 压缩的源映射，这样错误和堆栈跟踪就会指向其原始位置，而不是转译后的位置。发生错误时，Bun 会自动解压并解析源映射。
 
 `--bytecode` 参数会启用字节码编译。每次在 Bun 中运行 JavaScript 代码时，JavaScriptCore（引擎）都会将源代码编译为字节码。`--bytecode` 会将这部分解析工作从运行时转移到打包时，从而缩短启动时间。
+
+使用 `--bytecode` 时，JavaScriptCore 的构建时优化过程也会对生成的字节码运行；`--no-optimize-bytecode`（`Bun.build` 中的 `optimize: { bytecode: false }`）则会跳过这些过程。
+
+### 基于配置文件引导的字节码布局
+
+`--bytecode-order` 是针对 `--bytecode` 的配置文件引导优化（PGO）。运行一次可执行文件以记录它使用的函数，然后使用该配置文件再次构建。Bun 会将运行期间使用的字节码集中放在文件开头，这样可执行文件读取和解码自身的内容就会更少：启动更快，内存占用也更低。
+
+在一个大型 CLI 应用中，冷启动时间从 1.0 秒降至 0.53 秒，启动时的内存占用减少了 40 MB。
+
+```sh
+# 1. Build
+bun build --compile --bytecode ./cli.ts --outfile myapp
+
+# 2. Run it the way your users do. The profile is written on exit.
+BUN_BYTECODE_ORDER_OUT=myapp.order ./myapp --help
+
+# 3. Build again with the profile
+bun build --compile --bytecode --bytecode-order=myapp.order ./cli.ts --outfile myapp
+```
+
+在 CI 中，记录配置文件并在同一任务中使用它：
+
+```yaml .github/workflows/release.yml icon="file-code"
+name: Release
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+
+      - name: Build
+        run: bun build --compile --bytecode ./cli.ts --outfile myapp
+
+      - name: Record a profile
+        run: ./myapp --help
+        env:
+          BUN_BYTECODE_ORDER_OUT: myapp.order
+
+      - name: Build with the profile
+        run: bun build --compile --bytecode --bytecode-order=myapp.order ./cli.ts --outfile myapp
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: myapp
+          path: myapp
+```
+
+使用 `Bun.build`：
+
+```ts build.ts icon="/icons/typescript.svg"
+await Bun.build({
+  entrypoints: ["./cli.ts"],
+  bytecode: true,
+  compile: { outfile: "./myapp", bytecodeOrder: "./myapp.order" },
+});
+```
+
+- **代码变更后，配置文件仍然有效。** 函数根据语法哈希进行匹配，而非名称或位置，因此上周构建生成的配置文件仍然适用。如果每次构建时都记录配置文件不方便，可以将其提交到版本控制或缓存。自记录后发生变化的函数会放在已记录函数之后。
+- **一个配置文件适用于所有 `--target`。**
+- **多个配置文件**可覆盖多种应用启动方式：`--bytecode-order=interactive.order,oneshot.order`。将最常见的方式列在前面。
+- **只有布局会发生变化。** 程序行为保持不变，构建仍然可复现。配置文件包含的是哈希，而非源代码。
+- `BUN_BYTECODE_ORDER_OUT` 中的 `%p` 会替换为进程 ID。`Worker` 线程也会被记录。
+- `bun:jsc` 中的 `bytecodeOrderStats()` 会报告配置文件覆盖（`hot`）或未覆盖（`cold`）的已加载函数数量。如果 `cold` 的占比不断上升，就该重新记录了。
+
+### JIT 策略
+
+只在启动期间运行的代码通常无法抵消 JIT 编译它所花费的时间。`--compile-jit-policy <n>`（`Bun.build` 中的 `compile: { jitPolicy: n }`）会将 JavaScriptCore 的层级提升阈值乘以 `n`，从而让启动代码在解释器中停留更长时间。默认值 `1` 表示常规 JIT 策略。该倍数会一直生效，直到程序调用 `Bun.unsafe.setJITPolicy(1)`；程序应在进入交互状态后调用此函数：
+
+```ts build.ts icon="/icons/typescript.svg"
+await Bun.build({
+  entrypoints: ["./app.ts"],
+  compile: { outfile: "./myapp", jitPolicy: 8 },
+  bytecode: true,
+});
+```
+
+```ts app.ts icon="/icons/typescript.svg"
+await renderFirstScreen();
+Bun.unsafe.setJITPolicy(1); // back to the normal JIT policy
+```
 
 ---
 
@@ -489,7 +532,7 @@ bun build --compile ./such-bun.js
 you shouldn't see this
 ```
 
-但是，使用 `BUN_BE_BUN=1` 环境变量后，它的行为就会像 `bun` 二进制文件一样：
+不过，设置 `BUN_BE_BUN=1` 环境变量后，该可执行文件的行为会与 `bun` 二进制文件相同：
 
 ```bash icon="terminal" terminal
 # 通过环境变量让可执行文件行为等同于 `bun` CLI
@@ -584,7 +627,7 @@ body {
 ./myapp
 ```
 
-Bun 会使用正确的 MIME 类型和缓存标头提供前端资源。HTML 导入会被替换为一个清单对象，`Bun.serve` 会使用该对象提供预先打包的资源。
+Bun 会使用正确的 MIME 类型和缓存标头来提供前端资源。Bun 会将 HTML 导入替换为清单对象，`Bun.serve` 会使用该对象提供预先打包的资源。
 
 有关构建全栈应用的更多信息，请参阅[全栈指南](/bundler/fullstack)。
 
@@ -623,9 +666,9 @@ new Worker(new URL("./my-worker.ts", import.meta.url));
 new Worker(new URL("./my-worker.ts", import.meta.url).href);
 ```
 
-向独立可执行文件添加多个入口时，每个入口都会分别打包到可执行文件中。
+向独立可执行文件添加多个入口点时，Bun 会将每个入口点分别打包到可执行文件中。
 
-我们最终可能会自动检测 `new Worker(path)` 中静态已知的路径并将其自动打包，但目前你需要将 Worker 文件列为入口，就像前面的示例一样。
+我们最终可能会检测 `new Worker(path)` 中静态已知的路径，并自动打包它们。目前，你需要像前面的示例那样，将 Worker 文件列为入口点。
 
 如果你使用相对路径指向未包含在独立可执行文件中的文件，Bun 会相对于进程当前工作目录从磁盘加载该路径；如果文件不存在，则会报错。
 
@@ -635,7 +678,7 @@ new Worker(new URL("./my-worker.ts", import.meta.url).href);
 
 使用 `bun:sqlite` 导入时，支持 `bun build --compile`。
 
-默认情况下，数据库文件路径相对进程当前工作目录。
+默认情况下，Bun 会相对于进程的当前工作目录解析数据库路径。
 
 ```ts index.ts icon="/icons/typescript.svg"
 import db from "./my.db" with { type: "sqlite" };
@@ -740,7 +783,7 @@ const config = { ...defaultConfig, ...userConfig };
 
 #### HTTP 服务器中提供静态资源
 
-用 Bun.serve() 的 static 路由高效提供静态文件：
+在 `Bun.serve()` 中使用静态路由，可高效提供静态文件：
 
 ```ts server.ts icon="/icons/typescript.svg"
 import favicon from "./favicon.ico" with { type: "file" };
@@ -749,10 +792,12 @@ import styles from "./styles.css" with { type: "file" };
 import { file, serve } from "bun";
 
 serve({
-  static: {
-    "/favicon.ico": file(favicon),
-    "/logo.png": file(logo),
-    "/styles.css": file(styles),
+  // Inside the compiled executable, file() on an embedded path returns an
+  // in-memory Blob, which routes only accepts wrapped in a Response.
+  routes: {
+    "/favicon.ico": new Response(file(favicon)),
+    "/logo.png": new Response(file(logo)),
+    "/styles.css": new Response(file(styles)),
   },
   fetch(req) {
     return new Response("Not found", { status: 404 });
@@ -760,7 +805,7 @@ serve({
 });
 ```
 
-Bun 会自动处理静态路由的 Content-Type 头和缓存策略。
+Bun 会自动处理静态路由的 Content-Type 标头和缓存策略。
 
 #### 嵌入模板文件
 
@@ -791,6 +836,19 @@ const wasmModule = await WebAssembly.instantiate(wasmBytes);
 const fontData = await file(fontPath).bytes();
 ```
 
+### 将文本嵌入为字符串
+
+如果要将文件内容作为字符串使用，请使用 `text` 加载器。`.txt` 文件默认使用此加载器。对于其他扩展名，可以添加 `with { type: "text" }`，或传入 `--loader .md:text`。
+
+```ts index.ts icon="/icons/typescript.svg"
+import notes from "./notes.txt";
+import readme from "./README.md" with { type: "text" };
+
+console.log(notes); // the contents of notes.txt
+```
+
+在编译后的可执行文件中，文本只存储一次，格式为 JavaScript 引擎用于字符串的形式（ASCII 文本每个字符占一个字节，其他文本则使用 UTF-16）。运行时会直接返回字符串，不会复制，因此大型文本导入会占用等同于其大小的二进制文件空间，并且不会在堆上产生额外副本。文本导入是一个模块，而不是文件：`Bun.embeddedFiles` 不会列出它。需要文件路径时，请使用 `with { type: "file" }`。
+
 ### 嵌入 SQLite 数据库
 
 要将 SQLite 数据库嵌入编译后的可执行文件，请在导入属性中设置 `type: "sqlite"`，并将 `embed` 属性设置为 `"true"`。
@@ -810,11 +868,10 @@ bun build --compile ./index.ts --outfile mycli
 ```
 
 <Note>
-  构建时数据库文件必须存在。`embed: "true"` 告诉打包器将数据库内容内嵌进可执行文件。常规运行 `bun run`
-  时数据库文件仍从磁盘加载。
+  运行 `bun build --compile` 时，数据库文件必须存在于磁盘上。`embed: "true"` 属性会告知打包器将数据库内容包含在编译后的可执行文件中。使用 `bun run` 正常运行时，Bun 会像处理常规 SQLite 导入一样从磁盘加载数据库文件。
 </Note>
 
-在编译后的可执行文件中，嵌入的数据库为读写模式，但所有更改会在程序退出时丢失（内存存储）。
+在编译后的可执行文件中，嵌入的数据库支持读写。由于数据库存储在内存中，可执行文件退出时，所有更改都会丢失。
 
 ### 嵌入 N-API 插件
 
@@ -826,7 +883,7 @@ const addon = require("./addon.node");
 console.log(addon.hello());
 ```
 
-如果使用 `@mapbox/node-pre-gyp` 或类似工具，必须直接 require `.node` 文件，否则无法正确打包。
+如果你使用 `@mapbox/node-pre-gyp` 或类似工具，请直接 require `.node` 文件，否则打包将无法正确完成。
 
 ### 嵌入目录
 
@@ -864,9 +921,9 @@ for (const entry of fs.readdirSync(publicDir, { withFileTypes: true })) {
 const html = await Bun.file(path.join(publicDir, "index.html")).text();
 ```
 
-多次传递 `--asset` 可嵌入多个目录（例如，对于 SvelteKit 构建，可以使用 `--asset ./client --asset ./prerendered`）。只有普通文件会被嵌入；目录树中的符号链接和空子目录会被跳过。
+多次传入 `--asset` 可嵌入多个目录（例如，对于 SvelteKit 构建，可以使用 `--asset ./client --asset ./prerendered`）。Bun 只嵌入常规文件；它会跳过目录树中的符号链接和空子目录。
 
-你也可以通过将单个文件添加为额外入口点，以旧方式嵌入文件；导入的资源会根据 `--asset-naming` 重命名（默认为 `[name]-[hash].[ext]`）：
+你也可以通过 `with { type: "file" }` 导入属性嵌入单个文件；对于使用 `file` 加载器的文件（图像、字体等）以及 `.wasm` 和 `.node` 文件，也可以将它们作为额外的入口点添加。Bun 会根据 `--asset-naming` 重命名导入的资源（默认值为 `[name]-[hash].[ext]`）：
 
 ```ts
 import icon from "./public/assets/icon.png" with { type: "file" };
@@ -912,7 +969,7 @@ for (const blob of embeddedFiles) {
 embeddedFiles: ReadonlyArray<Blob>;
 ```
 
-可以使用它通过 `static` 路由提供所有嵌入的资源：
+使用它可通过静态路由提供所有嵌入资源：
 
 ```ts server.ts icon="/icons/typescript.svg"
 import "./public/favicon.ico" with { type: "file" };
@@ -920,16 +977,17 @@ import "./public/logo.png" with { type: "file" };
 import "./public/styles.css" with { type: "file" };
 import { embeddedFiles, serve } from "bun";
 
-// 根据嵌入文件构造静态路由
-const staticRoutes: Record<string, Blob> = {};
+// Build static routes from all embedded files
+const staticRoutes: Record<string, Response> = {};
 for (const blob of embeddedFiles) {
-  // 去除文件名中的哈希："icon-a1b2c3d4.png" -> "icon.png"
-  const name = blob.name.replace(/-[a-f0-9]+\./, ".");
-  staticRoutes[`/${name}`] = blob;
+  // Remove hash from filename: "icon-a1b2c3d4.png" -> "icon.png"
+  const name = blob.name.replace(/-[a-z0-9]+\./, ".");
+  // embeddedFiles are plain Blobs, which routes does not accept directly
+  staticRoutes[`/${name}`] = new Response(blob);
 }
 
 serve({
-  static: staticRoutes,
+  routes: staticRoutes,
   fetch(req) {
     return new Response("Not found", { status: 404 });
   },
@@ -940,7 +998,7 @@ serve({
 
 #### 内容哈希
 
-默认情况下，嵌入文件的名称会附加内容哈希，这有助于通过 URL 或 CDN 提供文件时实现缓存失效。若要保留原始名称，请配置资源命名方式：
+默认情况下，Bun 会在每个嵌入文件的名称后附加内容哈希，这有助于从 URL 或 CDN 提供文件时进行缓存失效。如要保留原始名称，请配置资源命名：
 
 <Tabs>
   <Tab title="命令行">
@@ -1012,7 +1070,7 @@ Bun 使用自身压缩器来减小代码体积。不过总体上 Bun 的二进�
 
 <Tabs>
   <Tab title="命令行">
-    ```bash terminal icon="terminal"
+    ```bash icon="terminal" terminal
     # 自定义图标
     bun build --compile --windows-icon=path/to/icon.ico ./app.ts --outfile myapp
 
@@ -1054,8 +1112,7 @@ Windows 可用选项说明：
 - `copyright` - 版权声明
 
 <Warning>
-  除了 `hideConsole` 之外，这些标志不能在交叉编译时使用，因为它们依赖 Windows
-  API。
+  除 `hideConsole` 外，交叉编译时不能使用这些标志，因为它们依赖 Windows API。
 </Warning>
 
 ---
@@ -1070,7 +1127,7 @@ codesign --deep --force -vvvv --sign "XXXXXXXXXX" ./myapp
 
 推荐附带带有 JIT 权限的 `entitlements.plist` 文件：
 
-```xml icon="xml" title="info.plist"
+```xml icon="xml" title="entitlements.plist"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -1147,7 +1204,7 @@ export function hello() {
 
 运行编译结果：
 
-```bash terminal icon="terminal"
+```bash icon="terminal" terminal
 ./build/entry
 ```
 
@@ -1228,14 +1285,17 @@ interface BuildConfig {
 }
 
 interface CompileBuildOptions {
-  target?: Bun.Build.CompileTarget; // 交叉编译目标
-  outfile?: string; // 输出可执行文件路径
-  assets?: string[]; // 要嵌入到 import.meta.dir 下的文件/目录
-  execArgv?: string[]; // 运行时参数（process.execArgv）
-  autoloadTsconfig?: boolean; // 加载 tsconfig.json（默认：false）
-  autoloadPackageJson?: boolean; // 加载 package.json（默认：false）
-  autoloadDotenv?: boolean; // 加载 .env 文件（默认：true）
-  autoloadBunfig?: boolean; // 加载 bunfig.toml（默认：true）
+  target?: Bun.Build.CompileTarget; // Cross-compilation target
+  outfile?: string; // Output executable path
+  assets?: string[]; // Files/directories to embed under import.meta.dir
+  execArgv?: string[]; // Runtime arguments (process.execArgv)
+  executablePath?: string; // Bun executable to use instead of downloading one for target
+  autoloadTsconfig?: boolean; // Load tsconfig.json (default: false)
+  autoloadPackageJson?: boolean; // Load package.json (default: false)
+  autoloadDotenv?: boolean; // Load .env files (default: true)
+  autoloadBunfig?: boolean; // Load bunfig.toml (default: true)
+  bytecodeOrder?: string | string[] | false | null; // Order file(s) to lay the bytecode out by (requires bytecode: true)
+  jitPolicy?: number; // JIT tier-up threshold scale at startup (default: 1 = normal)
   windows?: {
     icon?: string; // .ico 文件路径
     hideConsole?: boolean; // 隐藏控制台窗口
@@ -1264,23 +1324,23 @@ compile: {
 }
 ```
 
-### 支持的目标
+如果未指定 `outfile`，可执行文件将以入口点命名并写入 `outdir`；如果未指定 `outdir`，则写入当前工作目录。这与 `bun build --compile` 的行为一致。
+
+### 支持的目标平台
 
 ```ts title="Bun.Build.CompileTarget" icon="/icons/typescript.svg"
 type CompileTarget =
   | "bun-darwin-x64"
-  | "bun-darwin-x64-baseline"
   | "bun-darwin-arm64"
   | "bun-linux-x64"
-  | "bun-linux-x64-baseline"
-  | "bun-linux-x64-modern"
   | "bun-linux-arm64"
   | "bun-linux-x64-musl"
+  | "bun-linux-x64-baseline-musl"
   | "bun-linux-arm64-musl"
   | "bun-windows-x64"
-  | "bun-windows-x64-baseline"
-  | "bun-windows-x64-modern"
   | "bun-windows-arm64";
+// The "-baseline" and "-modern" suffixes are accepted for backward
+// compatibility and resolve to the same x64 binary.
 ```
 
 ### 完整示例

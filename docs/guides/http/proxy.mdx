@@ -35,7 +35,7 @@ await fetch("https://example.com", {
 });
 ```
 
-`headers` 属性可以是普通对象或 `Headers` 实例。这些请求头会直接发送给代理服务器，用于 `CONNECT` 请求（针对 HTTPS 目标）或代理请求（针对 HTTP 目标）。
+`headers` 属性接受普通对象或 `Headers` 实例。Bun 会在 `CONNECT` 请求（针对 HTTPS 目标）或代理请求（针对 HTTP 目标）中，将这些请求头直接发送到代理服务器。
 
 如果提供 `Proxy-Authorization` 请求头，它会覆盖代理 URL 中的任何凭据。
 
@@ -43,8 +43,16 @@ await fetch("https://example.com", {
 
 ## 环境变量
 
-要为所有请求使用同一个代理，请将 `$HTTP_PROXY` 和 `$HTTPS_PROXY` 环境变量设置为代理 URL。`$HTTP_PROXY` 仅用于请求 `http://` URL，而 `$HTTPS_PROXY` 仅用于请求 `https://` URL，因此请将两者都设置为代理，以代理所有请求。
+要对所有请求使用同一个代理，请将 `$HTTP_PROXY` 和 `$HTTPS_PROXY` 环境变量设为代理 URL。Bun 仅对 `http://` URL 的请求使用 `$HTTP_PROXY`，仅对 `https://` URL 的请求使用 `$HTTPS_PROXY`，因此请同时设置二者，以便通过代理发送所有请求。
 
 ```sh terminal icon="terminal"
 HTTP_PROXY=https://username:password@proxy.example.com:8080 HTTPS_PROXY=https://username:password@proxy.example.com:8080 bun run index.ts
+```
+
+如果未设置特定协议的变量，`$ALL_PROXY` 会同时应用于这两种 URL。`$NO_PROXY` 列出了绕过代理的主机。语法请参阅[代理请求](/runtime/networking/fetch#proxying-requests)。
+
+要在单个请求中忽略这些变量，请传入 `proxy: false`：
+
+```ts direct.ts icon="/icons/typescript.svg"
+await fetch("https://example.com", { proxy: false });
 ```

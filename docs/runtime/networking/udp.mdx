@@ -114,7 +114,9 @@ socket.sendMany(["foo", "bar", "baz"]);
 你发送的数据包可能无法放入操作系统的数据包缓冲区。当出现以下情况时，你可以检测到这一点：
 
 - `send` 返回 `false`
-- `sendMany` 返回的数字小于你指定的数据包数量。在这种情况下，套接字再次变为可写后，Bun 会调用一次 `drain` 套接字处理程序：
+- `sendMany` 返回的数字小于你指定的数据包数量
+
+在这两种情况下，套接字再次变为可写时，Bun 都会调用 `drain` 套接字处理程序：
 
 ```ts
 const socket = await Bun.udpSocket({

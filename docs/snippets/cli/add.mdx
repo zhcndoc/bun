@@ -80,7 +80,7 @@ bun add <package> <@version>
 ### 安装控制
 
 <ParamField path="--dry-run" type="boolean">
-  不执行实际安装
+  解析软件包，但不安装它们、不更新 <code>package.json</code>，也不保存锁文件（项目自身的生命周期脚本仍会运行）
 </ParamField>
 
 <ParamField path="--force" type="boolean">
@@ -92,7 +92,7 @@ bun add <package> <@version>
 </ParamField>
 
 <ParamField path="--ignore-scripts" type="boolean">
-  跳过项目 <code>package.json</code> 中的生命周期脚本（依赖的脚本永远不会执行）
+  跳过所有软件包的生命周期脚本，包括项目的 <code>package.json</code> 和可信依赖中的脚本
 </ParamField>
 
 <ParamField path="--analyze" type="boolean">
@@ -119,9 +119,8 @@ bun add <package> <@version>
 
 ### 性能与资源
 
-<ParamField path="--backend" type="string" default="clonefile">
-  用于安装依赖的平台特定优化方式。可选值为 <code>clonefile</code>、<code>hardlink</code>、{" "}
-  <code>symlink</code> 或 <code>copyfile</code>
+<ParamField path="--backend" type="string">
+  用于安装依赖的平台专属优化。可能的值：<code>clonefile</code>（macOS 上的默认值）、<code>hardlink</code>（Linux 和 Windows 上的默认值）、<code>symlink</code>、<code>copyfile</code>
 </ParamField>
 
 <ParamField path="--concurrent-scripts" type="number">

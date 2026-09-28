@@ -46,18 +46,30 @@ console.log(data);
 // }
 ```
 
-默认情况下，结果是一个以元素名称为键的**紧凑对象**——这是大多数 XML 转对象库所使用的形状：
+默认情况下，结果是一个以元素名称为键的紧凑对象——这是大多数 XML 转对象库采用的 `@attr`／`#text` 约定。其工作方式如下：
 
-- 结果只有一个键，即根元素的名称
-- 没有属性且没有子元素的元素会变成其文本内容，并去除周围的空白（为空时为 `""`）
-- 其他元素会变成一个对象：每个属性对应一个 `"@name"` 键，每个不同的子元素名称对应一个键——当该名称重复时使用**数组**，并保持文档顺序——如果存在经过修剪的字符数据，则使用 `"#text"` 表示
-- CDATA 节和实体引用已经展开到文本中。注释和处理指令会被丢弃
-- 所有值都是字符串。不会将任何内容强制转换为数字、布尔值或 `null`
+- 结果只有一个键，即根元素的名称。
+- 没有属性和子元素的元素会变成其字符数据：一个字符串；如果为空，则为 `""`。在 XML 中，`<paid/>` 和 `<paid></paid>` 是同一回事。
+- 其他元素都会变成对象。每个属性对应一个 `"@name"` 键，然后按照各个子元素名称首次出现的顺序，为每个不同的子元素名称添加一个键，并为元素自身的文本添加一个 `"#text"` 键。
+- 如果某个子元素名称在元素中出现多次，其键对应的值就是按文档顺序排列的数组；否则对应单个值。请参阅[一个或多个](#one-or-many)。
+- `compact` 用于选择结构，不会改变值。Bun 会按原样返回文本：包括前导、尾随和内部空白字符，展开 CDATA 段和实体引用，并将行尾规范化为 `\n`——这与该元素对应的树结构所给出的文本相同。由于一个元素只有一个 `"#text"`，Bun 会串联该元素的文本片段，并忽略位于子元素之间的纯空白片段（即文档的排版空白）。如果文档经过手动排版（`<name>\n  value\n</name>`），请在读取时进行修剪。
+- 所有值都是字符串。不会将任何值转换为数字、布尔值或 `null`。
+- 名称保持原样，包括命名空间前缀（`"soap:Body"`）；`xmlns` 声明是普通属性。
+- 注释、处理指令、`<?xml …?>` 声明和 `<!DOCTYPE …>` 都不会被表示。
 
-紧凑形状不会保留不同名称的同级元素之间，或子元素之间文本的相对顺序。当这一点很重要时——处理文档而非数据时——传入 `{ compact: false }`，以获得一个能够保留所有文档顺序的根元素**节点树**：
+`@` 和 `#` 不能作为 XML 名称的开头，因此属性键和文本键不会与子元素键冲突。
+
+紧凑结构用于 _数据_。它不会保留名称不同的兄弟元素之间的相对顺序，也不会保留文本相对于子元素的位置：
 
 ```ts
-const p = XML.parse(`<p class="lead">Hello <b>world</b>!</p>`, { compact: false });
+XML.parse(`<p>Hello <b>world</b>!</p>`);
+// { p: { "#text": "Hello !", b: "world" } }
+```
+
+如果这些信息很重要——例如处理文档而非数据时——请传入 `{ compact: false }`，以获取根元素的树结构，并保留元素内容在文档中的顺序：
+
+```ts
+const p = XML.parse(`<p class="lead">Hello <b>world</b>!<!-- draft --></p>`, { compact: false });
 
 console.log(p);
 // {
@@ -67,17 +79,29 @@ console.log(p);
 //     "Hello ",
 //     { name: "b", attributes: {}, children: ["world"] },
 //     "!",
+//     { comment: " draft " },
 //   ],
 // }
 ```
 
-每个元素都是 `{ name, attributes, children }`；`children` 保存子元素和字符串，文本会原样传递（包括元素之间仅由空白组成的文本）。
+每个元素都是 `{ name, attributes, children }`；即使为空，这两个键也都会存在。`children` 按顺序保存元素内容：文本以字符串形式保存（保持原样，包括纯空白片段，相邻文本会合并）、子元素、以 `{ comment }` 表示的注释，以及以 `{ target, data }` 表示的处理指令。可以根据对象所包含的键来区分对象子项。与紧凑结构一样，树结构不会表示声明、DOCTYPE，或根元素之前和之后的任何内容。
+
+#### 一个或多个
+
+在紧凑结构中，一个元素的列表和两个元素的列表具有不同的类型（`entry: {…}` 与 `entry: [{…}, {…}]`）。通常是字符串的元素，如果带有属性，也会变成对象（`<title>` 与 `<title type="html">`）。对于需要遍历或可能带有属性的值，请采取稳妥的处理方式：
+
+```ts
+const entries = [feed.entry ?? []].flat(); // an array either way
+const title = typeof e.title === "string" ? e.title : (e.title["#text"] ?? "");
+```
+
+树结构没有这类歧义：`children` 是数组，每个元素都是一个对象。
 
 #### 输入类型和编码
 
-`XML.parse` 接受字符串，或作为 `Buffer`、`TypedArray`、`ArrayBuffer` 或 `Blob` 的字节数据。
+`XML.parse` 接受字符串，或以 `Buffer`、`TypedArray`、`DataView`、`ArrayBuffer` 或 `Blob` 表示的字节数据。
 
-字符串已经是解码后的文本，因此会检查其中 `encoding` 声明的语法，但除此之外会忽略该声明。字节数据会按照 XML 规则解码：字节顺序标记或 `<?xml version="1.0" encoding="..."?>` 中的 `encoding` 会选择 **UTF-8**（默认）、**UTF-16**（任一字节序）或 **ISO-8859-1**。其他编码会抛出错误。
+字符串已经是解码后的文本，因此会检查其中 `encoding` 声明的语法，但除此之外会忽略它。字节数据会按照 XML 规则解码：字节顺序标记或 `<?xml version="1.0" encoding="..."?>` 中的 `encoding` 会指定使用 UTF-8（默认值）、UTF-16（任一字节序）或 ISO-8859-1。其他编码会抛出错误。
 
 ```ts
 XML.parse(await Bun.file("feed.xml").bytes());
@@ -85,7 +109,7 @@ XML.parse(await Bun.file("feed.xml").bytes());
 
 #### 错误处理
 
-当文档格式不正确时，`Bun.XML.parse()` 会抛出 `SyntaxError`：
+当文档格式不正确时，`Bun.XML.parse()` 会抛出 `SyntaxError`（没有宽松模式）；对于深度异常的嵌套，会抛出 `RangeError`：
 
 ```ts
 try {
@@ -97,7 +121,7 @@ try {
 
 ### `Bun.XML.stringify()`
 
-将任一形状重新序列化为 XML。输出没有 XML 声明，并且始终格式正确：会对 `&`、`<`、`>`（以及属性中的引号、制表符和换行符）进行转义，而不是 XML 名称的元素名或属性名会抛出错误。
+将任一结构中的一个元素序列化为 XML。
 
 ```ts
 import { XML } from "bun";
@@ -115,16 +139,29 @@ XML.stringify({
 XML.stringify({
   name: "p",
   attributes: { class: "lead" },
-  children: ["Hello ", { name: "b", children: ["world"] }, "!"],
+  children: ["Hello ", { name: "b", children: ["world"] }, "!", { comment: " draft " }],
 });
-// '<p class="lead">Hello <b>world</b>!</p>'
+// '<p class="lead">Hello <b>world</b>!<!-- draft --></p>'
 ```
 
-具有字符串 `name` 以及 `children` 或 `attributes` 属性的值会作为节点写入；其他内容都是紧凑对象，并且必须恰好有一个用于命名根元素的键。字符串、数字、布尔值、bigint 和 `Date`（作为 ISO 字符串）会变成文本，`null` 会变成空元素，而 `undefined`、函数和符号会像 `JSON.stringify` 跳过它们一样被跳过（与 `JSON.stringify` 不同，bigint 会以十进制数字写入，而不是被拒绝）。
+当一个值具有字符串类型的 `name`，并且具有 `children` 或 `attributes` 属性时，Bun 会将其作为树节点写入。在 `children` 中，包含 `name` 的对象是元素，包含 `comment` 的对象是注释，包含 `target` 的对象是处理指令。其他所有值都会被视为紧凑对象，其中一个键用于命名根元素。Bun 会按顺序写入键，并将 `@` 键作为属性。字符串、数字、布尔值和 bigint 会通过 `String()` 转换为文本；`Date` 会转换为其 ISO 字符串。`null` 会变成空元素。与 `JSON.stringify` 一样，Bun 会跳过 `undefined`、函数和符号。数组会为每个项生成一个元素。
+
+输出是格式正确的 XML，否则 `stringify` 会抛出错误。Bun 会转义 `&`、`<` 和 `>`。属性值中的 `"`、制表符和换行符，以及任意位置的回车符，都会以字符引用的形式写入，以便解析后保持不变。XML 无法容纳的值会导致错误，而不是生成损坏的文档：不是 XML 名称的元素和属性名称（`"first name"`、`"0"`）、XML 字符集之外的字符（U+0000 和其他控制字符、未配对的代理项——XML 1.0 没有可用于这些字符的转义形式）、注释中的 `--`、处理指令中的 `?>`、根节点处的数组或其他数组中的数组，以及循环结构。
+
+结果只有元素本身，不包含 `<?xml …?>` 声明和 DOCTYPE，因此你可以将结果串联到外层元素中。要写入文件，请自行添加序言：
+
+```ts
+await Bun.write(
+  "Info.plist",
+  `<?xml version="1.0" encoding="UTF-8"?>\n` +
+    `<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n` +
+    XML.stringify(plist, null, "\t"),
+);
+```
 
 #### 美化打印
 
-传入 `space` 参数（空格数量或缩进字符串，与 `JSON.stringify` 一致）即可缩进仅包含元素的内容。包含文本的元素会以内联形式写入，因此字符数据不会改变：
+传入 `space` 参数（空格数或缩进字符串，与 `JSON.stringify` 一样），即可缩进仅包含元素的内容。对于包含文本的元素，Bun 会将其写在同一行，因此缩进不会改变字符数据：
 
 ```ts
 console.log(XML.stringify(data, null, 2));
@@ -136,7 +173,9 @@ console.log(XML.stringify(data, null, 2));
 // </order>
 ```
 
-对于 `XML.parse` 生成的任何值，无论哪种形状，`XML.parse(XML.stringify(value))` 都会返回 `value`。
+第二个参数已保留，请传入 `null` 或 `undefined`。
+
+对于 `XML.parse` 生成的值，无论采用哪种结构，`XML.parse(XML.stringify(value))` 都会返回相等的值。
 
 ---
 
@@ -144,7 +183,7 @@ console.log(XML.stringify(data, null, 2));
 
 ### ES Modules
 
-你可以直接导入 XML 文件。文件的解码方式与传递给 `XML.parse` 的字节数据相同（根据字节顺序标记或声明使用 UTF-8、UTF-16 或 ISO-8859-1），模块的值是上文所述的紧凑对象：
+你可以直接导入 XML 文件。Bun 会像处理传递给 `XML.parse` 的字节数据一样解码文件（根据字节顺序标记或声明使用 UTF-8、UTF-16 或 ISO-8859-1）。模块的值是上文所述的紧凑对象：
 
 ```xml config.xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -215,7 +254,7 @@ bun --hot server.ts
 
 ## 打包器集成
 
-使用 Bun 进行打包时，导入的 XML 文件会在构建时解析，并以内联 JavaScript 对象的形式写入：
+使用 Bun 打包时，打包器会在构建时解析导入的 XML 文件，并将它们内联为 JavaScript 对象：
 
 ```bash terminal icon="terminal"
 bun build app.ts --outdir=dist
@@ -229,7 +268,7 @@ bun build app.ts --outdir=dist
 
 ### 动态导入
 
-XML 文件可以动态导入：
+你可以动态导入 XML 文件：
 
 ```ts
 const { default: doc } = await import("./config.xml");
@@ -239,20 +278,20 @@ const { default: doc } = await import("./config.xml");
 
 ## 一致性
 
-Bun 的 XML 解析器使用 Rust 编写，实现了 [XML 1.0（第五版）](https://www.w3.org/TR/2008/REC-xml-20081126/)，作为一种**不读取外部实体的非验证处理器**：
+Bun 的 XML 解析器使用 Rust 编写，并作为非验证处理器实现了 [XML 1.0（第五版）](https://www.w3.org/TR/2008/REC-xml-20081126/)，不会读取外部实体：
 
-- 整个文档（包括内部 DTD 子集）都必须格式正确——否则会抛出 `SyntaxError`
-- 文档中声明的内部实体会被展开（具有展开限制，因此“billion laughs”负载会失败，而不会耗尽内存），属性值会被规范化，并且会应用内部子集中声明的属性默认值
-- 永远不会获取或读取外部 DTD 和外部实体，因此不存在 XXE 攻击面。在没有 DTD 的文档中，对未声明实体的引用会出错；当 DOCTYPE 指向外部子集（或使用可能声明该实体的参数实体）时，该引用会按原样保留（`&nbsp;` 保持为 `&nbsp;`），除非文档声明了 `standalone="yes"`
-- 不会根据 DTD 进行验证，不会解析命名空间（带前缀的名称会原样保留），并且会跳过注释和处理指令
+- 整个文档（包括内部 DTD 子集）都必须格式正确，否则会抛出 `SyntaxError`。
+- 解析器会展开文档中声明的内部实体，并设置展开限制，因此“十亿笑声”攻击载荷会失败，而不是耗尽内存。它会规范化属性值，并应用内部子集中声明的属性默认值。
+- 解析器不会获取或读取外部 DTD 或外部实体，因此不存在 XXE 攻击面。对于没有 DTD 的文档，引用未声明的实体会导致错误。如果 DOCTYPE 指向外部子集（或使用参数实体），而该子集可能声明了此实体，解析器就会保留原样的引用（`&nbsp;` 仍为 `&nbsp;`），除非文档指定了 `standalone="yes"`。
+- 解析器不会根据 DTD 进行验证。它不会解析命名空间，并会原样保留带前缀的名称。
 
-它会针对 [W3C XML 一致性测试套件](https://www.w3.org/XML/Test/)运行：对于此类处理器具有必需结果的全部 1,679 个测试用例均已通过——格式不正确的文档会被拒绝，格式正确的文档会被接受；如果测试套件提供了规范输出，其元素树也会逐字节匹配。 [已翻译的测试套件](https://github.com/oven-sh/bun/blob/main/test/js/bun/xml/xml-test-suite.test.ts)列出了每个测试用例，包括那些结果合理地取决于不读取外部实体的测试用例。
+解析器使用 [W3C XML 一致性测试套件](https://www.w3.org/XML/Test/)进行测试。对于此类处理器有明确预期结果的 1,679 个测试用例，解析器均已通过：拒绝格式不正确的文档，并接受格式正确的文档。对于测试套件提供了规范输出的用例，格式正确文档的元素树（包括处理指令）与规范输出逐字节匹配。[已转换的测试套件](https://github.com/oven-sh/bun/blob/main/test/js/bun/xml/xml-test-suite.test.ts)列出了所有用例，包括那些结果合理地取决于是否读取外部实体的用例。
 
 ---
 
 ## 性能
 
-解析器分两个阶段工作，与 Bun 的 JSON 解析器类似：SIMD 阶段（运行时分派 AVX2／AVX-512／NEON／SVE 内核）会找出可能改变解析结果的字节，因此不会逐字节扫描字符数据、属性值、注释和 CDATA 节；元素名和属性名会复用 JavaScriptCore 的原子字符串缓存，其方式与 `JSON.parse` 相同。
+与 Bun 的 JSON 解析器一样，解析器分两个阶段工作。SIMD 扫描阶段（运行时分派 AVX2／AVX-512／NEON／SVE 内核）会查找可能影响解析的字节，因此解析器无需逐字节扫描字符数据、属性值、注释和 CDATA 段。元素名称和属性名称会像 `JSON.parse` 一样复用 JavaScriptCore 的原子字符串缓存。
 
 [`bench/xml/xml.mjs`](https://github.com/oven-sh/bun/blob/main/bench/xml/xml.mjs) 会在相同文档上比较 `Bun.XML.parse` 与常用的 npm 解析器（越低越好；Linux x64，单核）：
 

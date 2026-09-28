@@ -13,7 +13,7 @@ bun publish dist
 bun publish --access public
 ```
 
-也可以在 `package.json` 的 `publishConfig` 字段中设置 `--access`。
+你也可以在 `package.json` 的 `publishConfig` 字段中设置 `--access`。
 
 ```json package.json icon="file-json"
 {
@@ -26,13 +26,13 @@ bun publish --access public
 </ParamField>
 
 <ParamField path="--tag" type="string" default="latest">
-设置发布的包版本标签。默认标签是 `latest`。包的初始版本始终会获得 `latest` 标签，此外还会标记指定的标签。
+设置发布包的版本标签。默认标签是 `latest`。包的初始版本始终会获得 `latest` 标签，此外还会标记指定的标签。
 
 ```sh terminal icon="terminal"
 bun publish --tag alpha
 ```
 
-也可以在 `package.json` 的 `publishConfig` 字段中设置 `--tag`。
+你也可以在 `package.json` 的 `publishConfig` 字段中设置 `--tag`。
 
 ```json package.json icon="file-json"
 {
@@ -53,8 +53,12 @@ bun publish --dry-run
 
 </ParamField>
 
+<ParamField path="--tolerate-republish" type="boolean">
+  如果要发布的版本已存在于注册表中，`bun publish` 将以代码 0 而不是 1 退出。
+</ParamField>
+
 <ParamField path="--gzip-level" type="string" default="9">
-  指定打包时使用的 gzip 压缩级别。仅适用于没有使用 tarball 路径参数的 `bun publish`。数值范围是 `0` 到 `9`（默认是 `9`）。
+  指定打包时使用的 gzip 压缩级别。仅适用于未使用 tarball 路径参数的 `bun publish`。数值范围为 `0` 到 `9`（默认值为 `9`）。
 </ParamField>
 
 <ParamField path="--auth-type" type="string" default="web">
@@ -90,7 +94,7 @@ bun publish --otp 123456
 #### 自定义注册表
 
 <ParamField path="--registry" type="string">
-  指定注册表 URL，覆盖 .npmrc 和 bunfig.toml 配置
+  默认使用指定的注册表，覆盖 .npmrc、bunfig.toml 和环境变量。为软件包作用域配置的注册表（在 .npmrc 中设置 `@scope:registry=`，或在 bunfig.toml 中设置 `[install.scopes]`）仍具有优先级。
 </ParamField>
 
 ```bash
@@ -100,7 +104,7 @@ bun publish --registry https://my-private-registry.com
 #### SSL 证书
 
 <ParamField path="--ca" type="string">
-  提供证书颁发机构（CA）签名证书
+  提供由证书颁发机构（CA）签名的证书
 </ParamField>
 
 <ParamField path="--cafile" type="string">
@@ -118,7 +122,7 @@ bun publish --cafile ./ca-cert.pem
 
 </CodeGroup>
 
-### 发布选项
+### 常规选项
 
 #### 依赖管理
 
@@ -165,7 +169,7 @@ bun publish --cafile ./ca-cert.pem
 #### 性能
 
 <ParamField path="--backend" type="string">
-  平台优化选项：`clonefile`（默认）、`hardlink`、`symlink` 或 `copyfile`
+  平台优化：`clonefile`（macOS 上的默认值）、`hardlink`（Linux 和 Windows 上的默认值）、`symlink` 或 `copyfile`
 </ParamField>
 
 <ParamField path="--network-concurrency" type="number" default="48">
@@ -173,7 +177,7 @@ bun publish --cafile ./ca-cert.pem
 </ParamField>
 
 <ParamField path="--concurrent-scripts" type="number">
-  最大并发生命周期脚本数（默认：CPU 核心数的 2 倍）
+  最大并发生命周期脚本数（默认值：CPU 核心数的 2 倍）
 </ParamField>
 
 #### 输出控制

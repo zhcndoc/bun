@@ -11,12 +11,12 @@ import Patch from "/snippets/cli/patch.mdx";
 
 功能特点：
 
-- 生成 `.patch` 文件，Bun 安装时会将其应用到 `node_modules` 中的依赖
-- `.patch` 文件可以提交到代码仓库，并在不同安装、项目和机器之间重复使用
-- `package.json` 中的 `"patchedDependencies"` 会记录已修补的包
-- 修补 `node_modules/` 中的包，同时保持 Bun [全局缓存](/pm/global-cache)的完整性
-- 使用 `bun patch --commit <pkg>` 提交前，可以在本地测试你的修改
-- 为节省磁盘空间并保持 `bun install` 的速度，已修补的包会提交到全局缓存，并尽可能在多个项目之间共享
+- 生成 `.patch` 文件，Bun 会在安装时将其应用于 `node_modules` 中的依赖项
+- 你可以将 `.patch` 文件提交到仓库，并在不同的安装、项目和机器之间重复使用
+- `package.json` 中的 `"patchedDependencies"` 会跟踪已修补的包
+- 修补 `node_modules/` 中的包，同时保留 Bun [Global Cache](/pm/global-cache) 的完整性
+- 使用 `bun patch --commit <pkg>` 提交修改前，可在本地测试修改
+- 为了节省磁盘空间并加快 `bun install`，Bun 会将修补后的包提交到 Global Cache，并尽可能在多个项目之间共享
 
 #### 第 1 步. 准备包进行补丁
 
@@ -34,7 +34,7 @@ bun patch node_modules/react
 ```
 
 <Note>
-不要跳过 `bun patch <pkg>`。它可以确保 `node_modules/` 中的包目录包含一个全新的包副本，不含指向 Bun 缓存的符号链接或硬链接。
+请务必先运行 `bun patch <pkg>`。它会确保 `node_modules/` 中的包目录包含一份全新的包副本，且没有指向 Bun 缓存的符号链接或硬链接。
 
 如果跳过这一步，你可能会修改缓存中的全局包。
 
@@ -42,7 +42,7 @@ bun patch node_modules/react
 
 #### 第 2 步. 本地测试你的修改
 
-`bun patch <pkg>` 让你可以直接安全地编辑 `node_modules/` 中的 `<pkg>`，同时保持 Bun [全局缓存](/pm/global-cache)的完整性。它的工作原理是在 `node_modules/` 中重新创建一个未链接的包副本，并将其与全局缓存中的原始包进行差异比较。
+`bun patch <pkg>` 让你可以直接安全地编辑 `node_modules/` 中的 `<pkg>`，同时保留 Bun [Global Cache](/pm/global-cache) 的完整性。它会在 `node_modules/` 中重新创建一个没有链接的包副本。随后，`bun patch --commit <pkg>` 会将该副本与 Global Cache 中的原始包进行差异比较。
 
 #### 第 3 步. 提交修改
 

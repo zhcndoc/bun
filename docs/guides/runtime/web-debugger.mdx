@@ -21,7 +21,7 @@ Bun.serve({
 
 这会在端口 `6499` 上启动一个 WebSocket 服务器（传递 `--inspect=<port>` 可使用其他端口）。调试工具会连接到此服务器，以检查正在运行的 Bun 进程。
 
-Bun 在 [debug.bun.sh](https://debug.bun.sh) 托管了一个基于网页的调试器。它是 WebKit 的 [Web Inspector Interface](https://webkit.org/web-inspector/web-inspector-interface/) 的修改版本，对于 Safari 用户来说会很熟悉。
+Bun 提供了一个基于网页的调试器，网址为 [debug.bun.sh](https://debug.bun.sh)。它是 WebKit 的 [Web Inspector Interface](https://webkit.org/web-inspector/web-inspector-interface/) 的修改版本，Safari 用户会对其感到熟悉。
 
 ```sh terminal icon="terminal"
 bun --inspect server.ts

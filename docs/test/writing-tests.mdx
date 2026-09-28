@@ -3,7 +3,7 @@ title: "编写测试"
 description: "使用 Bun 兼容 Jest 的 API 编写测试，包括异步测试、超时和测试修饰符"
 ---
 
-使用从内置 `bun:test` 模块导入的类似 Jest 的 API 定义测试。从长远来看，Bun 旨在完全兼容 Jest；目前仅支持有限的一组 `expect` 匹配器。
+使用从内置 `bun:test` 模块导入的类 Jest API 定义测试。从长远来看，Bun 的目标是完全兼容 Jest。
 
 ## 基本用法
 
@@ -66,7 +66,7 @@ test("2 * 2", done => {
 可通过给 `test` 传入第三个参数数字来指定单个测试的超时时间（毫秒）。
 
 ```ts title="math.test.ts" icon="/icons/typescript.svg"
-import { test } from "bun:test";
+import { expect, test } from "bun:test";
 
 test("wat", async () => {
   const data = await slowOperation();
@@ -76,7 +76,7 @@ test("wat", async () => {
 
 在 `bun:test` 中，超时会抛出无法捕获的异常，以强制测试停止运行并失败。Bun 还会终止测试中生成的所有子进程，因此它们不会作为僵尸进程残留。
 
-如果未通过此超时选项或 `jest.setTimeout()` 覆盖，每个测试的默认超时时间为 5000ms（5 秒）。
+除非使用此超时选项或 `jest.setTimeout()` 覆盖，否则每个测试的默认超时时间为 5000ms（5 秒）。
 
 ## 重试和重复执行
 
@@ -85,7 +85,7 @@ test("wat", async () => {
 使用 `retry` 选项可在不稳定的测试失败时自动重试。测试在指定的尝试次数内成功即可通过。
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
-import { test } from "bun:test";
+import { expect, test } from "bun:test";
 
 test(
   "不稳定的网络请求",
@@ -102,7 +102,7 @@ test(
 使用 `repeats` 选项可多次运行测试，而不论测试通过还是失败；如果任何一次迭代失败，测试就会失败。可使用此选项检测不稳定的测试或进行压力测试。`repeats: N` 总共运行测试 N+1 次（1 次初始运行 + N 次重复运行）。
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
-import { test } from "bun:test";
+import { expect, test } from "bun:test";
 
 test(
   "确保测试稳定",
@@ -117,13 +117,13 @@ test(
 
 ### 🧟 僵尸进程清理器
 
-当测试超时时，Bun 会终止其中通过 `Bun.spawn`、`Bun.spawnSync` 或 `node:child_process` 启动且仍在运行的所有进程，并向控制台记录一条消息。这可以防止僵尸进程在测试超时后继续残留。
+当测试超时时，Bun 会终止测试使用 `Bun.spawn`、`Bun.spawnSync` 或 `node:child_process` 生成的所有仍在运行的进程，并在控制台中记录一条消息。这可以防止超时测试结束后留下僵尸进程。
 
 ## 测试修饰符
 
 ### test.skip
 
-使用 `test.skip` 跳过单个测试。这些测试不会运行。
+使用 `test.skip` 跳过单个测试。Bun 不会运行这些测试。
 
 ```ts title="math.test.ts" icon="/icons/typescript.svg"
 import { expect, test } from "bun:test";
@@ -136,7 +136,7 @@ test.skip("wat", () => {
 
 ### test.todo
 
-使用 `test.todo` 将测试标记为待办事项。这些测试不会运行。
+使用 `test.todo` 将测试标记为待办事项。Bun 不会运行这些测试。
 
 ```ts title="math.test.ts" icon="/icons/typescript.svg"
 import { expect, test } from "bun:test";
@@ -146,23 +146,22 @@ test.todo("修复此处", () => {
 });
 ```
 
-要运行待办测试并找出其中通过的测试，请使用 `bun test --todo`。
+要运行待办测试并找出其中通过的测试，请使用 `bun test --todo`。当 `myTestFunction()` 正常工作后，Bun 会将上面的测试报告为失败。
 
 ```bash terminal icon="terminal"
 bun test --todo
 ```
 
 ```
-my.test.ts:
-✗ 未实现功能
-  ^ 该测试被标记为 todo，且通过。请移除 `.todo` 或确认测试是否正确。
+math.test.ts:
+✗ fix this
+  ^ this test is marked as todo but passes. Remove `.todo` if tested behavior now works
 
- 0 通过
- 1 失败
- 1 次 expect() 调用
+ 0 pass
+ 1 fail
 ```
 
-使用此标志时，失败的待办测试不会导致错误，但通过的待办测试会被标记为失败，以便你移除 todo 标记或修复测试。
+使用此标志时，失败的待办测试不会导致错误，但 Bun 会将通过的待办测试标记为失败，以便你移除待办标记或修复测试。
 
 ### test.only
 
@@ -323,10 +322,10 @@ describe.each([
 
 ### 参数传递
 
-如何将参数传递给测试函数，依赖于测试用例的结构：
+Bun 如何向测试函数传递参数，取决于测试用例的结构：
 
-- 如果表格行是数组（例如 `[1, 2, 3]`），则每个元素作为单独参数传入
-- 如果行不是数组（如对象），则作为单个参数传入
+- 如果表格行是数组（例如 `[1, 2, 3]`），Bun 会将每个元素作为单独的参数传递
+- 如果行不是数组（例如对象），Bun 会将其作为单个参数传递
 
 ```ts title="example.test.ts" icon="/icons/typescript.svg"
 // 数组项作为单独参数传入
@@ -407,7 +406,7 @@ test("异步工作调用断言", async () => {
 });
 ```
 
-这对于异步测试尤其有用，可以确保断言确实执行。
+`expect.hasAssertions()` 在异步测试中特别有用，可确保断言确实运行。
 
 ### expect.assertions(count)
 
@@ -422,7 +421,7 @@ test("恰好两个断言", () => {
 });
 ```
 
-尤其适合复杂异步代码中确保所有断言都执行。
+`expect.assertions(count)` 有助于确保所有断言都运行，尤其是在包含多个代码路径的复杂异步代码中。
 
 ## 类型测试
 
@@ -432,7 +431,7 @@ Bun 包含用于测试 TypeScript 类型的 `expectTypeOf`，兼容 Vitest。
 
 <Warning>这些函数在运行时不会执行任何操作。请单独运行 TypeScript 以验证类型检查。</Warning>
 
-`expectTypeOf` 函数提供类型级别的断言，由 TypeScript 的类型检查器检查。测试类型的方法：
+`expectTypeOf` 函数提供类型级断言，由 TypeScript 类型检查器验证。要测试类型：
 
 1. 使用 `expectTypeOf` 编写类型断言
 2. 运行 `bunx tsc --noEmit` 检查类型是否正确

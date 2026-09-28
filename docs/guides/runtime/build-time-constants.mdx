@@ -14,14 +14,14 @@ bun build --compile --define BUILD_VERSION='"1.2.3"' --define BUILD_TIME='"2024-
 
 ## 为什么使用构建时常量？
 
-构建时常量直接嵌入到编译后的代码中，因此它们具有：
+Bun 会将构建时常量直接嵌入编译后的代码中，使其具有以下特点：
 
 - **零运行时开销** – 不需要环境变量查找或文件读取
 - **不可变** – 值在编译时烘焙进二进制文件
 - **可优化** – 未使用的分支可以被死代码消除
 - **安全** – 无需管理外部依赖或配置文件
 
-这类似于 C/C++ 中的 `gcc -D` 或 `#define`，但适用于 JavaScript/TypeScript。
+构建时常量类似于 C/C++ 中的 `gcc -D` 或 `#define`，但适用于 JavaScript/TypeScript。
 
 ---
 
@@ -202,7 +202,7 @@ console.log(`构建版本为 ${version.trim()}`);
 
 ### 值的格式
 
-值必须是有效的 JSON。Bun 会解析每个值，并将其内联为 JavaScript 表达式：
+值可以是 JSON、标识符或属性路径，例如 `globalThis` 或 `console.log`。Bun 会解析每个值，并将其作为 JavaScript 表达式内联：
 
 ```sh
 # ✅ 字符串必须用 JSON 引号包裹
@@ -226,7 +226,7 @@ console.log(`构建版本为 ${version.trim()}`);
 
 ### 属性键名
 
-键可以是属性访问模式，而不仅仅是简单标识符：
+键也可以是属性访问模式，而不仅限于普通标识符：
 
 ```sh
 # ✅ 替换 process.env.NODE_ENV 为 "production"

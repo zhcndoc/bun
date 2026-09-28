@@ -7,7 +7,7 @@ description: "学习如何在 Bun 中使用快照测试，在测试运行之间�
 
 ## 基本快照
 
-快照测试使用 `.toMatchSnapshot()` 匹配器编写：
+使用 `.toMatchSnapshot()` 匹配器编写快照测试：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
@@ -48,11 +48,11 @@ exports[`snap 1`] = `"foo"`;
 bun test --update-snapshots
 ```
 
-当你有意更改了输出或添加了新的快照测试时，请执行此操作。
+当你有意更改输出时，请执行此操作。在 CI 环境中，除非传递此标志，否则 Bun 不会写入新的快照。
 
 ## 内联快照
 
-对于较小的值，请使用 `.toMatchInlineSnapshot()`。内联快照会直接存储在测试文件中：
+对于较小的值，请使用 `.toMatchInlineSnapshot()`。Bun 会将内联快照直接存储在测试文件中：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
@@ -70,10 +70,10 @@ import { test, expect } from "bun:test";
 
 test("inline snapshot", () => {
   expect({ hello: "world" }).toMatchInlineSnapshot(`
-{
-  "hello": "world",
-}
-`);
+    {
+      "hello": "world",
+    }
+  `);
 });
 ```
 
@@ -358,16 +358,16 @@ tests/
 
 ### 快照失败
 
-当快照不匹配时，会看到差异视图：
+快照失败时，Bun 会显示差异：
 
 ```diff title="diff" icon="file-code"
-- Expected
-+ Received
-
-  Object {
+  {
 -   "name": "John",
 +   "name": "Jane",
   }
+
+- Expected  - 1
++ Received  + 1
 ```
 
 常见原因：

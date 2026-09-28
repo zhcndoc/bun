@@ -48,8 +48,8 @@ bun install
 
 `bun install`:
 
-- **安装**所有 `dependencies`、`devDependencies` 和 `optionalDependencies`。Bun 默认安装 `peerDependencies`。
-- **运行**项目的 `{pre|post}install` 和 `{pre|post}prepare` 脚本，并在适当的时间执行。出于安全原因，Bun _不会执行_ 已安装依赖项的生命周期脚本。
+- **安装**所有 `dependencies`、`devDependencies` 和 `optionalDependencies`。Bun 默认会安装 `peerDependencies`。
+- **运行**项目的 `{pre|post}install` 和 `{pre|post}prepare` 脚本，并在适当的时机执行。出于安全考虑，除非已将已安装的依赖项标记为[可信](/pm/lifecycle)，否则 Bun _不会执行_它们的生命周期脚本。
 - **写入**一个 `bun.lock` 锁文件到项目根目录。
 
 ---
@@ -178,7 +178,7 @@ cowsay "Bun!"
 bun install --production
 ```
 
-`--production` 意味着启用 `--frozen-lockfile`。它只控制实际安装的内容——早期安装时已经存在于 `node_modules` 中的 `devDependencies` 会保留在那里。使用 [`bun prune --production`](/pm/cli/prune) 将其移除。
+`--production` 等同于 `--frozen-lockfile`。它只控制要安装的内容。先前安装时已经在 `node_modules` 中的 `devDependencies` 会继续保留。使用 [`bun prune --production`](/pm/cli/prune) 将它们移除。
 
 如需可复现安装，请使用 `--frozen-lockfile`。Bun 会安装锁文件中指定的确切版本，并且不会更新锁文件。如果你的 `package.json` 与 `bun.lock` 不一致，Bun 会以错误退出。
 
@@ -188,9 +188,25 @@ bun install --frozen-lockfile
 
 Bun 不会在 CI 中自动启用 `--frozen-lockfile`；请传入该标志或使用 `bun ci`。如果完全不存在锁文件，`--frozen-lockfile` 会从 `package.json` 安装，但不会写入锁文件。
 
-`--frozen-lockfile` 支持在经过裁剪的 monorepo 检出目录上运行（例如 `turbo prune` 的输出，或仅复制了部分工作区文件夹的 Docker 上下文）。`bun.lock` 中列出但磁盘上缺少其 `package.json` 的工作区会被跳过，并显示 `note:`；这些工作区的专属依赖不会被安装。如果剩余的某个工作区依赖于被跳过的工作区，安装将失败。
+`--frozen-lockfile` 可用于经过精简的 monorepo 检出目录（例如 `turbo prune` 的输出，或只复制了部分工作区文件夹的 Docker 上下文）。如果 `bun.lock` 中列出的工作区在磁盘上缺少 `package.json`，Bun 会跳过它，并显示 `note:`，且不会安装其专属依赖。如果剩余的工作区依赖于被跳过的工作区，安装将失败。
 
 如需在不安装的情况下验证锁文件，请使用 `bun install --frozen-lockfile --dry-run`。
+
+### 离线安装
+
+使用已预热的缓存时，`bun install` 可以在没有网络的情况下运行：
+
+```bash terminal icon="terminal"
+# 无论缓存数据的时间有多旧，都使用缓存的软件包元数据；仅获取缓存中缺少的内容
+bun install --prefer-offline
+
+# 完全不访问网络（注册表、tarball URL、git）；未缓存的必需依赖会导致错误
+bun install --offline
+```
+
+`--prefer-offline` 也是 `bunfig.toml` 中 `install.prefer = "offline"` 所选择的选项；`install.offline = true` 是 `--offline` 的配置形式。使用完整的还原缓存时，`--offline --frozen-lockfile` 可让 CI 安装完全确定且无需网络；而 `--prefer-offline` 仍会获取缓存中缺少的内容。
+
+安装只能确保缓存放入 `node_modules` 中的软件包。要为 `--offline` 安装预热缓存，请在同一平台上运行安装，并至少放入相同的软件包。使用 `--production` 或 `--omit` 的安装不会缓存被省略的分组。
 
 有关 `bun.lock` 的更多信息，请参阅[锁文件](/pm/lockfile)。
 
@@ -253,7 +269,7 @@ bun install --linker hoisted
 
 ### 隔离安装（Isolated installs）
 
-一种类似 pnpm 的方式，可创建严格的依赖隔离，以防止[幻影依赖](/pm/isolated-installs)，即那些可以在未于 `package.json` 中声明的情况下被导入的包：
+一种类似 pnpm 的方式，可创建严格的依赖隔离，以防止[幻影依赖](/pm/isolated-installs)：即无需在 `package.json` 中声明就可以导入的包：
 
 ```bash terminal icon="terminal"
 bun install --linker isolated
@@ -269,7 +285,7 @@ bun install --linker isolated
 - **新单包项目**：`hoisted`（传统 npm 行为）
 - **旧项目（v1.3.2 之前创建）**：`hoisted`（保留向后兼容）
 
-默认设置由锁文件中的 `configVersion` 字段控制。有关详细说明，请参阅[隔离安装](/pm/isolated-installs)。
+锁文件中的 `configVersion` 字段会控制默认值。详细说明请参阅[隔离安装](/pm/isolated-installs)。
 
 ---
 
@@ -295,13 +311,13 @@ minimumReleaseAgeExcludes = ["@types/node", "typescript"]
 
 启用最小年龄过滤时：
 
-- 它只会影响新的软件包解析；`bun.lock` 中已有的软件包保持不变
-- 解析时，所有依赖项（直接依赖和传递依赖）都会经过过滤，以满足年龄要求
-- 当版本被年龄门槛阻止时，稳定性检查会检测快速修复问题的发布模式
-  - 如果有多个版本在年龄门槛之外相近时间发布，Bun 会扩展过滤范围，跳过这些可能不稳定的版本，并选择更早发布、更成熟的版本
-  - 该检查最多会搜索年龄门槛之后的 7 天；如果在此之后发布仍然很频繁，Bun 会忽略稳定性检查
+- 它只影响新的软件包解析；`bun.lock` 中已有的软件包保持不变
+- Bun 会在解析依赖时过滤所有依赖（直接依赖和传递依赖），以满足年龄要求
+- 当年龄门槛阻止某些版本时，稳定性检查会检测快速修复缺陷的发布模式
+  - 如果多个版本在刚刚超出年龄门槛时接连发布，Bun 会扩大过滤范围，跳过这些可能不稳定的版本，并选择更旧、更成熟的版本
+  - 检查会在年龄门槛之后最多搜索 7 天；如果这段时间内仍有频繁发布，Bun 会忽略稳定性检查
   - 精确版本请求（如 `package@1.1.1`）仍会遵守年龄门槛，但会绕过稳定性检查
-- 没有 `time` 字段的版本会被视为通过年龄检查（npm 注册表应该始终提供时间戳）
+- Bun 会将没有 `time` 字段的版本视为通过年龄检查（npm 注册表应始终提供时间戳）
 
 如需更高级的安全扫描，包括与服务集成和自定义过滤，请参阅[安全扫描器 API](/pm/security-scanner-api)。
 
@@ -316,7 +332,7 @@ minimumReleaseAgeExcludes = ["@types/node", "typescript"]
 1. `$XDG_CONFIG_HOME/.bunfig.toml` 或 `$HOME/.bunfig.toml`
 2. 当前目录下的 `./bunfig.toml`
 
-如果两者都找到，则都会被加载，并且项目的 `bunfig.toml` 中设置的键会覆盖全局文件中的同名键。
+如果 Bun 找到这两个文件，就会同时加载。项目的 `bunfig.toml` 中设置的键会覆盖全局文件中的同名键。
 
 通过 `bunfig.toml` 进行配置是可选的。以下是默认值：
 
@@ -371,7 +387,7 @@ minimumReleaseAgeExcludes = ["@types/node", "typescript"]
 | `BUN_CONFIG_SKIP_LOAD_LOCKFILE`    | 不加载锁文件                                       |
 | `BUN_CONFIG_SKIP_INSTALL_PACKAGES` | 不安装任何软件包                                   |
 
-Bun 会使用目标平台上可用的最快安装方式：在 macOS 上使用 `clonefile`，在 Linux 上使用 `hardlink`。你可以通过 `--backend` 标志更改安装方式。当这些方式不可用或发生错误时，`clonefile` 和 `hardlink` 会回退到平台特定的文件复制实现。
+Bun 会在目标平台上使用可用的最快安装方式：在 macOS 上使用 `clonefile`，在 Linux 和 Windows 上使用 `hardlink`。你可以通过 `--backend` 标志更改安装方式。如果 `clonefile` 和 `hardlink` 不可用或出错，则会回退到平台特定的文件复制实现。
 
 Bun 会将从 npm 安装的软件包存储在 `~/.bun/install/cache/${name}@${version}` 中。如果 semver 版本包含 `build` 或 `pre` 标签，Bun 会将其替换为该值的哈希。这可以降低因文件路径过长而导致错误的可能性，但会使确定软件包在磁盘上的安装位置变得更加复杂。
 
@@ -379,7 +395,7 @@ Bun 会将从 npm 安装的软件包存储在 `~/.bun/install/cache/${name}@${ve
 
 当不存在 `bun.lock`，或者 `package.json` 中的软件包依赖发生变化时，Bun 会在解析过程中立即下载并提取 tarball。
 
-当存在 `bun.lock` 且 `package.json` 未发生变化时，Bun 会延迟下载缺失的依赖。如果 `node_modules` 中预期位置已经存在名称和版本匹配的软件包，Bun 就不会尝试下载 tarball。
+当存在 `bun.lock` 且 `package.json` 未发生变化时，Bun 会延迟下载缺失的依赖。如果 `node_modules` 中的预期位置已存在名称和版本匹配的软件包，Bun 就不会尝试下载 tarball。
 
 ## CI/CD
 
@@ -431,7 +447,7 @@ jobs:
 
 ## 平台特定依赖？
 
-Bun 会将 npm 中规范化的 `cpu` 和 `os` 值与解析后的包一同存储在锁文件中。运行时，它会跳过为当前目标禁用的包的下载、解压和安装。这意味着，即使最终安装的包发生变化，锁文件也不会因平台/架构不同而改变。
+Bun 会将 npm 中规范化的 `cpu` 和 `os` 值连同已解析的软件包存储在锁文件中。运行时会跳过为当前目标平台禁用的软件包的下载、提取和安装。这意味着即使最终安装的软件包有所变化，不同平台/架构上的锁文件也不会改变。
 
 ### `--cpu` 和 `--os` 参数
 
@@ -455,7 +471,7 @@ Bun 像 Yarn 一样处理对等依赖：`bun install` 会自动安装它们。�
 
 `bun.lock` 是 Bun 的锁文件格式。请参阅[我们关于文本锁文件的博客文章](https://bun.com/blog/bun-lock-text-lockfile)。
 
-在 Bun 1.2 之前，锁文件是二进制格式，名为 `bun.lockb`。要将旧锁文件升级为新格式，请运行 `bun install --save-text-lockfile --frozen-lockfile --lockfile-only`，然后删除 `bun.lockb`。
+在 Bun 1.2 之前，锁文件采用二进制格式，名为 `bun.lockb`。要将旧锁文件升级为新格式，请运行 `bun install --save-text-lockfile --frozen-lockfile --lockfile-only`，然后删除 `bun.lockb`。
 
 ## 缓存
 
@@ -471,7 +487,7 @@ rm -rf ~/.bun/install/cache
 
 为了提升性能，`bun install` 会根据平台使用不同的系统调用来安装依赖。你可以使用 `--backend` 标志强制指定后端。
 
-**`hardlink`** 是 Linux 默认后端，基准测试显示其性能最佳。
+**`hardlink`** 是 Linux 和 Windows 上的默认后端。基准测试表明，它在 Linux 上速度最快。
 
 ```bash
 rm -rf node_modules
@@ -485,7 +501,7 @@ rm -rf node_modules
 bun install --backend clonefile
 ```
 
-**`clonefile_each_dir`** 类似 `clonefile`，但每个目录逐文件克隆。仅 macOS 可用，通常性能不及 `clonefile`。不支持一次系统调用递归克隆子目录。
+**`clonefile_each_dir`** 与 `clonefile` 类似，但会按目录逐个克隆文件。它仅在 macOS 上可用，运行速度通常比 `clonefile` 慢。与 `clonefile` 不同，`clonefile_each_dir` 不会通过一次系统调用递归克隆子目录。
 
 ```bash
 rm -rf node_modules
@@ -499,7 +515,7 @@ rm -rf node_modules
 bun install --backend copyfile
 ```
 
-**`symlink`** 通常仅用于内部 `file:` 依赖（以及未来的 `link:`）。为防止循环链接，不会对 `node_modules` 文件夹做符号链接。
+**`symlink`** 通常仅在内部用于 `file:` 依赖（例如 `file:../foo` 和传递的 `file:` 依赖）。`link:` 依赖不会使用此后端；Bun 会将它们安装为指向链接目录的单个符号链接。
 
 若用 `--backend=symlink` 安装，除非每个依赖都有自己的 `node_modules`，否则 Node.js 不会正确解析依赖的 `node_modules`，除非对 `node` 或 `bun` 使用 `--preserve-symlinks` 参数。详见 [Node.js 关于 `--preserve-symlinks` 文档](https://nodejs.org/api/cli.html#--preserve-symlinks)。
 
@@ -512,14 +528,13 @@ node --preserve-symlinks ./my-file.js # https://nodejs.org/api/cli.html#--preser
 
 ## npm 注册表元数据
 
-Bun 使用一种二进制格式缓存 npm 注册表响应。其加载速度比 JSON 快得多，并且通常在磁盘上占用的空间更小。  
-这些文件位于 `~/.bun/install/cache/*.npm`。文件名模式为 `${hash(packageName)}.npm`。之所以使用哈希，是为了不必为作用域包创建额外的目录。
+Bun 使用二进制格式缓存 npm 注册表响应。与 JSON 相比，这种格式的加载速度快得多，且磁盘占用通常更小。这些文件位于 `~/.bun/install/cache/*.npm`。文件名格式为 `${hash(packageName)}.npm`。文件名使用哈希，这样 Bun 就不需要为作用域包创建额外目录。
 
-Bun 对 `Cache-Control` 的使用会忽略 `Age`。这可以提升性能，但意味着 Bun 获取的 npm 最新软件包版本元数据可能会滞后约 5 分钟。
+Bun 使用 `Cache-Control` 时会忽略 `Age`。这可以提升性能，但意味着 Bun 获取的 npm 最新软件包版本元数据可能会滞后约 5 分钟。
 
 ## pnpm 迁移
 
-Bun 会自动迁移 pnpm 项目。当检测到 `pnpm-lock.yaml` 文件且不存在 `bun.lock` 文件时，Bun 会在安装过程中将锁文件转换为 `bun.lock`。原始的 `pnpm-lock.yaml` 文件保持不变。
+Bun 会自动迁移 pnpm 项目。当 Bun 检测到 `pnpm-lock.yaml` 文件且不存在 `bun.lock` 文件时，会在安装过程中将锁文件转换为 `bun.lock`。原始的 `pnpm-lock.yaml` 文件保持不变。
 
 ```bash terminal icon="terminal"
 bun install
@@ -581,7 +596,7 @@ Bun 会将工作区包列表和 catalog 迁移至 `package.json` 中的 `workspa
 
 ### 目录依赖
 
-支持保留 pnpm 的 `catalog:` 协议依赖：
+Bun 会保留使用 pnpm `catalog:` 协议的依赖：
 
 ```json package.json icon="file-json"
 {

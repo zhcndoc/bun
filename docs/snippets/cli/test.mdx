@@ -15,7 +15,7 @@ bun test <patterns>
 </ParamField>
 
 <ParamField path="--retry" type="number">
-  最多重试失败的测试 <code>NUMBER</code> 次。可被每个测试的 <code>{`{ retry: N }`}</code> 覆盖
+  最多重试失败的测试 <code>NUMBER</code> 次。每个测试的 <code>{`{ retry: N }`}</code> 会覆盖此标志
 </ParamField>
 
 <ParamField path="--concurrent" type="boolean">
@@ -30,8 +30,8 @@ bun test <patterns>
   设置测试随机化的随机种子
 </ParamField>
 
-<ParamField path="--bail" type="number" default="1">
-  在出现 <code>NUMBER</code> 次失败后退出测试套件。如果不指定数字，默认为 1。
+<ParamField path="--bail" type="number">
+  失败 <code>NUMBER</code> 次后退出测试套件。如果不指定数字，则默认为 1
 </ParamField>
 
 <ParamField path="--max-concurrency" type="number" default="20">
@@ -55,7 +55,7 @@ bun test <patterns>
 </ParamField>
 
 <ParamField path="--reporter-outfile" type="string">
-  报告格式的输出文件路径（与 --reporter 一起使用时必需）
+  报告格式的输出文件路径（与 --reporter=junit 一起使用时必需）
 </ParamField>
 
 <ParamField path="--dots" type="boolean">

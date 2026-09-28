@@ -21,7 +21,7 @@ bun patch <package>@<version>
 </ParamField>
 
 <ParamField path="--ignore-scripts" type="boolean">
-  跳过项目 <code>package.json</code> 中的生命周期脚本（依赖的脚本永远不会执行）
+  跳过所有包的生命周期脚本，包括项目的 <code>package.json</code> 和可信赖的依赖项
 </ParamField>
 
 <ParamField path="--trust" type="boolean">
@@ -64,16 +64,21 @@ bun patch <package>@<version>
 
 ### 安装控制
 
-<ParamField path="--backend" type="string" default="clonefile">
-  针对依赖安装的特定平台优化。可选值：<code>clonefile</code>（默认），<code>hardlink</code>，<code>symlink</code>，<code>copyfile</code>
+<ParamField path="--backend" type="string">
+  用于安装依赖项的平台专属优化。可能的值：<code>clonefile</code>（macOS 上的默认值）、<code>hardlink</code>（Linux 和 Windows 上的默认值）、<code>symlink</code>、<code>copyfile</code>
 </ParamField>
 
 <ParamField path="--linker" type="string">
   链接策略（<code>isolated</code> 或 <code>hoisted</code> 其中之一）
 </ParamField>
 
+<ParamField path="--minimum-release-age" type="number">
+  仅安装至少在 N 秒前发布的包（安全功能）
+</ParamField>
+
 <ParamField path="--dry-run" type="boolean">
-  不实际安装
+  不安装包、不更新 <code>package.json</code>，也不保存锁文件。仍会将包复制到{" "}
+  <code>node_modules</code> 以供打补丁，并且 <code>--commit</code> 仍会写入补丁文件
 </ParamField>
 
 <ParamField path="--force" type="boolean">
@@ -125,7 +130,7 @@ bun patch <package>@<version>
 </ParamField>
 
 <ParamField path="--quiet" type="boolean">
-  打包时仅显示压缩包名称
+  禁用进度条
 </ParamField>
 
 <ParamField path="--verbose" type="boolean">
@@ -143,11 +148,11 @@ bun patch <package>@<version>
 ### 平台目标
 
 <ParamField path="--cpu" type="string">
-  覆盖可选依赖的 CPU 架构（例如 <code>x64</code>, <code>arm64</code>, <code>*</code> 表示全部）
+  覆盖可选依赖的 CPU 架构（例如 <code>x64</code>，<code>arm64</code>，<code>*</code> 表示全部）
 </ParamField>
 
 <ParamField path="--os" type="string">
-  覆盖可选依赖的操作系统（例如 <code>linux</code>, <code>darwin</code>, <code>*</code> 表示全部）
+  覆盖可选依赖的操作系统（例如 <code>linux</code>，<code>darwin</code>，<code>*</code> 表示全部）
 </ParamField>
 
 ### 全局配置与上下文

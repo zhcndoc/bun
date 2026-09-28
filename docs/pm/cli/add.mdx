@@ -19,7 +19,7 @@ bun add zod@^3.0.0
 bun add zod@latest
 ```
 
-除非指定了 `--dev`、`--optional` 或 `--peer`，否则包会写入 `dependencies`。如果 `package.json` 已经在其他分组中列出了该包，则会在原位置更新该条目。
+除非传入 `--dev`、`--optional` 或 `--peer`，否则 Bun 会将包写入 `dependencies`。如果 `package.json` 已在其他分组中列出了该包，Bun 会在原位置更新该条目。
 
 ## `--dev`
 
@@ -110,11 +110,11 @@ bun add vitest --catalog=testing
 }
 ```
 
-- 如果目录中已经存在条目，则会复用该条目，并且只将 `"catalog:"` 写入当前包。传入显式版本（`bun add react@19 --catalog`）可替换该条目——这会影响所有引用它的包
-- 如果未指定版本，则会将当前 `package.json` 中已有的范围（`"react": "^18.2.0"`）加入目录
-- 已经引用 `"catalog:<name>"` 的包会继续使用该目录
-- 名称必须使用 `=` 连接：`--catalog=testing`，而不是 `--catalog testing`
-- Tarball 和 git 说明符会以包的实际名称加入目录。相对路径和工作区包会被拒绝
+- 如果目录中已有条目，Bun 会复用该条目，并仅将 `"catalog:"` 写入当前包。传入显式版本（`bun add react@19 --catalog`）可替换该条目——这会影响所有引用它的包。
+- 如果省略版本，且当前 `package.json` 已有版本范围（`"react": "^18.2.0"`），Bun 会将该版本范围添加到目录中。
+- 已引用 `"catalog:<name>"` 的包会继续使用该目录。
+- 使用 `=` 附加名称：`--catalog=testing`，而不是 `--catalog testing`。
+- Bun 会在目录中以包的实际名称记录 tarball 和 Git 说明符。它会拒绝相对路径和工作区包。
 
 即使没有该标志，如果默认目录中已经列出了 `react`，`bun add react`（不带版本）也会写入 `"catalog:"`。传入版本则会写入具体范围。
 
@@ -131,11 +131,11 @@ bun add ./vendor/logger --filter '*'
 bun remove zod --filter '*' --filter '!api'
 ```
 
-- `*` 匹配每个工作区包，但不匹配根目录。要包含根目录，请指定其名称：`--filter '*' --filter '<root-name>'`
-- 如果没有工作区匹配，则不会写入任何内容，并且命令会失败
-- 本地路径从当前目录解析，并重写为相对于每个选定包的路径
-- `bun.lock` 会为整个仓库更新，但只有选定的工作区会链接到 `node_modules`，与 `bun install --filter` 一样
-- 不能与 `--global` 组合使用
+- `*` 匹配每个工作区包，但不包括根目录。要包含根目录，请指定其名称：`--filter '*' --filter '<root-name>'`。
+- 如果没有工作区匹配，Bun 不会写入任何内容，并且命令会失败。
+- Bun 会从当前目录解析本地路径，并将它们重写为相对于每个选定包的路径。
+- 与 `bun install --filter` 一样，Bun 会更新整个仓库的 `bun.lock`，但只会将选定的工作区链接到 `node_modules`。
+- 不能与 `--global` 同时使用。
 
 ## `--global`
 
@@ -152,7 +152,7 @@ cowsay "Bun!"
  ______
 < Bun! >
  ------
-        \   ^__^
+        \   ^__
          \  (oo)\_______
             (__)\       )\/\
                 ||----w |
@@ -174,7 +174,7 @@ globalBinDir = "~/.bun/bin"
 
 ## 受信任的依赖
 
-与其它 npm 客户端不同，Bun 不会执行已安装依赖的任意生命周期脚本，如 `postinstall`。这些脚本存在安全风险，可能在您的机器上执行任意代码。
+与其他 npm 客户端不同，Bun 不会执行已安装依赖的任意生命周期脚本，如 `postinstall`。这些脚本存在安全风险，可能在您的机器上执行任意代码。
 
 要让 Bun 允许特定包的生命周期脚本，请在您的 package.json 中将该包添加到 `trustedDependencies`。
 
@@ -230,6 +230,8 @@ bun add zod@https://registry.npmjs.org/zod/-/zod-3.21.4.tgz
   }
 }
 ```
+
+Tarball URL 可以包含凭据，例如 `https://user:password@example.com/zod-3.21.4.tgz`。Bun 会像 npm 一样，将这些凭据作为 `Authorization: Basic` 标头发送，并在请求 URL 时移除凭据。包含凭据的 URL 会写入 `package.json` 和锁文件。
 
 ---
 

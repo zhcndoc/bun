@@ -5,7 +5,7 @@ description: "Bun 的自动包安装功能，用于独立脚本执行"
 
 如果 Bun 在工作目录或其上级目录中找不到 `node_modules` 目录，它会放弃 Node.js 风格的模块解析，转而使用 **Bun 模块解析算法**。
 
-在 Bun 风格的模块解析下，Bun 会在执行期间将每个导入的包即时自动安装到[全局模块缓存](/pm/global-cache)中（该缓存与 [`bun install`](/pm/cli/install) 使用的缓存相同）。
+在 Bun 风格的模块解析中，Bun 会在执行期间将每个导入的包自动安装到[全局模块缓存](/pm/global-cache)中。 [`bun install`](/pm/cli/install) 使用相同的缓存。
 
 ```ts index.ts icon="/icons/typescript.svg"
 import { foo } from "foo"; // 安装 `latest` 版本
@@ -39,7 +39,7 @@ Bun 按照以下方式确定要安装的版本：
 
 ## 安装
 
-Bun 会将软件包安装并缓存到 `<cache>/<pkg>@<version>`，因此同一软件包的多个版本可以同时缓存。它还会在 `<cache>/<pkg>/<version>` 下创建一个符号链接，以加快查找某个软件包的所有已缓存版本。
+Bun 会将包安装并缓存到 `<cache>/<pkg>@<version>`，因此可以同时缓存同一个包的多个版本。它还会在 `<cache>/<pkg>/<version>` 下创建一个符号链接，以加快查找包的所有缓存版本的速度。
 
 ## 版本说明符
 
@@ -79,8 +79,8 @@ import { z } from "zod@^3.20.0"; // 语义版本范围
 
     </Accordion>
 
-    <Accordion title="这与 Yarn Plug'N'Play 有何不同？">
-    使用 Yarn，必须先运行 `yarn install` 才能运行脚本。相比之下，Bun 在运行文件时动态解析依赖，无需事先运行任何安装命令。
+    <Accordion title="这与 Yarn Plug'N'Play 的做法有何不同？">
+    使用 Yarn，必须先运行 `yarn install`，才能运行脚本。相比之下，Bun 会在运行文件时动态解析依赖；无需事先运行任何 `install` 命令。
 
     Yarn Plug'N'Play 使用 zip 文件存储依赖，这导致依赖加载在运行时更慢，因为对 zip 文件的随机访问通常比等效的磁盘查找更慢。[参考](https://twitter.com/jarredsumner/status/1458207919636287490)
     </Accordion>

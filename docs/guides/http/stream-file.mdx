@@ -4,7 +4,7 @@ sidebarTitle: 流式文件响应
 mode: center
 ---
 
-[`Bun.file()`](/runtime/file-io#reading-files-bun-file) 从磁盘读取文件并返回一个 `BunFile` 实例，你可以将其直接传递给 `new Response` 构造函数。
+[`Bun.file()`](/runtime/file-io#reading-files-bun-file) 接受一个路径，并返回一个延迟加载的 `BunFile` 实例，你可以将其直接传递给 `new Response` 构造函数。
 
 ```ts server.ts icon="/icons/typescript.svg"
 const path = "/path/to/file.txt";
@@ -14,7 +14,7 @@ const resp = new Response(file);
 
 ---
 
-Bun 从文件中读取 `Content-Type`，并将其设置在 `Response` 上。
+Bun 根据文件扩展名确定 `Content-Type`，并将其设置在 `Response` 上。
 
 ```ts server.ts icon="/icons/typescript.svg"
 new Response(Bun.file("./package.json")).headers.get("Content-Type");

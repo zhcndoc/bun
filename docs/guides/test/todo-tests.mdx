@@ -7,10 +7,10 @@ mode: center
 要提醒自己稍后编写测试，请使用 `test.todo` 函数。不要求提供实现。
 
 ```ts test.test.ts icon="/icons/typescript.svg"
-import { test, expect } from "bun:test";
+import { test } from "bun:test";
 
-// 稍后编写此测试
-test.todo("未实现的功能");
+// write this later
+test.todo("parses durations like 1h30m");
 ```
 
 ---
@@ -23,45 +23,71 @@ bun test
 
 ```txt
 test.test.ts:
-✓ add [0.03ms]
-✓ multiply [0.02ms]
-✎ 未实现的功能
+✎ parses durations like 1h30m
 
- 2 通过
- 1 个待办
- 0 失败
- 2 次 expect() 调用
-在 1 个文件中运行了 3 个测试。[74.00ms]
+ 0 pass
+ 1 todo
+ 0 fail
+Ran 1 test across 1 file. [6.00ms]
 ```
 
 ---
 
-你可以提供测试实现。
+你也可以在被测试的代码尚未编写之前先写测试。这里的 `parseDuration` 仍是一个存根，而 `todo` 测试记录了它最终应该实现的功能。`bun test` 也会将此测试报告为 `todo`，但不会运行它的测试体。
 
-```ts
+```ts test.test.ts icon="/icons/typescript.svg"
 import { test, expect } from "bun:test";
 
-test.todo("未实现的功能", () => {
-  expect(Bun.isAwesome()).toBe(true);
+// Not written yet; the todo test below says what it should do.
+function parseDuration(input: string): number {
+  throw new Error("not implemented");
+}
+
+test.todo("parses durations like 1h30m", () => {
+  expect(parseDuration("1h30m")).toBe(5400);
 });
 ```
 
 ---
 
-除非传入 `--todo` 标志，否则 Bun 不会运行该实现。使用 `--todo` 时，测试会运行并且_预期失败_。如果待办测试通过，`bun test` 会返回非零退出代码。
+传入 `--todo` 以运行 `todo` 测试的测试体。`todo` 测试_预期会失败_：由于 `parseDuration` 尚未实现，Bun 会打印错误，但仍将该测试计为 `todo`，并以代码 `0` 退出。
 
 ```sh terminal icon="terminal"
 bun test --todo
 ```
 
 ```txt
-my.test.ts:
-✗ 未实现的功能
-  ^ 此测试已标记为待办，但测试通过了。如果测试行为现在已正常工作，请移除 `.todo`
+test.test.ts:
+1 | import { test, expect } from "bun:test";
+2 |
+3 | // Not written yet; the todo test below says what it should do.
+4 | function parseDuration(input: string): number {
+5 |   throw new Error("not implemented");
+                                       ^
+error: not implemented
+      at parseDuration (/path/to/test.test.ts:5:36)
+      at <anonymous> (/path/to/test.test.ts:9:10)
+✎ parses durations like 1h30m [0.16ms]
 
- 0 通过
- 1 失败
- 1 次 expect() 调用
+ 0 pass
+ 1 todo
+ 0 fail
+Ran 1 test across 1 file. [5.00ms]
+```
+
+---
+
+实现 `parseDuration` 并使测试体通过后，`bun test --todo` 会将该测试报告为失败，并以非零代码退出。这意味着你应该移除 `.todo`，将其变为常规测试。
+
+```txt
+test.test.ts:
+✗ parses durations like 1h30m [0.19ms]
+  ^ this test is marked as todo but passes. Remove `.todo` if tested behavior now works
+
+ 0 pass
+ 1 fail
+ 1 expect() calls
+Ran 1 test across 1 file. [5.00ms]
 $ echo $?
 1 # 这是前一个命令的退出代码
 ```

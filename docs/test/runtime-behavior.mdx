@@ -87,44 +87,44 @@ test("无超时测试", async () => {
 
 ### 未捕获的错误
 
-`bun test` 会跟踪未处理的 Promise 拒绝，以及测试之间发生的错误。如果发生任何此类错误，即使所有测试都通过，最终退出代码也会是非零值。
+`bun test` 会跟踪未处理的 Promise 拒绝以及测试之间发生的错误。如果发生任何此类情况，即使没有测试失败，`bun test` 也会以非零退出码退出。在下面两个示例中，错误都发生在加载文件时，因此完全不会运行该文件中的测试。
 
 这有助于捕获异步代码中的错误，否则可能被忽略：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
-import { test } from "bun:test";
+import { test, expect } from "bun:test";
 
-test("测试 1", () => {
-  // 测试通过
+test("test 1", () => {
   expect(true).toBe(true);
 });
 
-// 该错误发生在任何测试外部
-setTimeout(() => {
-  throw new Error("未捕获的错误");
-}, 0);
+// This error happens outside any test
+queueMicrotask(() => {
+  throw new Error("Unhandled error");
+});
 
-test("测试 2", () => {
-  // 此测试也通过
+test("test 2", () => {
   expect(true).toBe(true);
 });
 
-// 因未捕获的错误，测试运行仍会以非零码失败
+// bun test reports this as "Unhandled error between tests", does not run
+// this file's tests (0 pass, 1 error), and exits with code 1
 ```
 
 ### Promise 拒绝
 
-未处理的 Promise 拒绝也会被捕获：
+测试运行器也会捕获未处理的 Promise 拒绝：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
-import { test } from "bun:test";
+import { test, expect } from "bun:test";
 
-test("通过测试", () => {
+test("test 1", () => {
   expect(1).toBe(1);
 });
 
-// 这将导致测试运行失败
-Promise.reject(new Error("未处理的拒绝"));
+// bun test reports this as "Unhandled error between tests", does not run
+// this file's tests, and exits with code 1
+Promise.reject(new Error("Unhandled rejection"));
 ```
 
 ### 自定义错误处理
@@ -145,7 +145,7 @@ process.on("unhandledRejection", (reason, promise) => {
 
 ## CLI 选项集成
 
-Several Bun CLI flags also work with `bun test`：
+多个 Bun CLI 标志也适用于 `bun test`：
 
 ### 内存使用
 
@@ -288,9 +288,9 @@ if (process.env.CI) {
 
 测试运行器默认在单个进程中运行所有测试。这带来了：
 
-- **更快的启动时间** — 无需生成多个进程
-- **共享内存** — 资源使用更高效
-- **简单的调试** — 所有测试都在一个进程中
+- **启动更快**：无需启动多个进程
+- **共享内存**：高效利用资源
+- **调试更简单**：所有测试都在一个进程中运行
 
 但这意味着：
 
@@ -314,7 +314,7 @@ bun test src/integration/
 由于测试运行在同一进程，需确保适当清理：
 
 ```ts title="test.ts" icon="/icons/typescript.svg"
-import { afterEach } from "bun:test";
+import { afterEach, jest } from "bun:test";
 
 afterEach(() => {
   // 清理全局状态

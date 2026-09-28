@@ -14,6 +14,14 @@ bun build <入口点>
   编译时使用字节码缓存
 </ParamField>
 
+<ParamField path="--bytecode-depth" type="number">
+  预先编译为字节码的嵌套函数层数（非负整数）。默认编译所有层级
+</ParamField>
+
+<ParamField path="--no-optimize-bytecode" type="boolean">
+  使用 <code>--bytecode</code> 时：跳过构建时的字节码优化过程
+</ParamField>
+
 <ParamField path="--target" type="string" default="browser">
   打包的预期执行环境。可选 <code>browser</code>、<code>bun</code> 或 <code>node</code>
 </ParamField>
@@ -35,6 +43,14 @@ bun build <入口点>
 
 <ParamField path="--outfile" type="string">
   输出到指定文件
+</ParamField>
+
+<ParamField path="--metafile" type="string">
+  写入包含构建元数据的 JSON 文件
+</ParamField>
+
+<ParamField path="--metafile-md" type="string">
+  写入以可视化模块图的 Markdown 文件（便于 LLM 使用）
 </ParamField>
 
 <ParamField path="--sourcemap" type="string" default="none">
@@ -78,12 +94,28 @@ bun build <入口点>
   启用共享模块的代码分割
 </ParamField>
 
+<ParamField path="--min-chunk-size" type="number">
+  使用 `--splitting` 时，也会将小于此源字节数且无副作用的代码块，合并到由其所有导入方都能加载的代码块中
+</ParamField>
+
+<ParamField path="--no-module-preload" type="boolean">
+  同时使用 `--splitting` 和 `--target browser` 时，不为入口点或 `import()` 所依赖的代码块生成 `<link rel="modulepreload">`
+</ParamField>
+
 <ParamField path="--public-path" type="string">
-  添加到打包代码中导入路径的前缀
+  打包器添加到打包代码中导入路径前的前缀
 </ParamField>
 
 <ParamField path="--external" type="string">
   从包中排除模块（支持通配符）。别名：<code>-e</code>
+</ParamField>
+
+<ParamField path="--allow-unresolved" type="string" default="*">
+  允许未解析且符合这些 glob 模式的动态 import()/require() 标识符。传入 <code>''</code> 可允许不透明标识符
+</ParamField>
+
+<ParamField path="--reject-unresolved" type="boolean">
+  如果任何动态 import()/require() 标识符无法在构建时解析，则构建失败
 </ParamField>
 
 <ParamField path="--packages" type="string" default="bundle">
@@ -95,13 +127,17 @@ bun build <入口点>
 </ParamField>
 
 <ParamField path="--css-chunking" type="boolean">
-  合并 CSS 文件以减少重复（仅当多个入口点引入 CSS时生效）
+  合并 CSS 文件以减少重复（仅当多个入口点引入 CSS 时生效）
 </ParamField>
 
 ### 压缩与优化
 
 <ParamField path="--emit-dce-annotations" type="boolean" default="true">
   重新输出死代码消除注释。在使用 <code>--minify-whitespace</code> 时禁用
+</ParamField>
+
+<ParamField path="--no-deprecated-namespace-object-setters" type="boolean">
+  输出仅包含 getter 的模块命名空间对象（赋值给属性会抛出错误，与真正的命名空间对象相同）。此选项将在未来版本中成为默认设置
 </ParamField>
 
 <ParamField path="--minify" type="boolean">
@@ -139,8 +175,7 @@ bun build <入口点>
 </ParamField>
 
 <ParamField path="--react-compiler" type="boolean">
-  在 `.jsx`/`.tsx` 文件上运行 React 编译器，自动对组件和 hooks 进行记忆化。输出模式由
-  <code>--target</code> 决定（<code>browser</code> → client，<code>bun</code>/<code>node</code> → ssr）。实验性功能。
+  对 `.jsx`/`.tsx` 文件运行 React Compiler，自动对组件和钩子进行记忆化。打包器根据 `--target` 推导输出模式（`browser` → 客户端，`bun`/`node` → ssr）。实验性功能。
 </ParamField>
 
 ### 独立可执行文件
@@ -151,6 +186,51 @@ bun build <入口点>
 
 <ParamField path="--compile-exec-argv" type="string">
   向独立可执行文件的 <code>execArgv</code> 前置参数
+</ParamField>
+
+<ParamField path="--compile-jit-policy" type="number" default="1">
+  可执行文件启动时使用的 JIT 层级提升阈值倍率；<code>1</code> 表示正常的 JIT 策略。请参阅 <code>Bun.unsafe.setJITPolicy</code>
+</ParamField>
+
+<ParamField path="--compile-autoload-dotenv" type="boolean" default="true">
+  在独立可执行文件中启用 <code>.env</code> 文件的自动加载
+</ParamField>
+
+<ParamField path="--no-compile-autoload-dotenv" type="boolean">
+  在独立可执行文件中禁用 <code>.env</code> 文件的自动加载
+</ParamField>
+
+<ParamField path="--compile-autoload-bunfig" type="boolean" default="true">
+  在独立可执行文件中启用 <code>bunfig.toml</code> 的自动加载
+</ParamField>
+
+<ParamField path="--no-compile-autoload-bunfig" type="boolean">
+  在独立可执行文件中禁用 <code>bunfig.toml</code> 的自动加载
+</ParamField>
+
+<ParamField path="--compile-autoload-tsconfig" type="boolean" default="false">
+  在独立可执行文件运行时启用 <code>tsconfig.json</code> 的自动加载
+</ParamField>
+
+<ParamField path="--no-compile-autoload-tsconfig" type="boolean">
+  在独立可执行文件运行时禁用 <code>tsconfig.json</code> 的自动加载
+</ParamField>
+
+<ParamField path="--compile-autoload-package-json" type="boolean" default="false">
+  在独立可执行文件运行时启用 <code>package.json</code> 的自动加载
+</ParamField>
+
+<ParamField path="--no-compile-autoload-package-json" type="boolean">
+  在独立可执行文件运行时禁用 <code>package.json</code> 的自动加载
+</ParamField>
+
+<ParamField path="--compile-executable-path" type="string">
+  指定用于交叉编译的 Bun 可执行文件路径，以替代下载
+</ParamField>
+
+<ParamField path="--asset" type="string">
+  将文件或目录嵌入编译后的可执行文件，并以其基本名称作为路径；目录会保留其内部树结构，因此{" "}
+  <code>--asset ./static/public</code> 会嵌入 <code>public/...</code>（需要 <code>--compile</code>）
 </ParamField>
 
 ### Windows 可执行文件详情

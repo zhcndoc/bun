@@ -35,7 +35,7 @@ Sentry.init({
 
 ---
 
-使用 [`--preload`](/runtime) 启动你的应用，以便该文件在应用的任何模块之前运行。文件的 `import`s 会在其自身代码之前进行计算，因此在入口文件顶部调用 `Sentry.init()` 仍会在该文件导入的所有内容之后运行。
+使用 [`--preload`](/runtime) 启动你的应用，以便此文件在应用的任何模块之前运行。Bun 会在执行文件自身的代码之前计算该文件中的 `import`，因此在入口文件顶部调用 `Sentry.init()`，仍会在该文件导入的所有内容之后运行。
 
 ```sh terminal icon="terminal"
 bun --preload ./sentry.ts index.ts

@@ -5,16 +5,16 @@ description: "用于扩展 Bun 运行时和打包器的通用插件 API"
 
 Bun 提供了一个通用插件 API，可同时扩展 _运行时_ 和 _打包器_。
 
-插件会拦截导入并执行自定义加载逻辑，例如读取文件或转换代码。可以使用插件支持其他文件类型，例如 `.scss` 或 `.yaml`。在 Bun 的打包器中，插件可以实现框架级功能，例如 CSS 提取、宏，以及客户端与服务器代码共置。
+插件可以拦截导入并执行自定义加载逻辑，例如读取文件或转译代码。使用它们可以添加对其他文件类型的支持，例如 `.scss`。在 Bun 的打包器中，插件可以实现框架级功能，例如 CSS 提取、宏以及客户端与服务器端代码共置。
 
 ## 生命周期钩子
 
 插件会注册在 bundle 生命周期各个阶段运行的回调：
 
-- [`onStart()`](#onstart)：在打包器开始构建 bundle 后运行一次
-- [`onResolve()`](#onresolve)：在解析模块之前运行
-- [`onLoad()`](#onload)：在加载模块之前运行
-- [`onBeforeParse()`](#onbeforeparse)：在解析文件之前，于解析器线程中运行零拷贝原生插件
+- [`onStart()`](#onstart)：打包器开始打包后运行一次
+- [`onResolve()`](#onresolve)：打包器解析模块之前运行
+- [`onLoad()`](#onload)：打包器加载模块之前运行
+- [`onBeforeParse()`](#onbeforeparse)：在打包器解析文件之前，于解析器线程中运行零拷贝原生插件
 
 ### 参考
 
@@ -22,7 +22,7 @@ Bun 提供了一个通用插件 API，可同时扩展 _运行时_ 和 _打包器
 
 ```ts Plugin Types icon="/icons/typescript.svg"
 type PluginBuilder = {
-  onStart(callback: () => void): void;
+  onStart(callback: () => void | Promise<void>): void;
   onResolve: (
     args: { filter: RegExp; namespace?: string },
     callback: (args: { path: string; importer: string }) => {
@@ -60,7 +60,7 @@ type Loader =
 
 ## 使用方法
 
-一个插件被定义为一个包含 `name` 属性和 `setup` 函数的 JavaScript 对象。
+插件是一个包含 `name` 属性和 `setup` 函数的 JavaScript 对象。
 
 ```tsx myPlugin.ts icon="/icons/typescript.svg"
 import type { BunPlugin } from "bun";
@@ -87,7 +87,7 @@ await Bun.build({
 
 ### 命名空间
 
-`onLoad` 和 `onResolve` 接受一个可选的 `namespace` 字符串。每个模块都有一个命名空间，它会为转译代码中的导入添加前缀；例如，一个具有 `filter: /\.yaml$/` 和 `namespace: "yaml:"` 的加载器，会将从 `./myfile.yaml` 导入的内容转换为 `yaml:./myfile.yaml`。
+`onLoad` 和 `onResolve` 接受一个可选的 `namespace` 字符串。每个模块都有一个命名空间，它会作为转译后代码中导入路径的前缀。例如，使用 `filter: /\.yaml$/` 和 `namespace: "yaml:"` 的加载器，会将从 `./myfile.yaml` 导入的内容转换为 `yaml:./myfile.yaml`。
 
 默认命名空间是 `"file"`，无需显式指定：`import myModule from "./my-module.ts"` 等同于 `import myModule from "file:./my-module.ts"`。
 
@@ -99,22 +99,24 @@ await Bun.build({
 ### `onStart`
 
 ```ts
-onStart(callback: () => void): Promise<void> | void;
+onStart(callback: () => void | Promise<void>): void;
 ```
 
 注册一个回调函数，当打包器开始新的打包任务时运行。
 
 ```ts index.ts icon="/icons/typescript.svg"
-import { plugin } from "bun";
-
-plugin({
-  name: "onStart 示例",
-
-  setup(build) {
-    build.onStart(() => {
-      console.log("打包开始！");
-    });
-  },
+await Bun.build({
+  entrypoints: ["./app.ts"],
+  plugins: [
+    {
+      name: "onStart example",
+      setup(build) {
+        build.onStart(() => {
+          console.log("Bundle started!");
+        });
+      },
+    },
+  ],
 });
 ```
 
@@ -167,9 +169,9 @@ onResolve(
 
 为了打包项目，Bun 会遍历项目中所有模块的依赖树。对于每个导入的模块，Bun 都必须找到并读取该模块。“查找”模块的过程称为“解析”模块。
 
-`onResolve()` 生命周期回调可以自定义模块的解析方式。
+`onResolve()` 生命周期回调用于自定义 Bun 解析模块的方式。
 
-`onResolve()` 的第一个参数是一个包含 `filter` 和 [`namespace`](#what-is-a-namespace) 属性的对象。`filter` 是一个用于匹配导入字符串的正则表达式。二者共同决定自定义解析逻辑适用于哪些模块。
+`onResolve()` 的第一个参数是一个包含 `filter` 和 [`namespace`](#namespaces) 属性的对象。`filter` 是一个针对导入字符串运行的正则表达式。两者共同决定自定义解析逻辑适用于哪些模块。
 
 `onResolve()` 的第二个参数是一个回调函数，对于 Bun 找到的、与第一个参数中定义的 `filter` 和 `namespace` 匹配的每个模块导入，该回调都会运行。
 
@@ -222,12 +224,15 @@ Bun 的打包器解析模块后，需要读取并解析模块的内容。
 例如：
 
 ```ts index.ts icon="/icons/typescript.svg"
-import { plugin } from "bun";
+import type { BunPlugin } from "bun";
 
 const envPlugin: BunPlugin = {
   name: "环境变量插件",
   setup(build) {
-    build.onLoad({ filter: /env/, namespace: "file" }, args => {
+    build.onResolve({ filter: /^env$/ }, args => {
+      return { path: args.path, namespace: "env" };
+    });
+    build.onLoad({ filter: /env/, namespace: "env" }, args => {
       return {
         contents: `export default ${JSON.stringify(process.env)}`,
         loader: "js",
@@ -250,7 +255,7 @@ Bun.build({
 
 #### `.defer()`
 
-`onLoad` 回调会接收一个 `defer` 函数，该函数返回一个 `Promise`，当所有 _其他_ 模块都加载完成后，该 Promise 才会解析。当模块的内容依赖其他模块时，请等待该 Promise。
+`onLoad` 回调会接收一个 `defer` 函数，该函数会返回一个 `Promise`，当 Bun 加载完所有_其他_模块后，该 `Promise` 就会兑现。当模块内容依赖其他模块时，请等待此函数返回的 `Promise`。
 
 ##### 示例：跟踪并报告未使用的导出
 
@@ -293,7 +298,7 @@ plugin({
 });
 ```
 
-`.defer()` 函数在每个 `onLoad` 回调中只能调用一次。
+每个 `onLoad` 回调只能调用一次 `.defer()` 函数。
 
 ## 原生插件
 
@@ -303,7 +308,7 @@ Bun 的打包器速度很快，部分原因在于它使用原生代码编写，�
 
 原生插件可用的生命周期钩子如下：
 
-- [`onBeforeParse()`](#onbeforeparse)：在 Bun 的打包器解析文件前于任何线程调用。
+- [`onBeforeParse()`](#onbeforeparse)：在 Bun 的打包器解析文件之前，于任意线程上调用。
 
 原生插件是通过 C ABI 函数暴露生命周期钩子的 NAPI 模块。要创建一个原生插件，请导出一个与要实现的生命周期钩子签名匹配的 C ABI 函数。
 
@@ -395,4 +400,4 @@ onBeforeParse(
 
 它会接收文件内容，并可以返回新的源代码。
 
-此回调可能会从任意线程调用，因此 NAPI 模块的实现必须是线程安全的。
+Bun 可以从任意线程调用此回调，因此 NAPI 模块实现必须是线程安全的。

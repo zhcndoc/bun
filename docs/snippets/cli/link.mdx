@@ -39,10 +39,10 @@ bun link <packages>
 </ParamField>
 
 <ParamField path="--no-save" type="boolean">
-  不更新 <code>package.json</code> 或保存锁文件
+  无效果。<code>bun link</code> 仅在使用 <code>--save</code> 时更新 <code>package.json</code> 和锁文件
 </ParamField>
 
-<ParamField path="--save" type="boolean" default="true">
+<ParamField path="--save" type="boolean">
   保存到 <code>package.json</code>
 </ParamField>
 
@@ -60,9 +60,8 @@ bun link <packages>
   跳过验证新下载包的完整性
 </ParamField>
 
-<ParamField path="--backend" type="string" default="clonefile">
-  用于安装依赖的平台特定优化。可选值为 <code>clonefile</code>、<code>hardlink</code>、{" "}
-  <code>symlink</code> 或 <code>copyfile</code>
+<ParamField path="--backend" type="string">
+  安装依赖时使用的平台特定优化方式。可选值为 <code>clonefile</code>、<code>hardlink</code>、<code>symlink</code> 或 <code>copyfile</code>
 </ParamField>
 
 <ParamField path="--linker" type="string">
@@ -70,11 +69,11 @@ bun link <packages>
 </ParamField>
 
 <ParamField path="--dry-run" type="boolean">
-  不执行任何安装
+  使用 <code>bun link &lt;package&gt;</code> 时，仅解析包，不安装包、不更新 <code>package.json</code>，也不保存锁文件。对不带参数的 <code>bun link</code> 无效；该命令仍会注册当前包
 </ParamField>
 
 <ParamField path="--ignore-scripts" type="boolean">
-  跳过项目 <code>package.json</code> 中的生命周期脚本（依赖的脚本永远不会运行）
+  跳过所有包的生命周期脚本，包括项目的 <code>package.json</code> 和受信任的依赖项
 </ParamField>
 
 ### 网络与注册表
@@ -118,7 +117,7 @@ bun link <packages>
 </ParamField>
 
 <ParamField path="--quiet" type="boolean">
-  打包时只显示压缩包名称
+  禁用进度条
 </ParamField>
 
 <ParamField path="--verbose" type="boolean">
